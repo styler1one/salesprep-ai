@@ -31,6 +31,7 @@ ALLOWED_MIME_TYPES = [
     "text/plain",
     "text/markdown"
 ]
+ALLOWED_EXTENSIONS = [".pdf", ".docx", ".txt", ".md"]
 
 
 async def process_file_background(
@@ -150,8 +151,15 @@ async def upload_file(
     
     organization_id = org_response.data[0]["organization_id"]
     
-    # Validate file type
-    if file.content_type not in ALLOWED_MIME_TYPES:
+    # Get file extension
+    file_extension = file.filename.split(".")[-1].lower() if "." in file.filename else ""
+    file_extension_with_dot = f".{file_extension}" if file_extension else ""
+    
+    # Validate file type (check both MIME type and extension)
+    has_valid_mime = file.content_type in ALLOWED_MIME_TYPES
+    has_valid_extension = file_extension_with_dot in ALLOWED_EXTENSIONS
+    
+    if not has_valid_mime and not has_valid_extension:
         raise HTTPException(
             status_code=400,
             detail=f"File type not supported. Allowed types: PDF, DOCX, TXT, MD"
@@ -174,8 +182,9 @@ async def upload_file(
     # Generate unique file ID
     file_id = str(uuid.uuid4())
     
-    # Get file extension
-    file_extension = file.filename.split(".")[-1] if "." in file.filename else "bin"
+    # Use extension from earlier validation, or default to "bin"
+    if not file_extension:
+        file_extension = "bin"
     
     # Storage path: {organization_id}/{file_id}.{extension}
     storage_path = f"{organization_id}/{file_id}.{file_extension}"

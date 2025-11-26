@@ -15,13 +15,20 @@ const ALLOWED_TYPES = [
   'text/plain',
   'text/markdown'
 ]
+const ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.txt', '.md']
 
 export function FileUploadZone({ onUpload, uploading }: FileUploadZoneProps) {
   const [dragActive, setDragActive] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const validateFile = (file: File): string | null => {
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    // Check file extension
+    const extension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'))
+    const hasValidExtension = ALLOWED_EXTENSIONS.includes(extension)
+    const hasValidType = ALLOWED_TYPES.includes(file.type)
+    
+    // Allow if either extension or MIME type is valid (some browsers don't set MIME type correctly)
+    if (!hasValidExtension && !hasValidType) {
       return 'File type not supported. Please upload PDF, DOCX, TXT, or MD files.'
     }
     if (file.size > MAX_FILE_SIZE) {
