@@ -17,10 +17,15 @@ class GeminiResearcher:
         
         genai.configure(api_key=api_key)
         
-        # Configure Google Search tool for grounding
-        self.search_tool = genai.Tool(
-            google_search={}
-        )
+        # Configure Google Search tool for grounding (using correct syntax for google-generativeai)
+        self.search_tool = {
+            'google_search_retrieval': {
+                'dynamic_retrieval_config': {
+                    'mode': 'MODE_DYNAMIC',
+                    'dynamic_threshold': 0.3  # Lower threshold = more likely to search
+                }
+            }
+        }
         
         # Use Gemini 1.5 Flash with Google Search grounding
         self.model = genai.GenerativeModel(
