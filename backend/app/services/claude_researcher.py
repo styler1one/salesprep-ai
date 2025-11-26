@@ -101,7 +101,7 @@ Be thorough but concise. Focus on factual, verifiable information. If informatio
         try:
             # Call Claude with web search enabled
             response = self.client.messages.create(
-                model="claude-3-5-sonnet-20241022",
+                model="claude-3-5-sonnet-20240620",  # Fixed: correct model name
                 max_tokens=4096,
                 temperature=0.3,  # Lower temperature for factual responses
                 messages=[{

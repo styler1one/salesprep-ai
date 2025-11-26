@@ -172,7 +172,7 @@ Cross-reference the data from different sources. If sources conflict, note the d
 
         try:
             response = self.claude.client.messages.create(
-                model="claude-3-5-sonnet-20241022",
+                model="claude-3-5-sonnet-20240620",  # Fixed: correct model name
                 max_tokens=4096,
                 temperature=0.2,
                 messages=[{

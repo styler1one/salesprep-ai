@@ -59,7 +59,7 @@ class KVKApi:
                         "apikey": self.api_key,
                         "Accept": "application/json"
                     },
-                    timeout=10.0
+                    timeout=30.0  # Increased timeout for KVK API
                 )
                 
                 if response.status_code == 200:

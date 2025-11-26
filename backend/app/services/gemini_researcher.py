@@ -16,7 +16,7 @@ class GeminiResearcher:
             raise ValueError("GOOGLE_AI_API_KEY environment variable not set")
         
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-pro')
+        self.model = genai.GenerativeModel('gemini-1.5-flash')  # Fixed: use current model
     
     async def search_company(
         self,
