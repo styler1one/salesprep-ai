@@ -144,10 +144,14 @@ async def upload_file(
     """
     # Get user's organization
     user_id = current_user.get("sub")
+    print(f"DEBUG upload_file: user_id from token: {user_id}")
+    
     org_response = supabase.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
+    print(f"DEBUG upload_file: org_response.data: {org_response.data}")
     
     if not org_response.data:
-        raise HTTPException(status_code=403, detail="User not in any organization")
+        print(f"ERROR upload_file: No organization found for user_id: {user_id}")
+        raise HTTPException(status_code=403, detail=f"User {user_id} not in any organization")
     
     organization_id = org_response.data[0]["organization_id"]
     
@@ -249,10 +253,14 @@ async def list_files(current_user: dict = Depends(get_current_user)):
     """
     # Get user's organization
     user_id = current_user.get("sub")
+    print(f"DEBUG list_files: user_id from token: {user_id}")
+    
     org_response = supabase.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
+    print(f"DEBUG list_files: org_response.data: {org_response.data}")
     
     if not org_response.data:
-        raise HTTPException(status_code=403, detail="User not in any organization")
+        print(f"ERROR list_files: No organization found for user_id: {user_id}")
+        raise HTTPException(status_code=403, detail=f"User {user_id} not in any organization")
     
     organization_id = org_response.data[0]["organization_id"]
     
