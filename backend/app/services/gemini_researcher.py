@@ -13,8 +13,12 @@ class GeminiResearcher:
     
     def __init__(self):
         """Initialize Gemini API with new Google GenAI SDK."""
-        # The client automatically reads GEMINI_API_KEY or GOOGLE_AI_API_KEY from env
-        self.client = genai.Client()
+        api_key = os.getenv("GOOGLE_AI_API_KEY")
+        if not api_key:
+            raise ValueError("GOOGLE_AI_API_KEY environment variable not set")
+        
+        # Initialize client with explicit API key
+        self.client = genai.Client(api_key=api_key)
         
         # Configure Google Search tool for grounding
         self.search_tool = types.Tool(
