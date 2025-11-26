@@ -9,7 +9,7 @@ from typing import List
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
 from app.deps import get_current_user, get_auth_token
-from supabase import create_client, Client
+from supabase import create_client, Client, ClientOptions
 from app.services.file_processor import FileProcessor
 from app.services.text_chunker import TextChunker
 from app.services.embeddings import EmbeddingsService
@@ -25,14 +25,14 @@ supabase: Client = create_client(
 
 def get_user_supabase_client(user_token: str) -> Client:
     """Create a Supabase client with user's JWT token for RLS"""
+    options = ClientOptions()
+    options.headers = {
+        "Authorization": f"Bearer {user_token}"
+    }
     client = create_client(
         os.getenv("SUPABASE_URL"),
         os.getenv("SUPABASE_KEY"),
-        options={
-            "headers": {
-                "Authorization": f"Bearer {user_token}"
-            }
-        }
+        options=options
     )
     return client
 
