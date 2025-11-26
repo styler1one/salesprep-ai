@@ -22,10 +22,6 @@ supabase_url = os.getenv("SUPABASE_URL")
 supabase_anon_key = os.getenv("SUPABASE_KEY")  # Anon key for user operations
 supabase_service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", supabase_anon_key)  # Service role key for admin operations
 
-# Debug: Check which key is being used
-print(f"DEBUG: Using service role key: {supabase_service_key[:20]}..." if supabase_service_key else "DEBUG: No service role key!")
-print(f"DEBUG: Service key == Anon key: {supabase_service_key == supabase_anon_key}")
-
 # Service role client for background tasks and storage (bypasses RLS)
 supabase_service: Client = create_client(supabase_url, supabase_service_key)
 
@@ -73,23 +69,18 @@ async def process_file_background(
     6. Update database
     """
     try:
-        print(f"DEBUG BACKGROUND: Starting processing for file_id: {file_id}")
-        
         # Update status to processing (use service client for background tasks)
         supabase_service.table("knowledge_base_files").update({
             "status": "processing"
         }).eq("id", file_id).execute()
-        print(f"DEBUG BACKGROUND: Status updated to processing")
         
         # Download file from storage (use service client for background tasks)
         file_data = supabase_service.storage.from_("knowledge-base-files").download(file_path)
-        print(f"DEBUG BACKGROUND: Downloaded {len(file_data)} bytes from storage")
         
         # Extract text
         file_processor = FileProcessor()
         import io
         text = file_processor.extract_text(io.BytesIO(file_data), file_type)
-        print(f"DEBUG BACKGROUND: Extracted {len(text)} characters of text")
         
         if not text or not text.strip():
             raise ValueError("No text could be extracted from file")
@@ -97,7 +88,6 @@ async def process_file_background(
         # Chunk text
         chunker = TextChunker(chunk_size=500, chunk_overlap=50)
         chunks = chunker.chunk_text(text)
-        print(f"DEBUG BACKGROUND: Created {len(chunks)} chunks")
         
         if not chunks:
             raise ValueError("No chunks created from text")
@@ -105,9 +95,7 @@ async def process_file_background(
         # Generate embeddings
         embeddings_service = EmbeddingsService()
         chunk_texts = [chunk["content"] for chunk in chunks]
-        print(f"DEBUG BACKGROUND: Generating embeddings for {len(chunk_texts)} chunks...")
         embeddings = embeddings_service.generate_embeddings(chunk_texts, input_type="document")
-        print(f"DEBUG BACKGROUND: Generated {len(embeddings)} embeddings")
         
         # Prepare vectors for Pinecone
         vector_store = VectorStore()
@@ -138,27 +126,18 @@ async def process_file_background(
             })
         
         # Store vectors in Pinecone
-        print(f"DEBUG BACKGROUND: Upserting {len(vectors)} vectors to Pinecone...")
         vector_store.upsert_vectors(vectors)
-        print(f"DEBUG BACKGROUND: Vectors upserted successfully")
         
         # Store chunks in database (use service client for background tasks)
-        print(f"DEBUG BACKGROUND: Inserting {len(chunk_records)} chunks to database...")
         supabase_service.table("knowledge_base_chunks").insert(chunk_records).execute()
-        print(f"DEBUG BACKGROUND: Chunks inserted successfully")
         
         # Update file status to completed (use service client for background tasks)
         supabase_service.table("knowledge_base_files").update({
             "status": "completed",
             "chunk_count": len(chunks)
         }).eq("id", file_id).execute()
-        print(f"DEBUG BACKGROUND: File {file_id} processing completed successfully!")
         
     except Exception as e:
-        print(f"ERROR BACKGROUND: Processing failed for file_id {file_id}: {type(e).__name__}: {str(e)}")
-        import traceback
-        print(f"ERROR BACKGROUND traceback: {traceback.format_exc()}")
-        
         # Update status to failed (use service client for background tasks)
         supabase_service.table("knowledge_base_files").update({
             "status": "failed",
@@ -188,14 +167,10 @@ async def upload_file(
     
     # Get user's organization (RLS ensures user can only see their own memberships)
     user_id = current_user.get("sub")
-    print(f"DEBUG upload_file: user_id from token: {user_id}")
-    
     org_response = user_supabase.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
-    print(f"DEBUG upload_file: org_response.data: {org_response.data}")
     
     if not org_response.data:
-        print(f"ERROR upload_file: No organization found for user_id: {user_id}")
-        raise HTTPException(status_code=403, detail=f"User {user_id} not in any organization")
+        raise HTTPException(status_code=403, detail=f"User not in any organization")
     
     organization_id = org_response.data[0]["organization_id"]
     
@@ -251,13 +226,11 @@ async def upload_file(
     try:
         # Upload to Supabase Storage (use service client - RLS already checked via organization_members)
         # We manually verified user has access to this organization above
-        print(f"DEBUG: Uploading to storage: {storage_path} with content-type: {content_type}")
         supabase_service.storage.from_("knowledge-base-files").upload(
             path=storage_path,
             file=file_content,
             file_options={"content-type": content_type}
         )
-        print(f"DEBUG: Storage upload successful")
         
         # Create database record
         db_record = {
@@ -271,9 +244,7 @@ async def upload_file(
             "status": "uploading"
         }
         
-        print(f"DEBUG: Inserting DB record: {db_record}")
         result = supabase_service.table("knowledge_base_files").insert(db_record).execute()
-        print(f"DEBUG: DB insert successful")
         
         # Start background processing
         background_tasks.add_task(
@@ -297,10 +268,6 @@ async def upload_file(
         )
         
     except Exception as e:
-        print(f"ERROR upload_file: {type(e).__name__}: {str(e)}")
-        import traceback
-        print(f"ERROR traceback: {traceback.format_exc()}")
-        
         # Clean up: try to delete uploaded file (use service client)
         try:
             supabase_service.storage.from_("knowledge-base-files").remove([storage_path])
@@ -323,14 +290,10 @@ async def list_files(
     
     # Get user's organization (RLS ensures user can only see their own memberships)
     user_id = current_user.get("sub")
-    print(f"DEBUG list_files: user_id from token: {user_id}")
-    
     org_response = user_supabase.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
-    print(f"DEBUG list_files: org_response.data: {org_response.data}")
     
     if not org_response.data:
-        print(f"ERROR list_files: No organization found for user_id: {user_id}")
-        raise HTTPException(status_code=403, detail=f"User {user_id} not in any organization")
+        raise HTTPException(status_code=403, detail="User not in any organization")
     
     organization_id = org_response.data[0]["organization_id"]
     
