@@ -1,24 +1,30 @@
 """
 Gemini Google Search integration for research.
+Uses the new Google GenAI SDK with Google Search grounding.
 """
 import os
 from typing import Dict, Any, Optional
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 
 class GeminiResearcher:
     """Research using Gemini with Google Search grounding."""
     
     def __init__(self):
-        """Initialize Gemini API."""
-        api_key = os.getenv("GOOGLE_AI_API_KEY")
-        if not api_key:
-            raise ValueError("GOOGLE_AI_API_KEY environment variable not set")
+        """Initialize Gemini API with new Google GenAI SDK."""
+        # The client automatically reads GEMINI_API_KEY or GOOGLE_AI_API_KEY from env
+        self.client = genai.Client()
         
-        genai.configure(api_key=api_key)
+        # Configure Google Search tool for grounding
+        self.search_tool = types.Tool(
+            google_search=types.GoogleSearch()
+        )
         
-        # Use Gemini 1.5 Flash (no tools in constructor for old SDK)
-        self.model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        self.config = types.GenerateContentConfig(
+            tools=[self.search_tool],
+            temperature=0.3,  # Lower temperature for factual responses
+        )
     
     async def search_company(
         self,
@@ -87,17 +93,11 @@ Format the response in clear sections.
 """
         
         try:
-            # Generate response with Google Search grounding
-            # For google-generativeai library, pass tools as string in generate_content
-            response = self.model.generate_content(
+            # Generate response with Google Search grounding using new SDK
+            response = self.client.models.generate_content(
+                model='gemini-1.5-flash',
                 contents=prompt,
-                tools='google_search_retrieval',  # Enable Google Search for Gemini 1.5
-                generation_config={
-                    'temperature': 0.3,  # Lower temperature for factual responses
-                    'top_p': 0.8,
-                    'top_k': 40,
-                    'max_output_tokens': 2048,
-                }
+                config=self.config
             )
             
             return {
