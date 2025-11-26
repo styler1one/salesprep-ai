@@ -90,7 +90,12 @@ def process_research_background(
         
         # Store source data
         for source_name, source_result in research_data["sources"].items():
-            print(f"DEBUG: Storing source {source_name}, success: {source_result.get('success')}")
+            success = source_result.get('success', False)
+            error = source_result.get('error', 'No error message')
+            print(f"DEBUG: Source {source_name} - Success: {success}")
+            if not success:
+                print(f"ERROR: Source {source_name} failed: {error}")
+            
             supabase_service.table("research_sources").insert({
                 "research_id": research_id,
                 "source_type": source_name,
