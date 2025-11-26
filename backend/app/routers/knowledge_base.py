@@ -207,13 +207,24 @@ async def upload_file(
     # Storage path: {organization_id}/{file_id}.{extension}
     storage_path = f"{organization_id}/{file_id}.{file_extension}"
     
+    # Fix MIME type for certain file extensions
+    content_type = file.content_type
+    if file_extension == "md":
+        content_type = "text/markdown"
+    elif file_extension == "txt":
+        content_type = "text/plain"
+    elif file_extension == "pdf":
+        content_type = "application/pdf"
+    elif file_extension == "docx":
+        content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    
     try:
         # Upload to Supabase Storage
-        print(f"DEBUG: Uploading to storage: {storage_path}")
+        print(f"DEBUG: Uploading to storage: {storage_path} with content-type: {content_type}")
         supabase.storage.from_("knowledge-base-files").upload(
             path=storage_path,
             file=file_content,
-            file_options={"content-type": file.content_type}
+            file_options={"content-type": content_type}
         )
         print(f"DEBUG: Storage upload successful")
         
