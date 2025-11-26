@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
-from app.routers import users, knowledge_base
+from app.routers import users, knowledge_base, research
 
 load_dotenv()
 
@@ -26,6 +26,7 @@ app.add_middleware(
 # Include routers
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(knowledge_base.router, prefix="/api/v1/knowledge-base", tags=["knowledge-base"])
+app.include_router(research.router, prefix="/api/v1/research", tags=["research"])
 
 @app.get("/")
 def read_root():
