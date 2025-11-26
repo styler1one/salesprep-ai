@@ -219,9 +219,9 @@ async def upload_file(
         content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     
     try:
-        # Upload to Supabase Storage
+        # Upload to Supabase Storage using user-specific client for RLS
         print(f"DEBUG: Uploading to storage: {storage_path} with content-type: {content_type}")
-        supabase.storage.from_("knowledge-base-files").upload(
+        user_supabase.storage.from_("knowledge-base-files").upload(
             path=storage_path,
             file=file_content,
             file_options={"content-type": content_type}
