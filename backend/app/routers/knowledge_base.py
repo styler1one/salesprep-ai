@@ -22,6 +22,10 @@ supabase_url = os.getenv("SUPABASE_URL")
 supabase_anon_key = os.getenv("SUPABASE_KEY")  # Anon key for user operations
 supabase_service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", supabase_anon_key)  # Service role key for admin operations
 
+# Debug: Check which key is being used
+print(f"DEBUG: Using service role key: {supabase_service_key[:20]}..." if supabase_service_key else "DEBUG: No service role key!")
+print(f"DEBUG: Service key == Anon key: {supabase_service_key == supabase_anon_key}")
+
 # Service role client for background tasks and storage (bypasses RLS)
 supabase_service: Client = create_client(supabase_url, supabase_service_key)
 
