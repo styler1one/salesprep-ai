@@ -227,9 +227,10 @@ async def upload_file(
         content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     
     try:
-        # Upload to Supabase Storage with user auth (RLS enforced)
+        # Upload to Supabase Storage (use service client - RLS already checked via organization_members)
+        # We manually verified user has access to this organization above
         print(f"DEBUG: Uploading to storage: {storage_path} with content-type: {content_type}")
-        user_supabase.storage.from_("knowledge-base-files").upload(
+        supabase_service.storage.from_("knowledge-base-files").upload(
             path=storage_path,
             file=file_content,
             file_options={"content-type": content_type}
