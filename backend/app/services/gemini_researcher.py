@@ -17,21 +17,8 @@ class GeminiResearcher:
         
         genai.configure(api_key=api_key)
         
-        # Configure Google Search tool for grounding (using correct syntax for google-generativeai)
-        self.search_tool = {
-            'google_search_retrieval': {
-                'dynamic_retrieval_config': {
-                    'mode': 'MODE_DYNAMIC',
-                    'dynamic_threshold': 0.3  # Lower threshold = more likely to search
-                }
-            }
-        }
-        
-        # Use Gemini 1.5 Flash with Google Search grounding
-        self.model = genai.GenerativeModel(
-            'gemini-1.5-flash-latest',
-            tools=[self.search_tool]
-        )
+        # Use Gemini 1.5 Flash (no tools in constructor for old SDK)
+        self.model = genai.GenerativeModel('gemini-1.5-flash-latest')
     
     async def search_company(
         self,
@@ -101,8 +88,10 @@ Format the response in clear sections.
         
         try:
             # Generate response with Google Search grounding
+            # For google-generativeai library, pass tools as string in generate_content
             response = self.model.generate_content(
-                prompt,
+                contents=prompt,
+                tools='google_search_retrieval',  # Enable Google Search for Gemini 1.5
                 generation_config={
                     'temperature': 0.3,  # Lower temperature for factual responses
                     'top_p': 0.8,
