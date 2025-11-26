@@ -17,20 +17,27 @@ from app.services.vector_store import VectorStore
 
 router = APIRouter()
 
-# Initialize Supabase client (service role for background tasks)
-supabase: Client = create_client(
-    os.getenv("SUPABASE_URL"),
-    os.getenv("SUPABASE_KEY")
-)
+# Initialize Supabase client with ANON key (respects RLS)
+supabase_url = os.getenv("SUPABASE_URL")
+supabase_anon_key = os.getenv("SUPABASE_KEY")  # This should be ANON key, not service role
+
+# Service role client for background tasks only (bypasses RLS)
+supabase_service: Client = create_client(supabase_url, supabase_anon_key)
 
 def get_user_supabase_client(user_token: str) -> Client:
     """
     Create a Supabase client with user's JWT token for RLS.
-    We use the service role key to bypass RLS, then manually check permissions.
+    This properly authenticates the user for RLS policies.
     """
-    # For now, just return the global client
-    # RLS will be handled by checking organization_members manually
-    return supabase
+    # Create client with anon key
+    client = create_client(supabase_url, supabase_anon_key)
+    
+    # Set the auth header with user's JWT token
+    # This is the correct way according to Supabase docs
+    client.postgrest.auth(user_token)
+    client.storage.set_auth(user_token)
+    
+    return client
 
 # File upload configuration
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
@@ -59,13 +66,13 @@ async def process_file_background(
     6. Update database
     """
     try:
-        # Update status to processing
-        supabase.table("knowledge_base_files").update({
+        # Update status to processing (use service client for background tasks)
+        supabase_service.table("knowledge_base_files").update({
             "status": "processing"
         }).eq("id", file_id).execute()
         
-        # Download file from storage
-        file_data = supabase.storage.from_("knowledge-base-files").download(file_path)
+        # Download file from storage (use service client for background tasks)
+        file_data = supabase_service.storage.from_("knowledge-base-files").download(file_path)
         
         # Extract text
         file_processor = FileProcessor()
@@ -118,25 +125,25 @@ async def process_file_background(
         # Store vectors in Pinecone
         vector_store.upsert_vectors(vectors)
         
-        # Store chunks in database
-        supabase.table("knowledge_base_chunks").insert(chunk_records).execute()
+        # Store chunks in database (use service client for background tasks)
+        supabase_service.table("knowledge_base_chunks").insert(chunk_records).execute()
         
-        # Update file status to completed
-        supabase.table("knowledge_base_files").update({
+        # Update file status to completed (use service client for background tasks)
+        supabase_service.table("knowledge_base_files").update({
             "status": "completed",
             "chunk_count": len(chunks)
         }).eq("id", file_id).execute()
         
     except Exception as e:
-        # Update status to failed
-        supabase.table("knowledge_base_files").update({
+        # Update status to failed (use service client for background tasks)
+        supabase_service.table("knowledge_base_files").update({
             "status": "failed",
             "error_message": str(e)
         }).eq("id", file_id).execute()
         
-        # Clean up: delete file from storage
+        # Clean up: delete file from storage (use service client for background tasks)
         try:
-            supabase.storage.from_("knowledge-base-files").remove([file_path])
+            supabase_service.storage.from_("knowledge-base-files").remove([file_path])
         except:
             pass
 
@@ -152,11 +159,14 @@ async def upload_file(
     Upload a file to the knowledge base.
     File is uploaded to storage and processed in the background.
     """
-    # Get user's organization (using service role key to bypass RLS)
+    # Create user-specific client for RLS security
+    user_supabase = get_user_supabase_client(auth_token)
+    
+    # Get user's organization (RLS ensures user can only see their own memberships)
     user_id = current_user.get("sub")
     print(f"DEBUG upload_file: user_id from token: {user_id}")
     
-    org_response = supabase.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
+    org_response = user_supabase.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
     print(f"DEBUG upload_file: org_response.data: {org_response.data}")
     
     if not org_response.data:
@@ -215,9 +225,9 @@ async def upload_file(
         content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     
     try:
-        # Upload to Supabase Storage (service role bypasses RLS)
+        # Upload to Supabase Storage with user auth (RLS enforced)
         print(f"DEBUG: Uploading to storage: {storage_path} with content-type: {content_type}")
-        supabase.storage.from_("knowledge-base-files").upload(
+        user_supabase.storage.from_("knowledge-base-files").upload(
             path=storage_path,
             file=file_content,
             file_options={"content-type": content_type}
@@ -237,7 +247,7 @@ async def upload_file(
         }
         
         print(f"DEBUG: Inserting DB record: {db_record}")
-        result = supabase.table("knowledge_base_files").insert(db_record).execute()
+        result = supabase_service.table("knowledge_base_files").insert(db_record).execute()
         print(f"DEBUG: DB insert successful")
         
         # Start background processing
@@ -266,9 +276,9 @@ async def upload_file(
         import traceback
         print(f"ERROR traceback: {traceback.format_exc()}")
         
-        # Clean up: try to delete uploaded file
+        # Clean up: try to delete uploaded file (use service client)
         try:
-            supabase.storage.from_("knowledge-base-files").remove([storage_path])
+            supabase_service.storage.from_("knowledge-base-files").remove([storage_path])
         except:
             pass
         
@@ -283,11 +293,14 @@ async def list_files(
     """
     List all knowledge base files for the user's organization.
     """
-    # Get user's organization (using service role key to bypass RLS)
+    # Create user-specific client for RLS security
+    user_supabase = get_user_supabase_client(auth_token)
+    
+    # Get user's organization (RLS ensures user can only see their own memberships)
     user_id = current_user.get("sub")
     print(f"DEBUG list_files: user_id from token: {user_id}")
     
-    org_response = supabase.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
+    org_response = user_supabase.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
     print(f"DEBUG list_files: org_response.data: {org_response.data}")
     
     if not org_response.data:
@@ -297,7 +310,7 @@ async def list_files(
     organization_id = org_response.data[0]["organization_id"]
     
     # Get files
-    files_response = supabase.table("knowledge_base_files").select("*").eq("organization_id", organization_id).order("created_at", desc=True).execute()
+    files_response = user_supabase.table("knowledge_base_files").select("*").eq("organization_id", organization_id).order("created_at", desc=True).execute()
     
     return {"files": files_response.data}
 
@@ -308,36 +321,37 @@ async def delete_file(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Delete a knowledge base file and all its chunks.
+    Delete a file from the knowledge base.
     """
-    # Get user's organization
+    # Get user's organization (use service client to bypass RLS for delete operations)
     user_id = current_user.get("sub")
-    org_response = supabase.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
+    org_response = supabase_service.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
     
     if not org_response.data:
         raise HTTPException(status_code=403, detail="User not in any organization")
     
     organization_id = org_response.data[0]["organization_id"]
     
-    # Get file
-    file_response = supabase.table("knowledge_base_files").select("*").eq("id", file_id).eq("organization_id", organization_id).execute()
+    # Get file (ensure it belongs to user's organization)
+    file_response = supabase_service.table("knowledge_base_files").select("*").eq("id", file_id).eq("organization_id", organization_id).execute()
     
     if not file_response.data:
         raise HTTPException(status_code=404, detail="File not found")
     
     file_data = file_response.data[0]
+    storage_path = file_data["storage_path"]
     
     try:
-        # Delete vectors from Pinecone
+        # Delete from Pinecone
         vector_store = VectorStore()
-        vector_store.delete_by_filter({"file_id": file_id})
+        vector_store.delete_by_file(file_id)
         
-        # Delete from storage
-        supabase.storage.from_("knowledge-base-files").remove([file_data["storage_path"]])
+        # Delete from storage (use service client)
+        supabase_service.storage.from_("knowledge-base-files").remove([storage_path])
         
         # Delete chunks (will cascade from file deletion)
         # Delete file record (will cascade delete chunks due to ON DELETE CASCADE)
-        supabase.table("knowledge_base_files").delete().eq("id", file_id).execute()
+        supabase_service.table("knowledge_base_files").delete().eq("id", file_id).execute()
         
         return JSONResponse(status_code=204, content=None)
         
@@ -353,17 +367,17 @@ async def get_file_status(
     """
     Get processing status of a file.
     """
-    # Get user's organization
+    # Get user's organization (use service client)
     user_id = current_user.get("sub")
-    org_response = supabase.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
+    org_response = supabase_service.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
     
     if not org_response.data:
         raise HTTPException(status_code=403, detail="User not in any organization")
     
     organization_id = org_response.data[0]["organization_id"]
     
-    # Get file
-    file_response = supabase.table("knowledge_base_files").select("*").eq("id", file_id).eq("organization_id", organization_id).execute()
+    # Get file (use service client)
+    file_response = supabase_service.table("knowledge_base_files").select("*").eq("id", file_id).eq("organization_id", organization_id).execute()
     
     if not file_response.data:
         raise HTTPException(status_code=404, detail="File not found")
