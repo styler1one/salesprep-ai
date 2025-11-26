@@ -152,14 +152,11 @@ async def upload_file(
     Upload a file to the knowledge base.
     File is uploaded to storage and processed in the background.
     """
-    # Create user-specific Supabase client for RLS
-    user_supabase = get_user_supabase_client(auth_token)
-    
-    # Get user's organization
+    # Get user's organization (using service role key to bypass RLS)
     user_id = current_user.get("sub")
     print(f"DEBUG upload_file: user_id from token: {user_id}")
     
-    org_response = user_supabase.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
+    org_response = supabase.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
     print(f"DEBUG upload_file: org_response.data: {org_response.data}")
     
     if not org_response.data:
@@ -218,9 +215,9 @@ async def upload_file(
         content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     
     try:
-        # Upload to Supabase Storage using user-specific client for RLS
+        # Upload to Supabase Storage (service role bypasses RLS)
         print(f"DEBUG: Uploading to storage: {storage_path} with content-type: {content_type}")
-        user_supabase.storage.from_("knowledge-base-files").upload(
+        supabase.storage.from_("knowledge-base-files").upload(
             path=storage_path,
             file=file_content,
             file_options={"content-type": content_type}
@@ -286,14 +283,11 @@ async def list_files(
     """
     List all knowledge base files for the user's organization.
     """
-    # Create user-specific Supabase client for RLS
-    user_supabase = get_user_supabase_client(auth_token)
-    
-    # Get user's organization
+    # Get user's organization (using service role key to bypass RLS)
     user_id = current_user.get("sub")
     print(f"DEBUG list_files: user_id from token: {user_id}")
     
-    org_response = user_supabase.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
+    org_response = supabase.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
     print(f"DEBUG list_files: org_response.data: {org_response.data}")
     
     if not org_response.data:
