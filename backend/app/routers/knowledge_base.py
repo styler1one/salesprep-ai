@@ -17,12 +17,13 @@ from app.services.vector_store import VectorStore
 
 router = APIRouter()
 
-# Initialize Supabase client with ANON key (respects RLS)
+# Initialize Supabase clients
 supabase_url = os.getenv("SUPABASE_URL")
-supabase_anon_key = os.getenv("SUPABASE_KEY")  # This should be ANON key, not service role
+supabase_anon_key = os.getenv("SUPABASE_KEY")  # Anon key for user operations
+supabase_service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", supabase_anon_key)  # Service role key for admin operations
 
-# Service role client for background tasks only (bypasses RLS)
-supabase_service: Client = create_client(supabase_url, supabase_anon_key)
+# Service role client for background tasks and storage (bypasses RLS)
+supabase_service: Client = create_client(supabase_url, supabase_service_key)
 
 def get_user_supabase_client(user_token: str) -> Client:
     """
