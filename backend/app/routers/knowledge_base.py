@@ -6,7 +6,7 @@ Handles file uploads, processing, and retrieval.
 import os
 import uuid
 from typing import List
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, BackgroundTasks
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, BackgroundTasks, Response
 from fastapi.responses import JSONResponse
 from app.deps import get_current_user, get_auth_token
 from supabase import create_client, Client
@@ -361,7 +361,7 @@ async def delete_file(
         # Delete file record (will cascade delete chunks due to ON DELETE CASCADE)
         supabase_service.table("knowledge_base_files").delete().eq("id", file_id).execute()
         
-        return JSONResponse(status_code=204, content=None)
+        return Response(status_code=204)
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")
