@@ -49,7 +49,7 @@ class ResearchResponse(BaseModel):
 
 
 # Background processing function
-async def process_research_background(
+def process_research_background(
     research_id: str,
     company_name: str,
     country: Optional[str],
@@ -63,25 +63,34 @@ async def process_research_background(
     3. Generate PDF
     4. Update database
     """
+    import asyncio
     from app.services.research_orchestrator import ResearchOrchestrator
     
     try:
+        print(f"DEBUG: Starting research for {company_name}")
+        
         # Update status to researching
         supabase_service.table("research_briefs").update({
             "status": "researching"
         }).eq("id", research_id).execute()
         
-        # Execute research
+        print(f"DEBUG: Status updated to researching")
+        
+        # Execute research (run async function in sync context)
         orchestrator = ResearchOrchestrator()
-        research_data = await orchestrator.research_company(
+        research_data = asyncio.run(orchestrator.research_company(
             company_name=company_name,
             country=country,
             city=city,
             linkedin_url=linkedin_url
-        )
+        ))
+        
+        print(f"DEBUG: Research completed, got {len(research_data.get('sources', {}))} sources")
+        print(f"DEBUG: Success count: {research_data.get('success_count', 0)}")
         
         # Store source data
         for source_name, source_result in research_data["sources"].items():
+            print(f"DEBUG: Storing source {source_name}, success: {source_result.get('success')}")
             supabase_service.table("research_sources").insert({
                 "research_id": research_id,
                 "source_type": source_name,
@@ -91,6 +100,7 @@ async def process_research_background(
         
         # Get the unified brief
         brief_content = research_data.get("brief", "")
+        print(f"DEBUG: Brief length: {len(brief_content)} characters")
         
         # TODO: Generate PDF (Phase 2.5)
         pdf_url = None
@@ -104,7 +114,13 @@ async def process_research_background(
             "completed_at": "now()"
         }).eq("id", research_id).execute()
         
+        print(f"DEBUG: Research {research_id} completed successfully")
+        
     except Exception as e:
+        print(f"ERROR: Research failed: {type(e).__name__}: {str(e)}")
+        import traceback
+        print(f"ERROR traceback: {traceback.format_exc()}")
+        
         # Update status to failed
         supabase_service.table("research_briefs").update({
             "status": "failed",
