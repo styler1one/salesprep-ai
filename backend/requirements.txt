@@ -1,7 +1,7 @@
 fastapi==0.115.0  # Updated for anyio 4.x compatibility
 uvicorn[standard]==0.32.0  # Updated to match FastAPI
 python-dotenv==1.0.0
-supabase==2.0.3
+supabase==2.10.0  # Updated for httpx 0.28+ compatibility
 pydantic==2.5.0
 pydantic-settings==2.1.0
 sqlalchemy==2.0.23
@@ -21,5 +21,5 @@ python-multipart==0.0.6
 
 # Research Agent dependencies
 google-genai>=1.0.0  # New unified Google GenAI SDK
-httpx==0.24.1
+httpx>=0.28.1  # Updated for google-genai compatibility
 reportlab==4.0.7
