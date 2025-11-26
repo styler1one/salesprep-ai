@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
 import { FileUploadZone } from '@/components/knowledge-base/file-upload-zone'
 import { FileList } from '@/components/knowledge-base/file-list'
+import { useToast } from '@/components/ui/use-toast'
+import { Toaster } from '@/components/ui/toaster'
 
 interface KnowledgeBaseFile {
   id: string
@@ -23,6 +25,7 @@ interface KnowledgeBaseFile {
 export default function KnowledgeBasePage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
+  const { toast } = useToast()
   const [user, setUser] = useState<any>(null)
   const [files, setFiles] = useState<KnowledgeBaseFile[]>([])
   const [loading, setLoading] = useState(true)
@@ -96,22 +99,27 @@ export default function KnowledgeBasePage() {
       // Refresh file list
       await fetchFiles()
       
+      toast({
+        title: "Upload successful",
+        description: `${file.name} is being processed`,
+      })
+      
       // Start polling for status updates
       setTimeout(() => fetchFiles(), 2000)
     } catch (error: any) {
       console.error('Upload failed:', error)
       const errorMessage = error.message || 'Failed to fetch'
-      alert(`Upload failed: ${errorMessage}\n\nCheck browser console (F12) for details.`)
+      toast({
+        variant: "destructive",
+        title: "Upload failed",
+        description: errorMessage,
+      })
     } finally {
       setUploading(false)
     }
   }
 
   const handleDeleteFile = async (fileId: string) => {
-    if (!confirm('Are you sure you want to delete this file?')) {
-      return
-    }
-
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
@@ -128,10 +136,20 @@ export default function KnowledgeBasePage() {
 
       if (response.ok) {
         await fetchFiles()
+        toast({
+          title: "File deleted",
+          description: "The file has been removed from your knowledge base",
+        })
+      } else {
+        throw new Error('Delete failed')
       }
     } catch (error) {
       console.error('Delete failed:', error)
-      alert('Failed to delete file')
+      toast({
+        variant: "destructive",
+        title: "Delete failed",
+        description: "Could not delete the file. Please try again.",
+      })
     }
   }
 
@@ -266,6 +284,8 @@ export default function KnowledgeBasePage() {
           <p>SalesPrep AI - Knowledge Base</p>
         </div>
       </footer>
+      
+      <Toaster />
     </div>
   )
 }
