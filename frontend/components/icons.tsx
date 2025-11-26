@@ -4,7 +4,11 @@ import {
     Calendar, 
     CheckCircle, 
     Search, 
-    Mic 
+    Mic,
+    Upload,
+    AlertCircle,
+    Trash2,
+    RefreshCw
 } from 'lucide-react'
 
 export const Icons = {
@@ -14,4 +18,8 @@ export const Icons = {
     checkCircle: CheckCircle,
     search: Search,
     mic: Mic,
+    upload: Upload,
+    alertCircle: AlertCircle,
+    trash: Trash2,
+    refresh: RefreshCw,
 }
