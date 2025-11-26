@@ -186,18 +186,24 @@ export default function KnowledgeBasePage() {
   const failedFiles = files.filter(f => f.status === 'failed').length
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-gradient-to-b from-background to-muted/20">
       {/* Header */}
-      <header className="border-b">
+      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold">SalesPrep AI</h1>
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <Icons.fileText className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold">SalesPrep AI</h1>
+              <p className="text-xs text-muted-foreground">Knowledge Base</p>
+            </div>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
+            <div className="hidden sm:block text-sm text-muted-foreground">
               {user?.email}
-            </span>
-            <Button variant="outline" onClick={handleSignOut}>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleSignOut}>
               Sign Out
             </Button>
           </div>
@@ -206,56 +212,56 @@ export default function KnowledgeBasePage() {
 
       {/* Main Content */}
       <main className="flex-1">
-        <div className="container py-8 px-4">
+        <div className="container py-8 px-4 max-w-7xl">
           <div className="mb-8">
-            <h2 className="text-3xl font-bold tracking-tight">
+            <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
               Knowledge Base
             </h2>
-            <p className="text-muted-foreground mt-2">
-              Upload company documents to power AI research
+            <p className="text-muted-foreground mt-2 text-lg">
+              Upload and manage your company documents
             </p>
           </div>
 
           {/* Stats */}
           <div className="grid gap-4 md:grid-cols-3 mb-8">
-            <div className="rounded-lg border bg-card p-6">
+            <div className="group rounded-xl border bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-6 transition-all hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-sm font-medium text-muted-foreground mb-1">
                     Completed Files
                   </p>
-                  <p className="text-2xl font-bold">{completedFiles}</p>
+                  <p className="text-3xl font-bold text-green-700 dark:text-green-400">{completedFiles}</p>
                 </div>
-                <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                  <Icons.checkCircle className="h-6 w-6 text-green-600" />
+                <div className="h-14 w-14 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Icons.checkCircle className="h-7 w-7 text-green-600 dark:text-green-400" />
                 </div>
               </div>
             </div>
 
-            <div className="rounded-lg border bg-card p-6">
+            <div className="group rounded-xl border bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 p-6 transition-all hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-sm font-medium text-muted-foreground mb-1">
                     Processing
                   </p>
-                  <p className="text-2xl font-bold">{processingFiles}</p>
+                  <p className="text-3xl font-bold text-blue-700 dark:text-blue-400">{processingFiles}</p>
                 </div>
-                <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Icons.spinner className="h-6 w-6 text-blue-600 animate-spin" />
+                <div className="h-14 w-14 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+                  <Icons.spinner className="h-7 w-7 text-blue-600 dark:text-blue-400 animate-spin" />
                 </div>
               </div>
             </div>
 
-            <div className="rounded-lg border bg-card p-6">
+            <div className="group rounded-xl border bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/20 dark:to-rose-950/20 p-6 transition-all hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-sm font-medium text-muted-foreground mb-1">
                     Failed
                   </p>
-                  <p className="text-2xl font-bold">{failedFiles}</p>
+                  <p className="text-3xl font-bold text-red-700 dark:text-red-400">{failedFiles}</p>
                 </div>
-                <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
-                  <Icons.alertCircle className="h-6 w-6 text-red-600" />
+                <div className="h-14 w-14 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Icons.alertCircle className="h-7 w-7 text-red-600 dark:text-red-400" />
                 </div>
               </div>
             </div>
@@ -279,9 +285,11 @@ export default function KnowledgeBasePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t py-6">
-        <div className="container px-4 text-center text-sm text-muted-foreground">
-          <p>SalesPrep AI - Knowledge Base</p>
+      <footer className="border-t bg-muted/30 py-6 mt-auto">
+        <div className="container px-4 text-center">
+          <p className="text-sm text-muted-foreground">
+            Built with <span className="text-red-500">♥</span> by SalesPrep AI
+          </p>
         </div>
       </footer>
       

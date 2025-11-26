@@ -78,12 +78,18 @@ export function FileList({ files, onDelete, onRefresh }: FileListProps) {
 
   if (files.length === 0) {
     return (
-      <div className="rounded-lg border bg-card p-12 text-center">
-        <Icons.fileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">No files uploaded yet</h3>
-        <p className="text-sm text-muted-foreground">
-          Upload your first document to get started
-        </p>
+      <div className="rounded-lg border-2 border-dashed bg-card p-12 text-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="rounded-full bg-muted p-4">
+            <Icons.fileText className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold mb-1">No files uploaded yet</h3>
+            <p className="text-sm text-muted-foreground">
+              Upload your first document to build your knowledge base
+            </p>
+          </div>
+        </div>
       </div>
     )
   }
