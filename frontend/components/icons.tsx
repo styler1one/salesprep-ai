@@ -8,7 +8,11 @@ import {
     Upload,
     AlertCircle,
     Trash2,
-    RefreshCw
+    RefreshCw,
+    Clock,
+    ArrowLeft,
+    Download,
+    Copy
 } from 'lucide-react'
 
 export const Icons = {
@@ -22,4 +26,8 @@ export const Icons = {
     alertCircle: AlertCircle,
     trash: Trash2,
     refresh: RefreshCw,
+    clock: Clock,
+    arrowLeft: ArrowLeft,
+    download: Download,
+    copy: Copy,
 }
