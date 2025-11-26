@@ -27,10 +27,13 @@ def get_user_supabase_client(user_token: str) -> Client:
     """Create a Supabase client with user's JWT token for RLS"""
     client = create_client(
         os.getenv("SUPABASE_URL"),
-        os.getenv("SUPABASE_KEY")
+        os.getenv("SUPABASE_KEY"),
+        options={
+            "headers": {
+                "Authorization": f"Bearer {user_token}"
+            }
+        }
     )
-    # Set the user's access token for RLS
-    client.postgrest.auth(user_token)
     return client
 
 # File upload configuration
