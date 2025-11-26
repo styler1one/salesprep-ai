@@ -209,11 +209,13 @@ async def upload_file(
     
     try:
         # Upload to Supabase Storage
+        print(f"DEBUG: Uploading to storage: {storage_path}")
         supabase.storage.from_("knowledge-base-files").upload(
             path=storage_path,
             file=file_content,
             file_options={"content-type": file.content_type}
         )
+        print(f"DEBUG: Storage upload successful")
         
         # Create database record
         db_record = {
@@ -227,7 +229,9 @@ async def upload_file(
             "status": "uploading"
         }
         
+        print(f"DEBUG: Inserting DB record: {db_record}")
         result = supabase.table("knowledge_base_files").insert(db_record).execute()
+        print(f"DEBUG: DB insert successful")
         
         # Start background processing
         background_tasks.add_task(
@@ -251,6 +255,10 @@ async def upload_file(
         )
         
     except Exception as e:
+        print(f"ERROR upload_file: {type(e).__name__}: {str(e)}")
+        import traceback
+        print(f"ERROR traceback: {traceback.format_exc()}")
+        
         # Clean up: try to delete uploaded file
         try:
             supabase.storage.from_("knowledge-base-files").remove([storage_path])
