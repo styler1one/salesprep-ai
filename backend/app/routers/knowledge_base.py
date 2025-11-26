@@ -8,7 +8,7 @@ import uuid
 from typing import List
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
-from app.deps import get_current_user
+from app.deps import get_current_user, get_auth_token
 from supabase import create_client, Client
 from app.services.file_processor import FileProcessor
 from app.services.text_chunker import TextChunker
@@ -17,11 +17,21 @@ from app.services.vector_store import VectorStore
 
 router = APIRouter()
 
-# Initialize Supabase client
+# Initialize Supabase client (service role for background tasks)
 supabase: Client = create_client(
     os.getenv("SUPABASE_URL"),
     os.getenv("SUPABASE_KEY")
 )
+
+def get_user_supabase_client(user_token: str) -> Client:
+    """Create a Supabase client with user's JWT token for RLS"""
+    client = create_client(
+        os.getenv("SUPABASE_URL"),
+        os.getenv("SUPABASE_KEY")
+    )
+    # Set the user's access token for RLS
+    client.postgrest.auth(user_token)
+    return client
 
 # File upload configuration
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
@@ -136,17 +146,21 @@ async def process_file_background(
 async def upload_file(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    auth_token: str = Depends(get_auth_token)
 ):
     """
     Upload a file to the knowledge base.
     File is uploaded to storage and processed in the background.
     """
+    # Create user-specific Supabase client for RLS
+    user_supabase = get_user_supabase_client(auth_token)
+    
     # Get user's organization
     user_id = current_user.get("sub")
     print(f"DEBUG upload_file: user_id from token: {user_id}")
     
-    org_response = supabase.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
+    org_response = user_supabase.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
     print(f"DEBUG upload_file: org_response.data: {org_response.data}")
     
     if not org_response.data:
@@ -247,15 +261,21 @@ async def upload_file(
 
 
 @router.get("/files")
-async def list_files(current_user: dict = Depends(get_current_user)):
+async def list_files(
+    current_user: dict = Depends(get_current_user),
+    auth_token: str = Depends(get_auth_token)
+):
     """
     List all knowledge base files for the user's organization.
     """
+    # Create user-specific Supabase client for RLS
+    user_supabase = get_user_supabase_client(auth_token)
+    
     # Get user's organization
     user_id = current_user.get("sub")
     print(f"DEBUG list_files: user_id from token: {user_id}")
     
-    org_response = supabase.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
+    org_response = user_supabase.table("organization_members").select("organization_id").eq("user_id", user_id).execute()
     print(f"DEBUG list_files: org_response.data: {org_response.data}")
     
     if not org_response.data:

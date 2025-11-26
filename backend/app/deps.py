@@ -8,6 +8,12 @@ load_dotenv()
 
 security = HTTPBearer()
 
+def get_auth_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
+    """
+    Returns the raw JWT token from the Authorization header.
+    """
+    return credentials.credentials
+
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
     Verifies the Supabase JWT token and returns the user payload.
