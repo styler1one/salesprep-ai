@@ -9,6 +9,7 @@ import { FileUploadZone } from '@/components/knowledge-base/file-upload-zone'
 import { FileList } from '@/components/knowledge-base/file-list'
 import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 interface KnowledgeBaseFile {
   id: string
@@ -186,9 +187,9 @@ export default function KnowledgeBasePage() {
   const failedFiles = files.filter(f => f.status === 'failed').length
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-background to-muted/20">
+    <div className="flex min-h-screen flex-col bg-white dark:bg-slate-950">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md">
         <div className="container flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -199,8 +200,9 @@ export default function KnowledgeBasePage() {
               <p className="text-xs text-muted-foreground">Knowledge Base</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:block text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <div className="hidden sm:block text-sm text-slate-600 dark:text-slate-400">
               {user?.email}
             </div>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
@@ -211,56 +213,56 @@ export default function KnowledgeBasePage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1">
+      <main className="flex-1 bg-slate-50 dark:bg-slate-900">
         <div className="container py-8 px-4 max-w-7xl">
           <div className="mb-8">
-            <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
               Knowledge Base
             </h2>
-            <p className="text-muted-foreground mt-2 text-lg">
+            <p className="text-slate-600 dark:text-slate-400 mt-2 text-lg">
               Upload and manage your company documents
             </p>
           </div>
 
           {/* Stats */}
           <div className="grid gap-4 md:grid-cols-3 mb-8">
-            <div className="group rounded-xl border bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-6 transition-all hover:shadow-md">
+            <div className="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm hover:shadow-lg transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
                     Completed Files
                   </p>
-                  <p className="text-3xl font-bold text-green-700 dark:text-green-400">{completedFiles}</p>
+                  <p className="text-3xl font-bold text-green-600 dark:text-green-400">{completedFiles}</p>
                 </div>
-                <div className="h-14 w-14 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="h-14 w-14 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Icons.checkCircle className="h-7 w-7 text-green-600 dark:text-green-400" />
                 </div>
               </div>
             </div>
 
-            <div className="group rounded-xl border bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 p-6 transition-all hover:shadow-md">
+            <div className="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm hover:shadow-lg transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
                     Processing
                   </p>
-                  <p className="text-3xl font-bold text-blue-700 dark:text-blue-400">{processingFiles}</p>
+                  <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{processingFiles}</p>
                 </div>
-                <div className="h-14 w-14 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+                <div className="h-14 w-14 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
                   <Icons.spinner className="h-7 w-7 text-blue-600 dark:text-blue-400 animate-spin" />
                 </div>
               </div>
             </div>
 
-            <div className="group rounded-xl border bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/20 dark:to-rose-950/20 p-6 transition-all hover:shadow-md">
+            <div className="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm hover:shadow-lg transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
                     Failed
                   </p>
-                  <p className="text-3xl font-bold text-red-700 dark:text-red-400">{failedFiles}</p>
+                  <p className="text-3xl font-bold text-red-600 dark:text-red-400">{failedFiles}</p>
                 </div>
-                <div className="h-14 w-14 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="h-14 w-14 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Icons.alertCircle className="h-7 w-7 text-red-600 dark:text-red-400" />
                 </div>
               </div>
@@ -285,9 +287,9 @@ export default function KnowledgeBasePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-muted/30 py-6 mt-auto">
+      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-6 mt-auto">
         <div className="container px-4 text-center">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             Built with <span className="text-red-500">♥</span> by SalesPrep AI
           </p>
         </div>
