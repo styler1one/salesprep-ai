@@ -14,9 +14,7 @@ class KVKApi:
     def __init__(self):
         """Initialize KVK API client."""
         self.api_key = os.getenv("KVK_API_KEY")
-        if not self.api_key:
-            # KVK API is optional - only for Dutch companies
-            self.api_key = None
+        self.enabled = bool(self.api_key)
     
     async def search_company(
         self,
