@@ -73,18 +73,23 @@ async def process_file_background(
     6. Update database
     """
     try:
+        print(f"DEBUG BACKGROUND: Starting processing for file_id: {file_id}")
+        
         # Update status to processing (use service client for background tasks)
         supabase_service.table("knowledge_base_files").update({
             "status": "processing"
         }).eq("id", file_id).execute()
+        print(f"DEBUG BACKGROUND: Status updated to processing")
         
         # Download file from storage (use service client for background tasks)
         file_data = supabase_service.storage.from_("knowledge-base-files").download(file_path)
+        print(f"DEBUG BACKGROUND: Downloaded {len(file_data)} bytes from storage")
         
         # Extract text
         file_processor = FileProcessor()
         import io
         text = file_processor.extract_text(io.BytesIO(file_data), file_type)
+        print(f"DEBUG BACKGROUND: Extracted {len(text)} characters of text")
         
         if not text or not text.strip():
             raise ValueError("No text could be extracted from file")
@@ -92,6 +97,7 @@ async def process_file_background(
         # Chunk text
         chunker = TextChunker(chunk_size=500, chunk_overlap=50)
         chunks = chunker.chunk_text(text)
+        print(f"DEBUG BACKGROUND: Created {len(chunks)} chunks")
         
         if not chunks:
             raise ValueError("No chunks created from text")
@@ -99,7 +105,9 @@ async def process_file_background(
         # Generate embeddings
         embeddings_service = EmbeddingsService()
         chunk_texts = [chunk["content"] for chunk in chunks]
+        print(f"DEBUG BACKGROUND: Generating embeddings for {len(chunk_texts)} chunks...")
         embeddings = embeddings_service.generate_embeddings(chunk_texts, input_type="document")
+        print(f"DEBUG BACKGROUND: Generated {len(embeddings)} embeddings")
         
         # Prepare vectors for Pinecone
         vector_store = VectorStore()
@@ -130,18 +138,27 @@ async def process_file_background(
             })
         
         # Store vectors in Pinecone
+        print(f"DEBUG BACKGROUND: Upserting {len(vectors)} vectors to Pinecone...")
         vector_store.upsert_vectors(vectors)
+        print(f"DEBUG BACKGROUND: Vectors upserted successfully")
         
         # Store chunks in database (use service client for background tasks)
+        print(f"DEBUG BACKGROUND: Inserting {len(chunk_records)} chunks to database...")
         supabase_service.table("knowledge_base_chunks").insert(chunk_records).execute()
+        print(f"DEBUG BACKGROUND: Chunks inserted successfully")
         
         # Update file status to completed (use service client for background tasks)
         supabase_service.table("knowledge_base_files").update({
             "status": "completed",
             "chunk_count": len(chunks)
         }).eq("id", file_id).execute()
+        print(f"DEBUG BACKGROUND: File {file_id} processing completed successfully!")
         
     except Exception as e:
+        print(f"ERROR BACKGROUND: Processing failed for file_id {file_id}: {type(e).__name__}: {str(e)}")
+        import traceback
+        print(f"ERROR BACKGROUND traceback: {traceback.format_exc()}")
+        
         # Update status to failed (use service client for background tasks)
         supabase_service.table("knowledge_base_files").update({
             "status": "failed",
