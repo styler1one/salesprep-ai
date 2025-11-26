@@ -74,8 +74,11 @@ export default function KnowledgeBasePage() {
       const formData = new FormData()
       formData.append('file', file)
 
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      console.log('Uploading to:', `${apiUrl}/api/v1/knowledge-base/upload`)
+      
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/knowledge-base/upload`,
+        `${apiUrl}/api/v1/knowledge-base/upload`,
         {
           method: 'POST',
           headers: {
@@ -97,7 +100,8 @@ export default function KnowledgeBasePage() {
       setTimeout(() => fetchFiles(), 2000)
     } catch (error: any) {
       console.error('Upload failed:', error)
-      alert(error.message || 'Upload failed')
+      const errorMessage = error.message || 'Failed to fetch'
+      alert(`Upload failed: ${errorMessage}\n\nCheck browser console (F12) for details.`)
     } finally {
       setUploading(false)
     }
