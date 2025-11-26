@@ -28,14 +28,16 @@ def get_user_supabase_client(user_token: str) -> Client:
     """
     Create a Supabase client with user's JWT token for RLS.
     This properly authenticates the user for RLS policies.
+    
+    Note: In Python supabase library, we set auth on postgrest.
+    Storage operations will inherit the auth from the client.
     """
     # Create client with anon key
     client = create_client(supabase_url, supabase_anon_key)
     
     # Set the auth header with user's JWT token
-    # This is the correct way according to Supabase docs
+    # This applies to both PostgREST and Storage
     client.postgrest.auth(user_token)
-    client.storage.set_auth(user_token)
     
     return client
 
