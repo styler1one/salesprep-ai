@@ -98,9 +98,9 @@ Format the response in clear sections.
         
         try:
             # Generate response with Google Search grounding using new SDK
-            # Note: Use full model path for v1beta API
+            # Note: Use gemini-2.0-flash-exp for v1beta API with Google Search
             response = self.client.models.generate_content(
-                model='models/gemini-1.5-flash-latest',
+                model='gemini-2.0-flash-exp',
                 contents=prompt,
                 config=self.config
             )
