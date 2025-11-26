@@ -36,6 +36,10 @@ class FileProcessor:
             return FileProcessor._extract_from_txt(file)
         elif file_type == "text/markdown":
             return FileProcessor._extract_from_markdown(file)
+        elif file_type == "application/octet-stream":
+            # Fallback for .md files that get wrong MIME type
+            # Try to process as markdown/text
+            return FileProcessor._extract_from_markdown(file)
         else:
             raise ValueError(f"Unsupported file type: {file_type}")
     

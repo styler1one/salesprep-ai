@@ -5,7 +5,7 @@ Stores and retrieves embeddings for knowledge base chunks.
 
 import os
 from typing import List, Dict, Optional
-import pinecone
+from pinecone import Pinecone
 
 
 class VectorStore:
@@ -14,18 +14,17 @@ class VectorStore:
     def __init__(self):
         """Initialize Pinecone client and connect to index."""
         api_key = os.getenv("PINECONE_API_KEY")
-        environment = os.getenv("PINECONE_ENVIRONMENT")
         index_name = os.getenv("PINECONE_INDEX_NAME", "salesprep-knowledge-base")
         
-        if not api_key or not environment:
-            raise ValueError("PINECONE_API_KEY and PINECONE_ENVIRONMENT must be set")
+        if not api_key:
+            raise ValueError("PINECONE_API_KEY must be set")
         
-        # Initialize Pinecone
-        pinecone.init(api_key=api_key, environment=environment)
+        # Initialize Pinecone (new API)
+        pc = Pinecone(api_key=api_key)
         
         # Connect to index
         self.index_name = index_name
-        self.index = pinecone.Index(index_name)
+        self.index = pc.Index(index_name)
     
     def upsert_vectors(
         self,
@@ -102,6 +101,15 @@ class VectorStore:
             self.index.delete(filter=filter)
         except Exception as e:
             raise ValueError(f"Failed to delete vectors by filter: {str(e)}")
+    
+    def delete_by_file(self, file_id: str) -> None:
+        """
+        Delete all vectors for a specific file.
+        
+        Args:
+            file_id: File ID to delete vectors for
+        """
+        self.delete_by_filter({"file_id": file_id})
     
     def get_stats(self) -> Dict:
         """
