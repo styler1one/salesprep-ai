@@ -1,7 +1,7 @@
 fastapi==0.115.0  # Updated for anyio 4.x compatibility
 uvicorn[standard]==0.32.0  # Updated to match FastAPI
 python-dotenv==1.0.0
-supabase==2.10.0  # Updated for httpx 0.28+ compatibility
+supabase>=2.12.0  # Latest version with httpx 0.28+ support
 pydantic==2.5.0
 pydantic-settings==2.1.0
 sqlalchemy==2.0.23
