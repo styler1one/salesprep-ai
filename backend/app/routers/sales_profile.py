@@ -44,7 +44,7 @@ class InterviewAnswerResponse(BaseModel):
 class InterviewCompleteRequest(BaseModel):
     """Request for completing interview."""
     session_id: str
-    responses: Dict[int, str] = Field(..., description="Map of question_id to answer")
+    responses: Optional[Dict[int, str]] = Field(None, description="Map of question_id to answer (optional, will be retrieved from session)")
 
 
 class SalesProfileResponse(BaseModel):
@@ -174,9 +174,20 @@ async def complete_interview(
         interview_service = InterviewService()
         profile_service = ProfileService()
         
+        # Get responses from request or retrieve from session
+        responses = request.responses
+        if not responses:
+            # Retrieve responses from session storage
+            responses = interview_service.get_session_responses(request.session_id)
+            if not responses:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="No responses found for this session"
+                )
+        
         # Analyze responses with AI
         print(f"DEBUG: Analyzing interview responses for user {current_user['sub']}")
-        profile_data = interview_service.analyze_responses(request.responses)
+        profile_data = interview_service.analyze_responses(responses)
         
         # Generate personalization settings
         personalization = interview_service.generate_personalization_settings(profile_data)

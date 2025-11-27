@@ -26,6 +26,7 @@ export default function OnboardingPage() {
   const [currentProgress, setCurrentProgress] = useState<number>(0)
   const [totalQuestions, setTotalQuestions] = useState<number>(15)
   const [answer, setAnswer] = useState("")
+  const [responses, setResponses] = useState<Record<number, string>>({})
   const [loading, setLoading] = useState(false)
   const [starting, setStarting] = useState(true)
   const [completing, setCompleting] = useState(false)
@@ -166,6 +167,11 @@ export default function OnboardingPage() {
 
       const data: InterviewResponse = await response.json()
       
+      // Save the answer we just submitted
+      if (currentQuestionId) {
+        setResponses(prev => ({ ...prev, [currentQuestionId]: answer }))
+      }
+      
       // Check if interview is complete
       if (data.completed || data.progress >= data.total_questions) {
         await completeInterview()
@@ -204,6 +210,7 @@ export default function OnboardingPage() {
           },
           body: JSON.stringify({
             session_id: sessionId,
+            responses: responses,
           }),
         }
       )
