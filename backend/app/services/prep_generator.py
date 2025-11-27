@@ -89,6 +89,19 @@ class PrepGeneratorService:
         
         prompt += "\n"
         
+        # Add sales rep & company profile context (PERSONALIZATION)
+        if context.get("has_profile_context") and context.get("formatted_profile_context"):
+            prompt += "## PERSONALIZATION CONTEXT (Use this to tailor the brief):\n"
+            prompt += context["formatted_profile_context"] + "\n\n"
+            prompt += """**IMPORTANT**: Use the above profile context to:
+- Match the sales rep's methodology and communication style
+- Leverage their strengths in talking points
+- Focus on industries and regions they target
+- Include relevant value propositions from their company
+- Reference case studies if available
+
+"""
+        
         # Add company context from KB
         if context["has_kb_data"]:
             prompt += context["company_info"]["formatted_context"] + "\n"

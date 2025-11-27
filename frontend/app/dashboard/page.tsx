@@ -14,6 +14,7 @@ export default function DashboardPage() {
     const [profile, setProfile] = useState<any>(null)
     const [knowledgeBase, setKnowledgeBase] = useState<any[]>([])
     const [researchBriefs, setResearchBriefs] = useState<any[]>([])
+    const [meetingPreps, setMeetingPreps] = useState<any[]>([])
 
     useEffect(() => {
         const loadData = async () => {
@@ -65,6 +66,19 @@ export default function DashboardPage() {
                         }
                     } catch (error) {
                         console.error('Failed to load research briefs:', error)
+                    }
+
+                    // Fetch meeting preps
+                    try {
+                        const prepsRes = await fetch(`${apiUrl}/api/v1/prep/briefs`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        })
+                        if (prepsRes.ok) {
+                            const prepsData = await prepsRes.json()
+                            setMeetingPreps(prepsData.preps || [])
+                        }
+                    } catch (error) {
+                        console.error('Failed to load meeting preps:', error)
                     }
                 }
             }
@@ -119,8 +133,8 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Stats Cards */}
-                    <div className="grid gap-4 md:grid-cols-3 mb-8">
-                        <div className="rounded-lg border bg-card p-6">
+                    <div className="grid gap-4 md:grid-cols-4 mb-8">
+                        <div className="rounded-lg border bg-card p-6 cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push('/dashboard/research')}>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">
@@ -129,12 +143,26 @@ export default function DashboardPage() {
                                     <p className="text-2xl font-bold">{researchBriefs.length}</p>
                                 </div>
                                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                    <Icons.fileText className="h-6 w-6 text-primary" />
+                                    <Icons.search className="h-6 w-6 text-primary" />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="rounded-lg border bg-card p-6">
+                        <div className="rounded-lg border bg-card p-6 cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push('/dashboard/preparation')}>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-muted-foreground">
+                                        Meeting Preps
+                                    </p>
+                                    <p className="text-2xl font-bold">{meetingPreps.length}</p>
+                                </div>
+                                <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                                    <Icons.fileText className="h-6 w-6 text-green-600" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="rounded-lg border bg-card p-6 cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push('/dashboard/knowledge-base')}>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">
@@ -142,13 +170,13 @@ export default function DashboardPage() {
                                     </p>
                                     <p className="text-2xl font-bold">{knowledgeBase.length}</p>
                                 </div>
-                                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                    <Icons.book className="h-6 w-6 text-primary" />
+                                <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <Icons.book className="h-6 w-6 text-blue-600" />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="rounded-lg border bg-card p-6">
+                        <div className="rounded-lg border bg-card p-6 cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push('/onboarding')}>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">
@@ -156,11 +184,50 @@ export default function DashboardPage() {
                                     </p>
                                     <p className="text-2xl font-bold">{profile ? '✓' : '–'}</p>
                                 </div>
-                                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                    <Icons.user className="h-6 w-6 text-primary" />
+                                <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
+                                    <Icons.user className="h-6 w-6 text-purple-600" />
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div className="grid gap-4 md:grid-cols-3 mb-8">
+                        <Button 
+                            variant="outline" 
+                            className="h-auto p-4 flex flex-col items-start gap-2"
+                            onClick={() => router.push('/dashboard/research')}
+                        >
+                            <Icons.search className="h-5 w-5 text-primary" />
+                            <div className="text-left">
+                                <p className="font-medium">Research Prospect</p>
+                                <p className="text-xs text-muted-foreground">AI-powered company research</p>
+                            </div>
+                        </Button>
+                        
+                        <Button 
+                            variant="outline" 
+                            className="h-auto p-4 flex flex-col items-start gap-2 border-green-200 hover:border-green-300"
+                            onClick={() => router.push('/dashboard/preparation')}
+                        >
+                            <Icons.fileText className="h-5 w-5 text-green-600" />
+                            <div className="text-left">
+                                <p className="font-medium">Prepare for Meeting</p>
+                                <p className="text-xs text-muted-foreground">Generate personalized briefs</p>
+                            </div>
+                        </Button>
+                        
+                        <Button 
+                            variant="outline" 
+                            className="h-auto p-4 flex flex-col items-start gap-2"
+                            onClick={() => router.push('/dashboard/knowledge-base')}
+                        >
+                            <Icons.book className="h-5 w-5 text-blue-600" />
+                            <div className="text-left">
+                                <p className="font-medium">Upload Documents</p>
+                                <p className="text-xs text-muted-foreground">Add to your knowledge base</p>
+                            </div>
+                        </Button>
                     </div>
 
                     {/* Sales Profile Card */}
@@ -205,8 +272,8 @@ export default function DashboardPage() {
                         </div>
                     )}
 
-                    {/* Knowledge Base & Research */}
-                    <div className="grid gap-4 md:grid-cols-2 mb-8">
+                    {/* Knowledge Base, Research & Meeting Preps */}
+                    <div className="grid gap-4 md:grid-cols-3 mb-8">
                         {/* Knowledge Base */}
                         <div className="rounded-lg border bg-card p-6">
                             <div className="flex items-center justify-between mb-4">
@@ -250,7 +317,7 @@ export default function DashboardPage() {
                                         <div
                                             key={brief.id}
                                             className="flex items-center gap-2 p-2 rounded hover:bg-muted/50 cursor-pointer"
-                                            onClick={() => router.push(`/research/${brief.id}`)}
+                                            onClick={() => router.push(`/dashboard/research/${brief.id}`)}
                                         >
                                             <Icons.search className="h-4 w-4 text-muted-foreground" />
                                             <div className="flex-1 min-w-0">
@@ -262,6 +329,47 @@ export default function DashboardPage() {
                                     {researchBriefs.length > 3 && (
                                         <p className="text-xs text-muted-foreground mt-2">
                                             +{researchBriefs.length - 3} more briefs
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Meeting Preps */}
+                        <div className="rounded-lg border bg-card p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold">Meeting Preps</h3>
+                                <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/preparation')}>
+                                    View All
+                                </Button>
+                            </div>
+                            {meetingPreps.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">No meeting preps yet</p>
+                            ) : (
+                                <div className="space-y-2">
+                                    {meetingPreps.slice(0, 3).map((prep: any) => (
+                                        <div
+                                            key={prep.id}
+                                            className="flex items-center gap-2 p-2 rounded hover:bg-muted/50 cursor-pointer"
+                                            onClick={() => router.push('/dashboard/preparation')}
+                                        >
+                                            <Icons.fileText className="h-4 w-4 text-green-600" />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm truncate">{prep.prospect_company_name}</p>
+                                                <p className="text-xs text-muted-foreground capitalize">{prep.meeting_type?.replace('_', ' ')}</p>
+                                            </div>
+                                            <span className={`text-xs px-2 py-0.5 rounded ${
+                                                prep.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                                prep.status === 'generating' ? 'bg-blue-100 text-blue-700' :
+                                                'bg-yellow-100 text-yellow-700'
+                                            }`}>
+                                                {prep.status}
+                                            </span>
+                                        </div>
+                                    ))}
+                                    {meetingPreps.length > 3 && (
+                                        <p className="text-xs text-muted-foreground mt-2">
+                                            +{meetingPreps.length - 3} more preps
                                         </p>
                                     )}
                                 </div>

@@ -58,6 +58,7 @@ async def generate_prep_background(
     prospect_company: str,
     meeting_type: str,
     organization_id: str,
+    user_id: str,
     custom_notes: Optional[str]
 ):
     """Background task to generate meeting prep"""
@@ -69,11 +70,12 @@ async def generate_prep_background(
         
         logger.info(f"Starting prep generation for {prep_id}")
         
-        # Build context using RAG
+        # Build context using RAG (now includes profile context)
         context = await rag_service.build_context_for_ai(
             prospect_company=prospect_company,
             meeting_type=meeting_type,
             organization_id=organization_id,
+            user_id=user_id,
             custom_notes=custom_notes
         )
         
@@ -157,13 +159,14 @@ async def start_prep(
         prep = response.data[0]
         prep_id = prep["id"]
         
-        # Start background generation
+        # Start background generation (now includes user_id for profile context)
         background_tasks.add_task(
             generate_prep_background,
             prep_id,
             request.prospect_company_name,
             request.meeting_type,
             organization_id,
+            user_id,  # Pass user_id for personalized briefs
             request.custom_notes
         )
         

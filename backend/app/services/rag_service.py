@@ -3,12 +3,15 @@ RAG Service for Meeting Preparation
 
 Retrieves relevant context from Knowledge Base (Pinecone) and Research Briefs
 to build comprehensive meeting preparation context.
+
+Enhanced with Profile Context for personalized outputs.
 """
 
 from typing import List, Dict, Any, Optional
 import logging
 from app.services.vector_store import VectorStore
 from app.services.embeddings import EmbeddingsService
+from app.services.context_service import ContextService
 from supabase import create_client
 import os
 
@@ -17,6 +20,7 @@ logger = logging.getLogger(__name__)
 # Initialize services
 embeddings_service = EmbeddingsService()
 vector_store = VectorStore()
+context_service = ContextService()
 
 
 class RAGService:
@@ -202,6 +206,7 @@ class RAGService:
         prospect_company: str,
         meeting_type: str,
         organization_id: str,
+        user_id: Optional[str] = None,
         custom_notes: Optional[str] = None
     ) -> Dict[str, Any]:
         """
@@ -211,6 +216,7 @@ class RAGService:
             prospect_company: Prospect company name
             meeting_type: Type of meeting
             organization_id: Organization ID
+            user_id: Optional user ID for profile context
             custom_notes: Optional custom notes
             
         Returns:
@@ -233,6 +239,28 @@ class RAGService:
             meeting_type,
             custom_notes
         )
+        
+        # Add profile context if user_id provided
+        if user_id:
+            try:
+                profile_context = context_service.get_user_context(user_id, organization_id)
+                context["profile_context"] = profile_context
+                context["has_profile_context"] = True
+                
+                # Add formatted profile context for prompt
+                formatted_profile = context_service.get_context_for_prompt(
+                    user_id, organization_id, max_tokens=1500
+                )
+                context["formatted_profile_context"] = formatted_profile
+                
+                logger.info(f"Added profile context for user {user_id}")
+            except Exception as e:
+                logger.warning(f"Could not load profile context: {e}")
+                context["has_profile_context"] = False
+                context["formatted_profile_context"] = ""
+        else:
+            context["has_profile_context"] = False
+            context["formatted_profile_context"] = ""
         
         return context
 
