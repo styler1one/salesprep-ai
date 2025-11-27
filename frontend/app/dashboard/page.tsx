@@ -19,15 +19,15 @@ export default function DashboardPage() {
         const loadData = async () => {
             const { data: { user } } = await supabase.auth.getUser()
             setUser(user)
-            
+
             if (user) {
                 // Get auth token
                 const { data: { session } } = await supabase.auth.getSession()
                 const token = session?.access_token
-                
+
                 if (token) {
                     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-                    
+
                     // Fetch sales profile
                     try {
                         const profileRes = await fetch(`${apiUrl}/api/v1/profile/sales`, {
@@ -40,20 +40,20 @@ export default function DashboardPage() {
                     } catch (error) {
                         console.error('Failed to load profile:', error)
                     }
-                    
+
                     // Fetch knowledge base
                     try {
-                        const kbRes = await fetch(`${apiUrl}/api/v1/knowledge-base/documents`, {
+                        const kbRes = await fetch(`${apiUrl}/api/v1/knowledge-base/files`, {
                             headers: { 'Authorization': `Bearer ${token}` }
                         })
                         if (kbRes.ok) {
                             const kbData = await kbRes.json()
-                            setKnowledgeBase(kbData.documents || [])
+                            setKnowledgeBase(kbData.files || [])
                         }
                     } catch (error) {
                         console.error('Failed to load knowledge base:', error)
                     }
-                    
+
                     // Fetch research briefs
                     try {
                         const researchRes = await fetch(`${apiUrl}/api/v1/research/briefs`, {
@@ -68,7 +68,7 @@ export default function DashboardPage() {
                     }
                 }
             }
-            
+
             setLoading(false)
         }
         loadData()
@@ -211,7 +211,7 @@ export default function DashboardPage() {
                         <div className="rounded-lg border bg-card p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-lg font-semibold">Knowledge Base</h3>
-                                <Button variant="outline" size="sm" onClick={() => router.push('/knowledge-base')}>
+                                <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/knowledge-base')}>
                                     View All
                                 </Button>
                             </div>
@@ -238,7 +238,7 @@ export default function DashboardPage() {
                         <div className="rounded-lg border bg-card p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-lg font-semibold">Research Briefs</h3>
-                                <Button variant="outline" size="sm" onClick={() => router.push('/research')}>
+                                <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/research')}>
                                     View All
                                 </Button>
                             </div>
@@ -247,8 +247,8 @@ export default function DashboardPage() {
                             ) : (
                                 <div className="space-y-2">
                                     {researchBriefs.slice(0, 3).map((brief: any) => (
-                                        <div 
-                                            key={brief.id} 
+                                        <div
+                                            key={brief.id}
                                             className="flex items-center gap-2 p-2 rounded hover:bg-muted/50 cursor-pointer"
                                             onClick={() => router.push(`/research/${brief.id}`)}
                                         >
@@ -273,10 +273,10 @@ export default function DashboardPage() {
                     <div className="rounded-lg border bg-card p-6">
                         <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
                         <div className="grid gap-4 md:grid-cols-3">
-                            <Button 
-                                className="h-auto flex-col items-start p-4" 
+                            <Button
+                                className="h-auto flex-col items-start p-4"
                                 variant="outline"
-                                onClick={() => router.push('/research/new')}
+                                onClick={() => router.push('/dashboard/research')}
                             >
                                 <Icons.search className="h-5 w-5 mb-2" />
                                 <span className="font-semibold">Research Prospect</span>
@@ -285,10 +285,10 @@ export default function DashboardPage() {
                                 </span>
                             </Button>
 
-                            <Button 
-                                className="h-auto flex-col items-start p-4" 
+                            <Button
+                                className="h-auto flex-col items-start p-4"
                                 variant="outline"
-                                onClick={() => router.push('/knowledge-base')}
+                                onClick={() => router.push('/dashboard/knowledge-base')}
                             >
                                 <Icons.book className="h-5 w-5 mb-2" />
                                 <span className="font-semibold">Knowledge Base</span>
@@ -297,8 +297,8 @@ export default function DashboardPage() {
                                 </span>
                             </Button>
 
-                            <Button 
-                                className="h-auto flex-col items-start p-4" 
+                            <Button
+                                className="h-auto flex-col items-start p-4"
                                 variant="outline"
                                 onClick={() => router.push('/onboarding')}
                             >
