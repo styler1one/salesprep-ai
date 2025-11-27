@@ -268,79 +268,33 @@ export default function DashboardPage() {
                             )}
                         </div>
                     </div>
-
-                    {/* Quick Actions */}
-                    <div className="rounded-lg border bg-card p-6">
-                        <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-                        <div className="grid gap-4 md:grid-cols-3">
-                            <Button
-                                className="h-auto flex-col items-start p-4"
-                                variant="outline"
-                                onClick={() => router.push('/dashboard/research')}
-                            >
-                                <Icons.search className="h-5 w-5 mb-2" />
-                                <span className="font-semibold">Research Prospect</span>
-                                <span className="text-xs text-muted-foreground mt-1">
-                                    Generate AI-powered research brief
-                                </span>
-                            </Button>
-
-                            <Button
-                                className="h-auto flex-col items-start p-4"
-                                variant="outline"
-                                onClick={() => router.push('/dashboard/knowledge-base')}
-                            >
-                                <Icons.book className="h-5 w-5 mb-2" />
-                                <span className="font-semibold">Knowledge Base</span>
-                                <span className="text-xs text-muted-foreground mt-1">
-                                    Upload and manage documents
-                                </span>
-                            </Button>
-
-                            <Button
-                                className="h-auto flex-col items-start p-4"
-                                variant="outline"
-                                onClick={() => router.push('/onboarding')}
-                            >
-                                <Icons.user className="h-5 w-5 mb-2" />
-                                <span className="font-semibold">Update Profile</span>
-                                <span className="text-xs text-muted-foreground mt-1">
-                                    Personalize your AI experience
-                                </span>
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* Getting Started */}
-                    <div className="mt-8 rounded-lg border bg-muted/50 p-6">
-                        <h3 className="text-lg font-semibold mb-2">🎉 Getting Started</h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                            Welcome! Your account is set up and ready to go. Here's what you can do next:
-                        </p>
-                        <ul className="space-y-2 text-sm">
-                            <li className="flex items-start gap-2">
-                                <span className="text-primary">✓</span>
-                                <span>Upload your company knowledge base (PDFs, docs)</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-primary">✓</span>
-                                <span>Connect your CRM (HubSpot, Salesforce)</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-primary">✓</span>
-                                <span>Start researching your first prospect</span>
-                            </li>
-                        </ul>
-                    </div>
+                    <p className="text-sm text-muted-foreground mb-4">
+                        Welcome! Your account is set up and ready to go. Here's what you can do next:
+                    </p>
+                    <ul className="space-y-2 text-sm">
+                        <li className="flex items-start gap-2">
+                            <span className="text-primary">✓</span>
+                            <span>Upload your company knowledge base (PDFs, docs)</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                            <span className="text-primary">✓</span>
+                            <span>Connect your CRM (HubSpot, Salesforce)</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                            <span className="text-primary">✓</span>
+                            <span>Start researching your first prospect</span>
+                        </li>
+                    </ul>
                 </div>
-            </main>
-
-            {/* Footer */}
-            <footer className="border-t py-6">
-                <div className="container px-4 text-center text-sm text-muted-foreground">
-                    <p>SalesPrep AI - AI-powered sales enablement platform</p>
-                </div>
-            </footer>
         </div>
+            </main >
+
+        {/* Footer */ }
+        < footer className = "border-t py-6" >
+            <div className="container px-4 text-center text-sm text-muted-foreground">
+                <p>SalesPrep AI - AI-powered sales enablement platform</p>
+            </div>
+            </footer >
+        </div >
     )
 }
