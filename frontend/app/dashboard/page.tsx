@@ -394,15 +394,14 @@ export default function DashboardPage() {
                         </li>
                     </ul>
                 </div>
-            </div>
-        </main>
+            </main>
 
-        {/* Footer */}
-        <footer className="border-t py-6">
-            <div className="container px-4 text-center text-sm text-muted-foreground">
-                <p>SalesPrep AI - AI-powered sales enablement platform</p>
-            </div>
-        </footer>
-    </div>
+            {/* Footer */}
+            <footer className="border-t py-6">
+                <div className="container px-4 text-center text-sm text-muted-foreground">
+                    <p>SalesPrep AI - AI-powered sales enablement platform</p>
+                </div>
+            </footer>
+        </div>
     )
 }
