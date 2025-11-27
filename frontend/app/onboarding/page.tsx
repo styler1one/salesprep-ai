@@ -11,10 +11,11 @@ import { Loader2, CheckCircle2, ArrowRight, Sparkles } from "lucide-react"
 
 interface InterviewResponse {
   session_id: string
-  question_id: number
-  question: string
+  question_id?: number
+  question?: string
   progress: number
   total_questions: number
+  completed?: boolean
 }
 
 export default function OnboardingPage() {
@@ -121,8 +122,8 @@ export default function OnboardingPage() {
 
       const data: InterviewResponse = await response.json()
       setSessionId(data.session_id)
-      setCurrentQuestionId(data.question_id)
-      setCurrentQuestionText(data.question)
+      if (data.question_id) setCurrentQuestionId(data.question_id)
+      if (data.question) setCurrentQuestionText(data.question)
       setCurrentProgress(data.progress)
       setTotalQuestions(data.total_questions)
     } catch (err) {
@@ -166,11 +167,11 @@ export default function OnboardingPage() {
       const data: InterviewResponse = await response.json()
       
       // Check if interview is complete
-      if (data.progress >= data.total_questions) {
+      if (data.completed || data.progress >= data.total_questions) {
         await completeInterview()
       } else {
-        setCurrentQuestionId(data.question_id)
-        setCurrentQuestionText(data.question)
+        if (data.question_id) setCurrentQuestionId(data.question_id)
+        if (data.question) setCurrentQuestionText(data.question)
         setCurrentProgress(data.progress)
         setTotalQuestions(data.total_questions)
         setAnswer("")
