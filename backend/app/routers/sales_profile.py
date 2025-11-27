@@ -174,16 +174,13 @@ async def complete_interview(
         interview_service = InterviewService()
         profile_service = ProfileService()
         
-        # Get responses from request or retrieve from session
+        # Get responses from request
         responses = request.responses
-        if not responses:
-            # Retrieve responses from session storage
-            responses = interview_service.get_session_responses(request.session_id)
-            if not responses:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="No responses found for this session"
-                )
+        if not responses or len(responses) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No responses provided. Please complete the interview first."
+            )
         
         # Analyze responses with AI
         print(f"DEBUG: Analyzing interview responses for user {current_user['sub']}")
@@ -195,13 +192,28 @@ async def complete_interview(
         
         # Get user's organization
         # In production, get from organization_members table
-        # For now, use a placeholder
+        # For now, create a default organization if none exists
         organization_id = current_user.get("organization_id")
         if not organization_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User must be part of an organization"
-            )
+            # Create or get default organization for this user
+            import uuid
+            from app.database import supabase
+            
+            # Try to find existing default org for user
+            result = supabase.table("organizations").select("id").eq("name", f"Personal - {current_user['email']}").execute()
+            
+            if result.data and len(result.data) > 0:
+                organization_id = result.data[0]["id"]
+            else:
+                # Create new default organization
+                org_data = {
+                    "id": str(uuid.uuid4()),
+                    "name": f"Personal - {current_user.get('email', 'User')}",
+                    "created_at": "now()",
+                    "updated_at": "now()"
+                }
+                org_result = supabase.table("organizations").insert(org_data).execute()
+                organization_id = org_result.data[0]["id"] if org_result.data else str(uuid.uuid4())
         
         # Create profile
         print(f"DEBUG: Creating sales profile for user {current_user['sub']}")
