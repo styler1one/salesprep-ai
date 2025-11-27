@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase"
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -52,7 +52,8 @@ export default function OnboardingPage() {
       const token = await getAuthToken()
       console.log('[ONBOARDING] Got token:', token ? 'YES' : 'NO')
       if (!token) {
-        console.log('[ONBOARDING] No token, returning early')
+        console.log('[ONBOARDING] No token, should have redirected to login')
+        // getAuthToken already handles redirect to /login
         return
       }
 
@@ -96,7 +97,7 @@ export default function OnboardingPage() {
   }
 
   const getAuthToken = async () => {
-    const supabase = createClient()
+    const supabase = createClientComponentClient()
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
       router.push("/login")
