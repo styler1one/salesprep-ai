@@ -5,10 +5,17 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
 import uuid
+import os
+from supabase import create_client, Client
 from app.deps import get_current_user
 from app.services.profile_service import ProfileService
 from app.services.interview_service import InterviewService
-from database import supabase
+
+# Initialize Supabase client
+supabase: Client = create_client(
+    os.getenv("SUPABASE_URL"),
+    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+)
 
 
 router = APIRouter(prefix="/api/v1/profile/sales", tags=["sales_profile"])
