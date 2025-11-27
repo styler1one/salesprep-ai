@@ -44,6 +44,7 @@ export default function OnboardingPage() {
   }, [])
 
   const checkProfileAndStartInterview = async () => {
+    console.log('[ONBOARDING] Version 2.0 - Profile update feature enabled')
     setStarting(true)
     setError(null)
     
