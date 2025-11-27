@@ -341,6 +341,18 @@ Return ONLY the JSON."""
             )
             
             content = response.content[0].text
+            print(f"DEBUG: Personalization response: {content[:200]}...")
+            
+            # Clean content - remove markdown code blocks if present
+            content = content.strip()
+            if content.startswith("```json"):
+                content = content[7:]
+            if content.startswith("```"):
+                content = content[3:]
+            if content.endswith("```"):
+                content = content[:-3]
+            content = content.strip()
+            
             settings = json.loads(content)
             
             return settings

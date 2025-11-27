@@ -212,9 +212,14 @@ async def complete_interview(
                 organization_id = result.data[0]["id"]
             else:
                 # Create new default organization
+                email = current_user.get('email', 'User')
+                # Generate slug from email (remove special chars, lowercase)
+                slug = email.split('@')[0].lower().replace('.', '-').replace('_', '-')
+                
                 org_data = {
                     "id": str(uuid.uuid4()),
-                    "name": f"Personal - {current_user.get('email', 'User')}",
+                    "name": f"Personal - {email}",
+                    "slug": slug,
                     "created_at": "now()",
                     "updated_at": "now()"
                 }
