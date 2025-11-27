@@ -7,17 +7,15 @@ to build comprehensive meeting preparation context.
 
 from typing import List, Dict, Any, Optional
 import logging
-from app.services.vector_store import VectorStore
-from app.services.embeddings import embeddings_service
+from app.services.embeddings import EmbeddingsService
 from supabase import create_client
 import os
 
 logger = logging.getLogger(__name__)
 
-# Initialize vector store instance
+# Initialize services
+embeddings_service = EmbeddingsService()
 vector_store = VectorStore()
-
-logger = logging.getLogger(__name__)
 
 
 class RAGService:
