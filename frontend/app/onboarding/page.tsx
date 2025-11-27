@@ -50,9 +50,14 @@ export default function OnboardingPage() {
     
     try {
       const token = await getAuthToken()
-      if (!token) return
+      console.log('[ONBOARDING] Got token:', token ? 'YES' : 'NO')
+      if (!token) {
+        console.log('[ONBOARDING] No token, returning early')
+        return
+      }
 
       // First check if profile already exists
+      console.log('[ONBOARDING] Checking if profile exists...')
       const checkResponse = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/profile/sales/check`,
         {
@@ -63,22 +68,29 @@ export default function OnboardingPage() {
         }
       )
 
+      console.log('[ONBOARDING] Check response status:', checkResponse.status)
       if (checkResponse.ok) {
         const checkData = await checkResponse.json()
+        console.log('[ONBOARDING] Profile exists:', checkData.exists)
         if (checkData.exists) {
           // Profile already exists, show prompt
+          console.log('[ONBOARDING] Showing existing profile prompt')
           setHasExistingProfile(true)
           setShowExistingProfilePrompt(true)
           setStarting(false)
           return
         }
+      } else {
+        console.log('[ONBOARDING] Check failed with status:', checkResponse.status)
       }
 
       // Profile doesn't exist, start interview
+      console.log('[ONBOARDING] Profile does not exist, starting interview')
       await startInterview()
     } catch (err) {
-      console.error("Error checking profile:", err)
+      console.error('[ONBOARDING] Error checking profile:', err)
       // If check fails, try to start interview anyway
+      console.log('[ONBOARDING] Falling back to start interview')
       await startInterview()
     }
   }
