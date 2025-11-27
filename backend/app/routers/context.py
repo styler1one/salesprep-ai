@@ -4,7 +4,7 @@ Context Router - Internal API for agents to get user context
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from typing import Dict, Any
-from app.dependencies import get_current_user
+from app.deps import get_current_user
 from app.services.context_service import ContextService
 
 

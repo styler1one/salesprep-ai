@@ -4,7 +4,7 @@ Sales Profile Router - API endpoints for sales rep profiles
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
-from app.dependencies import get_current_user
+from app.deps import get_current_user
 from app.services.profile_service import ProfileService
 from app.services.interview_service import InterviewService
 
