@@ -4,9 +4,11 @@ Sales Profile Router - API endpoints for sales rep profiles
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
+import uuid
 from app.deps import get_current_user
 from app.services.profile_service import ProfileService
 from app.services.interview_service import InterviewService
+from database import supabase
 
 
 router = APIRouter(prefix="/api/v1/profile/sales", tags=["sales_profile"])
@@ -196,9 +198,6 @@ async def complete_interview(
         organization_id = current_user.get("organization_id")
         if not organization_id:
             # Create or get default organization for this user
-            import uuid
-            from app.database import supabase
-            
             # Try to find existing default org for user
             result = supabase.table("organizations").select("id").eq("name", f"Personal - {current_user['email']}").execute()
             

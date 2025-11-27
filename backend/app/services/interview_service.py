@@ -238,6 +238,17 @@ Return ONLY the JSON, no other text."""
             
             # Extract JSON from response
             content = response.content[0].text
+            print(f"DEBUG: Claude response: {content[:200]}...")
+            
+            # Clean content - remove markdown code blocks if present
+            content = content.strip()
+            if content.startswith("```json"):
+                content = content[7:]
+            if content.startswith("```"):
+                content = content[3:]
+            if content.endswith("```"):
+                content = content[:-3]
+            content = content.strip()
             
             # Parse JSON
             profile_data = json.loads(content)
