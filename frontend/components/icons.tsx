@@ -12,7 +12,9 @@ import {
     Clock,
     ArrowLeft,
     Download,
-    Copy
+    Copy,
+    Book,
+    User
 } from 'lucide-react'
 
 export const Icons = {
@@ -30,4 +32,6 @@ export const Icons = {
     arrowLeft: ArrowLeft,
     download: Download,
     copy: Copy,
+    book: Book,
+    user: User,
 }
