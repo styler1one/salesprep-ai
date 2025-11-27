@@ -38,8 +38,45 @@ export default function OnboardingPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    startInterview()
+    checkProfileAndStartInterview()
   }, [])
+
+  const checkProfileAndStartInterview = async () => {
+    setStarting(true)
+    setError(null)
+    
+    try {
+      const token = await getAuthToken()
+      if (!token) return
+
+      // First check if profile already exists
+      const checkResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/profile/sales/check`,
+        {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+        }
+      )
+
+      if (checkResponse.ok) {
+        const checkData = await checkResponse.json()
+        if (checkData.exists) {
+          // Profile already exists, redirect to dashboard
+          router.push("/dashboard?message=profile_exists")
+          return
+        }
+      }
+
+      // Profile doesn't exist, start interview
+      await startInterview()
+    } catch (err) {
+      console.error("Error checking profile:", err)
+      // If check fails, try to start interview anyway
+      await startInterview()
+    }
+  }
 
   const getAuthToken = async () => {
     const supabase = createClient()
@@ -52,9 +89,6 @@ export default function OnboardingPage() {
   }
 
   const startInterview = async () => {
-    setStarting(true)
-    setError(null)
-    
     try {
       const token = await getAuthToken()
       if (!token) return
