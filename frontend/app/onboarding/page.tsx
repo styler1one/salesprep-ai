@@ -36,6 +36,8 @@ export default function OnboardingPage() {
   const [starting, setStarting] = useState(true)
   const [completing, setCompleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hasExistingProfile, setHasExistingProfile] = useState(false)
+  const [showExistingProfilePrompt, setShowExistingProfilePrompt] = useState(false)
 
   useEffect(() => {
     checkProfileAndStartInterview()
@@ -63,8 +65,10 @@ export default function OnboardingPage() {
       if (checkResponse.ok) {
         const checkData = await checkResponse.json()
         if (checkData.exists) {
-          // Profile already exists, redirect to dashboard
-          router.push("/dashboard?message=profile_exists")
+          // Profile already exists, show prompt
+          setHasExistingProfile(true)
+          setShowExistingProfilePrompt(true)
+          setStarting(false)
           return
         }
       }
@@ -206,6 +210,63 @@ export default function OnboardingPage() {
   }
 
   const progressPercentage = (progress.current / progress.total) * 100
+
+  // Show prompt for existing profile
+  if (showExistingProfilePrompt) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 px-4">
+        <Card className="w-full max-w-lg">
+          <CardHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <CheckCircle2 className="h-8 w-8 text-green-600" />
+              <CardTitle className="text-2xl">Profile Already Exists</CardTitle>
+            </div>
+            <CardDescription>
+              You already have a sales profile. Would you like to update it with a fresh interview?
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg bg-muted p-4">
+              <h4 className="font-semibold mb-2">What happens when you continue?</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <Sparkles className="h-4 w-4 mt-0.5 text-blue-600" />
+                  <span>Your answers will be analyzed by AI to update your profile</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Sparkles className="h-4 w-4 mt-0.5 text-blue-600" />
+                  <span>Your existing profile will be enhanced with new insights</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Sparkles className="h-4 w-4 mt-0.5 text-blue-600" />
+                  <span>AI agents will have better context for personalization</span>
+                </li>
+              </ul>
+            </div>
+          </CardContent>
+          <CardFooter className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => router.push("/dashboard")}
+              className="flex-1"
+            >
+              Go to Dashboard
+            </Button>
+            <Button
+              onClick={() => {
+                setShowExistingProfilePrompt(false)
+                startInterview()
+              }}
+              className="flex-1"
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              Update Profile
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    )
+  }
 
   if (starting) {
     return (
