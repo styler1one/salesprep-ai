@@ -138,9 +138,9 @@ async def submit_answer(
         )
         
         if next_question is None:
-            # Interview complete
+            # Interview complete - progress equals total questions
             return InterviewAnswerResponse(
-                progress=100,
+                progress=15,
                 total_questions=15,
                 completed=True
             )

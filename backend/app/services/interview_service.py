@@ -139,7 +139,7 @@ class InterviewService:
             "session_id": session_id,
             "question_id": first_question["id"],
             "question": first_question["question"],
-            "progress": 0,
+            "progress": 1,  # First question is progress 1
             "total_questions": len(self.QUESTIONS)
         }
     
@@ -164,7 +164,8 @@ class InterviewService:
             return None
         
         next_question = self.QUESTIONS[next_id - 1]
-        progress = int((next_id - 1) / len(self.QUESTIONS) * 100)
+        # Progress is the question number (1-15), not percentage
+        progress = next_id
         
         return {
             "question_id": next_question["id"],
