@@ -9,28 +9,21 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Progress } from "@/components/ui/progress"
 import { Loader2, CheckCircle2, ArrowRight, Sparkles } from "lucide-react"
 
-interface Question {
-  id: string
-  text: string
-  category: string
-}
-
-interface InterviewProgress {
-  current: number
-  total: number
-}
-
 interface InterviewResponse {
   session_id: string
-  question: Question
-  progress: InterviewProgress
+  question_id: number
+  question: string
+  progress: number
+  total_questions: number
 }
 
 export default function OnboardingPage() {
   const router = useRouter()
   const [sessionId, setSessionId] = useState<string | null>(null)
-  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null)
-  const [progress, setProgress] = useState<InterviewProgress>({ current: 0, total: 15 })
+  const [currentQuestionId, setCurrentQuestionId] = useState<number | null>(null)
+  const [currentQuestionText, setCurrentQuestionText] = useState<string>("")  
+  const [currentProgress, setCurrentProgress] = useState<number>(0)
+  const [totalQuestions, setTotalQuestions] = useState<number>(15)
   const [answer, setAnswer] = useState("")
   const [loading, setLoading] = useState(false)
   const [starting, setStarting] = useState(true)
@@ -128,8 +121,10 @@ export default function OnboardingPage() {
 
       const data: InterviewResponse = await response.json()
       setSessionId(data.session_id)
-      setCurrentQuestion(data.question)
-      setProgress(data.progress)
+      setCurrentQuestionId(data.question_id)
+      setCurrentQuestionText(data.question)
+      setCurrentProgress(data.progress)
+      setTotalQuestions(data.total_questions)
     } catch (err) {
       setError("Failed to start interview. Please try again.")
       console.error(err)
@@ -139,7 +134,7 @@ export default function OnboardingPage() {
   }
 
   const submitAnswer = async () => {
-    if (!answer.trim() || !sessionId || !currentQuestion) return
+    if (!answer.trim() || !sessionId || !currentQuestionId) return
 
     setLoading(true)
     setError(null)
@@ -158,7 +153,7 @@ export default function OnboardingPage() {
           },
           body: JSON.stringify({
             session_id: sessionId,
-            question_id: currentQuestion.id,
+            question_id: currentQuestionId,
             answer: answer,
           }),
         }
@@ -171,11 +166,13 @@ export default function OnboardingPage() {
       const data: InterviewResponse = await response.json()
       
       // Check if interview is complete
-      if (data.progress.current >= data.progress.total) {
+      if (data.progress >= data.total_questions) {
         await completeInterview()
       } else {
-        setCurrentQuestion(data.question)
-        setProgress(data.progress)
+        setCurrentQuestionId(data.question_id)
+        setCurrentQuestionText(data.question)
+        setCurrentProgress(data.progress)
+        setTotalQuestions(data.total_questions)
         setAnswer("")
       }
     } catch (err) {
@@ -223,7 +220,7 @@ export default function OnboardingPage() {
     }
   }
 
-  const progressPercentage = (progress.current / progress.total) * 100
+  const progressPercentage = (currentProgress / totalQuestions) * 100
 
   // Show prompt for existing profile
   if (showExistingProfilePrompt) {
@@ -335,7 +332,7 @@ export default function OnboardingPage() {
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex justify-between text-sm text-muted-foreground mb-2">
-            <span>Question {progress.current} of {progress.total}</span>
+            <span>Question {currentProgress} of {totalQuestions}</span>
             <span>{Math.round(progressPercentage)}% Complete</span>
           </div>
           <Progress value={progressPercentage} className="h-2" />
@@ -345,7 +342,7 @@ export default function OnboardingPage() {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="text-xl">
-              {currentQuestion?.text}
+              {currentQuestionText}
             </CardTitle>
             <CardDescription>
               Take your time to provide a thoughtful answer
