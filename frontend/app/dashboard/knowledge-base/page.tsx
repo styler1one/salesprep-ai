@@ -267,9 +267,8 @@ export default function KnowledgeBasePage() {
             />
           </div>
         </div>
+        <Toaster />
       </div>
-      
-      <Toaster />
     </DashboardLayout>
   )
 }

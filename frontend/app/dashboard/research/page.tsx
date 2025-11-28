@@ -446,9 +446,8 @@ export default function ResearchPage() {
             </div>
           )}
         </div>
+        <Toaster />
       </div>
-      
-      <Toaster />
     </DashboardLayout>
   )
 }
