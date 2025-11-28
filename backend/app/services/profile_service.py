@@ -56,7 +56,7 @@ class ProfileService:
         profile_data: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         """
-        Create a new sales profile.
+        Create or update a sales profile (upsert).
         
         Args:
             user_id: User ID
@@ -64,10 +64,18 @@ class ProfileService:
             profile_data: Profile data dict
             
         Returns:
-            Created profile dict or None if error
+            Created/updated profile dict or None if error
         """
         try:
-            # Prepare data
+            # Check if profile already exists
+            existing = self.get_sales_profile(user_id)
+            
+            if existing:
+                # Update existing profile
+                print(f"Profile exists for user {user_id}, updating instead of creating")
+                return self.update_sales_profile(user_id, profile_data)
+            
+            # Prepare data for new profile
             data = {
                 "user_id": user_id,
                 "organization_id": organization_id,
@@ -78,7 +86,7 @@ class ProfileService:
             completeness = self._calculate_sales_completeness(data)
             data["profile_completeness"] = completeness
             
-            # Insert
+            # Insert new profile
             response = self.client.table("sales_profiles")\
                 .insert(data)\
                 .execute()

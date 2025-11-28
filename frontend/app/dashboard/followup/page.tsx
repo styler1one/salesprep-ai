@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from '@/components/ui/button'
@@ -75,18 +75,28 @@ export default function FollowupPage() {
     }
   }, [supabase])
 
+  // Use a ref to track followups for polling without causing re-renders
+  const followupsRef = useRef<Followup[]>([])
+  followupsRef.current = followups
+
   useEffect(() => {
     fetchFollowups()
-    
-    // Poll for updates every 10 seconds if there are processing items
+  }, [fetchFollowups])
+
+  // Separate effect for polling to avoid dependency loop
+  useEffect(() => {
+    // Poll for updates every 5 seconds if there are processing items
     const interval = setInterval(() => {
-      if (followups.some(f => ['uploading', 'transcribing', 'summarizing'].includes(f.status))) {
+      const hasProcessing = followupsRef.current.some(f => 
+        ['uploading', 'transcribing', 'summarizing'].includes(f.status)
+      )
+      if (hasProcessing) {
         fetchFollowups()
       }
-    }, 10000)
+    }, 5000)
     
     return () => clearInterval(interval)
-  }, [fetchFollowups, followups])
+  }, [fetchFollowups])
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
