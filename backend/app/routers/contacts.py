@@ -7,10 +7,12 @@ Endpoints:
 - GET /prospects/{prospect_id}/contacts - List contacts for prospect
 - GET /contacts/{contact_id} - Get single contact
 - DELETE /contacts/{contact_id} - Delete contact
+- POST /contacts/lookup - Lookup contact LinkedIn and role online
 """
 
 import os
 import logging
+import asyncio
 from typing import Optional, List
 from datetime import datetime
 from uuid import uuid4
@@ -76,6 +78,23 @@ class ContactListResponse(BaseModel):
     count: int
 
 
+class ContactLookupRequest(BaseModel):
+    """Request model for looking up contact info online."""
+    name: str
+    company_name: str
+    country: Optional[str] = None
+
+
+class ContactLookupResponse(BaseModel):
+    """Response model for contact lookup."""
+    name: str
+    role: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    headline: Optional[str] = None
+    found: bool = False
+    confidence: Optional[str] = None  # "high", "medium", "low"
+
+
 # ==================== Helper Functions ====================
 
 def get_organization_id(user_id: str) -> str:
@@ -108,6 +127,101 @@ def get_prospect_id_from_research(research_id: str, organization_id: str) -> str
         raise HTTPException(status_code=400, detail="Research has no linked prospect")
     
     return prospect_id
+
+
+# ==================== Contact Lookup via Gemini ====================
+
+async def lookup_contact_online(name: str, company_name: str, country: Optional[str] = None) -> dict:
+    """
+    Lookup contact information (LinkedIn URL, role) via Gemini with Google Search.
+    
+    Returns a dict with:
+    - name: str
+    - role: Optional[str]
+    - linkedin_url: Optional[str]
+    - headline: Optional[str]
+    - found: bool
+    - confidence: str ("high", "medium", "low")
+    """
+    try:
+        from google import genai
+        from google.genai.types import Tool, GoogleSearch
+        
+        # Get API key
+        api_key = os.getenv("GOOGLE_AI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            logger.warning("No Google AI API key available for contact lookup")
+            return {"name": name, "found": False}
+        
+        client = genai.Client(api_key=api_key)
+        
+        # Build search context
+        location_context = f" in {country}" if country else ""
+        search_query = f"{name} {company_name}{location_context}"
+        
+        prompt = f"""You are a professional researcher helping find contact information.
+
+Search for this person: {name}
+Company: {company_name}
+Location: {location_context if country else "unknown"}
+
+Find their LinkedIn profile and current job title/role.
+
+IMPORTANT:
+- Only return information if you're confident it's the RIGHT person at the RIGHT company
+- The LinkedIn URL must be a direct profile link (linkedin.com/in/username)
+- The role should be their current job title at {company_name}
+
+Respond in JSON format ONLY, no markdown:
+{{
+  "found": true/false,
+  "confidence": "high"/"medium"/"low",
+  "linkedin_url": "https://linkedin.com/in/..." or null,
+  "role": "Current job title" or null,
+  "headline": "LinkedIn headline if found" or null
+}}
+
+If you cannot find the person with reasonable certainty, respond:
+{{"found": false, "confidence": "low", "linkedin_url": null, "role": null, "headline": null}}
+"""
+        
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-exp",
+            contents=prompt,
+            config={
+                "tools": [Tool(google_search=GoogleSearch())],
+                "temperature": 0.1,
+            }
+        )
+        
+        result_text = response.text.strip()
+        logger.info(f"Contact lookup result for {name}: {result_text[:200]}")
+        
+        # Parse JSON response
+        import json
+        import re
+        
+        # Try to extract JSON from response
+        json_match = re.search(r'\{[^{}]*\}', result_text, re.DOTALL)
+        if json_match:
+            result = json.loads(json_match.group())
+            result["name"] = name
+            
+            # Validate LinkedIn URL format
+            linkedin_url = result.get("linkedin_url")
+            if linkedin_url:
+                if "linkedin.com/in/" not in linkedin_url.lower():
+                    result["linkedin_url"] = None
+                    result["confidence"] = "low"
+            
+            return result
+        else:
+            logger.warning(f"Could not parse JSON from response: {result_text}")
+            return {"name": name, "found": False, "confidence": "low"}
+        
+    except Exception as e:
+        logger.error(f"Contact lookup failed: {e}")
+        return {"name": name, "found": False, "confidence": "low", "error": str(e)}
 
 
 # ==================== Background Tasks ====================
@@ -175,6 +289,35 @@ def analyze_contact_background(
 
 
 # ==================== Endpoints ====================
+
+@router.post("/contacts/lookup", response_model=ContactLookupResponse)
+async def lookup_contact(
+    request: ContactLookupRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Lookup contact information online (LinkedIn URL, role/title).
+    
+    Uses Gemini with Google Search to find the person's LinkedIn profile
+    and current job title at the specified company.
+    """
+    logger.info(f"Looking up contact: {request.name} at {request.company_name}")
+    
+    result = await lookup_contact_online(
+        name=request.name,
+        company_name=request.company_name,
+        country=request.country
+    )
+    
+    return ContactLookupResponse(
+        name=result.get("name", request.name),
+        role=result.get("role"),
+        linkedin_url=result.get("linkedin_url"),
+        headline=result.get("headline"),
+        found=result.get("found", False),
+        confidence=result.get("confidence", "low")
+    )
+
 
 @router.post("/research/{research_id}/contacts", response_model=ContactResponse)
 async def add_contact_to_research(

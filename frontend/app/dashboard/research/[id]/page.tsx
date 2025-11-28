@@ -58,6 +58,9 @@ export default function ResearchBriefPage() {
   const [newContact, setNewContact] = useState({ name: '', role: '', linkedin_url: '' })
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
   const [contactsLoading, setContactsLoading] = useState(false)
+  const [lookingUpContact, setLookingUpContact] = useState(false)
+  const [lookupResult, setLookupResult] = useState<{ found: boolean; confidence?: string } | null>(null)
+  const [analyzingContactIds, setAnalyzingContactIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const getUser = async () => {
@@ -148,6 +151,81 @@ export default function ResearchBriefPage() {
     }
   }, [brief, fetchContacts])
 
+  // Lookup contact online (LinkedIn + role)
+  const handleLookupContact = async () => {
+    if (!newContact.name.trim() || !brief?.company_name) {
+      toast({
+        variant: "destructive",
+        title: "Naam verplicht",
+        description: "Vul eerst de naam van de contactpersoon in",
+      })
+      return
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      setLookingUpContact(true)
+      setLookupResult(null)
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/contacts/lookup`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: newContact.name,
+            company_name: brief.company_name
+          })
+        }
+      )
+
+      if (response.ok) {
+        const data = await response.json()
+        setLookupResult({ found: data.found, confidence: data.confidence })
+        
+        if (data.found) {
+          // Auto-fill the found data
+          setNewContact(prev => ({
+            ...prev,
+            role: data.role || prev.role,
+            linkedin_url: data.linkedin_url || prev.linkedin_url
+          }))
+          
+          toast({
+            title: "Persoon gevonden",
+            description: data.role ? `${data.role} op LinkedIn` : "LinkedIn profiel gevonden",
+          })
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Niet gevonden",
+            description: "Kon geen LinkedIn profiel vinden. Vul handmatig in.",
+          })
+        }
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Zoeken mislukt",
+          description: "Er is een fout opgetreden bij het zoeken",
+        })
+      }
+    } catch (error) {
+      console.error('Lookup failed:', error)
+      toast({
+        variant: "destructive",
+        title: "Fout",
+        description: "Kon niet zoeken naar de persoon",
+      })
+    } finally {
+      setLookingUpContact(false)
+    }
+  }
+
   // Add a new contact
   const handleAddContact = async () => {
     if (!newContact.name.trim()) {
@@ -183,17 +261,53 @@ export default function ResearchBriefPage() {
       if (response.ok) {
         const data = await response.json()
         setContacts(prev => [...prev, data])
+        // Track this contact as analyzing
+        setAnalyzingContactIds(prev => new Set([...prev, data.id]))
         setNewContact({ name: '', role: '', linkedin_url: '' })
+        setLookupResult(null)
         setShowAddContact(false)
         toast({
           title: "Contactpersoon toegevoegd",
-          description: "Analyse wordt op de achtergrond uitgevoerd...",
+          description: "Analyse gestart - zie voortgang hieronder",
         })
         
-        // Poll for updates
-        setTimeout(() => fetchContacts(), 5000)
-        setTimeout(() => fetchContacts(), 15000)
-        setTimeout(() => fetchContacts(), 30000)
+        // Auto-expand the new contact to show analysis progress
+        setSelectedContact(data)
+        
+        // Smart polling: check frequently at first, then slower
+        const pollForAnalysis = async (contactId: string, attempts: number) => {
+          if (attempts > 12) { // Max 60 seconds (12 * 5s)
+            setAnalyzingContactIds(prev => {
+              const next = new Set(prev)
+              next.delete(contactId)
+              return next
+            })
+            return
+          }
+          
+          await fetchContacts()
+          
+          // Check if analysis is done
+          const contact = contacts.find(c => c.id === contactId)
+          if (contact?.analyzed_at) {
+            setAnalyzingContactIds(prev => {
+              const next = new Set(prev)
+              next.delete(contactId)
+              return next
+            })
+            toast({
+              title: "Analyse voltooid",
+              description: `${contact.name} is geanalyseerd`,
+            })
+            return
+          }
+          
+          // Continue polling
+          setTimeout(() => pollForAnalysis(contactId, attempts + 1), 5000)
+        }
+        
+        // Start polling for this contact
+        setTimeout(() => pollForAnalysis(data.id, 0), 3000)
       } else {
         const error = await response.json()
         toast({
@@ -394,18 +508,57 @@ export default function ResearchBriefPage() {
             {showAddContact && (
               <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
                 <h3 className="font-semibold mb-3">Nieuwe contactpersoon</h3>
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <div>
-                    <Label htmlFor="contact-name">Naam *</Label>
+                
+                {/* Step 1: Name + Lookup */}
+                <div className="mb-4">
+                  <Label htmlFor="contact-name">Naam *</Label>
+                  <div className="flex gap-2 mt-1">
                     <Input
                       id="contact-name"
                       placeholder="Jan de Vries"
                       value={newContact.name}
-                      onChange={(e) => setNewContact(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) => {
+                        setNewContact(prev => ({ ...prev, name: e.target.value }))
+                        setLookupResult(null)
+                      }}
+                      className="flex-1"
                     />
+                    <Button 
+                      variant="outline" 
+                      onClick={handleLookupContact}
+                      disabled={lookingUpContact || !newContact.name.trim()}
+                    >
+                      {lookingUpContact ? (
+                        <>
+                          <Icons.spinner className="h-4 w-4 mr-2 animate-spin" />
+                          Zoeken...
+                        </>
+                      ) : (
+                        <>
+                          <Icons.search className="h-4 w-4 mr-2" />
+                          Zoek online
+                        </>
+                      )}
+                    </Button>
                   </div>
+                  {lookupResult && (
+                    <p className={`text-xs mt-1 ${lookupResult.found ? 'text-green-600' : 'text-amber-600'}`}>
+                      {lookupResult.found 
+                        ? `✓ Gevonden (${lookupResult.confidence} confidence)` 
+                        : '⚠ Niet gevonden - vul handmatig in'}
+                    </p>
+                  )}
+                </div>
+
+                {/* Step 2: Auto-filled or manual fields */}
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <Label htmlFor="contact-role">Functie</Label>
+                    <Label htmlFor="contact-role">
+                      Functie
+                      {newContact.role && lookupResult?.found && (
+                        <span className="text-green-600 text-xs ml-2">✓ auto-ingevuld</span>
+                      )}
+                    </Label>
                     <Input
                       id="contact-role"
                       placeholder="IT Director"
@@ -414,7 +567,12 @@ export default function ResearchBriefPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="contact-linkedin">LinkedIn URL</Label>
+                    <Label htmlFor="contact-linkedin">
+                      LinkedIn URL
+                      {newContact.linkedin_url && lookupResult?.found && (
+                        <span className="text-green-600 text-xs ml-2">✓ auto-ingevuld</span>
+                      )}
+                    </Label>
                     <Input
                       id="contact-linkedin"
                       placeholder="https://linkedin.com/in/..."
@@ -423,16 +581,17 @@ export default function ResearchBriefPage() {
                     />
                   </div>
                 </div>
+
                 <div className="flex gap-2 mt-4">
-                  <Button onClick={handleAddContact} disabled={addingContact}>
+                  <Button onClick={handleAddContact} disabled={addingContact || !newContact.name.trim()}>
                     {addingContact ? (
                       <>
                         <Icons.spinner className="h-4 w-4 mr-2 animate-spin" />
-                        Analyseren...
+                        Toevoegen...
                       </>
                     ) : (
                       <>
-                        <Icons.search className="h-4 w-4 mr-2" />
+                        <Icons.plus className="h-4 w-4 mr-2" />
                         Analyseer & Voeg Toe
                       </>
                     )}
@@ -440,6 +599,7 @@ export default function ResearchBriefPage() {
                   <Button variant="outline" onClick={() => {
                     setShowAddContact(false)
                     setNewContact({ name: '', role: '', linkedin_url: '' })
+                    setLookupResult(null)
                   }}>
                     Annuleren
                   </Button>
@@ -461,26 +621,44 @@ export default function ResearchBriefPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {contacts.map((contact) => (
+                {contacts.map((contact) => {
+                  const isAnalyzing = analyzingContactIds.has(contact.id) || (!contact.analyzed_at && contact.profile_brief === "Analyse wordt uitgevoerd...")
+                  
+                  return (
                   <div 
                     key={contact.id}
-                    className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                    className={`p-4 rounded-lg border cursor-pointer transition-all ${
                       selectedContact?.id === contact.id 
                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                        : isAnalyzing
+                          ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/10 animate-pulse'
+                          : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                     }`}
                     onClick={() => setSelectedContact(selectedContact?.id === contact.id ? null : contact)}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-                          <Icons.user className="h-5 w-5 text-slate-500" />
+                        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                          isAnalyzing 
+                            ? 'bg-amber-200 dark:bg-amber-800' 
+                            : 'bg-slate-200 dark:bg-slate-700'
+                        }`}>
+                          {isAnalyzing ? (
+                            <Icons.spinner className="h-5 w-5 text-amber-600 animate-spin" />
+                          ) : (
+                            <Icons.user className="h-5 w-5 text-slate-500" />
+                          )}
                         </div>
                         <div>
                           <div className="font-semibold flex items-center gap-2">
                             {contact.name}
                             {contact.is_primary && (
                               <Badge variant="secondary" className="text-xs">Primary</Badge>
+                            )}
+                            {isAnalyzing && (
+                              <Badge className="bg-amber-500 hover:bg-amber-600 text-xs animate-pulse">
+                                Analyseren...
+                              </Badge>
                             )}
                           </div>
                           {contact.role && (
@@ -489,8 +667,8 @@ export default function ResearchBriefPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {getAuthorityBadge(contact.decision_authority)}
-                        {getStyleBadge(contact.communication_style)}
+                        {!isAnalyzing && getAuthorityBadge(contact.decision_authority)}
+                        {!isAnalyzing && getStyleBadge(contact.communication_style)}
                         <Button 
                           variant="ghost" 
                           size="sm"
@@ -505,8 +683,29 @@ export default function ResearchBriefPage() {
                       </div>
                     </div>
 
+                    {/* Analysis Progress Indicator */}
+                    {isAnalyzing && selectedContact?.id === contact.id && (
+                      <div className="mt-4 pt-4 border-t border-amber-200 dark:border-amber-700">
+                        <div className="flex items-center gap-3 text-amber-700 dark:text-amber-400">
+                          <Icons.spinner className="h-5 w-5 animate-spin" />
+                          <div>
+                            <p className="font-medium">Analyse bezig...</p>
+                            <p className="text-sm opacity-80">
+                              {contact.linkedin_url 
+                                ? "LinkedIn profiel wordt geanalyseerd"
+                                : "Persoon wordt onderzocht op basis van naam en rol"
+                              }
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-3 h-1.5 bg-amber-200 dark:bg-amber-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-amber-500 rounded-full animate-pulse" style={{ width: '60%' }} />
+                        </div>
+                      </div>
+                    )}
+
                     {/* Expanded Contact Analysis */}
-                    {selectedContact?.id === contact.id && contact.profile_brief && (
+                    {selectedContact?.id === contact.id && contact.profile_brief && !isAnalyzing && (
                       <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                         {contact.analyzed_at ? (
                           <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
@@ -567,7 +766,8 @@ export default function ResearchBriefPage() {
                       </div>
                     )}
                   </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
