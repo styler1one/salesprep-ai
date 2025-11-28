@@ -35,16 +35,20 @@ class GeminiResearcher:
         company_name: str,
         country: Optional[str] = None,
         city: Optional[str] = None,
-        linkedin_url: Optional[str] = None
+        linkedin_url: Optional[str] = None,
+        seller_context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         Search for company information using Gemini with Google Search.
+        
+        Enhanced with seller context for personalized research.
         
         Args:
             company_name: Name of the company
             country: Optional country for better search accuracy
             city: Optional city for better search accuracy
             linkedin_url: Optional LinkedIn URL
+            seller_context: Context about what the user sells
             
         Returns:
             Dictionary with research data
@@ -54,46 +58,64 @@ class GeminiResearcher:
             company_name, country, city, linkedin_url
         )
         
-        # Build prompt for Gemini
-        prompt = f"""
-You are a business research assistant with access to Google Search.
+        # Build seller context section if available
+        seller_section = ""
+        if seller_context and seller_context.get("has_context"):
+            products = ", ".join(seller_context.get("products_services", [])[:5]) or "niet gespecificeerd"
+            seller_section = f"""
 
-Research the following company and provide comprehensive information:
+BELANGRIJK - CONTEXT VAN DE VERKOPER:
+Verkopend bedrijf: {seller_context.get('company_name', 'Onbekend')}
+Producten/diensten die ze verkopen: {products}
+Doelmarkt: {seller_context.get('target_market', 'niet gespecificeerd')}
+
+Zoek specifiek naar informatie die relevant is voor het verkopen van bovenstaande producten aan {company_name}.
+"""
+        
+        # Build prompt for Gemini - NOW IN DUTCH
+        prompt = f"""
+Je bent een business research assistent met toegang tot Google Search. Schrijf je output in het NEDERLANDS.
+
+Onderzoek het volgende bedrijf en geef uitgebreide informatie:
 
 {search_query}
+{seller_section}
 
-Please search for and provide:
+Zoek naar en geef:
 
-1. COMPANY OVERVIEW
-   - Industry and sector
-   - Company size (employees, revenue if available)
-   - Headquarters location
-   - Founded date
+1. BEDRIJFSOVERZICHT
+   - Industrie en sector
+   - Bedrijfsgrootte (medewerkers, omzet indien bekend)
+   - Hoofdkantoor locatie
+   - Oprichtingsdatum
    - Website
 
 2. BUSINESS MODEL
-   - Main products or services
-   - Target market (B2B, B2C, etc.)
-   - Key value propositions
+   - Belangrijkste producten of diensten
+   - Doelmarkt (B2B, B2C, etc.)
+   - Belangrijkste value propositions
 
-3. RECENT NEWS (Last 30 days)
-   - Latest announcements
+3. RECENT NIEUWS (Laatste 30 dagen)
+   - Laatste aankondigingen
    - Product launches
-   - Funding or financial news
-   - Leadership changes
+   - Financiering of financieel nieuws
+   - Leiderschapswijzigingen
    - Partnerships
 
-4. KEY PEOPLE
-   - CEO and executive team
+4. KEY MENSEN
+   - CEO en directie team
    - Notable team members
+   - LinkedIn profielen
 
-5. MARKET POSITION
-   - Main competitors
-   - Market share (if available)
-   - Unique differentiators
+5. MARKTPOSITIE
+   - Belangrijkste concurrenten
+   - Marktaandeel (indien beschikbaar)
+   - Unieke onderscheidende factoren
 
-Provide factual, verified information from reliable sources. If information is not available, clearly state that.
-Format the response in clear sections.
+{"6. SALES KANSEN" + chr(10) + "   - Specifieke problemen die " + company_name + " heeft die relevant zijn voor " + ", ".join(seller_context.get('products_services', [])[:3]) + chr(10) + "   - Afdelingen of rollen die het meest relevant zijn" + chr(10) + "   - Timing factoren of trigger events" if seller_context and seller_context.get("has_context") else ""}
+
+Geef feitelijke, geverifieerde informatie uit betrouwbare bronnen. Als informatie niet beschikbaar is, vermeld dat duidelijk.
+Schrijf alles in het Nederlands.
 """
         
         try:

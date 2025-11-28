@@ -98,12 +98,14 @@ def process_research_background(
     country: Optional[str],
     city: Optional[str],
     linkedin_url: Optional[str],
-    website_url: Optional[str] = None  # NEW: Website URL for direct scraping
+    website_url: Optional[str] = None,
+    organization_id: Optional[str] = None,  # NEW: For seller context
+    user_id: Optional[str] = None  # NEW: For sales profile
 ):
     """
     Background task to process research request.
     1. Execute parallel searches (Claude, Gemini, KVK, Website)
-    2. Merge results
+    2. Merge results with seller context (what you sell!)
     3. Generate PDF
     4. Update database
     """
@@ -112,6 +114,7 @@ def process_research_background(
     
     try:
         print(f"DEBUG: Starting research for {company_name}")
+        print(f"DEBUG: Seller context - org_id={organization_id}, user_id={user_id}")
         if website_url:
             print(f"DEBUG: Will scrape website: {website_url}")
         
@@ -122,14 +125,16 @@ def process_research_background(
         
         print(f"DEBUG: Status updated to researching")
         
-        # Execute research (run async function in sync context)
+        # Execute research with seller context (run async function in sync context)
         orchestrator = ResearchOrchestrator()
         research_data = asyncio.run(orchestrator.research_company(
             company_name=company_name,
             country=country,
             city=city,
             linkedin_url=linkedin_url,
-            website_url=website_url  # NEW: Pass website URL
+            website_url=website_url,
+            organization_id=organization_id,  # NEW: Pass for seller context
+            user_id=user_id  # NEW: Pass for sales profile
         ))
         
         print(f"DEBUG: Research completed, got {len(research_data.get('sources', {}))} sources")
@@ -255,7 +260,7 @@ async def start_research(
             if updates:
                 prospect_service.update_prospect(prospect_id, organization_id, updates)
         
-        # Start background processing
+        # Start background processing with seller context
         background_tasks.add_task(
             process_research_background,
             research_id,
@@ -263,7 +268,9 @@ async def start_research(
             request.country,
             request.city,
             request.company_linkedin_url,
-            request.company_website_url  # NEW: Pass website URL
+            request.company_website_url,
+            organization_id,  # NEW: For seller context (what you sell)
+            user_id  # NEW: For sales profile context
         )
         
         return ResearchResponse(
