@@ -433,12 +433,16 @@ Rules:
             
             prompt = f"""Search for companies matching "{company_name}" in {country}.
 
+IMPORTANT: For each company, search for BOTH:
+1. The official company website
+2. The LinkedIn company page (search: "{company_name} linkedin" or "linkedin.com/company/{company_name}")
+
 Return a JSON array with up to 3 most likely matches. Each match should have:
 {{
     "company_name": "Official company name",
     "description": "Brief description (max 100 chars)",
-    "website": "https://...",
-    "linkedin_url": "https://www.linkedin.com/company/...",
+    "website": "https://www.example.com",
+    "linkedin_url": "https://www.linkedin.com/company/example",
     "location": "City, Country",
     "confidence": 0-100
 }}
@@ -446,7 +450,8 @@ Return a JSON array with up to 3 most likely matches. Each match should have:
 Rules:
 - Only include companies that actually exist in {country}
 - Order by relevance/confidence (most likely first)
-- Include official website and LinkedIn if found
+- ALWAYS try to find the LinkedIn company page URL - most companies have one
+- LinkedIn URLs should be in format: https://www.linkedin.com/company/company-name
 - If company name is ambiguous, include different companies with same/similar names
 - Return empty array [] if no matches found
 - Return valid JSON array only, no markdown or explanations"""
