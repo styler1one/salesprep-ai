@@ -165,7 +165,7 @@ export default function DashboardPage() {
                 {/* Welcome Section */}
                 <div className="mb-8">
                     <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
-                        Welcome back{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! 👋
+                        Welcome back{typeof profile?.full_name === 'string' && profile.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! 👋
                     </h1>
                     <p className="text-slate-500">
                         Here's what's happening with your sales activities.
@@ -384,7 +384,7 @@ export default function DashboardPage() {
                                         <div className="bg-slate-50 rounded-lg p-3">
                                             <p className="text-xs text-slate-500 mb-1">Target Market</p>
                                             <p className="font-semibold text-slate-900 truncate">
-                                                {companyProfile.target_market || companyProfile.ideal_customer_profile?.split(',')[0] || 'B2B'}
+                                                {companyProfile.target_market || (typeof companyProfile.ideal_customer_profile === 'string' ? companyProfile.ideal_customer_profile.split(',')[0] : 'B2B')}
                                             </p>
                                         </div>
                                     </div>
