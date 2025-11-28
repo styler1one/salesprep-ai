@@ -522,7 +522,7 @@ export default function ResearchPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => { setSelectedCompany(null); setWebsiteUrl(''); setLinkedinUrl(''); setCompanyOptions([]); lastSearchRef.current = '' }}
+                  onClick={() => { setSelectedCompany(null); setWebsiteUrl(''); setLinkedinUrl(''); setCompanyOptions([]) }}
                   className="text-sm text-green-700 hover:text-green-900 underline"
                 >
                   Wijzigen
