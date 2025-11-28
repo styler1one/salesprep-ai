@@ -4,7 +4,7 @@ Company Lookup Service
 Automatically discovers company website and LinkedIn URL based on company name and country.
 Uses multiple strategies:
 1. Direct URL guessing (company.com, company.nl, etc.)
-2. Google Search API (if available)
+2. Google Search via Gemini (grounded search)
 3. Common patterns for LinkedIn URLs
 """
 
@@ -12,11 +12,25 @@ import os
 import re
 import asyncio
 import aiohttp
+import json
 from typing import Dict, Any, Optional, List, Tuple
 from urllib.parse import quote_plus
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Lazy import for Gemini to avoid initialization issues
+_genai_client = None
+
+def get_genai_client():
+    """Get or create Google GenAI client."""
+    global _genai_client
+    if _genai_client is None:
+        from google import genai
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if api_key:
+            _genai_client = genai.Client(api_key=api_key)
+    return _genai_client
 
 
 class CompanyLookupService:
@@ -60,6 +74,10 @@ class CompanyLookupService:
         """
         Look up company website and LinkedIn URL.
         
+        Strategy:
+        1. First try direct URL patterns (fast, no API cost)
+        2. If not found, use Google Search via Gemini (more reliable)
+        
         Args:
             company_name: Name of the company
             country: Optional country for better TLD guessing
@@ -74,7 +92,8 @@ class CompanyLookupService:
             "website_confidence": 0,
             "linkedin_url": None,
             "linkedin_confidence": 0,
-            "suggestions_found": False
+            "suggestions_found": False,
+            "search_method": "direct"
         }
         
         if not company_name or len(company_name.strip()) < 2:
@@ -83,7 +102,7 @@ class CompanyLookupService:
         # Clean company name for URL generation
         clean_name = self._clean_company_name(company_name)
         
-        # Run lookups in parallel
+        # PHASE 1: Try direct URL patterns (fast, no API cost)
         website_task = self._find_website(clean_name, company_name, country)
         linkedin_task = self._find_linkedin(clean_name, company_name)
         
@@ -108,6 +127,28 @@ class CompanyLookupService:
                 result["linkedin_url"] = url
                 result["linkedin_confidence"] = confidence
                 result["suggestions_found"] = True
+        
+        # PHASE 2: If direct lookup failed, try Google Search via Gemini
+        if not result["website"] or not result["linkedin_url"]:
+            google_result = await self._google_search_lookup(
+                company_name, 
+                country,
+                need_website=not result["website"],
+                need_linkedin=not result["linkedin_url"]
+            )
+            
+            if google_result:
+                result["search_method"] = "google"
+                
+                if google_result.get("website") and not result["website"]:
+                    result["website"] = google_result["website"]
+                    result["website_confidence"] = google_result.get("website_confidence", 85)
+                    result["suggestions_found"] = True
+                    
+                if google_result.get("linkedin_url") and not result["linkedin_url"]:
+                    result["linkedin_url"] = google_result["linkedin_url"]
+                    result["linkedin_confidence"] = google_result.get("linkedin_confidence", 85)
+                    result["suggestions_found"] = True
         
         logger.info(
             f"Lookup for '{company_name}': "
@@ -270,6 +311,94 @@ class CompanyLookupService:
                 confidence += 10  # Exact match bonus
         
         return min(confidence, 100)
+    
+    async def _google_search_lookup(
+        self,
+        company_name: str,
+        country: Optional[str],
+        need_website: bool = True,
+        need_linkedin: bool = True
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Use Google Search via Gemini to find company URLs.
+        
+        This is more reliable than direct URL guessing but uses API quota.
+        """
+        client = get_genai_client()
+        if not client:
+            logger.warning("Google GenAI client not available for lookup")
+            return None
+        
+        try:
+            from google.genai import types
+            
+            # Build search query
+            location_hint = f" in {country}" if country else ""
+            
+            search_parts = []
+            if need_website:
+                search_parts.append("official website URL")
+            if need_linkedin:
+                search_parts.append("LinkedIn company page URL")
+            
+            prompt = f"""Find the {" and ".join(search_parts)} for the company "{company_name}"{location_hint}.
+
+Return ONLY a JSON object with these fields (no other text):
+{{
+    "website": "https://www.example.com" or null,
+    "linkedin_url": "https://www.linkedin.com/company/example" or null,
+    "website_confidence": 0-100,
+    "linkedin_confidence": 0-100
+}}
+
+Rules:
+- Only return URLs you are confident about (>80% sure)
+- Website should be the official company homepage
+- LinkedIn should be the official company LinkedIn page
+- Set confidence to 0 if not found or unsure
+- Return valid JSON only, no markdown or explanations"""
+
+            # Use Gemini with Google Search grounding
+            response = client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    tools=[types.Tool(google_search=types.GoogleSearch())],
+                    temperature=0.1,
+                    max_output_tokens=500
+                )
+            )
+            
+            if response and response.text:
+                # Parse JSON from response
+                text = response.text.strip()
+                
+                # Remove markdown code blocks if present
+                if text.startswith("```"):
+                    text = re.sub(r'^```\w*\n?', '', text)
+                    text = re.sub(r'\n?```$', '', text)
+                
+                result = json.loads(text)
+                
+                # Validate URLs
+                if result.get("website"):
+                    if not result["website"].startswith("http"):
+                        result["website"] = "https://" + result["website"]
+                
+                if result.get("linkedin_url"):
+                    if "linkedin.com" not in result["linkedin_url"]:
+                        result["linkedin_url"] = None
+                        result["linkedin_confidence"] = 0
+                
+                logger.info(f"Google Search found: website={result.get('website')}, linkedin={result.get('linkedin_url')}")
+                return result
+                
+        except json.JSONDecodeError as e:
+            logger.warning(f"Failed to parse Google Search response: {e}")
+        except Exception as e:
+            logger.error(f"Google Search lookup failed: {e}")
+        
+        return None
 
 
 # Lazy singleton
