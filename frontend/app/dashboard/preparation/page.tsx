@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, FileText, Download, Trash2, RefreshCw, ArrowLeft, Copy, CheckCircle, Clock, AlertCircle, Building2 } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 import ReactMarkdown from 'react-markdown'
+import { DashboardLayout } from '@/components/layout'
 
 interface MeetingPrep {
     id: string
@@ -41,6 +42,7 @@ export default function PreparationPage() {
     const supabase = createClientComponentClient()
     const { toast } = useToast()
 
+    const [user, setUser] = useState<any>(null)
     const [loading, setLoading] = useState(false)
     const [preps, setPreps] = useState<MeetingPrep[]>([])
     const [selectedPrep, setSelectedPrep] = useState<MeetingPrep | null>(null)
@@ -63,6 +65,11 @@ export default function PreparationPage() {
     }, [companyName, researchBriefs])
 
     useEffect(() => {
+        const getUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser()
+            setUser(user)
+        }
+        getUser()
         loadPreps()
         loadResearchBriefs()
 
@@ -74,7 +81,7 @@ export default function PreparationPage() {
         }, 5000)
 
         return () => clearInterval(interval)
-    }, [])
+    }, [supabase])
 
     const loadResearchBriefs = async () => {
         try {
@@ -253,18 +260,15 @@ export default function PreparationPage() {
     }
 
     return (
-        <div className="container mx-auto p-6 max-w-7xl">
-            {/* Header */}
-            <div className="mb-8">
-                <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard')} className="mb-4">
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Dashboard
-                </Button>
-                <h1 className="text-3xl font-bold mb-2">Meeting Preparation</h1>
-                <p className="text-muted-foreground">
-                    AI-powered meeting briefs using your knowledge base, research, and profile context
-                </p>
-            </div>
+        <DashboardLayout user={user}>
+            <div className="p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
+                {/* Header */}
+                <div className="mb-8">
+                    <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">Meeting Preparation</h1>
+                    <p className="text-slate-500">
+                        AI-powered meeting briefs using your knowledge base, research, and profile context
+                    </p>
+                </div>
 
             <div className="grid gap-6 lg:grid-cols-2">
                 {/* Left Column - Form & History */}
@@ -561,5 +565,6 @@ export default function PreparationPage() {
                 </div>
             </div>
         </div>
+        </DashboardLayout>
     )
 }

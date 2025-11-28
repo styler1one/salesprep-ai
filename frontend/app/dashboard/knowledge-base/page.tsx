@@ -9,7 +9,7 @@ import { FileUploadZone } from '@/components/knowledge-base/file-upload-zone'
 import { FileList } from '@/components/knowledge-base/file-list'
 import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { DashboardLayout } from '@/components/layout'
 
 interface KnowledgeBaseFile {
   id: string
@@ -195,42 +195,17 @@ export default function KnowledgeBasePage() {
   const failedFiles = files.filter(f => f.status === 'failed').length
 
   return (
-    <div className="flex min-h-screen flex-col bg-white dark:bg-slate-950">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md">
-        <div className="container flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Icons.fileText className="h-5 w-5" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold">SalesPrep AI</h1>
-              <p className="text-xs text-muted-foreground">Knowledge Base</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <div className="hidden sm:block text-sm text-slate-600 dark:text-slate-400">
-              {user?.email}
-            </div>
-            <Button variant="outline" size="sm" onClick={handleSignOut}>
-              Sign Out
-            </Button>
-          </div>
+    <DashboardLayout user={user}>
+      <div className="p-6 lg:p-8 max-w-6xl mx-auto animate-fade-in">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
+            Knowledge Base
+          </h1>
+          <p className="text-slate-500">
+            Upload and manage your company documents for AI context
+          </p>
         </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 bg-slate-50 dark:bg-slate-900">
-        <div className="container py-8 px-4 max-w-7xl">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Knowledge Base
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400 mt-2 text-lg">
-              Upload and manage your company documents
-            </p>
-          </div>
 
           {/* Stats */}
           <div className="grid gap-4 md:grid-cols-3 mb-8">
@@ -292,18 +267,9 @@ export default function KnowledgeBasePage() {
             />
           </div>
         </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-6 mt-auto">
-        <div className="container px-4 text-center">
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            Built with <span className="text-red-500">♥</span> by SalesPrep AI
-          </p>
-        </div>
-      </footer>
+      </div>
       
       <Toaster />
-    </div>
+    </DashboardLayout>
   )
 }

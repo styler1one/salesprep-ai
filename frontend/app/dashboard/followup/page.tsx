@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/use-toast'
+import { DashboardLayout } from '@/components/layout'
 import { 
   ArrowLeft, 
   Upload, 
@@ -38,6 +39,7 @@ export default function FollowupPage() {
   const supabase = createClientComponentClient()
   const { toast } = useToast()
   
+  const [user, setUser] = useState<any>(null)
   const [followups, setFollowups] = useState<Followup[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
@@ -80,8 +82,13 @@ export default function FollowupPage() {
   followupsRef.current = followups
 
   useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+    }
+    getUser()
     fetchFollowups()
-  }, [fetchFollowups])
+  }, [fetchFollowups, supabase])
 
   // Separate effect for polling to avoid dependency loop
   useEffect(() => {
@@ -286,22 +293,15 @@ export default function FollowupPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-6xl">
-      {/* Header */}
-      <div className="mb-8">
-        <Button 
-          variant="ghost" 
-          onClick={() => router.push('/dashboard')}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
-        </Button>
-        <h1 className="text-3xl font-bold">Meeting Follow-up</h1>
-        <p className="text-muted-foreground mt-1">
-          Upload meeting recordings voor transcriptie, samenvatting en follow-up emails
-        </p>
-      </div>
+    <DashboardLayout user={user}>
+      <div className="p-6 lg:p-8 max-w-6xl mx-auto animate-fade-in">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">Meeting Follow-up</h1>
+          <p className="text-slate-500">
+            Upload meeting recordings voor transcriptie, samenvatting en follow-up emails
+          </p>
+        </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Upload Form */}
@@ -537,6 +537,7 @@ export default function FollowupPage() {
         </Card>
       </div>
     </div>
+    </DashboardLayout>
   )
 }
 

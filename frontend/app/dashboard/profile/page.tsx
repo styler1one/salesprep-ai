@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { DashboardLayout } from '@/components/layout'
 import { 
   ArrowLeft, 
   User, 
@@ -44,10 +45,16 @@ export default function ProfilePage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
   
+  const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<SalesProfile | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+    }
+    getUser()
     const fetchProfile = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
@@ -84,54 +91,49 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     )
   }
 
   if (!profile) {
     return (
-      <div className="container mx-auto py-8 px-4 max-w-4xl">
-        <div className="text-center py-16">
-          <User className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Geen profiel gevonden</h2>
-          <p className="text-muted-foreground mb-6">
-            Start de onboarding om je profiel aan te maken
-          </p>
-          <Button onClick={() => router.push('/onboarding')}>
-            Start Onboarding
-          </Button>
+      <DashboardLayout user={user}>
+        <div className="p-6 lg:p-8 max-w-4xl mx-auto">
+          <div className="text-center py-16">
+            <User className="h-16 w-16 mx-auto text-slate-200 mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Geen profiel gevonden</h2>
+            <p className="text-slate-500 mb-6">
+              Start de onboarding om je profiel aan te maken
+            </p>
+            <Button onClick={() => router.push('/onboarding')}>
+              Start Onboarding
+            </Button>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     )
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
-      {/* Header */}
-      <div className="mb-8">
-        <Button 
-          variant="ghost" 
-          onClick={() => router.push('/dashboard')}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
-        </Button>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">{profile.full_name}</h1>
-            <p className="text-muted-foreground mt-1">
-              {profile.role || 'Sales Professional'}
-            </p>
+    <DashboardLayout user={user}>
+      <div className="p-6 lg:p-8 max-w-4xl mx-auto animate-fade-in">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">{profile.full_name}</h1>
+              <p className="text-slate-500 mt-1">
+                {profile.role || 'Sales Professional'}
+              </p>
+            </div>
+            <Button onClick={() => router.push('/onboarding')}>
+              <Edit className="h-4 w-4 mr-2" />
+              Update Profile
+            </Button>
           </div>
-          <Button onClick={() => router.push('/onboarding')}>
-            <Edit className="h-4 w-4 mr-2" />
-            Update Profile
-          </Button>
         </div>
-      </div>
 
       {/* Profile Completeness */}
       <Card className="mb-6">
@@ -370,6 +372,7 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
     </div>
+    </DashboardLayout>
   )
 }
 
