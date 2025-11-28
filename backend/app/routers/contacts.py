@@ -161,26 +161,43 @@ async def lookup_contact_online(name: str, company_name: str, country: Optional[
         client = genai.Client(api_key=api_key)
         
         # Build search context
-        location_context = f" in {country}" if country else ""
+        location_context = f" {country}" if country else ""
         
-        prompt = f"""Search for this person's LinkedIn profile: {name} at {company_name}{location_context}
+        # Create explicit search query like a human would type
+        search_terms = f"{name} {company_name} linkedin"
+        
+        prompt = f"""Je bent een onderzoeker. Zoek het LinkedIn profiel van deze persoon.
 
-IMPORTANT: Search for "{name} {company_name} linkedin" to find their profile.
+ZOEK OP GOOGLE NAAR: {search_terms}
 
-Return ONLY a JSON object (no markdown, no explanation):
+Persoon: {name}
+Bedrijf: {company_name}
+{f"Land: {country}" if country else ""}
+
+Geef het LinkedIn profiel URL terug als je het vindt.
+
+Antwoord ALLEEN met JSON (geen uitleg, geen markdown):
 {{
-  "found": true or false,
-  "confidence": "high" or "medium" or "low",
-  "linkedin_url": "https://www.linkedin.com/in/username" or null,
-  "role": "Current job title at {company_name}" or null,
-  "headline": "Their LinkedIn headline" or null
+  "found": true,
+  "confidence": "high",
+  "linkedin_url": "https://www.linkedin.com/in/de-echte-username",
+  "role": "Functietitel bij {company_name}",
+  "headline": "De LinkedIn headline van de persoon"
 }}
 
-Rules:
-- Only return found=true if you're confident it's the RIGHT person at {company_name}
-- LinkedIn URL must be a direct profile link (linkedin.com/in/username)
-- The role should be their current job title
-- If unsure, return found=false with confidence="low"
+Of als niet gevonden:
+{{
+  "found": false,
+  "confidence": "low",
+  "linkedin_url": null,
+  "role": null,
+  "headline": null
+}}
+
+LET OP:
+- Zoek actief op Google naar "{search_terms}"
+- LinkedIn URL moet beginnen met linkedin.com/in/ (persoonlijk profiel, NIET /company/)
+- Als je de persoon vindt, geef dan found=true
 """
         
         # Use same config as company_lookup.py
@@ -196,7 +213,7 @@ Rules:
         
         if response and response.text:
             result_text = response.text.strip()
-            logger.info(f"Contact lookup for {name}: {result_text[:200]}")
+            logger.info(f"Contact lookup for '{name}' at '{company_name}' - Full response: {result_text}")
             
             # Remove markdown code blocks if present
             if result_text.startswith("```"):
