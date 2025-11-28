@@ -135,6 +135,8 @@ async def lookup_contact_online(name: str, company_name: str, country: Optional[
     """
     Lookup contact information (LinkedIn URL, role) via Gemini with Google Search.
     
+    Uses the same approach as company_lookup.py which works reliably.
+    
     Returns a dict with:
     - name: str
     - role: Optional[str]
@@ -143,9 +145,12 @@ async def lookup_contact_online(name: str, company_name: str, country: Optional[
     - found: bool
     - confidence: str ("high", "medium", "low")
     """
+    import json
+    import re
+    
     try:
         from google import genai
-        from google.genai.types import Tool, GoogleSearch
+        from google.genai import types
         
         # Get API key
         api_key = os.getenv("GOOGLE_AI_API_KEY") or os.getenv("GOOGLE_API_KEY")
@@ -157,54 +162,49 @@ async def lookup_contact_online(name: str, company_name: str, country: Optional[
         
         # Build search context
         location_context = f" in {country}" if country else ""
-        search_query = f"{name} {company_name}{location_context}"
         
-        prompt = f"""You are a professional researcher helping find contact information.
+        prompt = f"""Search for this person's LinkedIn profile: {name} at {company_name}{location_context}
 
-Search for this person: {name}
-Company: {company_name}
-Location: {location_context if country else "unknown"}
+IMPORTANT: Search for "{name} {company_name} linkedin" to find their profile.
 
-Find their LinkedIn profile and current job title/role.
-
-IMPORTANT:
-- Only return information if you're confident it's the RIGHT person at the RIGHT company
-- The LinkedIn URL must be a direct profile link (linkedin.com/in/username)
-- The role should be their current job title at {company_name}
-
-Respond in JSON format ONLY, no markdown:
+Return ONLY a JSON object (no markdown, no explanation):
 {{
-  "found": true/false,
-  "confidence": "high"/"medium"/"low",
-  "linkedin_url": "https://linkedin.com/in/..." or null,
-  "role": "Current job title" or null,
-  "headline": "LinkedIn headline if found" or null
+  "found": true or false,
+  "confidence": "high" or "medium" or "low",
+  "linkedin_url": "https://www.linkedin.com/in/username" or null,
+  "role": "Current job title at {company_name}" or null,
+  "headline": "Their LinkedIn headline" or null
 }}
 
-If you cannot find the person with reasonable certainty, respond:
-{{"found": false, "confidence": "low", "linkedin_url": null, "role": null, "headline": null}}
+Rules:
+- Only return found=true if you're confident it's the RIGHT person at {company_name}
+- LinkedIn URL must be a direct profile link (linkedin.com/in/username)
+- The role should be their current job title
+- If unsure, return found=false with confidence="low"
 """
         
+        # Use same config as company_lookup.py
         response = client.models.generate_content(
-            model="gemini-2.0-flash-exp",
+            model="gemini-2.0-flash",
             contents=prompt,
-            config={
-                "tools": [Tool(google_search=GoogleSearch())],
-                "temperature": 0.1,
-            }
+            config=types.GenerateContentConfig(
+                tools=[types.Tool(google_search=types.GoogleSearch())],
+                temperature=0.1,
+                max_output_tokens=500
+            )
         )
         
-        result_text = response.text.strip()
-        logger.info(f"Contact lookup result for {name}: {result_text[:200]}")
-        
-        # Parse JSON response
-        import json
-        import re
-        
-        # Try to extract JSON from response
-        json_match = re.search(r'\{[^{}]*\}', result_text, re.DOTALL)
-        if json_match:
-            result = json.loads(json_match.group())
+        if response and response.text:
+            result_text = response.text.strip()
+            logger.info(f"Contact lookup for {name}: {result_text[:200]}")
+            
+            # Remove markdown code blocks if present
+            if result_text.startswith("```"):
+                result_text = re.sub(r'^```\w*\n?', '', result_text)
+                result_text = re.sub(r'\n?```$', '', result_text)
+            
+            # Parse JSON
+            result = json.loads(result_text)
             result["name"] = name
             
             # Validate LinkedIn URL format
@@ -216,9 +216,12 @@ If you cannot find the person with reasonable certainty, respond:
             
             return result
         else:
-            logger.warning(f"Could not parse JSON from response: {result_text}")
+            logger.warning("Empty response from Gemini")
             return {"name": name, "found": False, "confidence": "low"}
         
+    except json.JSONDecodeError as e:
+        logger.warning(f"Failed to parse contact lookup response: {e}")
+        return {"name": name, "found": False, "confidence": "low"}
     except Exception as e:
         logger.error(f"Contact lookup failed: {e}")
         return {"name": name, "found": False, "confidence": "low", "error": str(e)}
