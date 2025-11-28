@@ -16,12 +16,13 @@ const errorMessages: Record<string, string> = {
     server_error: 'The authentication provider is temporarily unavailable. Please try again later.',
 }
 
-export default function SignupPage({
+export default async function SignupPage({
     searchParams,
 }: {
-    searchParams: { error?: string }
+    searchParams: Promise<{ error?: string }>
 }) {
-    const errorMessage = searchParams.error ? errorMessages[searchParams.error] || 'An error occurred during sign up.' : null
+    const params = await searchParams
+    const errorMessage = params.error ? errorMessages[params.error] || 'An error occurred during sign up.' : null
 
     return (
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-blue-50">
