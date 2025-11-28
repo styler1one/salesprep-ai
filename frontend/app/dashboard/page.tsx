@@ -103,6 +103,12 @@ export default function DashboardPage() {
         loadData()
     }, [supabase])
 
+    // Calculate trends (items from last 7 days) - hooks must be before any early returns
+    const recentResearch = useMemo(() => countRecentItems(researchBriefs), [researchBriefs])
+    const recentPreps = useMemo(() => countRecentItems(meetingPreps), [meetingPreps])
+    const recentFollowups = useMemo(() => countRecentItems(followups), [followups])
+    const recentDocs = useMemo(() => countRecentItems(knowledgeBase), [knowledgeBase])
+
     if (loading) {
         return (
             <div className="flex h-screen items-center justify-center bg-slate-50">
@@ -113,12 +119,6 @@ export default function DashboardPage() {
             </div>
         )
     }
-
-    // Calculate trends (items from last 7 days)
-    const recentResearch = useMemo(() => countRecentItems(researchBriefs), [researchBriefs])
-    const recentPreps = useMemo(() => countRecentItems(meetingPreps), [meetingPreps])
-    const recentFollowups = useMemo(() => countRecentItems(followups), [followups])
-    const recentDocs = useMemo(() => countRecentItems(knowledgeBase), [knowledgeBase])
 
     const stats = [
         { 
