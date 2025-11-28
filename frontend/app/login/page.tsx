@@ -1,34 +1,80 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { AuthForm } from '@/components/auth/auth-form'
+import { Icons } from '@/components/icons'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export const metadata: Metadata = {
     title: 'Login - SalesPrep AI',
     description: 'Login to your account',
 }
 
-export default function LoginPage() {
+// Error messages for OAuth errors
+const errorMessages: Record<string, string> = {
+    oauth_error: 'Authentication failed. Please try again.',
+    access_denied: 'Sign in was cancelled.',
+    server_error: 'The authentication provider is temporarily unavailable. Please try again later.',
+}
+
+export default function LoginPage({
+    searchParams,
+}: {
+    searchParams: { error?: string }
+}) {
+    const errorMessage = searchParams.error ? errorMessages[searchParams.error] || 'An error occurred during sign in.' : null
+
     return (
-        <div className="container flex h-screen w-screen flex-col items-center justify-center">
-            <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-                <div className="flex flex-col space-y-2 text-center">
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                        Welcome back
-                    </h1>
-                    <p className="text-sm text-muted-foreground">
-                        Enter your email to sign in to your account
+        <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-blue-50">
+            {/* Header */}
+            <header className="p-4">
+                <Link href="/" className="flex items-center gap-2 w-fit">
+                    <Icons.zap className="h-6 w-6 text-blue-600" />
+                    <span className="font-bold text-xl text-slate-900">SalesPrep AI</span>
+                </Link>
+            </header>
+
+            {/* Main Content */}
+            <main className="flex-1 flex items-center justify-center p-4">
+                <div className="w-full max-w-[400px] space-y-6">
+                    {/* Card */}
+                    <div className="bg-white rounded-2xl shadow-xl border p-8">
+                        <div className="flex flex-col space-y-2 text-center mb-6">
+                            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                                Welcome back
+                            </h1>
+                            <p className="text-sm text-muted-foreground">
+                                Sign in to your account to continue
+                            </p>
+                        </div>
+
+                        {/* OAuth Error Alert */}
+                        {errorMessage && (
+                            <Alert variant="destructive" className="mb-6">
+                                <Icons.alertCircle className="h-4 w-4" />
+                                <AlertDescription>{errorMessage}</AlertDescription>
+                            </Alert>
+                        )}
+
+                        <AuthForm view="login" />
+                    </div>
+
+                    {/* Footer Link */}
+                    <p className="text-center text-sm text-muted-foreground">
+                        Don&apos;t have an account?{' '}
+                        <Link
+                            href="/signup"
+                            className="font-medium text-blue-600 hover:text-blue-500 underline underline-offset-4"
+                        >
+                            Sign up for free
+                        </Link>
                     </p>
                 </div>
-                <AuthForm view="login" />
-                <p className="px-8 text-center text-sm text-muted-foreground">
-                    <Link
-                        href="/signup"
-                        className="hover:text-brand underline underline-offset-4"
-                    >
-                        Don&apos;t have an account? Sign Up
-                    </Link>
-                </p>
-            </div>
+            </main>
+
+            {/* Footer */}
+            <footer className="p-4 text-center text-sm text-muted-foreground">
+                <p>© {new Date().getFullYear()} SalesPrep AI. All rights reserved.</p>
+            </footer>
         </div>
     )
 }

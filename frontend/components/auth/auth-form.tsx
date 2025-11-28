@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Icons } from '@/components/icons'
+import { OAuthButtons } from './oauth-buttons'
 
 interface AuthFormProps {
     view: 'login' | 'signup'
@@ -58,6 +59,22 @@ export function AuthForm({ view }: AuthFormProps) {
 
     return (
         <div className="grid gap-6">
+            {/* OAuth Buttons - Most prominent */}
+            <OAuthButtons />
+
+            {/* Divider */}
+            <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                        Or continue with email
+                    </span>
+                </div>
+            </div>
+
+            {/* Email/Password Form */}
             <form onSubmit={handleSubmit}>
                 <div className="grid gap-4">
                     <div className="grid gap-2">
@@ -97,7 +114,7 @@ export function AuthForm({ view }: AuthFormProps) {
                         {loading && (
                             <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
                         )}
-                        {view === 'login' ? 'Sign In' : 'Sign Up'}
+                        {view === 'login' ? 'Sign In with Email' : 'Sign Up with Email'}
                     </Button>
                 </div>
             </form>
