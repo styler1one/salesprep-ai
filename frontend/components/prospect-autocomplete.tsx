@@ -5,21 +5,26 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { Search, Building2, FileText, Briefcase, MessageSquare, Check } from 'lucide-react'
+import { Search, Building2, FileText, Briefcase, MessageSquare, Check, Loader2 } from 'lucide-react'
 
+// Updated interface to match new API response
 interface Prospect {
-    name: string
-    has_research: boolean
-    has_prep: boolean
-    has_followup: boolean
-    last_activity: string
-    last_activity_type: string
-    context_score: number
+    id: string
+    company_name: string
+    status: string
+    industry?: string
+    last_activity_at: string
+    // Legacy compatibility fields (computed in component)
+    name?: string
+    has_research?: boolean
+    has_prep?: boolean
+    has_followup?: boolean
+    context_score?: number
 }
 
 interface ProspectAutocompleteProps {
     value: string
-    onChange: (value: string) => void
+    onChange: (value: string, prospectId?: string) => void
     placeholder?: string
     className?: string
     disabled?: boolean
@@ -35,13 +40,15 @@ export function ProspectAutocomplete({
     const supabase = createClientComponentClient()
     const [isOpen, setIsOpen] = useState(false)
     const [prospects, setProspects] = useState<Prospect[]>([])
-    const [filteredProspects, setFilteredProspects] = useState<Prospect[]>([])
+    const [searchResults, setSearchResults] = useState<Prospect[]>([])
     const [loading, setLoading] = useState(false)
+    const [searching, setSearching] = useState(false)
     const [selectedIndex, setSelectedIndex] = useState(-1)
     const inputRef = useRef<HTMLInputElement>(null)
     const dropdownRef = useRef<HTMLDivElement>(null)
+    const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-    // Fetch known prospects on mount
+    // Fetch initial prospects on mount (recent ones)
     useEffect(() => {
         const fetchProspects = async () => {
             setLoading(true)
@@ -50,7 +57,7 @@ export function ProspectAutocomplete({
                 if (!session) return
 
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/prospects/known`,
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/prospects?limit=20`,
                     {
                         headers: {
                             'Authorization': `Bearer ${session.access_token}`
@@ -60,7 +67,16 @@ export function ProspectAutocomplete({
 
                 if (response.ok) {
                     const data = await response.json()
-                    setProspects(data)
+                    // Transform to include legacy fields
+                    const transformed = (data.prospects || []).map((p: any) => ({
+                        ...p,
+                        name: p.company_name,
+                        has_research: (p.research_count || 0) > 0,
+                        has_prep: (p.prep_count || 0) > 0,
+                        has_followup: (p.followup_count || 0) > 0,
+                        context_score: (p.research_count || 0) + (p.prep_count || 0) + (p.followup_count || 0)
+                    }))
+                    setProspects(transformed)
                 }
             } catch (error) {
                 console.error('Error fetching prospects:', error)
@@ -72,29 +88,72 @@ export function ProspectAutocomplete({
         fetchProspects()
     }, [supabase])
 
-    // Filter prospects based on input
-    useEffect(() => {
-        if (!value.trim()) {
-            setFilteredProspects(prospects.slice(0, 10))
+    // Search prospects with debounce
+    const searchProspects = useCallback(async (query: string) => {
+        if (query.length < 2) {
+            setSearchResults([])
             return
         }
 
-        const query = value.toLowerCase()
-        const filtered = prospects.filter(p => 
-            p.name.toLowerCase().includes(query)
-        )
+        setSearching(true)
+        try {
+            const { data: { session } } = await supabase.auth.getSession()
+            if (!session) return
 
-        // Sort: exact start match first, then by context score
-        filtered.sort((a, b) => {
-            const aStarts = a.name.toLowerCase().startsWith(query)
-            const bStarts = b.name.toLowerCase().startsWith(query)
-            if (aStarts && !bStarts) return -1
-            if (!aStarts && bStarts) return 1
-            return b.context_score - a.context_score
-        })
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/v1/prospects/search?q=${encodeURIComponent(query)}&limit=10`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${session.access_token}`
+                    }
+                }
+            )
 
-        setFilteredProspects(filtered.slice(0, 10))
-    }, [value, prospects])
+            if (response.ok) {
+                const data = await response.json()
+                // Transform to include legacy fields
+                const transformed = data.map((p: any) => ({
+                    ...p,
+                    name: p.company_name,
+                    has_research: false, // Search endpoint doesn't return counts
+                    has_prep: false,
+                    has_followup: false,
+                    context_score: 0
+                }))
+                setSearchResults(transformed)
+            }
+        } catch (error) {
+            console.error('Error searching prospects:', error)
+        } finally {
+            setSearching(false)
+        }
+    }, [supabase])
+
+    // Debounced search when typing
+    useEffect(() => {
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current)
+        }
+
+        if (value.trim().length >= 2) {
+            searchTimeoutRef.current = setTimeout(() => {
+                searchProspects(value.trim())
+            }, 300)
+        } else {
+            setSearchResults([])
+        }
+
+        return () => {
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current)
+            }
+        }
+    }, [value, searchProspects])
+
+    // Get filtered prospects (search results or filter from cached)
+    const filteredProspects = value.trim().length >= 2 
+        ? searchResults 
+        : prospects.slice(0, 10)
 
     // Handle keyboard navigation
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -132,7 +191,7 @@ export function ProspectAutocomplete({
     }, [isOpen, selectedIndex, filteredProspects])
 
     const selectProspect = (prospect: Prospect) => {
-        onChange(prospect.name)
+        onChange(prospect.company_name || prospect.name || '', prospect.id)
         setIsOpen(false)
         setSelectedIndex(-1)
         inputRef.current?.blur()
@@ -156,7 +215,12 @@ export function ProspectAutocomplete({
 
     // Check if current value matches a known prospect
     const isKnownProspect = prospects.some(
-        p => p.name.toLowerCase() === value.toLowerCase()
+        p => (p.company_name || p.name || '').toLowerCase() === value.toLowerCase()
+    )
+    
+    // Find matched prospect for additional info
+    const matchedProspect = prospects.find(
+        p => (p.company_name || p.name || '').toLowerCase() === value.toLowerCase()
     )
 
     return (
@@ -181,7 +245,10 @@ export function ProspectAutocomplete({
                         isKnownProspect && "border-green-500 focus-visible:ring-green-500"
                     )}
                 />
-                {isKnownProspect && (
+                {searching && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
+                )}
+                {!searching && isKnownProspect && (
                     <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
                 )}
             </div>
@@ -194,12 +261,13 @@ export function ProspectAutocomplete({
                 >
                     {filteredProspects.length > 0 ? (
                         <>
-                            <div className="px-3 py-2 text-xs text-muted-foreground border-b bg-muted/50">
-                                Bekende prospects ({filteredProspects.length})
+                            <div className="px-3 py-2 text-xs text-muted-foreground border-b bg-muted/50 flex items-center justify-between">
+                                <span>Bekende prospects ({filteredProspects.length})</span>
+                                {searching && <Loader2 className="h-3 w-3 animate-spin" />}
                             </div>
                             {filteredProspects.map((prospect, index) => (
                                 <div
-                                    key={prospect.name}
+                                    key={prospect.id || prospect.name}
                                     className={cn(
                                         "px-3 py-2 cursor-pointer flex items-center justify-between",
                                         "hover:bg-accent",
@@ -210,7 +278,12 @@ export function ProspectAutocomplete({
                                 >
                                     <div className="flex items-center gap-2">
                                         <Building2 className="h-4 w-4 text-muted-foreground" />
-                                        <span className="font-medium">{prospect.name}</span>
+                                        <div>
+                                            <span className="font-medium">{prospect.company_name || prospect.name}</span>
+                                            {prospect.industry && (
+                                                <span className="text-xs text-muted-foreground ml-2">• {prospect.industry}</span>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="flex items-center gap-1">
                                         {prospect.has_research && (
@@ -231,17 +304,31 @@ export function ProspectAutocomplete({
                                                 Follow-up
                                             </Badge>
                                         )}
+                                        {prospect.status && prospect.status !== 'new' && (
+                                            <Badge variant="secondary" className="text-xs px-1.5 py-0 capitalize">
+                                                {prospect.status}
+                                            </Badge>
+                                        )}
                                     </div>
                                 </div>
                             ))}
                         </>
                     ) : value.trim() ? (
                         <div className="px-3 py-4 text-center text-sm text-muted-foreground">
-                            <Building2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                            <p>Geen bekende prospect gevonden</p>
-                            <p className="text-xs mt-1">
-                                Druk Enter om "{value}" te gebruiken als nieuwe prospect
-                            </p>
+                            {searching ? (
+                                <>
+                                    <Loader2 className="h-8 w-8 mx-auto mb-2 animate-spin opacity-50" />
+                                    <p>Zoeken...</p>
+                                </>
+                            ) : (
+                                <>
+                                    <Building2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                    <p>Geen bekende prospect gevonden</p>
+                                    <p className="text-xs mt-1">
+                                        Druk Enter om "{value}" te gebruiken als nieuwe prospect
+                                    </p>
+                                </>
+                            )}
                         </div>
                     ) : null}
                 </div>
@@ -250,12 +337,12 @@ export function ProspectAutocomplete({
             {/* Helper text */}
             {!isOpen && !isKnownProspect && value.trim() && (
                 <p className="text-xs text-amber-600 mt-1">
-                    ⚠️ Nieuwe prospect - context wordt pas opgebouwd na research/prep
+                    ⚠️ Nieuwe prospect - wordt automatisch aangemaakt
                 </p>
             )}
-            {!isOpen && isKnownProspect && (
+            {!isOpen && isKnownProspect && matchedProspect && (
                 <p className="text-xs text-green-600 mt-1">
-                    ✓ Bekende prospect - bestaande context wordt gebruikt
+                    ✓ Bekende prospect{matchedProspect.context_score && matchedProspect.context_score > 0 ? ` - ${matchedProspect.context_score} activiteit(en)` : ''}
                 </p>
             )}
         </div>

@@ -18,6 +18,7 @@ from app.services.transcription_service import get_transcription_service
 from app.services.followup_generator import get_followup_generator
 from app.services.transcript_parser import get_transcript_parser
 from app.services.prospect_context_service import get_prospect_context_service
+from app.services.prospect_service import get_prospect_service
 
 logger = logging.getLogger(__name__)
 
@@ -272,10 +273,20 @@ async def upload_audio(
         if len(audio_data) > 50 * 1024 * 1024:
             raise HTTPException(status_code=413, detail="File too large. Max 50MB.")
         
-        # Create followup record
+        # Get or create prospect (NEW!)
+        prospect_id = None
+        if prospect_company_name:
+            prospect_service = get_prospect_service()
+            prospect_id = prospect_service.get_or_create_prospect(
+                organization_id=organization_id,
+                company_name=prospect_company_name
+            )
+        
+        # Create followup record with prospect_id
         followup_data = {
             "organization_id": organization_id,
             "user_id": user_id,
+            "prospect_id": prospect_id,  # Link to prospect!
             "meeting_prep_id": meeting_prep_id,
             "prospect_company_name": prospect_company_name,
             "meeting_date": meeting_date,
@@ -304,7 +315,7 @@ async def upload_audio(
             prospect_company_name
         )
         
-        logger.info(f"Created followup {followup_id}, starting background processing")
+        logger.info(f"Created followup {followup_id} for prospect {prospect_id}, starting background processing")
         
         return FollowupResponse(
             id=followup_id,
@@ -473,10 +484,20 @@ async def upload_transcript(
             for seg in parsed.segments
         ]
         
-        # Create followup record
+        # Get or create prospect (NEW!)
+        prospect_id = None
+        if prospect_company_name:
+            prospect_service = get_prospect_service()
+            prospect_id = prospect_service.get_or_create_prospect(
+                organization_id=organization_id,
+                company_name=prospect_company_name
+            )
+        
+        # Create followup record with prospect_id
         followup_data = {
             "organization_id": organization_id,
             "user_id": user_id,
+            "prospect_id": prospect_id,  # Link to prospect!
             "meeting_prep_id": meeting_prep_id,
             "prospect_company_name": prospect_company_name,
             "meeting_date": meeting_date,
@@ -507,7 +528,7 @@ async def upload_transcript(
             parsed.estimated_duration
         )
         
-        logger.info(f"Created transcript followup {followup_id}, starting background processing")
+        logger.info(f"Created transcript followup {followup_id} for prospect {prospect_id}, starting background processing")
         
         return FollowupResponse(
             id=followup_id,

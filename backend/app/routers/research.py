@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from supabase import create_client, Client
 
 from app.deps import get_current_user, get_auth_token
+from app.services.prospect_service import get_prospect_service
 
 
 router = APIRouter()
@@ -44,6 +45,7 @@ class ResearchRequest(BaseModel):
 class ResearchResponse(BaseModel):
     id: str
     company_name: str
+    prospect_id: Optional[str] = None
     status: str
     created_at: str
 
@@ -155,15 +157,23 @@ async def start_research(
     
     organization_id = org_response.data[0]["organization_id"]
     
+    # Get or create prospect (NEW!)
+    prospect_service = get_prospect_service()
+    prospect_id = prospect_service.get_or_create_prospect(
+        organization_id=organization_id,
+        company_name=request.company_name
+    )
+    
     # Generate research ID
     research_id = str(uuid.uuid4())
     
     try:
-        # Create database record
+        # Create database record with prospect_id
         db_record = {
             "id": research_id,
             "organization_id": organization_id,
             "user_id": user_id,
+            "prospect_id": prospect_id,  # Link to prospect!
             "company_name": request.company_name,
             "company_linkedin_url": request.company_linkedin_url,
             "country": request.country,
@@ -172,6 +182,18 @@ async def start_research(
         }
         
         result = supabase_service.table("research_briefs").insert(db_record).execute()
+        
+        # Update prospect with additional info if provided
+        if prospect_id and (request.company_linkedin_url or request.country or request.city):
+            updates = {}
+            if request.company_linkedin_url:
+                updates["linkedin_url"] = request.company_linkedin_url
+            if request.country:
+                updates["country"] = request.country
+            if request.city:
+                updates["city"] = request.city
+            if updates:
+                prospect_service.update_prospect(prospect_id, organization_id, updates)
         
         # Start background processing
         background_tasks.add_task(
@@ -186,6 +208,7 @@ async def start_research(
         return ResearchResponse(
             id=research_id,
             company_name=request.company_name,
+            prospect_id=prospect_id,
             status="pending",
             created_at=result.data[0]["created_at"]
         )

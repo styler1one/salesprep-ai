@@ -12,6 +12,7 @@ import logging
 from app.deps import get_current_user
 from app.services.rag_service import rag_service
 from app.services.prep_generator import prep_generator
+from app.services.prospect_service import get_prospect_service
 from supabase import create_client
 import os
 
@@ -132,21 +133,36 @@ async def start_prep(
         
         organization_id = org_response.data[0]["organization_id"]
         
-        # Check if research brief exists
+        # Get or create prospect (NEW!)
+        prospect_service = get_prospect_service()
+        prospect_id = prospect_service.get_or_create_prospect(
+            organization_id=organization_id,
+            company_name=request.prospect_company_name
+        )
+        
+        # Check if research brief exists (now also by prospect_id)
         research_response = supabase.table("research_briefs").select("id").eq(
             "organization_id", organization_id
-        ).ilike(
-            "company_name", f"%{request.prospect_company_name}%"
         ).eq(
             "status", "completed"
-        ).limit(1).execute()
+        )
         
+        # Try to find by prospect_id first, then fallback to company name
+        if prospect_id:
+            research_response = research_response.eq("prospect_id", prospect_id)
+        else:
+            research_response = research_response.ilike(
+                "company_name", f"%{request.prospect_company_name}%"
+            )
+        
+        research_response = research_response.limit(1).execute()
         research_brief_id = research_response.data[0]["id"] if research_response.data else None
         
-        # Create prep record
+        # Create prep record with prospect_id
         prep_data = {
             "organization_id": organization_id,
             "user_id": user_id,
+            "prospect_id": prospect_id,  # Link to prospect!
             "prospect_company_name": request.prospect_company_name,
             "meeting_type": request.meeting_type,
             "custom_notes": request.custom_notes,
@@ -173,10 +189,11 @@ async def start_prep(
             request.custom_notes
         )
         
-        logger.info(f"Created prep {prep_id} for {request.prospect_company_name}")
+        logger.info(f"Created prep {prep_id} for {request.prospect_company_name} (prospect: {prospect_id})")
         
         return {
             "id": prep_id,
+            "prospect_id": prospect_id,
             "prospect_company_name": request.prospect_company_name,
             "meeting_type": request.meeting_type,
             "status": "pending",
