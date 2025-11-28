@@ -166,25 +166,19 @@ async def lookup_contact_online(name: str, company_name: str, country: Optional[
         # Build search query exactly like you would type in Google
         search_query = f"{name} {company_name} linkedin"
         
-        prompt = f"""Search Google for: {search_query}
+        # Force Gemini to actually use Google Search by making it the main instruction
+        prompt = f"""Use Google Search to find: "{search_query}"
 
-Find the LinkedIn profile URL for {name} who works at {company_name}.
+Look at the search results and find the LinkedIn profile (linkedin.com/in/...) for this person.
 
-Return JSON only:
-{{
-  "found": true,
-  "linkedin_url": "https://www.linkedin.com/in/actual-username",
-  "role": "Their job title",
-  "confidence": "high"
-}}
+Person: {name}
+Company: {company_name}
 
-Or if not found:
-{{
-  "found": false,
-  "linkedin_url": null,
-  "role": null,
-  "confidence": "low"
-}}
+After searching, respond with ONLY this JSON (no other text before or after):
+{{"found": true, "linkedin_url": "the-url-you-found", "role": "their-job-title", "confidence": "high"}}
+
+If the search doesn't show their LinkedIn profile:
+{{"found": false, "linkedin_url": null, "role": null, "confidence": "low"}}
 """
         
         print(f"[CONTACT_LOOKUP] Sending request to Gemini with search: {search_query}")
@@ -206,13 +200,24 @@ Or if not found:
             result_text = response.text.strip()
             print(f"[CONTACT_LOOKUP] Raw response: {result_text}")
             
-            # Remove markdown code blocks if present
-            if result_text.startswith("```"):
-                result_text = re.sub(r'^```\w*\n?', '', result_text)
-                result_text = re.sub(r'\n?```$', '', result_text)
+            # Extract JSON from response - it might have text before/after
+            # First try to find JSON in code block
+            json_match = re.search(r'```(?:json)?\s*(\{[^`]+\})\s*```', result_text, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(1)
+            else:
+                # Try to find raw JSON object
+                json_match = re.search(r'\{[^{}]*"found"[^{}]*\}', result_text, re.DOTALL)
+                if json_match:
+                    json_str = json_match.group(0)
+                else:
+                    print(f"[CONTACT_LOOKUP] Could not find JSON in response")
+                    return {"name": name, "found": False, "confidence": "low"}
+            
+            print(f"[CONTACT_LOOKUP] Extracted JSON: {json_str}")
             
             # Parse JSON
-            result = json.loads(result_text)
+            result = json.loads(json_str)
             result["name"] = name
             
             # Validate LinkedIn URL format
