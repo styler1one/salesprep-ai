@@ -189,15 +189,18 @@ def check_admin_access(current_user: dict) -> str:
     Raises:
         HTTPException if not admin
     """
-    # In production, check organization_members table for role
-    # For now, assume user has organization_id in token
     organization_id = current_user.get("organization_id")
     
+    # If no org_id in token, try to find user's organization
     if not organization_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User must be part of an organization"
-        )
+        result = supabase.table("organizations").select("id").eq("name", f"Personal - {current_user.get('email', '')}").execute()
+        if result.data and len(result.data) > 0:
+            organization_id = result.data[0]["id"]
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User must be part of an organization"
+            )
     
     # TODO: Check if user is admin/owner in organization_members table
     # For now, allow all users (will be restricted by RLS policies)
@@ -440,11 +443,18 @@ async def get_company_profile(
     """
     try:
         organization_id = current_user.get("organization_id")
+        
+        # If no org_id in token, try to find user's organization
         if not organization_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User must be part of an organization"
-            )
+            # Try to find existing org for user
+            result = supabase.table("organizations").select("id").eq("name", f"Personal - {current_user.get('email', '')}").execute()
+            if result.data and len(result.data) > 0:
+                organization_id = result.data[0]["id"]
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No organization found for user"
+                )
         
         profile_service = ProfileService()
         profile = profile_service.get_company_profile(organization_id)
@@ -576,11 +586,17 @@ async def check_company_profile_exists(
     """
     try:
         organization_id = current_user.get("organization_id")
+        
+        # If no org_id in token, try to find user's organization
         if not organization_id:
-            return {
-                "exists": False,
-                "completeness": 0
-            }
+            result = supabase.table("organizations").select("id").eq("name", f"Personal - {current_user.get('email', '')}").execute()
+            if result.data and len(result.data) > 0:
+                organization_id = result.data[0]["id"]
+            else:
+                return {
+                    "exists": False,
+                    "completeness": 0
+                }
         
         profile_service = ProfileService()
         profile = profile_service.get_company_profile(organization_id)
