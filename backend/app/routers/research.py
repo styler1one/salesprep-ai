@@ -136,6 +136,16 @@ def process_research_background(
         print(f"DEBUG: Success count: {research_data.get('success_count', 0)}")
         
         # Store source data
+        # Map source names to allowed source_type values in database
+        source_type_map = {
+            "claude": "claude",
+            "gemini": "gemini",
+            "kvk": "kvk",
+            "website": "web",  # website scraper -> 'web' in database
+            "premium": "premium",
+            "web": "web"
+        }
+        
         for source_name, source_result in research_data["sources"].items():
             success = source_result.get('success', False)
             error = source_result.get('error', 'No error message')
@@ -143,9 +153,12 @@ def process_research_background(
             if not success:
                 print(f"ERROR: Source {source_name} failed: {error}")
             
+            # Map source_name to valid source_type
+            source_type = source_type_map.get(source_name, "web")
+            
             supabase_service.table("research_sources").insert({
                 "research_id": research_id,
-                "source_type": source_name,
+                "source_type": source_type,
                 "source_name": source_name,
                 "data": source_result
             }).execute()
