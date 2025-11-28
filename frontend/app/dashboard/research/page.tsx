@@ -48,16 +48,18 @@ export default function ResearchPage() {
   // Form state
   const [companyName, setCompanyName] = useState('')
   const [linkedinUrl, setLinkedinUrl] = useState('')
-  const [websiteUrl, setWebsiteUrl] = useState('')  // NEW: Website URL for direct scraping
+  const [websiteUrl, setWebsiteUrl] = useState('')
   const [country, setCountry] = useState('')
   const [city, setCity] = useState('')
   
-  // Auto-lookup state
-  const [isLookingUp, setIsLookingUp] = useState(false)
-  const [lookupDone, setLookupDone] = useState(false)
-  const debouncedCompanyName = useDebounce(companyName, 800)
-  const debouncedCountry = useDebounce(country, 800)
-  const lastLookupRef = useRef<string>('')
+  // Company search state
+  const [isSearching, setIsSearching] = useState(false)
+  const [companyOptions, setCompanyOptions] = useState<any[]>([])
+  const [showOptions, setShowOptions] = useState(false)
+  const [selectedCompany, setSelectedCompany] = useState<any>(null)
+  const debouncedCompanyName = useDebounce(companyName, 1000)
+  const debouncedCountry = useDebounce(country, 1000)
+  const lastSearchRef = useRef<string>('')
 
   useEffect(() => {
     const getUser = async () => {
@@ -71,30 +73,32 @@ export default function ResearchPage() {
     getUser()
   }, [supabase])
   
-  // Auto-lookup when company name changes (debounced)
+  // Search for company options when BOTH name AND country are filled
   useEffect(() => {
-    const lookupKey = `${debouncedCompanyName}|${debouncedCountry}`
+    const searchKey = `${debouncedCompanyName}|${debouncedCountry}`
     
-    // Skip if already looked up this combination, or name too short
+    // Only search when BOTH company name AND country are provided
     if (
       !debouncedCompanyName || 
       debouncedCompanyName.length < 3 ||
-      lastLookupRef.current === lookupKey ||
-      (websiteUrl && linkedinUrl) // Already have both URLs
+      !debouncedCountry ||
+      debouncedCountry.length < 2 ||
+      lastSearchRef.current === searchKey ||
+      selectedCompany // Already selected a company
     ) {
       return
     }
     
-    const performLookup = async () => {
+    const searchCompanies = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
         if (!session) return
         
-        setIsLookingUp(true)
-        lastLookupRef.current = lookupKey
+        setIsSearching(true)
+        lastSearchRef.current = searchKey
         
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-        const response = await fetch(`${apiUrl}/api/v1/research/lookup`, {
+        const response = await fetch(`${apiUrl}/api/v1/research/search-company`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
@@ -102,41 +106,66 @@ export default function ResearchPage() {
           },
           body: JSON.stringify({
             company_name: debouncedCompanyName,
-            country: debouncedCountry || null
+            country: debouncedCountry
           })
         })
         
         if (response.ok) {
           const data = await response.json()
           
-          // Only auto-fill if we don't have values yet and confidence is high
-          if (data.suggestions_found) {
-            if (data.website && !websiteUrl && data.website_confidence >= 80) {
-              setWebsiteUrl(data.website)
-              toast({
-                title: "Website gevonden",
-                description: `${data.website} (${data.website_confidence}% zeker)`,
-              })
+          if (data.options && data.options.length > 0) {
+            setCompanyOptions(data.options)
+            
+            // If only 1 option with high confidence, auto-select
+            if (data.options.length === 1 && data.options[0].confidence >= 90) {
+              selectCompanyOption(data.options[0])
+            } else {
+              // Show options for user to choose
+              setShowOptions(true)
             }
-            if (data.linkedin_url && !linkedinUrl && data.linkedin_confidence >= 80) {
-              setLinkedinUrl(data.linkedin_url)
-              toast({
-                title: "LinkedIn gevonden",
-                description: `${data.linkedin_url} (${data.linkedin_confidence}% zeker)`,
-              })
-            }
-            setLookupDone(true)
+          } else {
+            setCompanyOptions([])
+            toast({
+              title: "Geen bedrijven gevonden",
+              description: `Geen match voor "${debouncedCompanyName}" in ${debouncedCountry}`,
+              variant: "destructive"
+            })
           }
         }
       } catch (error) {
-        console.error('Lookup failed:', error)
+        console.error('Company search failed:', error)
       } finally {
-        setIsLookingUp(false)
+        setIsSearching(false)
       }
     }
     
-    performLookup()
-  }, [debouncedCompanyName, debouncedCountry, supabase, toast, websiteUrl, linkedinUrl])
+    searchCompanies()
+  }, [debouncedCompanyName, debouncedCountry, supabase, toast, selectedCompany])
+  
+  // Handle selecting a company option
+  const selectCompanyOption = (option: any) => {
+    setSelectedCompany(option)
+    setCompanyName(option.company_name)
+    if (option.website) setWebsiteUrl(option.website)
+    if (option.linkedin_url) setLinkedinUrl(option.linkedin_url)
+    setShowOptions(false)
+    
+    toast({
+      title: "Bedrijf geselecteerd",
+      description: `${option.company_name} - URLs automatisch ingevuld`,
+    })
+  }
+  
+  // Reset selection when company name is manually changed
+  const handleCompanyNameChange = (value: string) => {
+    setCompanyName(value)
+    if (selectedCompany && value !== selectedCompany.company_name) {
+      setSelectedCompany(null)
+      setWebsiteUrl('')
+      setLinkedinUrl('')
+      setCompanyOptions([])
+    }
+  }
 
   const fetchBriefs = useCallback(async () => {
     try {
@@ -363,77 +392,143 @@ export default function ResearchPage() {
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Icons.search className="h-5 w-5 text-blue-600" />
             Research a Company
-            {isLookingUp && (
+            {isSearching && (
               <span className="ml-2 text-xs text-slate-400 flex items-center gap-1">
                 <Icons.spinner className="h-3 w-3 animate-spin" />
-                Auto-detecting URLs...
+                Zoeken op Google...
               </span>
             )}
           </h2>
+          
+          {/* Step indicator */}
+          <div className="mb-6 p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
+            <strong>Stap 1:</strong> Vul bedrijfsnaam en land in → <strong>Stap 2:</strong> Selecteer het juiste bedrijf → <strong>Stap 3:</strong> Start research
+          </div>
+          
           <form onSubmit={handleStartResearch} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="companyName">Company Name *</Label>
+                <Label htmlFor="companyName">Bedrijfsnaam *</Label>
                 <Input
                   id="companyName"
                   value={companyName}
-                  onChange={(e) => { setCompanyName(e.target.value); setLookupDone(false) }}
-                  placeholder="e.g., Acme Corp"
-                  className="mt-1"
+                  onChange={(e) => handleCompanyNameChange(e.target.value)}
+                  placeholder="bijv. Precision Health Clinic"
+                  className={`mt-1 ${selectedCompany ? 'border-green-300 bg-green-50' : ''}`}
                   required
                 />
-                <p className="text-xs text-slate-400 mt-1">
-                  We'll auto-find website & LinkedIn
-                </p>
               </div>
 
               <div>
-                <Label htmlFor="country">Country (optional)</Label>
+                <Label htmlFor="country">Land * (verplicht voor zoeken)</Label>
                 <Input
                   id="country"
                   value={country}
-                  onChange={(e) => { setCountry(e.target.value); setLookupDone(false) }}
-                  placeholder="e.g., Netherlands"
-                  className="mt-1"
+                  onChange={(e) => { setCountry(e.target.value); setSelectedCompany(null) }}
+                  placeholder="bijv. Netherlands"
+                  className={`mt-1 ${country.length >= 2 ? 'border-blue-300' : ''}`}
+                  required
                 />
                 <p className="text-xs text-slate-400 mt-1">
-                  Helps find correct domain (.nl, .de, etc.)
+                  {!country ? '⚠️ Vul land in om bedrijf te zoeken' : 
+                   companyName.length < 3 ? '⚠️ Vul bedrijfsnaam in (min. 3 tekens)' :
+                   isSearching ? '🔍 Zoeken...' :
+                   selectedCompany ? '✅ Bedrijf geselecteerd' :
+                   '⏳ Wacht even...'}
                 </p>
               </div>
             </div>
+            
+            {/* Company Options Dropdown */}
+            {showOptions && companyOptions.length > 0 && (
+              <div className="border rounded-lg p-4 bg-blue-50 space-y-3">
+                <p className="font-medium text-blue-800">
+                  🔍 Meerdere bedrijven gevonden - selecteer het juiste:
+                </p>
+                {companyOptions.map((option, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => selectCompanyOption(option)}
+                    className="w-full text-left p-3 bg-white rounded-lg border hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium text-slate-800">{option.company_name}</p>
+                        {option.description && (
+                          <p className="text-sm text-slate-500 mt-1">{option.description}</p>
+                        )}
+                        {option.location && (
+                          <p className="text-xs text-slate-400 mt-1">📍 {option.location}</p>
+                        )}
+                      </div>
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                        {option.confidence}% match
+                      </span>
+                    </div>
+                    <div className="flex gap-4 mt-2 text-xs text-slate-500">
+                      {option.website && <span>🌐 {option.website}</span>}
+                      {option.linkedin_url && <span>💼 LinkedIn</span>}
+                    </div>
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setShowOptions(false)}
+                  className="text-sm text-slate-500 hover:text-slate-700"
+                >
+                  ✕ Sluiten en handmatig invullen
+                </button>
+              </div>
+            )}
+            
+            {/* Selected company indicator */}
+            {selectedCompany && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-green-800">✅ {selectedCompany.company_name}</p>
+                  <p className="text-sm text-green-600">{selectedCompany.description || selectedCompany.location}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setSelectedCompany(null); setWebsiteUrl(''); setLinkedinUrl(''); setCompanyOptions([]); lastSearchRef.current = '' }}
+                  className="text-sm text-green-700 hover:text-green-900 underline"
+                >
+                  Wijzigen
+                </button>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="websiteUrl" className="flex items-center gap-2">
-                  Company Website (optional)
-                  {websiteUrl && lookupDone && (
+                  Website
+                  {websiteUrl && selectedCompany && (
                     <span className="text-xs text-green-600 flex items-center gap-1">
                       <Icons.checkCircle className="h-3 w-3" />
-                      Auto-detected
+                      Via Google gevonden
                     </span>
                   )}
                 </Label>
-                <div className="relative">
-                  <Input
-                    id="websiteUrl"
-                    value={websiteUrl}
-                    onChange={(e) => setWebsiteUrl(e.target.value)}
-                    placeholder={isLookingUp ? "Zoeken..." : "https://www.company.com"}
-                    className={`mt-1 ${websiteUrl && lookupDone ? 'border-green-300 bg-green-50' : ''}`}
-                  />
-                </div>
+                <Input
+                  id="websiteUrl"
+                  value={websiteUrl}
+                  onChange={(e) => setWebsiteUrl(e.target.value)}
+                  placeholder="https://www.company.com"
+                  className={`mt-1 ${websiteUrl && selectedCompany ? 'border-green-300 bg-green-50' : ''}`}
+                />
                 <p className="text-xs text-slate-400 mt-1">
-                  We'll scrape this for detailed info
+                  We scrapen deze website voor details
                 </p>
               </div>
 
               <div>
                 <Label htmlFor="linkedinUrl" className="flex items-center gap-2">
-                  LinkedIn URL (optional)
-                  {linkedinUrl && lookupDone && (
+                  LinkedIn URL
+                  {linkedinUrl && selectedCompany && (
                     <span className="text-xs text-green-600 flex items-center gap-1">
                       <Icons.checkCircle className="h-3 w-3" />
-                      Auto-detected
+                      Via Google gevonden
                     </span>
                   )}
                 </Label>
@@ -441,35 +536,35 @@ export default function ResearchPage() {
                   id="linkedinUrl"
                   value={linkedinUrl}
                   onChange={(e) => setLinkedinUrl(e.target.value)}
-                  placeholder={isLookingUp ? "Zoeken..." : "https://linkedin.com/company/..."}
-                  className={`mt-1 ${linkedinUrl && lookupDone ? 'border-green-300 bg-green-50' : ''}`}
+                  placeholder="https://linkedin.com/company/..."
+                  className={`mt-1 ${linkedinUrl && selectedCompany ? 'border-green-300 bg-green-50' : ''}`}
                 />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="city">City (optional)</Label>
+              <Label htmlFor="city">Stad (optioneel)</Label>
               <Input
                 id="city"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                placeholder="e.g., Amsterdam"
+                placeholder="bijv. Amsterdam"
                 className="mt-1"
               />
               <p className="text-xs text-slate-400 mt-1">
-                Helps find the right company
+                Extra context voor de research
               </p>
             </div>
 
             <Button 
               type="submit" 
-              disabled={researching}
+              disabled={researching || !companyName || !country}
               className="bg-blue-600 hover:bg-blue-700"
             >
               {researching ? (
                 <>
                   <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                  Starting Research...
+                  Research starten...
                 </>
               ) : (
                 <>

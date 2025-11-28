@@ -399,6 +399,93 @@ Rules:
             logger.error(f"Google Search lookup failed: {e}")
         
         return None
+    
+    async def search_company_options(
+        self,
+        company_name: str,
+        country: str
+    ) -> List[Dict[str, Any]]:
+        """
+        Search for multiple company options matching the name and country.
+        
+        Returns a list of possible matches for the user to select from.
+        This is more accurate than auto-guessing the wrong company.
+        
+        Args:
+            company_name: Name of the company
+            country: Country where the company is located (REQUIRED)
+            
+        Returns:
+            List of company options with website, linkedin, description
+        """
+        if not company_name or not country:
+            return []
+        
+        client = get_genai_client()
+        if not client:
+            logger.warning("Google GenAI client not available for search")
+            return []
+        
+        try:
+            from google.genai import types
+            
+            prompt = f"""Search for companies matching "{company_name}" in {country}.
+
+Return a JSON array with up to 3 most likely matches. Each match should have:
+{{
+    "company_name": "Official company name",
+    "description": "Brief description (max 100 chars)",
+    "website": "https://...",
+    "linkedin_url": "https://www.linkedin.com/company/...",
+    "location": "City, Country",
+    "confidence": 0-100
+}}
+
+Rules:
+- Only include companies that actually exist in {country}
+- Order by relevance/confidence (most likely first)
+- Include official website and LinkedIn if found
+- If company name is ambiguous, include different companies with same/similar names
+- Return empty array [] if no matches found
+- Return valid JSON array only, no markdown or explanations"""
+
+            response = client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    tools=[types.Tool(google_search=types.GoogleSearch())],
+                    temperature=0.1,
+                    max_output_tokens=1500
+                )
+            )
+            
+            if response and response.text:
+                text = response.text.strip()
+                
+                # Remove markdown code blocks if present
+                if text.startswith("```"):
+                    text = re.sub(r'^```\w*\n?', '', text)
+                    text = re.sub(r'\n?```$', '', text)
+                
+                options = json.loads(text)
+                
+                if isinstance(options, list):
+                    # Validate and clean URLs
+                    for opt in options:
+                        if opt.get("website") and not opt["website"].startswith("http"):
+                            opt["website"] = "https://" + opt["website"]
+                        if opt.get("linkedin_url") and "linkedin.com" not in opt.get("linkedin_url", ""):
+                            opt["linkedin_url"] = None
+                    
+                    logger.info(f"Found {len(options)} company options for '{company_name}' in {country}")
+                    return options
+                
+        except json.JSONDecodeError as e:
+            logger.warning(f"Failed to parse company options response: {e}")
+        except Exception as e:
+            logger.error(f"Company options search failed: {e}")
+        
+        return []
 
 
 # Lazy singleton

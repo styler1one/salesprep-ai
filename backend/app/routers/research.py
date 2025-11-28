@@ -67,6 +67,30 @@ class LookupResponse(BaseModel):
     suggestions_found: bool = False
 
 
+class CompanySearchRequest(BaseModel):
+    """Request for searching company options."""
+    company_name: str
+    country: str  # REQUIRED - we need country to find the right company
+
+
+class CompanyOption(BaseModel):
+    """A possible company match."""
+    company_name: str
+    description: Optional[str] = None
+    website: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    location: Optional[str] = None
+    confidence: int = 0
+
+
+class CompanySearchResponse(BaseModel):
+    """Response with multiple company options."""
+    query_company: str
+    query_country: str
+    options: list[CompanyOption] = []
+    message: Optional[str] = None
+
+
 # Background processing function
 def process_research_background(
     research_id: str,
@@ -397,4 +421,63 @@ async def lookup_company(
             company_name=request.company_name,
             country=request.country,
             suggestions_found=False
+        )
+
+
+@router.post("/search-company", response_model=CompanySearchResponse)
+async def search_company_options(
+    request: CompanySearchRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Search for company options matching name and country.
+    
+    Use this when:
+    - User has entered both company name AND country
+    - You want to show multiple possible matches for user to choose from
+    
+    Returns up to 3 companies with website, LinkedIn, and description.
+    """
+    try:
+        if not request.country:
+            return CompanySearchResponse(
+                query_company=request.company_name,
+                query_country=request.country,
+                options=[],
+                message="Land is verplicht om het juiste bedrijf te vinden"
+            )
+        
+        lookup_service = get_company_lookup()
+        options = await lookup_service.search_company_options(
+            company_name=request.company_name,
+            country=request.country
+        )
+        
+        # Convert to response model
+        company_options = [
+            CompanyOption(
+                company_name=opt.get("company_name", request.company_name),
+                description=opt.get("description"),
+                website=opt.get("website"),
+                linkedin_url=opt.get("linkedin_url"),
+                location=opt.get("location"),
+                confidence=opt.get("confidence", 0)
+            )
+            for opt in options
+        ]
+        
+        return CompanySearchResponse(
+            query_company=request.company_name,
+            query_country=request.country,
+            options=company_options,
+            message=None if company_options else "Geen bedrijven gevonden"
+        )
+        
+    except Exception as e:
+        print(f"Company search error: {e}")
+        return CompanySearchResponse(
+            query_company=request.company_name,
+            query_country=request.country,
+            options=[],
+            message=f"Zoeken mislukt: {str(e)}"
         )
