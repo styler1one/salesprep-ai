@@ -11,6 +11,7 @@ from supabase import create_client, Client
 
 from app.deps import get_current_user, get_auth_token
 from app.services.prospect_service import get_prospect_service
+from app.services.company_lookup import get_company_lookup
 
 
 router = APIRouter()
@@ -49,6 +50,21 @@ class ResearchResponse(BaseModel):
     prospect_id: Optional[str] = None
     status: str
     created_at: str
+
+
+class LookupRequest(BaseModel):
+    company_name: str
+    country: Optional[str] = None
+
+
+class LookupResponse(BaseModel):
+    company_name: str
+    country: Optional[str] = None
+    website: Optional[str] = None
+    website_confidence: int = 0
+    linkedin_url: Optional[str] = None
+    linkedin_confidence: int = 0
+    suggestions_found: bool = False
 
 
 # Background processing function
@@ -354,3 +370,31 @@ async def get_research_brief(
         "created_at": research["created_at"],
         "completed_at": research["completed_at"]
     }
+
+
+@router.post("/lookup", response_model=LookupResponse)
+async def lookup_company(
+    request: LookupRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Auto-lookup company website and LinkedIn URL based on company name and country.
+    
+    Returns URLs with confidence scores. Only returns suggestions with >= 80% confidence.
+    Use this to pre-fill the research form.
+    """
+    try:
+        lookup_service = get_company_lookup()
+        result = await lookup_service.lookup_company(
+            company_name=request.company_name,
+            country=request.country
+        )
+        return LookupResponse(**result)
+    except Exception as e:
+        print(f"Lookup error: {e}")
+        # Return empty result on error (non-blocking)
+        return LookupResponse(
+            company_name=request.company_name,
+            country=request.country,
+            suggestions_found=False
+        )

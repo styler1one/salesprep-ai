@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,18 @@ import { Icons } from '@/components/icons'
 import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout'
+
+// Debounce helper
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+  
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay)
+    return () => clearTimeout(timer)
+  }, [value, delay])
+  
+  return debouncedValue
+}
 
 interface ResearchBrief {
   id: string
@@ -39,6 +51,13 @@ export default function ResearchPage() {
   const [websiteUrl, setWebsiteUrl] = useState('')  // NEW: Website URL for direct scraping
   const [country, setCountry] = useState('')
   const [city, setCity] = useState('')
+  
+  // Auto-lookup state
+  const [isLookingUp, setIsLookingUp] = useState(false)
+  const [lookupDone, setLookupDone] = useState(false)
+  const debouncedCompanyName = useDebounce(companyName, 800)
+  const debouncedCountry = useDebounce(country, 800)
+  const lastLookupRef = useRef<string>('')
 
   useEffect(() => {
     const getUser = async () => {
@@ -51,6 +70,73 @@ export default function ResearchPage() {
     }
     getUser()
   }, [supabase])
+  
+  // Auto-lookup when company name changes (debounced)
+  useEffect(() => {
+    const lookupKey = `${debouncedCompanyName}|${debouncedCountry}`
+    
+    // Skip if already looked up this combination, or name too short
+    if (
+      !debouncedCompanyName || 
+      debouncedCompanyName.length < 3 ||
+      lastLookupRef.current === lookupKey ||
+      (websiteUrl && linkedinUrl) // Already have both URLs
+    ) {
+      return
+    }
+    
+    const performLookup = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) return
+        
+        setIsLookingUp(true)
+        lastLookupRef.current = lookupKey
+        
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+        const response = await fetch(`${apiUrl}/api/v1/research/lookup`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            company_name: debouncedCompanyName,
+            country: debouncedCountry || null
+          })
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          
+          // Only auto-fill if we don't have values yet and confidence is high
+          if (data.suggestions_found) {
+            if (data.website && !websiteUrl && data.website_confidence >= 80) {
+              setWebsiteUrl(data.website)
+              toast({
+                title: "Website gevonden",
+                description: `${data.website} (${data.website_confidence}% zeker)`,
+              })
+            }
+            if (data.linkedin_url && !linkedinUrl && data.linkedin_confidence >= 80) {
+              setLinkedinUrl(data.linkedin_url)
+              toast({
+                title: "LinkedIn gevonden",
+                description: `${data.linkedin_url} (${data.linkedin_confidence}% zeker)`,
+              })
+            }
+            setLookupDone(true)
+          }
+        }
+      } catch (error) {
+        console.error('Lookup failed:', error)
+      } finally {
+        setIsLookingUp(false)
+      }
+    }
+    
+    performLookup()
+  }, [debouncedCompanyName, debouncedCountry, supabase, toast, websiteUrl, linkedinUrl])
 
   const fetchBriefs = useCallback(async () => {
     try {
@@ -277,75 +363,102 @@ export default function ResearchPage() {
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Icons.search className="h-5 w-5 text-blue-600" />
             Research a Company
+            {isLookingUp && (
+              <span className="ml-2 text-xs text-slate-400 flex items-center gap-1">
+                <Icons.spinner className="h-3 w-3 animate-spin" />
+                Auto-detecting URLs...
+              </span>
+            )}
           </h2>
           <form onSubmit={handleStartResearch} className="space-y-4">
-            <div>
-              <Label htmlFor="companyName">Company Name *</Label>
-              <Input
-                id="companyName"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="e.g., Acme Corp"
-                className="mt-1"
-                required
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="companyName">Company Name *</Label>
+                <Input
+                  id="companyName"
+                  value={companyName}
+                  onChange={(e) => { setCompanyName(e.target.value); setLookupDone(false) }}
+                  placeholder="e.g., Acme Corp"
+                  className="mt-1"
+                  required
+                />
+                <p className="text-xs text-slate-400 mt-1">
+                  We'll auto-find website & LinkedIn
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="country">Country (optional)</Label>
+                <Input
+                  id="country"
+                  value={country}
+                  onChange={(e) => { setCountry(e.target.value); setLookupDone(false) }}
+                  placeholder="e.g., Netherlands"
+                  className="mt-1"
+                />
+                <p className="text-xs text-slate-400 mt-1">
+                  Helps find correct domain (.nl, .de, etc.)
+                </p>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="websiteUrl">Company Website (optional)</Label>
-                <Input
-                  id="websiteUrl"
-                  value={websiteUrl}
-                  onChange={(e) => setWebsiteUrl(e.target.value)}
-                  placeholder="https://www.company.com"
-                  className="mt-1"
-                />
+                <Label htmlFor="websiteUrl" className="flex items-center gap-2">
+                  Company Website (optional)
+                  {websiteUrl && lookupDone && (
+                    <span className="text-xs text-green-600 flex items-center gap-1">
+                      <Icons.checkCircle className="h-3 w-3" />
+                      Auto-detected
+                    </span>
+                  )}
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="websiteUrl"
+                    value={websiteUrl}
+                    onChange={(e) => setWebsiteUrl(e.target.value)}
+                    placeholder={isLookingUp ? "Zoeken..." : "https://www.company.com"}
+                    className={`mt-1 ${websiteUrl && lookupDone ? 'border-green-300 bg-green-50' : ''}`}
+                  />
+                </div>
                 <p className="text-xs text-slate-400 mt-1">
                   We'll scrape this for detailed info
                 </p>
               </div>
 
               <div>
-                <Label htmlFor="linkedinUrl">LinkedIn URL (optional)</Label>
+                <Label htmlFor="linkedinUrl" className="flex items-center gap-2">
+                  LinkedIn URL (optional)
+                  {linkedinUrl && lookupDone && (
+                    <span className="text-xs text-green-600 flex items-center gap-1">
+                      <Icons.checkCircle className="h-3 w-3" />
+                      Auto-detected
+                    </span>
+                  )}
+                </Label>
                 <Input
                   id="linkedinUrl"
                   value={linkedinUrl}
                   onChange={(e) => setLinkedinUrl(e.target.value)}
-                  placeholder="https://linkedin.com/company/..."
-                  className="mt-1"
+                  placeholder={isLookingUp ? "Zoeken..." : "https://linkedin.com/company/..."}
+                  className={`mt-1 ${linkedinUrl && lookupDone ? 'border-green-300 bg-green-50' : ''}`}
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="country">Country (optional)</Label>
-                <Input
-                  id="country"
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  placeholder="e.g., Netherlands"
-                  className="mt-1"
-                />
-                <p className="text-xs text-slate-400 mt-1">
-                  Improves search accuracy
-                </p>
-              </div>
-
-              <div>
-                <Label htmlFor="city">City (optional)</Label>
-                <Input
-                  id="city"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="e.g., Amsterdam"
-                  className="mt-1"
-                />
-                <p className="text-xs text-slate-400 mt-1">
-                  Helps find the right company
-                </p>
-              </div>
+            <div>
+              <Label htmlFor="city">City (optional)</Label>
+              <Input
+                id="city"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="e.g., Amsterdam"
+                className="mt-1"
+              />
+              <p className="text-xs text-slate-400 mt-1">
+                Helps find the right company
+              </p>
             </div>
 
             <Button 
