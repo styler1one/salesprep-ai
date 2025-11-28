@@ -2,10 +2,40 @@
 
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
 import { DashboardLayout } from '@/components/layout'
+
+// Helper function for relative time
+function getRelativeTime(dateString: string): string {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+    
+    if (diffInSeconds < 60) return 'Just now'
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min ago`
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`
+    if (diffInSeconds < 172800) return 'Yesterday'
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`
+    return date.toLocaleDateString()
+}
+
+// Helper function for time-based greeting
+function getGreeting(): { greeting: string; emoji: string } {
+    const hour = new Date().getHours()
+    if (hour < 12) return { greeting: 'Good morning', emoji: '☀️' }
+    if (hour < 17) return { greeting: 'Good afternoon', emoji: '👋' }
+    if (hour < 21) return { greeting: 'Good evening', emoji: '🌆' }
+    return { greeting: 'Good night', emoji: '🌙' }
+}
+
+// Helper to count items from last 7 days
+function countRecentItems(items: any[], dateField: string = 'created_at'): number {
+    const weekAgo = new Date()
+    weekAgo.setDate(weekAgo.getDate() - 7)
+    return items.filter(item => new Date(item[dateField]) > weekAgo).length
+}
 
 export default function DashboardPage() {
     const router = useRouter()
@@ -84,10 +114,17 @@ export default function DashboardPage() {
         )
     }
 
+    // Calculate trends (items from last 7 days)
+    const recentResearch = useMemo(() => countRecentItems(researchBriefs), [researchBriefs])
+    const recentPreps = useMemo(() => countRecentItems(meetingPreps), [meetingPreps])
+    const recentFollowups = useMemo(() => countRecentItems(followups), [followups])
+    const recentDocs = useMemo(() => countRecentItems(knowledgeBase), [knowledgeBase])
+
     const stats = [
         { 
             name: 'Research', 
             value: researchBriefs.length, 
+            recentCount: recentResearch,
             icon: Icons.search, 
             color: 'blue',
             href: '/dashboard/research',
@@ -96,6 +133,7 @@ export default function DashboardPage() {
         { 
             name: 'Preparations', 
             value: meetingPreps.length, 
+            recentCount: recentPreps,
             icon: Icons.fileText, 
             color: 'green',
             href: '/dashboard/preparation',
@@ -104,6 +142,7 @@ export default function DashboardPage() {
         { 
             name: 'Follow-ups', 
             value: followups.length, 
+            recentCount: recentFollowups,
             icon: Icons.mail, 
             color: 'orange',
             href: '/dashboard/followup',
@@ -112,12 +151,26 @@ export default function DashboardPage() {
         { 
             name: 'Knowledge', 
             value: knowledgeBase.length, 
+            recentCount: recentDocs,
             icon: Icons.book, 
             color: 'purple',
             href: '/dashboard/knowledge-base',
             description: 'Documents uploaded'
         },
     ]
+
+    // Get smart suggestion based on activity
+    const getSuggestion = () => {
+        if (!profile) return { text: 'Start by creating your sales profile', action: '/onboarding', actionText: 'Create Profile' }
+        if (!companyProfile) return { text: 'Add your company profile for better AI context', action: '/onboarding/company', actionText: 'Add Company' }
+        if (researchBriefs.length === 0) return { text: 'Research your first prospect to get started', action: '/dashboard/research', actionText: 'Start Research' }
+        if (meetingPreps.length === 0) return { text: 'Generate your first meeting brief', action: '/dashboard/preparation', actionText: 'Prepare Meeting' }
+        if (meetingPreps.length > researchBriefs.length) return { text: 'Research more prospects to expand your pipeline', action: '/dashboard/research', actionText: 'Research' }
+        return { text: 'Keep up the great work! Your sales prep is on track', action: null, actionText: null }
+    }
+    
+    const suggestion = getSuggestion()
+    const { greeting, emoji } = getGreeting()
 
     const quickActions = [
         {
@@ -165,11 +218,24 @@ export default function DashboardPage() {
                 {/* Welcome Section */}
                 <div className="mb-8">
                     <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
-                        Welcome back{typeof profile?.full_name === 'string' && profile.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! 👋
+                        {greeting}{typeof profile?.full_name === 'string' && profile.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! {emoji}
                     </h1>
-                    <p className="text-slate-500">
+                    <p className="text-slate-500 mb-4">
                         Here's what's happening with your sales activities.
                     </p>
+                    
+                    {/* Smart Suggestion */}
+                    <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <Icons.sparkles className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <p className="text-sm text-slate-700 flex-1">{suggestion.text}</p>
+                        {suggestion.action && (
+                            <Button size="sm" variant="outline" onClick={() => router.push(suggestion.action!)} className="flex-shrink-0">
+                                {suggestion.actionText}
+                            </Button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Stats Grid */}
@@ -189,7 +255,15 @@ export default function DashboardPage() {
                                     </div>
                                     <Icons.chevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
                                 </div>
-                                <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                                <div className="flex items-baseline gap-2">
+                                    <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                                    {stat.recentCount > 0 && (
+                                        <span className="text-xs font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                            <Icons.trendingUp className="h-3 w-3" />
+                                            +{stat.recentCount} this week
+                                        </span>
+                                    )}
+                                </div>
                                 <p className="text-sm text-slate-500">{stat.description}</p>
                             </button>
                         )
@@ -501,7 +575,10 @@ export default function DashboardPage() {
                         {researchBriefs.length === 0 ? (
                             <div className="text-center py-6">
                                 <Icons.search className="h-10 w-10 text-slate-200 mx-auto mb-2" />
-                                <p className="text-sm text-slate-500">No research yet</p>
+                                <p className="text-sm text-slate-500 mb-3">No research yet</p>
+                                <Button size="sm" variant="outline" onClick={() => router.push('/dashboard/research')}>
+                                    Start Research
+                                </Button>
                             </div>
                         ) : (
                             <div className="space-y-3">
@@ -516,7 +593,7 @@ export default function DashboardPage() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-slate-900 truncate">{brief.company_name}</p>
-                                            <p className="text-xs text-slate-500">{new Date(brief.created_at).toLocaleDateString()}</p>
+                                            <p className="text-xs text-slate-500">{getRelativeTime(brief.created_at)}</p>
                                         </div>
                                     </button>
                                 ))}
@@ -535,7 +612,10 @@ export default function DashboardPage() {
                         {meetingPreps.length === 0 ? (
                             <div className="text-center py-6">
                                 <Icons.fileText className="h-10 w-10 text-slate-200 mx-auto mb-2" />
-                                <p className="text-sm text-slate-500">No preps yet</p>
+                                <p className="text-sm text-slate-500 mb-3">No preps yet</p>
+                                <Button size="sm" variant="outline" onClick={() => router.push('/dashboard/preparation')}>
+                                    Create Brief
+                                </Button>
                             </div>
                         ) : (
                             <div className="space-y-3">
@@ -550,7 +630,7 @@ export default function DashboardPage() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-slate-900 truncate">{prep.prospect_company_name}</p>
-                                            <p className="text-xs text-slate-500 capitalize">{prep.meeting_type?.replace('_', ' ')}</p>
+                                            <p className="text-xs text-slate-500">{getRelativeTime(prep.created_at)}</p>
                                         </div>
                                         <span className={`text-xs px-2 py-1 rounded-full ${
                                             prep.status === 'completed' ? 'bg-green-100 text-green-700' :
@@ -576,7 +656,10 @@ export default function DashboardPage() {
                         {followups.length === 0 ? (
                             <div className="text-center py-6">
                                 <Icons.mail className="h-10 w-10 text-slate-200 mx-auto mb-2" />
-                                <p className="text-sm text-slate-500">No follow-ups yet</p>
+                                <p className="text-sm text-slate-500 mb-3">No follow-ups yet</p>
+                                <Button size="sm" variant="outline" onClick={() => router.push('/dashboard/followup')}>
+                                    Upload Recording
+                                </Button>
                             </div>
                         ) : (
                             <div className="space-y-3">
@@ -594,7 +677,7 @@ export default function DashboardPage() {
                                                 {followup.prospect_company_name || followup.meeting_subject || 'Meeting'}
                                             </p>
                                             <p className="text-xs text-slate-500">
-                                                {followup.meeting_date ? new Date(followup.meeting_date).toLocaleDateString() : 'No date'}
+                                                {followup.created_at ? getRelativeTime(followup.created_at) : 'No date'}
                                             </p>
                                         </div>
                                         <span className={`text-xs px-2 py-1 rounded-full ${
