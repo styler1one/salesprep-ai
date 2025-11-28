@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
+import { DashboardLayout } from '@/components/layout'
 
 export default function DashboardPage() {
     const router = useRouter()
@@ -24,89 +25,45 @@ export default function DashboardPage() {
             setUser(user)
 
             if (user) {
-                // Get auth token
                 const { data: { session } } = await supabase.auth.getSession()
                 const token = session?.access_token
 
                 if (token) {
                     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-                    // Fetch sales profile
-                    try {
-                        const profileRes = await fetch(`${apiUrl}/api/v1/profile/sales`, {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        })
-                        if (profileRes.ok) {
-                            const profileData = await profileRes.json()
-                            setProfile(profileData)
-                        }
-                    } catch (error) {
-                        console.error('Failed to load profile:', error)
-                    }
+                    // Fetch all data in parallel
+                    const fetchPromises = [
+                        fetch(`${apiUrl}/api/v1/profile/sales`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                        fetch(`${apiUrl}/api/v1/profile/company`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                        fetch(`${apiUrl}/api/v1/knowledge-base/files`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                        fetch(`${apiUrl}/api/v1/research/briefs`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                        fetch(`${apiUrl}/api/v1/prep/briefs`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                        fetch(`${apiUrl}/api/v1/followup/list`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                    ]
 
-                    // Fetch company profile
                     try {
-                        const companyRes = await fetch(`${apiUrl}/api/v1/profile/company`, {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        })
-                        if (companyRes.ok) {
-                            const companyData = await companyRes.json()
-                            setCompanyProfile(companyData)
-                        }
-                    } catch (error) {
-                        console.error('Failed to load company profile:', error)
-                    }
+                        const [profileRes, companyRes, kbRes, researchRes, prepsRes, followupsRes] = await Promise.all(fetchPromises)
 
-                    // Fetch knowledge base
-                    try {
-                        const kbRes = await fetch(`${apiUrl}/api/v1/knowledge-base/files`, {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        })
+                        if (profileRes.ok) setProfile(await profileRes.json())
+                        if (companyRes.ok) setCompanyProfile(await companyRes.json())
                         if (kbRes.ok) {
                             const kbData = await kbRes.json()
                             setKnowledgeBase(kbData.files || [])
                         }
-                    } catch (error) {
-                        console.error('Failed to load knowledge base:', error)
-                    }
-
-                    // Fetch research briefs
-                    try {
-                        const researchRes = await fetch(`${apiUrl}/api/v1/research/briefs`, {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        })
                         if (researchRes.ok) {
                             const researchData = await researchRes.json()
                             setResearchBriefs(researchData.briefs || [])
                         }
-                    } catch (error) {
-                        console.error('Failed to load research briefs:', error)
-                    }
-
-                    // Fetch meeting preps
-                    try {
-                        const prepsRes = await fetch(`${apiUrl}/api/v1/prep/briefs`, {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        })
                         if (prepsRes.ok) {
                             const prepsData = await prepsRes.json()
                             setMeetingPreps(prepsData.preps || [])
                         }
-                    } catch (error) {
-                        console.error('Failed to load meeting preps:', error)
-                    }
-
-                    // Fetch followups
-                    try {
-                        const followupsRes = await fetch(`${apiUrl}/api/v1/followup/list`, {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        })
                         if (followupsRes.ok) {
                             const followupsData = await followupsRes.json()
                             setFollowups(followupsData || [])
                         }
                     } catch (error) {
-                        console.error('Failed to load followups:', error)
+                        console.error('Failed to load data:', error)
                     }
                 }
             }
@@ -116,453 +73,411 @@ export default function DashboardPage() {
         loadData()
     }, [supabase])
 
-    const handleSignOut = async () => {
-        await supabase.auth.signOut()
-        router.push('/login')
-    }
-
     if (loading) {
         return (
-            <div className="flex h-screen items-center justify-center">
-                <Icons.spinner className="h-8 w-8 animate-spin" />
+            <div className="flex h-screen items-center justify-center bg-slate-50">
+                <div className="text-center">
+                    <Icons.spinner className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+                    <p className="text-sm text-slate-500">Loading your dashboard...</p>
+                </div>
             </div>
         )
     }
 
+    const stats = [
+        { 
+            name: 'Research', 
+            value: researchBriefs.length, 
+            icon: Icons.search, 
+            color: 'blue',
+            href: '/dashboard/research',
+            description: 'Prospects researched'
+        },
+        { 
+            name: 'Preparations', 
+            value: meetingPreps.length, 
+            icon: Icons.fileText, 
+            color: 'green',
+            href: '/dashboard/preparation',
+            description: 'Meeting briefs'
+        },
+        { 
+            name: 'Follow-ups', 
+            value: followups.length, 
+            icon: Icons.mail, 
+            color: 'orange',
+            href: '/dashboard/followup',
+            description: 'Calls summarized'
+        },
+        { 
+            name: 'Knowledge', 
+            value: knowledgeBase.length, 
+            icon: Icons.book, 
+            color: 'purple',
+            href: '/dashboard/knowledge-base',
+            description: 'Documents uploaded'
+        },
+    ]
+
+    const quickActions = [
+        {
+            name: 'Research Prospect',
+            description: 'AI-powered company research',
+            icon: Icons.search,
+            color: 'blue',
+            href: '/dashboard/research',
+        },
+        {
+            name: 'Prepare Meeting',
+            description: 'Generate personalized brief',
+            icon: Icons.fileText,
+            color: 'green',
+            href: '/dashboard/preparation',
+        },
+        {
+            name: 'Meeting Follow-up',
+            description: 'Transcribe & summarize calls',
+            icon: Icons.mail,
+            color: 'orange',
+            href: '/dashboard/followup',
+        },
+        {
+            name: 'Upload Documents',
+            description: 'Add to knowledge base',
+            icon: Icons.upload,
+            color: 'purple',
+            href: '/dashboard/knowledge-base',
+        },
+    ]
+
+    const colorClasses: Record<string, { bg: string; text: string; border: string }> = {
+        blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200 hover:border-blue-300' },
+        green: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200 hover:border-green-300' },
+        orange: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200 hover:border-orange-300' },
+        purple: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200 hover:border-purple-300' },
+        violet: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200 hover:border-violet-300' },
+        indigo: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200 hover:border-indigo-300' },
+    }
+
     return (
-        <div className="flex min-h-screen flex-col">
-            {/* Header */}
-            <header className="border-b">
-                <div className="container flex h-16 items-center justify-between px-4">
-                    <div className="flex items-center gap-2">
-                        <h1 className="text-xl font-bold">SalesPrep AI</h1>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <span className="text-sm text-muted-foreground">
-                            {user?.email}
-                        </span>
-                        <Button variant="outline" onClick={handleSignOut}>
-                            Sign Out
-                        </Button>
-                    </div>
-                </div>
-            </header>
-
-            {/* Main Content */}
-            <main className="flex-1">
-                <div className="container py-8 px-4">
-                    <div className="mb-8">
-                        <h2 className="text-3xl font-bold tracking-tight">
-                            Welcome to SalesPrep AI
-                        </h2>
-                        <p className="text-muted-foreground mt-2">
-                            Your AI-powered sales enablement platform
-                        </p>
-                    </div>
-
-                    {/* Stats Cards */}
-                    <div className="grid gap-4 md:grid-cols-6 mb-8">
-                        <div className="rounded-lg border bg-card p-6 cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push('/dashboard/research')}>
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">
-                                        Research
-                                    </p>
-                                    <p className="text-2xl font-bold">{researchBriefs.length}</p>
-                                </div>
-                                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                    <Icons.search className="h-6 w-6 text-primary" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="rounded-lg border bg-card p-6 cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push('/dashboard/preparation')}>
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">
-                                        Preps
-                                    </p>
-                                    <p className="text-2xl font-bold">{meetingPreps.length}</p>
-                                </div>
-                                <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                                    <Icons.fileText className="h-6 w-6 text-green-600" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="rounded-lg border bg-card p-6 cursor-pointer hover:border-orange-200 transition-colors" onClick={() => router.push('/dashboard/followup')}>
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">
-                                        Follow-ups
-                                    </p>
-                                    <p className="text-2xl font-bold">{followups.length}</p>
-                                </div>
-                                <div className="h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center">
-                                    <Icons.mail className="h-6 w-6 text-orange-600" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="rounded-lg border bg-card p-6 cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push('/dashboard/knowledge-base')}>
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">
-                                        Knowledge
-                                    </p>
-                                    <p className="text-2xl font-bold">{knowledgeBase.length}</p>
-                                </div>
-                                <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                                    <Icons.book className="h-6 w-6 text-blue-600" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="rounded-lg border bg-card p-6 cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push(profile ? '/dashboard/profile' : '/onboarding')}>
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">
-                                        Sales Profile
-                                    </p>
-                                    <p className="text-2xl font-bold">{profile ? `${profile.profile_completeness || 0}%` : '–'}</p>
-                                </div>
-                                <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
-                                    <Icons.user className="h-6 w-6 text-purple-600" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="rounded-lg border bg-card p-6 cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push(companyProfile ? '/dashboard/company-profile' : '/onboarding/company')}>
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">
-                                        Company
-                                    </p>
-                                    <p className="text-2xl font-bold">{companyProfile ? `${companyProfile.profile_completeness || 0}%` : '–'}</p>
-                                </div>
-                                <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center">
-                                    <Icons.building className="h-6 w-6 text-indigo-600" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Quick Actions */}
-                    <div className="grid gap-4 md:grid-cols-4 mb-8">
-                        <Button 
-                            variant="outline" 
-                            className="h-auto p-4 flex flex-col items-start gap-2"
-                            onClick={() => router.push('/dashboard/research')}
-                        >
-                            <Icons.search className="h-5 w-5 text-primary" />
-                            <div className="text-left">
-                                <p className="font-medium">Research Prospect</p>
-                                <p className="text-xs text-muted-foreground">AI-powered company research</p>
-                            </div>
-                        </Button>
-                        
-                        <Button 
-                            variant="outline" 
-                            className="h-auto p-4 flex flex-col items-start gap-2 border-green-200 hover:border-green-300"
-                            onClick={() => router.push('/dashboard/preparation')}
-                        >
-                            <Icons.fileText className="h-5 w-5 text-green-600" />
-                            <div className="text-left">
-                                <p className="font-medium">Prepare for Meeting</p>
-                                <p className="text-xs text-muted-foreground">Generate personalized briefs</p>
-                            </div>
-                        </Button>
-
-                        <Button 
-                            variant="outline" 
-                            className="h-auto p-4 flex flex-col items-start gap-2 border-orange-200 hover:border-orange-300"
-                            onClick={() => router.push('/dashboard/followup')}
-                        >
-                            <Icons.mail className="h-5 w-5 text-orange-600" />
-                            <div className="text-left">
-                                <p className="font-medium">Meeting Follow-up</p>
-                                <p className="text-xs text-muted-foreground">Transcribe & summarize calls</p>
-                            </div>
-                        </Button>
-                        
-                        <Button 
-                            variant="outline" 
-                            className="h-auto p-4 flex flex-col items-start gap-2"
-                            onClick={() => router.push('/dashboard/knowledge-base')}
-                        >
-                            <Icons.book className="h-5 w-5 text-blue-600" />
-                            <div className="text-left">
-                                <p className="font-medium">Upload Documents</p>
-                                <p className="text-xs text-muted-foreground">Add to your knowledge base</p>
-                            </div>
-                        </Button>
-                    </div>
-
-                    {/* Profiles Section */}
-                    <div className="grid gap-4 md:grid-cols-2 mb-8">
-                        {/* Sales Profile Card */}
-                        <div className="rounded-lg border bg-card p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold flex items-center gap-2">
-                                    <Icons.user className="h-5 w-5 text-purple-600" />
-                                    Sales Profile
-                                </h3>
-                                <div className="flex gap-2">
-                                    {profile ? (
-                                        <>
-                                            <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/profile')}>
-                                                View
-                                            </Button>
-                                            <Button variant="ghost" size="sm" onClick={() => router.push('/onboarding')}>
-                                                Update
-                                            </Button>
-                                        </>
-                                    ) : (
-                                        <Button size="sm" onClick={() => router.push('/onboarding')}>
-                                            Create Profile
-                                        </Button>
-                                    )}
-                                </div>
-                            </div>
-                            
-                            {profile ? (
-                                <>
-                                    {profile.sales_narrative && (
-                                        <div className="mb-4 p-3 bg-purple-50 rounded-lg border border-purple-100">
-                                            <p className="text-sm text-gray-700 line-clamp-2">
-                                                {profile.sales_narrative}
-                                            </p>
-                                            <Button 
-                                                variant="link" 
-                                                size="sm" 
-                                                className="p-0 h-auto mt-1 text-purple-600"
-                                                onClick={() => router.push('/dashboard/profile')}
-                                            >
-                                                Lees volledig verhaal →
-                                            </Button>
-                                        </div>
-                                    )}
-                                    <div className="grid gap-2 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Name</span>
-                                            <span className="font-medium">{profile.full_name || '–'}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Methodology</span>
-                                            <span className="font-medium">{profile.sales_methodology || '–'}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Completeness</span>
-                                            <span className="font-medium">{profile.profile_completeness || 0}%</span>
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="text-center py-4">
-                                    <p className="text-muted-foreground text-sm mb-2">
-                                        Maak een sales profiel aan voor gepersonaliseerde AI output
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Company Profile Card */}
-                        <div className="rounded-lg border bg-card p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold flex items-center gap-2">
-                                    <Icons.building className="h-5 w-5 text-indigo-600" />
-                                    Company Profile
-                                </h3>
-                                <div className="flex gap-2">
-                                    {companyProfile ? (
-                                        <>
-                                            <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/company-profile')}>
-                                                View
-                                            </Button>
-                                            <Button variant="ghost" size="sm" onClick={() => router.push('/onboarding/company')}>
-                                                Update
-                                            </Button>
-                                        </>
-                                    ) : (
-                                        <Button size="sm" onClick={() => router.push('/onboarding/company')}>
-                                            Create Profile
-                                        </Button>
-                                    )}
-                                </div>
-                            </div>
-                            
-                            {companyProfile ? (
-                                <>
-                                    {companyProfile.company_narrative && (
-                                        <div className="mb-4 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
-                                            <p className="text-sm text-gray-700 line-clamp-2">
-                                                {companyProfile.company_narrative}
-                                            </p>
-                                            <Button 
-                                                variant="link" 
-                                                size="sm" 
-                                                className="p-0 h-auto mt-1 text-indigo-600"
-                                                onClick={() => router.push('/dashboard/company-profile')}
-                                            >
-                                                Lees volledig verhaal →
-                                            </Button>
-                                        </div>
-                                    )}
-                                    <div className="grid gap-2 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Company</span>
-                                            <span className="font-medium">{companyProfile.company_name || '–'}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Industry</span>
-                                            <span className="font-medium">{companyProfile.industry || '–'}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Completeness</span>
-                                            <span className="font-medium">{companyProfile.profile_completeness || 0}%</span>
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="text-center py-4">
-                                    <p className="text-muted-foreground text-sm mb-2">
-                                        Maak een bedrijfsprofiel aan voor betere AI content
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Knowledge Base, Research & Meeting Preps */}
-                    <div className="grid gap-4 md:grid-cols-3 mb-8">
-                        {/* Knowledge Base */}
-                        <div className="rounded-lg border bg-card p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold">Knowledge Base</h3>
-                                <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/knowledge-base')}>
-                                    View All
-                                </Button>
-                            </div>
-                            {knowledgeBase.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">No documents uploaded yet</p>
-                            ) : (
-                                <div className="space-y-2">
-                                    {knowledgeBase.slice(0, 3).map((doc: any) => (
-                                        <div key={doc.id} className="flex items-center gap-2 p-2 rounded hover:bg-muted/50">
-                                            <Icons.fileText className="h-4 w-4 text-muted-foreground" />
-                                            <span className="text-sm truncate">{doc.title || doc.filename}</span>
-                                        </div>
-                                    ))}
-                                    {knowledgeBase.length > 3 && (
-                                        <p className="text-xs text-muted-foreground mt-2">
-                                            +{knowledgeBase.length - 3} more documents
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Research Briefs */}
-                        <div className="rounded-lg border bg-card p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold">Research Briefs</h3>
-                                <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/research')}>
-                                    View All
-                                </Button>
-                            </div>
-                            {researchBriefs.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">No research briefs yet</p>
-                            ) : (
-                                <div className="space-y-2">
-                                    {researchBriefs.slice(0, 3).map((brief: any) => (
-                                        <div
-                                            key={brief.id}
-                                            className="flex items-center gap-2 p-2 rounded hover:bg-muted/50 cursor-pointer"
-                                            onClick={() => router.push(`/dashboard/research/${brief.id}`)}
-                                        >
-                                            <Icons.search className="h-4 w-4 text-muted-foreground" />
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm truncate">{brief.company_name}</p>
-                                                <p className="text-xs text-muted-foreground">{new Date(brief.created_at).toLocaleDateString()}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {researchBriefs.length > 3 && (
-                                        <p className="text-xs text-muted-foreground mt-2">
-                                            +{researchBriefs.length - 3} more briefs
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Meeting Preps */}
-                        <div className="rounded-lg border bg-card p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold">Meeting Preps</h3>
-                                <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/preparation')}>
-                                    View All
-                                </Button>
-                            </div>
-                            {meetingPreps.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">No meeting preps yet</p>
-                            ) : (
-                                <div className="space-y-2">
-                                    {meetingPreps.slice(0, 3).map((prep: any) => (
-                                        <div
-                                            key={prep.id}
-                                            className="flex items-center gap-2 p-2 rounded hover:bg-muted/50 cursor-pointer"
-                                            onClick={() => router.push('/dashboard/preparation')}
-                                        >
-                                            <Icons.fileText className="h-4 w-4 text-green-600" />
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm truncate">{prep.prospect_company_name}</p>
-                                                <p className="text-xs text-muted-foreground capitalize">{prep.meeting_type?.replace('_', ' ')}</p>
-                                            </div>
-                                            <span className={`text-xs px-2 py-0.5 rounded ${
-                                                prep.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                                prep.status === 'generating' ? 'bg-blue-100 text-blue-700' :
-                                                'bg-yellow-100 text-yellow-700'
-                                            }`}>
-                                                {prep.status}
-                                            </span>
-                                        </div>
-                                    ))}
-                                    {meetingPreps.length > 3 && (
-                                        <p className="text-xs text-muted-foreground mt-2">
-                                            +{meetingPreps.length - 3} more preps
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-4">
-                        Welcome! Your account is set up and ready to go. Here's what you can do next:
+        <DashboardLayout user={user}>
+            <div className="p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
+                {/* Welcome Section */}
+                <div className="mb-8">
+                    <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
+                        Welcome back{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! 👋
+                    </h1>
+                    <p className="text-slate-500">
+                        Here's what's happening with your sales activities.
                     </p>
-                    <ul className="space-y-2 text-sm">
-                        <li className="flex items-start gap-2">
-                            <span className="text-primary">✓</span>
-                            <span>Upload your company knowledge base (PDFs, docs)</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="text-primary">✓</span>
-                            <span>Connect your CRM (HubSpot, Salesforce)</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="text-primary">✓</span>
-                            <span>Start researching your first prospect</span>
-                        </li>
-                    </ul>
                 </div>
-            </main>
 
-            {/* Footer */}
-            <footer className="border-t py-6">
-                <div className="container px-4 text-center text-sm text-muted-foreground">
-                    <p>SalesPrep AI - AI-powered sales enablement platform</p>
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    {stats.map((stat) => {
+                        const Icon = stat.icon
+                        const colors = colorClasses[stat.color]
+                        return (
+                            <button
+                                key={stat.name}
+                                onClick={() => router.push(stat.href)}
+                                className="bg-white rounded-xl border p-5 text-left hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group"
+                            >
+                                <div className="flex items-start justify-between mb-3">
+                                    <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                                        <Icon className={`h-5 w-5 ${colors.text}`} />
+                                    </div>
+                                    <Icons.chevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
+                                </div>
+                                <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                                <p className="text-sm text-slate-500">{stat.description}</p>
+                            </button>
+                        )
+                    })}
                 </div>
-            </footer>
-        </div>
+
+                {/* Quick Actions */}
+                <div className="mb-8">
+                    <h2 className="text-lg font-semibold text-slate-900 mb-4">Quick Actions</h2>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {quickActions.map((action) => {
+                            const Icon = action.icon
+                            const colors = colorClasses[action.color]
+                            return (
+                                <button
+                                    key={action.name}
+                                    onClick={() => router.push(action.href)}
+                                    className={`bg-white rounded-xl border ${colors.border} p-5 text-left hover:shadow-md transition-all duration-200 group`}
+                                >
+                                    <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                                        <Icon className={`h-5 w-5 ${colors.text}`} />
+                                    </div>
+                                    <p className="font-medium text-slate-900">{action.name}</p>
+                                    <p className="text-sm text-slate-500">{action.description}</p>
+                                </button>
+                            )
+                        })}
+                    </div>
+                </div>
+
+                {/* Profile Cards */}
+                <div className="grid lg:grid-cols-2 gap-6 mb-8">
+                    {/* Sales Profile */}
+                    <div className="bg-white rounded-xl border p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center">
+                                    <Icons.user className="h-5 w-5 text-violet-600" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-slate-900">Sales Profile</h3>
+                                    <p className="text-sm text-slate-500">Your AI personalization</p>
+                                </div>
+                            </div>
+                            {profile ? (
+                                <div className="flex gap-2">
+                                    <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/profile')}>
+                                        View
+                                    </Button>
+                                    <Button variant="ghost" size="sm" onClick={() => router.push('/onboarding')}>
+                                        Update
+                                    </Button>
+                                </div>
+                            ) : (
+                                <Button size="sm" onClick={() => router.push('/onboarding')}>
+                                    Create
+                                </Button>
+                            )}
+                        </div>
+                        
+                        {profile ? (
+                            <>
+                                {profile.sales_narrative && (
+                                    <div className="p-4 bg-violet-50 rounded-lg border border-violet-100 mb-4">
+                                        <p className="text-sm text-slate-700 line-clamp-2">
+                                            {profile.sales_narrative}
+                                        </p>
+                                        <button 
+                                            className="text-sm text-violet-600 hover:text-violet-700 font-medium mt-2"
+                                            onClick={() => router.push('/dashboard/profile')}
+                                        >
+                                            Read full story →
+                                        </button>
+                                    </div>
+                                )}
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-slate-500">Completeness</span>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                            <div 
+                                                className="h-full bg-gradient-to-r from-violet-500 to-purple-500 rounded-full"
+                                                style={{ width: `${profile.profile_completeness || 0}%` }}
+                                            />
+                                        </div>
+                                        <span className="font-medium text-slate-900">{profile.profile_completeness || 0}%</span>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-center py-6">
+                                <Icons.user className="h-12 w-12 text-slate-200 mx-auto mb-3" />
+                                <p className="text-slate-500 text-sm">
+                                    Create a profile to get personalized AI outputs
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Company Profile */}
+                    <div className="bg-white rounded-xl border p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                                    <Icons.building className="h-5 w-5 text-indigo-600" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-slate-900">Company Profile</h3>
+                                    <p className="text-sm text-slate-500">Your company context</p>
+                                </div>
+                            </div>
+                            {companyProfile ? (
+                                <div className="flex gap-2">
+                                    <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/company-profile')}>
+                                        View
+                                    </Button>
+                                    <Button variant="ghost" size="sm" onClick={() => router.push('/onboarding/company')}>
+                                        Update
+                                    </Button>
+                                </div>
+                            ) : (
+                                <Button size="sm" onClick={() => router.push('/onboarding/company')}>
+                                    Create
+                                </Button>
+                            )}
+                        </div>
+                        
+                        {companyProfile ? (
+                            <>
+                                {companyProfile.company_narrative && (
+                                    <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-100 mb-4">
+                                        <p className="text-sm text-slate-700 line-clamp-2">
+                                            {companyProfile.company_narrative}
+                                        </p>
+                                        <button 
+                                            className="text-sm text-indigo-600 hover:text-indigo-700 font-medium mt-2"
+                                            onClick={() => router.push('/dashboard/company-profile')}
+                                        >
+                                            Read full story →
+                                        </button>
+                                    </div>
+                                )}
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-slate-500">Completeness</span>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                            <div 
+                                                className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full"
+                                                style={{ width: `${companyProfile.profile_completeness || 0}%` }}
+                                            />
+                                        </div>
+                                        <span className="font-medium text-slate-900">{companyProfile.profile_completeness || 0}%</span>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-center py-6">
+                                <Icons.building className="h-12 w-12 text-slate-200 mx-auto mb-3" />
+                                <p className="text-slate-500 text-sm">
+                                    Add company info for better AI content
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Recent Activity */}
+                <div className="grid lg:grid-cols-3 gap-6">
+                    {/* Recent Research */}
+                    <div className="bg-white rounded-xl border p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-semibold text-slate-900">Recent Research</h3>
+                            <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/research')}>
+                                View All
+                            </Button>
+                        </div>
+                        {researchBriefs.length === 0 ? (
+                            <div className="text-center py-6">
+                                <Icons.search className="h-10 w-10 text-slate-200 mx-auto mb-2" />
+                                <p className="text-sm text-slate-500">No research yet</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {researchBriefs.slice(0, 4).map((brief: any) => (
+                                    <button
+                                        key={brief.id}
+                                        onClick={() => router.push(`/dashboard/research/${brief.id}`)}
+                                        className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors text-left"
+                                    >
+                                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                            <Icons.search className="h-4 w-4 text-blue-600" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-slate-900 truncate">{brief.company_name}</p>
+                                            <p className="text-xs text-slate-500">{new Date(brief.created_at).toLocaleDateString()}</p>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Recent Preps */}
+                    <div className="bg-white rounded-xl border p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-semibold text-slate-900">Recent Preps</h3>
+                            <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/preparation')}>
+                                View All
+                            </Button>
+                        </div>
+                        {meetingPreps.length === 0 ? (
+                            <div className="text-center py-6">
+                                <Icons.fileText className="h-10 w-10 text-slate-200 mx-auto mb-2" />
+                                <p className="text-sm text-slate-500">No preps yet</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {meetingPreps.slice(0, 4).map((prep: any) => (
+                                    <button
+                                        key={prep.id}
+                                        onClick={() => router.push('/dashboard/preparation')}
+                                        className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors text-left"
+                                    >
+                                        <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                            <Icons.fileText className="h-4 w-4 text-green-600" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-slate-900 truncate">{prep.prospect_company_name}</p>
+                                            <p className="text-xs text-slate-500 capitalize">{prep.meeting_type?.replace('_', ' ')}</p>
+                                        </div>
+                                        <span className={`text-xs px-2 py-1 rounded-full ${
+                                            prep.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                            prep.status === 'generating' ? 'bg-blue-100 text-blue-700' :
+                                            'bg-yellow-100 text-yellow-700'
+                                        }`}>
+                                            {prep.status}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Recent Follow-ups */}
+                    <div className="bg-white rounded-xl border p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-semibold text-slate-900">Recent Follow-ups</h3>
+                            <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/followup')}>
+                                View All
+                            </Button>
+                        </div>
+                        {followups.length === 0 ? (
+                            <div className="text-center py-6">
+                                <Icons.mail className="h-10 w-10 text-slate-200 mx-auto mb-2" />
+                                <p className="text-sm text-slate-500">No follow-ups yet</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {followups.slice(0, 4).map((followup: any) => (
+                                    <button
+                                        key={followup.id}
+                                        onClick={() => router.push(`/dashboard/followup/${followup.id}`)}
+                                        className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors text-left"
+                                    >
+                                        <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                                            <Icons.mail className="h-4 w-4 text-orange-600" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-slate-900 truncate">
+                                                {followup.prospect_company_name || followup.meeting_subject || 'Meeting'}
+                                            </p>
+                                            <p className="text-xs text-slate-500">
+                                                {followup.meeting_date ? new Date(followup.meeting_date).toLocaleDateString() : 'No date'}
+                                            </p>
+                                        </div>
+                                        <span className={`text-xs px-2 py-1 rounded-full ${
+                                            followup.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                            followup.status === 'failed' ? 'bg-red-100 text-red-700' :
+                                            'bg-blue-100 text-blue-700'
+                                        }`}>
+                                            {followup.status}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </DashboardLayout>
     )
 }

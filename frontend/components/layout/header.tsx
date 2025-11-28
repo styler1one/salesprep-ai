@@ -1,0 +1,127 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { Button } from '@/components/ui/button'
+import { Icons } from '@/components/icons'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { cn } from '@/lib/utils'
+
+interface HeaderProps {
+  user: any
+  className?: string
+}
+
+export function Header({ user, className }: HeaderProps) {
+  const router = useRouter()
+  const supabase = createClientComponentClient()
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
+
+  return (
+    <header className={cn('h-16 border-b bg-white/80 backdrop-blur-sm sticky top-0 z-40', className)}>
+      <div className="h-full px-6 flex items-center justify-between">
+        {/* Left side - can add breadcrumbs here */}
+        <div className="flex items-center gap-4">
+          {/* Mobile menu button - shown on small screens */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+          >
+            <Icons.menu className="h-5 w-5" />
+          </Button>
+        </div>
+
+        {/* Right side */}
+        <div className="flex items-center gap-3">
+          {/* Theme Toggle */}
+          <ThemeToggle />
+
+          {/* Notifications */}
+          <Button variant="ghost" size="icon" className="relative">
+            <Icons.bell className="h-5 w-5" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+          </Button>
+
+          {/* User Dropdown */}
+          <div className="relative">
+            <Button
+              variant="ghost"
+              className="flex items-center gap-2 px-2"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+            >
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-white font-medium text-sm">
+                {user?.email?.charAt(0).toUpperCase() || 'U'}
+              </div>
+              <span className="hidden md:block text-sm font-medium max-w-[150px] truncate">
+                {user?.email?.split('@')[0] || 'User'}
+              </span>
+              <Icons.chevronDown className="h-4 w-4 text-muted-foreground" />
+            </Button>
+
+            {/* Dropdown Menu */}
+            {dropdownOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setDropdownOpen(false)}
+                />
+                <div className="absolute right-0 mt-2 w-56 rounded-lg border bg-white shadow-lg z-50 animate-scale-in">
+                  <div className="p-3 border-b">
+                    <p className="text-sm font-medium">{user?.email?.split('@')[0]}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                  </div>
+                  <div className="p-1">
+                    <button
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded-md hover:bg-muted transition-colors"
+                      onClick={() => {
+                        router.push('/dashboard/profile')
+                        setDropdownOpen(false)
+                      }}
+                    >
+                      <Icons.user className="h-4 w-4" />
+                      Sales Profile
+                    </button>
+                    <button
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded-md hover:bg-muted transition-colors"
+                      onClick={() => {
+                        router.push('/dashboard/company-profile')
+                        setDropdownOpen(false)
+                      }}
+                    >
+                      <Icons.building className="h-4 w-4" />
+                      Company Profile
+                    </button>
+                    <button
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded-md hover:bg-muted transition-colors"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      <Icons.settings className="h-4 w-4" />
+                      Settings
+                    </button>
+                  </div>
+                  <div className="p-1 border-t">
+                    <button
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded-md hover:bg-red-50 text-red-600 transition-colors"
+                      onClick={handleSignOut}
+                    >
+                      <Icons.logOut className="h-4 w-4" />
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </header>
+  )
+}
+
