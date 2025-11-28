@@ -423,8 +423,9 @@ Rules:
         
         client = get_genai_client()
         if not client:
-            logger.warning("Google GenAI client not available for search")
-            return []
+            logger.warning("Google GenAI client not available for search - using fallback")
+            # Fallback: try direct URL patterns and return as single option
+            return await self._fallback_search(company_name, country)
         
         try:
             from google.genai import types
@@ -485,6 +486,50 @@ Rules:
         except Exception as e:
             logger.error(f"Company options search failed: {e}")
         
+        # If Google Search fails, use fallback
+        return await self._fallback_search(company_name, country)
+    
+    async def _fallback_search(
+        self,
+        company_name: str,
+        country: str
+    ) -> List[Dict[str, Any]]:
+        """
+        Fallback when Google Search is not available.
+        Uses direct URL patterns to find company website.
+        """
+        logger.info(f"Using fallback search for '{company_name}' in {country}")
+        
+        clean_name = self._clean_company_name(company_name)
+        
+        # Try to find website using direct patterns
+        website_result = await self._find_website(clean_name, company_name, country)
+        linkedin_result = await self._find_linkedin(clean_name, company_name)
+        
+        website_url = None
+        website_confidence = 0
+        linkedin_url = None
+        linkedin_confidence = 0
+        
+        if isinstance(website_result, tuple) and website_result[0]:
+            website_url, website_confidence = website_result
+        
+        if isinstance(linkedin_result, tuple) and linkedin_result[0]:
+            linkedin_url, linkedin_confidence = linkedin_result
+        
+        # If we found something, return it as an option
+        if website_url or linkedin_url:
+            return [{
+                "company_name": company_name,
+                "description": f"Gevonden via URL patronen in {country}",
+                "website": website_url,
+                "linkedin_url": linkedin_url,
+                "location": country,
+                "confidence": max(website_confidence, linkedin_confidence)
+            }]
+        
+        # Nothing found - return empty but with helpful message
+        logger.warning(f"Fallback search found nothing for '{company_name}' in {country}")
         return []
 
 
