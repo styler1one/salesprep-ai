@@ -238,7 +238,7 @@ Return ONLY valid JSON (no markdown, no explanation) with this structure:
             
             profile_data = json.loads(content)
             
-            # Add interview responses for reference
+            # Add interview responses for reference (can be edited later)
             profile_data["interview_responses"] = responses
             
             return profile_data
