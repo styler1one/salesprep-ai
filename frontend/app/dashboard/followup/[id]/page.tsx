@@ -22,7 +22,15 @@ import {
   RefreshCw,
   Play,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  TrendingUp,
+  Search,
+  Target,
+  Flag,
+  MessageCircle,
+  Award,
+  Zap,
+  AlertTriangle
 } from 'lucide-react'
 
 interface Followup {
@@ -51,6 +59,25 @@ interface Followup {
   error_message: string | null
   created_at: string
   completed_at: string | null
+  // NEW: Enhanced follow-up fields
+  include_coaching: boolean
+  commercial_signals: {
+    koopsignalen: string[]
+    cross_sell: string[]
+    risks: string[]
+  } | null
+  observations: {
+    doubts: string[]
+    unspoken_needs: string[]
+    opportunities: string[]
+    red_flags: string[]
+  } | null
+  coaching_feedback: {
+    strengths: string[]
+    improvements: string[]
+    tips: string[]
+  } | null
+  full_summary_content: string | null
 }
 
 export default function FollowupDetailPage() {
@@ -67,6 +94,9 @@ export default function FollowupDetailPage() {
   const [copied, setCopied] = useState<string | null>(null)
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     summary: true,
+    commercialSignals: true,  // NEW
+    observations: true,       // NEW
+    coaching: true,           // NEW
     transcription: false,
     actionItems: true,
     email: true
@@ -390,6 +420,262 @@ export default function FollowupDetailPage() {
               </CardContent>
             )}
           </Card>
+
+          {/* 💰 Commercial Signals - NEW */}
+          {followup.commercial_signals && (
+            followup.commercial_signals.koopsignalen?.length > 0 || 
+            followup.commercial_signals.cross_sell?.length > 0 || 
+            followup.commercial_signals.risks?.length > 0
+          ) && (
+            <Card className="border-amber-200 bg-amber-50/30">
+              <CardHeader 
+                className="cursor-pointer" 
+                onClick={() => toggleSection('commercialSignals')}
+              >
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-amber-600" />
+                    💰 Commerciële Signalen
+                  </CardTitle>
+                  {expandedSections.commercialSignals ? <ChevronUp /> : <ChevronDown />}
+                </div>
+              </CardHeader>
+              {expandedSections.commercialSignals && (
+                <CardContent className="space-y-4">
+                  {/* Koopsignalen (BANT) */}
+                  {followup.commercial_signals?.koopsignalen?.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <Target className="h-4 w-4 text-green-600" />
+                        Koopsignalen (BANT)
+                      </h4>
+                      <ul className="space-y-1 bg-white/50 p-3 rounded-lg">
+                        {followup.commercial_signals.koopsignalen.map((signal, i) => (
+                          <li key={i} className="text-sm flex items-start gap-2">
+                            <span className="text-green-600">✓</span>
+                            {signal}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Cross-sell & Upsell */}
+                  {followup.commercial_signals?.cross_sell?.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-blue-600" />
+                        Cross-sell & Upsell Kansen
+                      </h4>
+                      <ul className="space-y-1 bg-white/50 p-3 rounded-lg">
+                        {followup.commercial_signals.cross_sell.map((opportunity, i) => (
+                          <li key={i} className="text-sm flex items-start gap-2">
+                            <span className="text-blue-600">💡</span>
+                            {opportunity}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Deal Risks */}
+                  {followup.commercial_signals?.risks?.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-red-600" />
+                        Deal Risico's
+                      </h4>
+                      <ul className="space-y-1 bg-red-50 p-3 rounded-lg">
+                        {followup.commercial_signals.risks.map((risk, i) => (
+                          <li key={i} className="text-sm flex items-start gap-2">
+                            <span className="text-red-600">⚠️</span>
+                            {risk}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </CardContent>
+              )}
+            </Card>
+          )}
+
+          {/* 🔎 Observations & Signals - NEW */}
+          {followup.observations && (
+            followup.observations.doubts?.length > 0 || 
+            followup.observations.unspoken_needs?.length > 0 || 
+            followup.observations.opportunities?.length > 0 ||
+            followup.observations.red_flags?.length > 0
+          ) && (
+            <Card className="border-indigo-200 bg-indigo-50/30">
+              <CardHeader 
+                className="cursor-pointer" 
+                onClick={() => toggleSection('observations')}
+              >
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Search className="h-5 w-5 text-indigo-600" />
+                    🔎 Observaties & Signalen
+                  </CardTitle>
+                  {expandedSections.observations ? <ChevronUp /> : <ChevronDown />}
+                </div>
+              </CardHeader>
+              {expandedSections.observations && (
+                <CardContent className="space-y-4">
+                  {/* Doubts */}
+                  {followup.observations?.doubts?.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-amber-600" />
+                        ⚠️ Twijfel Gedetecteerd
+                      </h4>
+                      <ul className="space-y-1 bg-amber-50 p-3 rounded-lg">
+                        {followup.observations.doubts.map((doubt, i) => (
+                          <li key={i} className="text-sm flex items-start gap-2">
+                            <span className="text-amber-600">•</span>
+                            {doubt}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Unspoken Needs */}
+                  {followup.observations?.unspoken_needs?.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <Lightbulb className="h-4 w-4 text-yellow-600" />
+                        💡 Onuitgesproken Behoeften
+                      </h4>
+                      <ul className="space-y-1 bg-yellow-50 p-3 rounded-lg">
+                        {followup.observations.unspoken_needs.map((need, i) => (
+                          <li key={i} className="text-sm flex items-start gap-2">
+                            <span className="text-yellow-600">•</span>
+                            {need}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Opportunities */}
+                  {followup.observations?.opportunities?.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <Target className="h-4 w-4 text-green-600" />
+                        🎯 Vervolgkansen
+                      </h4>
+                      <ul className="space-y-1 bg-green-50 p-3 rounded-lg">
+                        {followup.observations.opportunities.map((opp, i) => (
+                          <li key={i} className="text-sm flex items-start gap-2">
+                            <span className="text-green-600">•</span>
+                            {opp}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Red Flags */}
+                  {followup.observations?.red_flags?.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <Flag className="h-4 w-4 text-red-600" />
+                        🚩 Rode Vlaggen
+                      </h4>
+                      <ul className="space-y-1 bg-red-50 p-3 rounded-lg">
+                        {followup.observations.red_flags.map((flag, i) => (
+                          <li key={i} className="text-sm flex items-start gap-2">
+                            <span className="text-red-600">•</span>
+                            {flag}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </CardContent>
+              )}
+            </Card>
+          )}
+
+          {/* 📈 Coaching Feedback - NEW (only if opted in) */}
+          {followup.include_coaching && followup.coaching_feedback && (
+            followup.coaching_feedback.strengths?.length > 0 || 
+            followup.coaching_feedback.improvements?.length > 0 || 
+            followup.coaching_feedback.tips?.length > 0
+          ) && (
+            <Card className="border-emerald-200 bg-emerald-50/30">
+              <CardHeader 
+                className="cursor-pointer" 
+                onClick={() => toggleSection('coaching')}
+              >
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Award className="h-5 w-5 text-emerald-600" />
+                    📈 Coaching Feedback
+                  </CardTitle>
+                  {expandedSections.coaching ? <ChevronUp /> : <ChevronDown />}
+                </div>
+              </CardHeader>
+              {expandedSections.coaching && (
+                <CardContent className="space-y-4">
+                  {/* Strengths */}
+                  {followup.coaching_feedback?.strengths?.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        ✅ Wat Ging Goed
+                      </h4>
+                      <ul className="space-y-1 bg-green-50 p-3 rounded-lg">
+                        {followup.coaching_feedback.strengths.map((strength, i) => (
+                          <li key={i} className="text-sm flex items-start gap-2">
+                            <span className="text-green-600">✓</span>
+                            {strength}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Improvements */}
+                  {followup.coaching_feedback?.improvements?.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <MessageCircle className="h-4 w-4 text-orange-600" />
+                        🔧 Verbeterpunten
+                      </h4>
+                      <ul className="space-y-1 bg-orange-50 p-3 rounded-lg">
+                        {followup.coaching_feedback.improvements.map((improvement, i) => (
+                          <li key={i} className="text-sm flex items-start gap-2">
+                            <span className="text-orange-600">•</span>
+                            {improvement}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Tips */}
+                  {followup.coaching_feedback?.tips?.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <Lightbulb className="h-4 w-4 text-blue-600" />
+                        💡 Tips voor Volgende Keer
+                      </h4>
+                      <ul className="space-y-1 bg-blue-50 p-3 rounded-lg">
+                        {followup.coaching_feedback.tips.map((tip, i) => (
+                          <li key={i} className="text-sm flex items-start gap-2">
+                            <span className="text-blue-600">→</span>
+                            {tip}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </CardContent>
+              )}
+            </Card>
+          )}
 
           {/* Action Items */}
           {followup.action_items?.length > 0 && (

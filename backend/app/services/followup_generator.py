@@ -30,6 +30,7 @@ class FollowupGenerator:
         self,
         transcription: str,
         prospect_context: Optional[Dict[str, Any]] = None,
+        include_coaching: bool = False,  # NEW: opt-in coaching feedback
         # Legacy params for backwards compatibility
         meeting_prep_context: Optional[str] = None,
         profile_context: Optional[str] = None,
@@ -51,6 +52,7 @@ class FollowupGenerator:
         prompt = self._build_summary_prompt(
             transcription,
             prospect_context=prospect_context,
+            include_coaching=include_coaching,
             # Legacy fallback
             meeting_prep_context=meeting_prep_context,
             profile_context=profile_context,
@@ -181,6 +183,7 @@ Als er geen actie-items zijn, retourneer een lege array: []"""
         self,
         transcription: str,
         prospect_context: Optional[Dict[str, Any]] = None,
+        include_coaching: bool = False,
         meeting_prep_context: Optional[str] = None,
         profile_context: Optional[str] = None,
         prospect_company: Optional[str] = None
@@ -326,12 +329,72 @@ Genereer een gestructureerde samenvatting met EXACT deze secties:
 - [Welke voorbereide punten zijn besproken? Welke vragen beantwoord?]
 - [Wat is niet aan bod gekomen maar nog relevant?]
 
+## 💰 Commerciële Signalen
+
+### Koopsignalen (BANT)
+- **Budget**: [Zijn er indicaties van beschikbaar budget? Wat werd gezegd?]
+- **Authority**: [Is deze persoon de beslisser? Wie moet er nog meer beslissen?]
+- **Need**: [Hoe urgent is de behoefte? Urgentiescore 1-10]
+- **Timeline**: [Is er een gewenste implementatiedatum genoemd?]
+
+### Cross-sell & Upsell Kansen
+- [Andere producten/diensten die relevant zijn op basis van het gesprek]
+- [Mogelijkheden om scope uit te breiden]
+
+### Deal Risico's
+- [Bezwaren die zijn geuit]
+- [Concurrenten die zijn genoemd]
+- [Twijfels of vertragingssignalen]
+
+## 🔎 Observaties & Signalen
+
+### ⚠️ Twijfel Gedetecteerd
+- [Waar aarzelde de klant? Bij welk onderwerp?]
+- [Welke vragen werden ontweken of vaag beantwoord?]
+
+### 💡 Onuitgesproken Behoeften
+- [Wat werd niet gezegd maar speelt waarschijnlijk wel?]
+- [Achterliggende problemen die je hebt waargenomen]
+
+### 🎯 Vervolgkansen
+- [Workshop, demo, pilot mogelijkheden]
+- [Andere stakeholders om te betrekken]
+
+### 🚩 Rode Vlaggen
+- [Signalen van desinteresse of weerstand]
+- [Zaken die zorgen baren]
+
 ## Sales Insights
-- [Inzichten voor sales follow-up: koopsignalen, bezwaren, timing]
+- [Samenvattende inzichten voor sales follow-up]
 - [Hoe past dit bij wat je in research hebt gevonden?]
 - [Aanbevelingen voor volgende stappen gebaseerd op alle context]
+"""
 
-Schrijf in het Nederlands. Focus op actionable insights en gebruik de volledige context die je hebt."""
+        # Add coaching section if requested
+        if include_coaching:
+            prompt += """
+
+## 📈 Coaching Feedback
+
+### ✅ Wat Ging Goed
+- [Effectieve gesprekstechnieken die de verkoper gebruikte]
+- [Sterke vaardigheden die werden getoond]
+- [Goede vragen die werden gesteld]
+
+### 🔧 Verbeterpunten
+- [Gemiste kansen in het gesprek]
+- [Vragen die niet gesteld werden maar relevant waren]
+- [Momenten waar dieper doorgevraagd had kunnen worden]
+
+### 💡 Tips voor Volgende Keer
+- [Concrete, actionable suggesties voor verbetering]
+- [Focus op 1-2 specifieke verbeterpunten]
+"""
+
+        prompt += """
+
+Schrijf in het Nederlands. Focus op actionable insights en gebruik de volledige context die je hebt.
+Wees eerlijk maar constructief in je analyse."""
 
         return prompt
     
@@ -344,19 +407,56 @@ Schrijf in het Nederlands. Focus op actionable insights en gebruik de volledige 
             "concerns": [],
             "decisions": [],
             "next_steps": [],
-            "sales_insights": []
+            "sales_insights": [],
+            # NEW: Enhanced sections
+            "commercial_signals": {},
+            "observations": {},
+            "coaching_feedback": {},
+            "full_content": content  # Store full markdown for display
         }
         
         current_section = None
         current_content = []
         
+        # Parse commercial signals
+        commercial_signals = {
+            "koopsignalen": [],
+            "cross_sell": [],
+            "risks": []
+        }
+        
+        # Parse observations
+        observations = {
+            "doubts": [],
+            "unspoken_needs": [],
+            "opportunities": [],
+            "red_flags": []
+        }
+        
+        # Parse coaching
+        coaching_feedback = {
+            "strengths": [],
+            "improvements": [],
+            "tips": []
+        }
+        
+        in_commercial = False
+        in_observations = False
+        in_coaching = False
+        commercial_subsection = None
+        observations_subsection = None
+        coaching_subsection = None
+        
         for line in content.split("\n"):
-            line = line.strip()
+            line_stripped = line.strip()
             
-            # Check for section headers
+            # Check for main section headers
             if "## Executive Summary" in line or "## Samenvatting" in line:
                 current_section = "executive_summary"
                 current_content = []
+                in_commercial = False
+                in_observations = False
+                in_coaching = False
             elif "## Key Discussion" in line or "## Belangrijkste" in line:
                 if current_section == "executive_summary":
                     sections["executive_summary"] = " ".join(current_content).strip()
@@ -364,33 +464,94 @@ Schrijf in het Nederlands. Focus op actionable insights en gebruik de volledige 
                 current_content = []
             elif "## Client Concerns" in line or "## Bezwaren" in line or "## Zorgen" in line:
                 current_section = "concerns"
-                current_content = []
             elif "## Decisions" in line or "## Beslissingen" in line:
                 current_section = "decisions"
-                current_content = []
             elif "## Next Steps" in line or "## Vervolgstappen" in line:
                 current_section = "next_steps"
-                current_content = []
+            elif "## 💰 Commerciële Signalen" in line or "## Commerciële Signalen" in line:
+                in_commercial = True
+                in_observations = False
+                in_coaching = False
+                current_section = None
+            elif "## 🔎 Observaties" in line or "## Observaties" in line:
+                in_commercial = False
+                in_observations = True
+                in_coaching = False
+                current_section = None
+            elif "## 📈 Coaching" in line or "## Coaching Feedback" in line:
+                in_commercial = False
+                in_observations = False
+                in_coaching = True
+                current_section = None
             elif "## Sales Insights" in line or "## Sales" in line:
                 current_section = "sales_insights"
-                current_content = []
-            elif line:
-                # Add content to current section
+                in_commercial = False
+                in_observations = False
+                in_coaching = False
+            
+            # Parse commercial subsections
+            elif in_commercial:
+                if "### Koopsignalen" in line or "**Budget**" in line_stripped:
+                    commercial_subsection = "koopsignalen"
+                elif "### Cross-sell" in line or "### Upsell" in line:
+                    commercial_subsection = "cross_sell"
+                elif "### Deal Risico" in line or "### Risico" in line:
+                    commercial_subsection = "risks"
+                elif line_stripped.startswith("-") and commercial_subsection:
+                    item = line_stripped.lstrip("- ").strip()
+                    if item:
+                        commercial_signals[commercial_subsection].append(item)
+                elif line_stripped.startswith("**") and commercial_subsection == "koopsignalen":
+                    commercial_signals["koopsignalen"].append(line_stripped)
+            
+            # Parse observations subsections
+            elif in_observations:
+                if "### ⚠️ Twijfel" in line or "### Twijfel" in line:
+                    observations_subsection = "doubts"
+                elif "### 💡 Onuitgesproken" in line or "### Onuitgesproken" in line:
+                    observations_subsection = "unspoken_needs"
+                elif "### 🎯 Vervolg" in line or "### Kansen" in line:
+                    observations_subsection = "opportunities"
+                elif "### 🚩 Rode" in line or "### Rode Vlaggen" in line:
+                    observations_subsection = "red_flags"
+                elif line_stripped.startswith("-") and observations_subsection:
+                    item = line_stripped.lstrip("- ").strip()
+                    if item:
+                        observations[observations_subsection].append(item)
+            
+            # Parse coaching subsections
+            elif in_coaching:
+                if "### ✅ Wat Ging Goed" in line or "### Wat Ging Goed" in line:
+                    coaching_subsection = "strengths"
+                elif "### 🔧 Verbeterpunten" in line or "### Verbeterpunten" in line:
+                    coaching_subsection = "improvements"
+                elif "### 💡 Tips" in line or "### Tips" in line:
+                    coaching_subsection = "tips"
+                elif line_stripped.startswith("-") and coaching_subsection:
+                    item = line_stripped.lstrip("- ").strip()
+                    if item:
+                        coaching_feedback[coaching_subsection].append(item)
+            
+            # Regular section parsing
+            elif line_stripped:
                 if current_section == "executive_summary":
-                    current_content.append(line)
-                elif current_section and line.startswith("-"):
-                    # Bullet point
-                    item = line.lstrip("- ").strip()
+                    current_content.append(line_stripped)
+                elif current_section and line_stripped.startswith("-"):
+                    item = line_stripped.lstrip("- ").strip()
                     if item:
                         sections[current_section].append(item)
                 elif current_section and current_section != "executive_summary":
-                    # Non-bullet content in list section
-                    if line and not line.startswith("#"):
-                        sections[current_section].append(line)
+                    if line_stripped and not line_stripped.startswith("#"):
+                        sections[current_section].append(line_stripped)
         
         # Handle last section if executive_summary
         if current_section == "executive_summary" and current_content:
             sections["executive_summary"] = " ".join(current_content).strip()
+        
+        # Add parsed enhanced sections
+        sections["commercial_signals"] = commercial_signals
+        sections["observations"] = observations
+        sections["coaching_feedback"] = coaching_feedback
         
         return sections
     
@@ -482,13 +643,32 @@ ACTIE-ITEMS:
 
 TONE: {tone_instructions.get(tone, tone_instructions['professional'])}
 
-Schrijf een follow-up email die:
-1. Bedankt voor hun tijd
-2. De belangrijkste punten kort samenvat (gebruik je kennis van hun bedrijf)
-3. De actie-items en vervolgstappen bevestigt met duidelijke owners
-4. Waar relevant, bied aan om case studies of materialen te delen
-5. Stel een concrete volgende stap voor (meeting, call, demo)
-6. Past bij jouw communicatiestijl en de relatie
+---
+
+BELANGRIJK: Schrijf de email vanuit CUSTOMER-CENTRIC PERSPECTIEF.
+
+Dit betekent:
+- Begin met erkenning van HUN situatie, niet "bedankt voor je tijd"
+- Focus op wat relevant is voor DE KLANT, niet voor jou als verkoper
+- Vervolgstappen koppelen aan KLANT belang ("Dit sluit aan bij jullie wens om...")
+- Geen verkooptaal of intern jargon
+- Professioneel maar menselijk en toegankelijk
+
+STRUCTUUR:
+1. Opening: erkenning van gesprek en hun situatie/uitdaging
+2. Kern: hun prioriteiten en hoe dat aansluit (niet: wat wij verkopen)
+3. Vervolgstap: concreet, gekoppeld aan hun doel
+4. Afsluiting: uitnodiging tot reactie
+
+VOORBEELD OPENING (niet letterlijk overnemen):
+"Goed dat we vandaag de tijd hebben genomen om te bespreken hoe [hun uitdaging] 
+aangepakt kan worden. Wat mij opviel uit ons gesprek: [hun prioriteiten]."
+
+VERMIJD:
+- "Bedankt voor je tijd" als opening
+- Te veel nadruk op jouw producten/diensten
+- Lange opsommingen van features
+- Jargon of afkortingen
 
 Begin direct met de email (geen "Hier is de email:" of dergelijke intro).
 Gebruik [NAAM] als placeholder voor de ontvanger naam.

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/use-toast'
@@ -52,6 +53,7 @@ export default function FollowupPage() {
   const [prospectCompany, setProspectCompany] = useState('')
   const [meetingSubject, setMeetingSubject] = useState('')
   const [meetingDate, setMeetingDate] = useState('')
+  const [includeCoaching, setIncludeCoaching] = useState(false)  // NEW: opt-in coaching
   
   const fetchFollowups = useCallback(async () => {
     try {
@@ -183,6 +185,7 @@ export default function FollowupPage() {
       if (prospectCompany) formData.append('prospect_company_name', prospectCompany)
       if (meetingSubject) formData.append('meeting_subject', meetingSubject)
       if (meetingDate) formData.append('meeting_date', meetingDate)
+      formData.append('include_coaching', includeCoaching.toString())  // NEW: coaching flag
 
       setUploadProgress(30)
 
@@ -219,6 +222,7 @@ export default function FollowupPage() {
       setProspectCompany('')
       setMeetingSubject('')
       setMeetingDate('')
+      setIncludeCoaching(false)
       
       // Refresh list
       fetchFollowups()
@@ -433,6 +437,27 @@ export default function FollowupPage() {
                 onChange={(e) => setMeetingDate(e.target.value)}
                 disabled={uploading}
               />
+            </div>
+
+            {/* Coaching Feedback Toggle */}
+            <div className="flex items-center space-x-2 pt-2 pb-1 border-t">
+              <Checkbox
+                id="coaching"
+                checked={includeCoaching}
+                onCheckedChange={(checked) => setIncludeCoaching(checked === true)}
+                disabled={uploading}
+              />
+              <div className="grid gap-1.5 leading-none">
+                <Label
+                  htmlFor="coaching"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  📈 Ontvang coaching feedback
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Krijg tips over wat goed ging en wat beter kan
+                </p>
+              </div>
             </div>
 
             <Button 

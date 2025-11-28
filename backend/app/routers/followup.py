@@ -62,6 +62,12 @@ class FollowupDetail(BaseModel):
     error_message: Optional[str]
     created_at: str
     completed_at: Optional[str]
+    # NEW: Enhanced follow-up fields
+    include_coaching: bool = False
+    commercial_signals: Optional[Dict[str, Any]] = None
+    observations: Optional[Dict[str, Any]] = None
+    coaching_feedback: Optional[Dict[str, Any]] = None
+    full_summary_content: Optional[str] = None
 
 
 class UpdateFollowupRequest(BaseModel):
@@ -83,7 +89,8 @@ async def process_followup_background(
     organization_id: str,
     user_id: str,
     meeting_prep_id: Optional[str] = None,
-    prospect_company: Optional[str] = None
+    prospect_company: Optional[str] = None,
+    include_coaching: bool = False  # NEW: opt-in coaching
 ):
     """Background task to process audio and generate follow-up content"""
     
@@ -166,12 +173,13 @@ async def process_followup_background(
             # Fall back to basic context
             prospect_context = None
         
-        # Step 4: Generate summary with full context
+        # Step 4: Generate summary with full context (including enhanced sections)
         followup_generator = get_followup_generator()
         
         summary = await followup_generator.generate_summary(
             transcription=transcription_result.full_text,
             prospect_context=prospect_context,
+            include_coaching=include_coaching,  # NEW: pass coaching flag
             prospect_company=prospect_company
         )
         
@@ -190,8 +198,8 @@ async def process_followup_background(
             tone="professional"
         )
         
-        # Step 7: Save all results
-        supabase.table("followups").update({
+        # Step 7: Save all results (including enhanced sections)
+        update_data = {
             "status": "completed",
             "executive_summary": summary.get("executive_summary", ""),
             "key_points": summary.get("key_points", []),
@@ -200,8 +208,19 @@ async def process_followup_background(
             "next_steps": summary.get("next_steps", []),
             "action_items": action_items,
             "email_draft": email_draft,
-            "completed_at": datetime.utcnow().isoformat()
-        }).eq("id", followup_id).execute()
+            "completed_at": datetime.utcnow().isoformat(),
+            # NEW: Enhanced follow-up fields
+            "commercial_signals": summary.get("commercial_signals", {}),
+            "observations": summary.get("observations", {}),
+            "full_summary_content": summary.get("full_content", "")
+        }
+        
+        # Only save coaching if requested
+        if include_coaching:
+            update_data["coaching_feedback"] = summary.get("coaching_feedback", {})
+            update_data["include_coaching"] = True
+        
+        supabase.table("followups").update(update_data).eq("id", followup_id).execute()
         
         logger.info(f"Successfully processed followup {followup_id}")
         
@@ -235,6 +254,7 @@ async def upload_audio(
     prospect_company_name: Optional[str] = Form(None),
     meeting_date: Optional[str] = Form(None),
     meeting_subject: Optional[str] = Form(None),
+    include_coaching: bool = Form(False),  # NEW: opt-in coaching feedback
     current_user: dict = Depends(get_current_user)
 ):
     """
@@ -292,7 +312,8 @@ async def upload_audio(
             "meeting_date": meeting_date,
             "meeting_subject": meeting_subject,
             "status": "uploading",
-            "audio_filename": file.filename
+            "audio_filename": file.filename,
+            "include_coaching": include_coaching  # NEW: store coaching preference
         }
         
         response = supabase.table("followups").insert(followup_data).execute()
@@ -312,10 +333,11 @@ async def upload_audio(
             organization_id,
             user_id,
             meeting_prep_id,
-            prospect_company_name
+            prospect_company_name,
+            include_coaching  # NEW: pass coaching flag
         )
         
-        logger.info(f"Created followup {followup_id} for prospect {prospect_id}, starting background processing")
+        logger.info(f"Created followup {followup_id} for prospect {prospect_id}, coaching={include_coaching}, starting background processing")
         
         return FollowupResponse(
             id=followup_id,
@@ -340,7 +362,8 @@ async def process_transcript_background(
     user_id: str,
     meeting_prep_id: Optional[str] = None,
     prospect_company: Optional[str] = None,
-    estimated_duration: Optional[float] = None
+    estimated_duration: Optional[float] = None,
+    include_coaching: bool = False  # NEW: opt-in coaching
 ):
     """Background task to process transcript and generate follow-up content"""
     
@@ -374,12 +397,13 @@ async def process_transcript_background(
             logger.warning(f"Could not get full prospect context: {e}")
             prospect_context = None
         
-        # Generate summary with full context
+        # Generate summary with full context (including enhanced sections)
         followup_generator = get_followup_generator()
         
         summary = await followup_generator.generate_summary(
             transcription=transcription_text,
             prospect_context=prospect_context,
+            include_coaching=include_coaching,  # NEW: pass coaching flag
             prospect_company=prospect_company
         )
         
@@ -398,8 +422,8 @@ async def process_transcript_background(
             tone="professional"
         )
         
-        # Save all results
-        supabase.table("followups").update({
+        # Save all results (including enhanced sections)
+        update_data = {
             "status": "completed",
             "executive_summary": summary.get("executive_summary", ""),
             "key_points": summary.get("key_points", []),
@@ -408,8 +432,19 @@ async def process_transcript_background(
             "next_steps": summary.get("next_steps", []),
             "action_items": action_items,
             "email_draft": email_draft,
-            "completed_at": datetime.utcnow().isoformat()
-        }).eq("id", followup_id).execute()
+            "completed_at": datetime.utcnow().isoformat(),
+            # NEW: Enhanced follow-up fields
+            "commercial_signals": summary.get("commercial_signals", {}),
+            "observations": summary.get("observations", {}),
+            "full_summary_content": summary.get("full_content", "")
+        }
+        
+        # Only save coaching if requested
+        if include_coaching:
+            update_data["coaching_feedback"] = summary.get("coaching_feedback", {})
+            update_data["include_coaching"] = True
+        
+        supabase.table("followups").update(update_data).eq("id", followup_id).execute()
         
         logger.info(f"Successfully processed transcript followup {followup_id}")
         
@@ -429,6 +464,7 @@ async def upload_transcript(
     prospect_company_name: Optional[str] = Form(None),
     meeting_date: Optional[str] = Form(None),
     meeting_subject: Optional[str] = Form(None),
+    include_coaching: bool = Form(False),  # NEW: opt-in coaching feedback
     current_user: dict = Depends(get_current_user)
 ):
     """
@@ -503,7 +539,8 @@ async def upload_transcript(
             "meeting_date": meeting_date,
             "meeting_subject": meeting_subject,
             "status": "summarizing",
-            "audio_filename": file.filename  # Store transcript filename
+            "audio_filename": file.filename,  # Store transcript filename
+            "include_coaching": include_coaching  # NEW: store coaching preference
         }
         
         response = supabase.table("followups").insert(followup_data).execute()
@@ -525,10 +562,11 @@ async def upload_transcript(
             user_id,
             meeting_prep_id,
             prospect_company_name,
-            parsed.estimated_duration
+            parsed.estimated_duration,
+            include_coaching  # NEW: pass coaching flag
         )
         
-        logger.info(f"Created transcript followup {followup_id} for prospect {prospect_id}, starting background processing")
+        logger.info(f"Created transcript followup {followup_id} for prospect {prospect_id}, coaching={include_coaching}, starting background processing")
         
         return FollowupResponse(
             id=followup_id,
