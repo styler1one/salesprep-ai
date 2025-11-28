@@ -11,10 +11,8 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children, user }: DashboardLayoutProps) {
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
-      {/* Sidebar - hidden on mobile, visible on md+ */}
-      <div className="hidden md:block">
-        <Sidebar />
-      </div>
+      {/* Sidebar */}
+      <Sidebar />
 
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
