@@ -16,6 +16,7 @@ from supabase import create_client
 from app.deps import get_current_user
 from app.services.transcription_service import get_transcription_service
 from app.services.followup_generator import get_followup_generator
+from app.services.transcript_parser import get_transcript_parser
 
 logger = logging.getLogger(__name__)
 
@@ -321,6 +322,218 @@ async def upload_audio(
         raise
     except Exception as e:
         logger.error(f"Error uploading audio: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Background task for transcript processing
+async def process_transcript_background(
+    followup_id: str,
+    transcription_text: str,
+    segments: list,
+    speaker_count: int,
+    organization_id: str,
+    user_id: str,
+    meeting_prep_id: Optional[str] = None,
+    prospect_company: Optional[str] = None,
+    estimated_duration: Optional[float] = None
+):
+    """Background task to process transcript and generate follow-up content"""
+    
+    try:
+        # Update status to summarizing
+        supabase.table("followups").update({
+            "status": "summarizing",
+            "transcription_text": transcription_text,
+            "transcription_segments": segments,
+            "speaker_count": speaker_count,
+            "audio_duration_seconds": int(estimated_duration) if estimated_duration else None
+        }).eq("id", followup_id).execute()
+        
+        # Get context for summary
+        meeting_prep_context = None
+        profile_context = None
+        
+        # Get meeting prep context if linked
+        if meeting_prep_id:
+            prep_response = supabase.table("meeting_preps").select(
+                "brief_content, talking_points, strategy"
+            ).eq("id", meeting_prep_id).limit(1).execute()
+            
+            if prep_response.data:
+                prep = prep_response.data[0]
+                meeting_prep_context = f"""
+Voorbereide talking points: {prep.get('talking_points', [])}
+Strategie: {prep.get('strategy', '')}
+Brief: {prep.get('brief_content', '')[:2000]}
+"""
+        
+        # Get profile context
+        try:
+            from app.services.context_service import ContextService
+            context_service = ContextService()
+            profile_context = context_service.get_context_for_prompt(
+                user_id, organization_id, max_tokens=1000
+            )
+        except Exception as e:
+            logger.warning(f"Could not get profile context: {e}")
+        
+        # Generate summary
+        followup_generator = get_followup_generator()
+        
+        summary = await followup_generator.generate_summary(
+            transcription=transcription_text,
+            meeting_prep_context=meeting_prep_context,
+            profile_context=profile_context,
+            prospect_company=prospect_company
+        )
+        
+        # Extract action items
+        action_items = await followup_generator.extract_action_items(
+            transcription=transcription_text,
+            summary=summary.get("executive_summary")
+        )
+        
+        # Generate email draft
+        email_draft = await followup_generator.generate_email_draft(
+            summary=summary,
+            action_items=action_items,
+            profile_context=profile_context,
+            prospect_company=prospect_company,
+            tone="professional"
+        )
+        
+        # Save all results
+        supabase.table("followups").update({
+            "status": "completed",
+            "executive_summary": summary.get("executive_summary", ""),
+            "key_points": summary.get("key_points", []),
+            "concerns": summary.get("concerns", []),
+            "decisions": summary.get("decisions", []),
+            "next_steps": summary.get("next_steps", []),
+            "action_items": action_items,
+            "email_draft": email_draft,
+            "completed_at": datetime.utcnow().isoformat()
+        }).eq("id", followup_id).execute()
+        
+        logger.info(f"Successfully processed transcript followup {followup_id}")
+        
+    except Exception as e:
+        logger.error(f"Error processing transcript followup {followup_id}: {e}")
+        supabase.table("followups").update({
+            "status": "failed",
+            "error_message": str(e)
+        }).eq("id", followup_id).execute()
+
+
+@router.post("/upload-transcript", response_model=FollowupResponse, status_code=202)
+async def upload_transcript(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    meeting_prep_id: Optional[str] = Form(None),
+    prospect_company_name: Optional[str] = Form(None),
+    meeting_date: Optional[str] = Form(None),
+    meeting_subject: Optional[str] = Form(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Upload transcript file for summary and follow-up generation
+    
+    Supports: .txt, .md, .docx, .srt files
+    Returns immediately with followup ID, processing happens in background
+    """
+    try:
+        # Get user ID from JWT
+        user_id = current_user.get("sub") or current_user.get("id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Could not get user ID")
+        
+        # Validate file type
+        allowed_extensions = ["txt", "md", "docx", "srt"]
+        file_ext = file.filename.lower().split(".")[-1] if file.filename else ""
+        if file_ext not in allowed_extensions:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid file type. Allowed: {', '.join(allowed_extensions)}"
+            )
+        
+        # Get user's organization
+        org_response = supabase.table("organization_members").select(
+            "organization_id"
+        ).eq("user_id", user_id).limit(1).execute()
+        
+        if not org_response.data:
+            raise HTTPException(status_code=404, detail="User not in any organization")
+        
+        organization_id = org_response.data[0]["organization_id"]
+        
+        # Read file data
+        file_data = await file.read()
+        
+        # Check file size (10MB limit for text files)
+        if len(file_data) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="File too large. Max 10MB.")
+        
+        # Parse transcript
+        parser = get_transcript_parser()
+        parsed = parser.parse_file(file_data, file.filename)
+        
+        # Convert segments to dict format
+        segments = [
+            {
+                "speaker": seg.speaker,
+                "start": seg.start,
+                "end": seg.end,
+                "text": seg.text
+            }
+            for seg in parsed.segments
+        ]
+        
+        # Create followup record
+        followup_data = {
+            "organization_id": organization_id,
+            "user_id": user_id,
+            "meeting_prep_id": meeting_prep_id,
+            "prospect_company_name": prospect_company_name,
+            "meeting_date": meeting_date,
+            "meeting_subject": meeting_subject,
+            "status": "summarizing",
+            "audio_filename": file.filename  # Store transcript filename
+        }
+        
+        response = supabase.table("followups").insert(followup_data).execute()
+        
+        if not response.data:
+            raise HTTPException(status_code=500, detail="Failed to create followup")
+        
+        followup = response.data[0]
+        followup_id = followup["id"]
+        
+        # Start background processing
+        background_tasks.add_task(
+            process_transcript_background,
+            followup_id,
+            parsed.full_text,
+            segments,
+            parsed.speaker_count,
+            organization_id,
+            user_id,
+            meeting_prep_id,
+            prospect_company_name,
+            parsed.estimated_duration
+        )
+        
+        logger.info(f"Created transcript followup {followup_id}, starting background processing")
+        
+        return FollowupResponse(
+            id=followup_id,
+            status="summarizing",
+            message="Transcript uploaded, generating summary..."
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading transcript: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

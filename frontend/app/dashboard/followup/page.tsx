@@ -42,6 +42,7 @@ export default function FollowupPage() {
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadType, setUploadType] = useState<'audio' | 'transcript'>('audio')
   
   // Form state
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -90,25 +91,50 @@ export default function FollowupPage() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Validate file type
-      const allowedTypes = ['audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/webm', 'audio/x-m4a']
-      if (!allowedTypes.includes(file.type)) {
-        toast({
-          title: 'Ongeldig bestandstype',
-          description: 'Upload een mp3, m4a, wav of webm bestand',
-          variant: 'destructive'
-        })
-        return
-      }
+      const ext = file.name.toLowerCase().split('.').pop() || ''
       
-      // Validate file size (50MB)
-      if (file.size > 50 * 1024 * 1024) {
-        toast({
-          title: 'Bestand te groot',
-          description: 'Maximum bestandsgrootte is 50MB',
-          variant: 'destructive'
-        })
-        return
+      if (uploadType === 'audio') {
+        // Validate audio file type
+        const allowedTypes = ['audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/webm', 'audio/x-m4a']
+        if (!allowedTypes.includes(file.type)) {
+          toast({
+            title: 'Ongeldig bestandstype',
+            description: 'Upload een mp3, m4a, wav of webm bestand',
+            variant: 'destructive'
+          })
+          return
+        }
+        
+        // Validate file size (50MB for audio)
+        if (file.size > 50 * 1024 * 1024) {
+          toast({
+            title: 'Bestand te groot',
+            description: 'Maximum bestandsgrootte is 50MB',
+            variant: 'destructive'
+          })
+          return
+        }
+      } else {
+        // Validate transcript file type
+        const allowedExts = ['txt', 'md', 'docx', 'srt']
+        if (!allowedExts.includes(ext)) {
+          toast({
+            title: 'Ongeldig bestandstype',
+            description: 'Upload een txt, md, docx of srt bestand',
+            variant: 'destructive'
+          })
+          return
+        }
+        
+        // Validate file size (10MB for transcripts)
+        if (file.size > 10 * 1024 * 1024) {
+          toast({
+            title: 'Bestand te groot',
+            description: 'Maximum bestandsgrootte is 10MB',
+            variant: 'destructive'
+          })
+          return
+        }
       }
       
       setSelectedFile(file)
@@ -142,16 +168,18 @@ export default function FollowupPage() {
 
       setUploadProgress(30)
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/followup/upload`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          },
-          body: formData
-        }
-      )
+      // Use different endpoint based on upload type
+      const endpoint = uploadType === 'audio' 
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1/followup/upload`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/v1/followup/upload-transcript`
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: formData
+      })
 
       setUploadProgress(80)
 
@@ -278,19 +306,45 @@ export default function FollowupPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Upload Type Selector */}
+            <div className="flex gap-2">
+              <Button
+                variant={uploadType === 'audio' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => { setUploadType('audio'); setSelectedFile(null); }}
+                disabled={uploading}
+                className="flex-1"
+              >
+                <Mic className="h-4 w-4 mr-1" />
+                Audio
+              </Button>
+              <Button
+                variant={uploadType === 'transcript' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => { setUploadType('transcript'); setSelectedFile(null); }}
+                disabled={uploading}
+                className="flex-1"
+              >
+                <FileAudio className="h-4 w-4 mr-1" />
+                Transcript
+              </Button>
+            </div>
+
             {/* File Upload */}
             <div className="space-y-2">
-              <Label>Audio Bestand *</Label>
+              <Label>{uploadType === 'audio' ? 'Audio Bestand' : 'Transcript Bestand'} *</Label>
               <div 
                 className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
                   ${selectedFile ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-gray-400'}
                   ${uploading ? 'pointer-events-none opacity-50' : ''}`}
-                onClick={() => document.getElementById('audio-input')?.click()}
+                onClick={() => document.getElementById('file-input')?.click()}
               >
                 <input
-                  id="audio-input"
+                  id="file-input"
                   type="file"
-                  accept="audio/mpeg,audio/mp4,audio/wav,audio/webm,audio/x-m4a"
+                  accept={uploadType === 'audio' 
+                    ? "audio/mpeg,audio/mp4,audio/wav,audio/webm,audio/x-m4a"
+                    : ".txt,.md,.docx,.srt"}
                   onChange={handleFileSelect}
                   className="hidden"
                   disabled={uploading}
@@ -309,10 +363,12 @@ export default function FollowupPage() {
                   <>
                     <Upload className="h-10 w-10 mx-auto text-gray-400 mb-2" />
                     <p className="text-sm text-gray-600">
-                      Klik of sleep een audio bestand
+                      Klik of sleep een {uploadType === 'audio' ? 'audio' : 'transcript'} bestand
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
-                      MP3, M4A, WAV, WebM (max 50MB)
+                      {uploadType === 'audio' 
+                        ? 'MP3, M4A, WAV, WebM (max 50MB)'
+                        : 'TXT, MD, DOCX, SRT (max 10MB)'}
                     </p>
                   </>
                 )}
