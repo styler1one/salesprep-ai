@@ -77,7 +77,7 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'flex flex-col h-screen bg-slate-900 text-white transition-all duration-300',
+        'flex flex-col h-screen bg-slate-900 text-white transition-all duration-300 flex-shrink-0',
         collapsed ? 'w-[72px]' : 'w-64',
         className
       )}
