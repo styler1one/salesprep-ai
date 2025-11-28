@@ -152,11 +152,24 @@ export default function ResearchPage() {
     setCompanyName(option.company_name)
     if (option.website) setWebsiteUrl(option.website)
     if (option.linkedin_url) setLinkedinUrl(option.linkedin_url)
+    
+    // Extract city from location (format: "City, Country" or just "City")
+    if (option.location) {
+      const locationParts = option.location.split(',')
+      if (locationParts.length > 0) {
+        const extractedCity = locationParts[0].trim()
+        // Only set if it looks like a city (not same as country)
+        if (extractedCity.toLowerCase() !== country.toLowerCase()) {
+          setCity(extractedCity)
+        }
+      }
+    }
+    
     setShowOptions(false)
     
     toast({
       title: "Bedrijf geselecteerd",
-      description: `${option.company_name} - URLs automatisch ingevuld`,
+      description: `${option.company_name} - gegevens automatisch ingevuld`,
     })
   }
   
@@ -530,7 +543,7 @@ export default function ResearchPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="websiteUrl" className="flex items-center gap-2">
                   Website
@@ -571,20 +584,25 @@ export default function ResearchPage() {
                   className={`mt-1 ${linkedinUrl && selectedCompany ? 'border-green-300 bg-green-50' : ''}`}
                 />
               </div>
-            </div>
 
-            <div>
-              <Label htmlFor="city">Stad (optioneel)</Label>
-              <Input
-                id="city"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="bijv. Amsterdam"
-                className="mt-1"
-              />
-              <p className="text-xs text-slate-400 mt-1">
-                Extra context voor de research
-              </p>
+              <div>
+                <Label htmlFor="city" className="flex items-center gap-2">
+                  Stad
+                  {city && selectedCompany && (
+                    <span className="text-xs text-green-600 flex items-center gap-1">
+                      <Icons.checkCircle className="h-3 w-3" />
+                      Via Google gevonden
+                    </span>
+                  )}
+                </Label>
+                <Input
+                  id="city"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="bijv. Amsterdam"
+                  className={`mt-1 ${city && selectedCompany ? 'border-green-300 bg-green-50' : ''}`}
+                />
+              </div>
             </div>
 
             <Button 
