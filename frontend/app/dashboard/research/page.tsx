@@ -57,9 +57,6 @@ export default function ResearchPage() {
   const [companyOptions, setCompanyOptions] = useState<any[]>([])
   const [showOptions, setShowOptions] = useState(false)
   const [selectedCompany, setSelectedCompany] = useState<any>(null)
-  const debouncedCompanyName = useDebounce(companyName, 1000)
-  const debouncedCountry = useDebounce(country, 1000)
-  const lastSearchRef = useRef<string>('')
 
   useEffect(() => {
     const getUser = async () => {
@@ -73,74 +70,81 @@ export default function ResearchPage() {
     getUser()
   }, [supabase])
   
-  // Search for company options when BOTH name AND country are filled
-  useEffect(() => {
-    const searchKey = `${debouncedCompanyName}|${debouncedCountry}`
-    
-    // Only search when BOTH company name AND country are provided
-    if (
-      !debouncedCompanyName || 
-      debouncedCompanyName.length < 3 ||
-      !debouncedCountry ||
-      debouncedCountry.length < 2 ||
-      lastSearchRef.current === searchKey ||
-      selectedCompany // Already selected a company
-    ) {
+  // Manual search function - only called when user clicks "Zoek"
+  const searchCompanies = async () => {
+    // Validate inputs
+    if (!companyName || companyName.length < 3) {
+      toast({
+        title: "Bedrijfsnaam te kort",
+        description: "Vul minimaal 3 tekens in",
+        variant: "destructive"
+      })
       return
     }
     
-    const searchCompanies = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) return
-        
-        setIsSearching(true)
-        lastSearchRef.current = searchKey
-        
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-        const response = await fetch(`${apiUrl}/api/v1/research/search-company`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            company_name: debouncedCompanyName,
-            country: debouncedCountry
-          })
-        })
-        
-        if (response.ok) {
-          const data = await response.json()
-          
-          if (data.options && data.options.length > 0) {
-            setCompanyOptions(data.options)
-            
-            // If only 1 option with high confidence, auto-select
-            if (data.options.length === 1 && data.options[0].confidence >= 90) {
-              selectCompanyOption(data.options[0])
-            } else {
-              // Show options for user to choose
-              setShowOptions(true)
-            }
-          } else {
-            setCompanyOptions([])
-            toast({
-              title: "Geen bedrijven gevonden",
-              description: `Geen match voor "${debouncedCompanyName}" in ${debouncedCountry}`,
-              variant: "destructive"
-            })
-          }
-        }
-      } catch (error) {
-        console.error('Company search failed:', error)
-      } finally {
-        setIsSearching(false)
-      }
+    if (!country || country.length < 2) {
+      toast({
+        title: "Land verplicht",
+        description: "Vul een land in om het juiste bedrijf te vinden",
+        variant: "destructive"
+      })
+      return
     }
     
-    searchCompanies()
-  }, [debouncedCompanyName, debouncedCountry, supabase, toast, selectedCompany])
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      
+      setIsSearching(true)
+      setCompanyOptions([])
+      setShowOptions(false)
+      
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/api/v1/research/search-company`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          company_name: companyName,
+          country: country
+        })
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        
+        if (data.options && data.options.length > 0) {
+          setCompanyOptions(data.options)
+          
+          // If only 1 option with high confidence, auto-select
+          if (data.options.length === 1 && data.options[0].confidence >= 90) {
+            selectCompanyOption(data.options[0])
+          } else {
+            // Show options for user to choose
+            setShowOptions(true)
+          }
+        } else {
+          setCompanyOptions([])
+          toast({
+            title: "Geen bedrijven gevonden",
+            description: `Geen match voor "${companyName}" in ${country}. Je kunt handmatig de website invullen.`,
+            variant: "destructive"
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Company search failed:', error)
+      toast({
+        title: "Zoeken mislukt",
+        description: "Er ging iets mis. Probeer het opnieuw.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsSearching(false)
+    }
+  }
   
   // Handle selecting a company option
   const selectCompanyOption = (option: any) => {
@@ -392,17 +396,19 @@ export default function ResearchPage() {
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Icons.search className="h-5 w-5 text-blue-600" />
             Research a Company
-            {isSearching && (
-              <span className="ml-2 text-xs text-slate-400 flex items-center gap-1">
-                <Icons.spinner className="h-3 w-3 animate-spin" />
-                Zoeken op Google...
-              </span>
-            )}
           </h2>
           
           {/* Step indicator */}
           <div className="mb-6 p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
-            <strong>Stap 1:</strong> Vul bedrijfsnaam en land in → <strong>Stap 2:</strong> Selecteer het juiste bedrijf → <strong>Stap 3:</strong> Start research
+            <span className={companyName.length >= 3 && country.length >= 2 ? 'text-green-600' : ''}>
+              <strong>1.</strong> Bedrijfsnaam + land
+            </span>
+            {' → '}
+            <span className={selectedCompany ? 'text-green-600' : ''}>
+              <strong>2.</strong> Zoek & selecteer
+            </span>
+            {' → '}
+            <strong>3.</strong> Start research
           </div>
           
           <form onSubmit={handleStartResearch} className="space-y-4">
@@ -429,15 +435,40 @@ export default function ResearchPage() {
                   className={`mt-1 ${country.length >= 2 ? 'border-blue-300' : ''}`}
                   required
                 />
-                <p className="text-xs text-slate-400 mt-1">
-                  {!country ? '⚠️ Vul land in om bedrijf te zoeken' : 
-                   companyName.length < 3 ? '⚠️ Vul bedrijfsnaam in (min. 3 tekens)' :
-                   isSearching ? '🔍 Zoeken...' :
-                   selectedCompany ? '✅ Bedrijf geselecteerd' :
-                   '⏳ Wacht even...'}
-                </p>
               </div>
             </div>
+            
+            {/* Search button - only show if not already selected a company */}
+            {!selectedCompany && (
+              <Button
+                type="button"
+                onClick={searchCompanies}
+                disabled={isSearching || companyName.length < 3 || country.length < 2}
+                variant="outline"
+                className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
+              >
+                {isSearching ? (
+                  <>
+                    <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                    Zoeken op Google...
+                  </>
+                ) : (
+                  <>
+                    <Icons.search className="mr-2 h-4 w-4" />
+                    🔍 Zoek bedrijf op Google
+                  </>
+                )}
+              </Button>
+            )}
+            
+            {/* Help text */}
+            {!selectedCompany && !showOptions && (
+              <p className="text-sm text-slate-500 text-center">
+                {companyName.length < 3 ? '⚠️ Vul minimaal 3 tekens in voor bedrijfsnaam' :
+                 country.length < 2 ? '⚠️ Vul een land in' :
+                 '👆 Klik op "Zoek bedrijf" om het juiste bedrijf te vinden'}
+              </p>
+            )}
             
             {/* Company Options Dropdown */}
             {showOptions && companyOptions.length > 0 && (
