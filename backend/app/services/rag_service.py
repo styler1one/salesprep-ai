@@ -102,7 +102,9 @@ class RAGService:
         organization_id: str
     ) -> Optional[Dict[str, Any]]:
         """
-        Find existing research brief for company
+        Find existing research brief for company.
+        
+        Uses exact matching to prevent cross-prospect data leakage.
         
         Args:
             company_name: Prospect company name
@@ -112,13 +114,13 @@ class RAGService:
             Research brief data if found, None otherwise
         """
         try:
-            # Query research_briefs table
+            # First try exact match (case-sensitive)
             response = self.supabase.table("research_briefs").select(
                 "id, company_name, brief_content, company_data, key_people, recent_news, created_at"
             ).eq(
                 "organization_id", organization_id
-            ).ilike(
-                "company_name", f"%{company_name}%"
+            ).eq(
+                "company_name", company_name
             ).eq(
                 "status", "completed"
             ).order(
@@ -127,11 +129,29 @@ class RAGService:
             
             if response.data and len(response.data) > 0:
                 research = response.data[0]
-                logger.info(f"Found research brief for {company_name}")
+                logger.info(f"Found research brief for {company_name} (exact match)")
                 return research
-            else:
-                logger.info(f"No research brief found for {company_name}")
-                return None
+            
+            # Fallback: case-insensitive exact match
+            response = self.supabase.table("research_briefs").select(
+                "id, company_name, brief_content, company_data, key_people, recent_news, created_at"
+            ).eq(
+                "organization_id", organization_id
+            ).ilike(
+                "company_name", company_name
+            ).eq(
+                "status", "completed"
+            ).order(
+                "created_at", desc=True
+            ).limit(1).execute()
+            
+            if response.data and len(response.data) > 0:
+                research = response.data[0]
+                logger.info(f"Found research brief for {company_name} (case-insensitive)")
+                return research
+            
+            logger.info(f"No research brief found for {company_name}")
+            return None
                 
         except Exception as e:
             logger.error(f"Error querying research brief: {e}")

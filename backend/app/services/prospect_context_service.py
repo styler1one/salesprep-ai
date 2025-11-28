@@ -296,12 +296,17 @@ Value Propositions: {', '.join(company.get('value_propositions', [])[:3])}""")
         prospect_company: str, 
         organization_id: str
     ) -> Optional[Dict[str, Any]]:
-        """Get research brief for prospect company."""
+        """Get research brief for prospect company.
+        
+        Uses exact match first, then case-insensitive exact match.
+        No fuzzy matching to prevent cross-prospect data leakage.
+        """
         try:
+            # First try exact match (case-sensitive)
             response = self.client.table("research_briefs")\
                 .select("*")\
                 .eq("organization_id", organization_id)\
-                .ilike("company_name", f"%{prospect_company}%")\
+                .eq("company_name", prospect_company)\
                 .eq("status", "completed")\
                 .order("created_at", desc=True)\
                 .limit(1)\
@@ -309,6 +314,20 @@ Value Propositions: {', '.join(company.get('value_propositions', [])[:3])}""")
             
             if response.data:
                 return response.data[0]
+            
+            # Fallback: case-insensitive exact match
+            response = self.client.table("research_briefs")\
+                .select("*")\
+                .eq("organization_id", organization_id)\
+                .ilike("company_name", prospect_company)\
+                .eq("status", "completed")\
+                .order("created_at", desc=True)\
+                .limit(1)\
+                .execute()
+            
+            if response.data:
+                return response.data[0]
+            
             return None
         except Exception as e:
             logger.error(f"Error getting research brief: {e}")
@@ -321,19 +340,43 @@ Value Propositions: {', '.join(company.get('value_propositions', [])[:3])}""")
         specific_prep_id: Optional[str] = None,
         limit: int = 3
     ) -> List[Dict[str, Any]]:
-        """Get meeting preps for prospect company."""
+        """Get meeting preps for prospect company.
+        
+        If specific_prep_id is provided, uses that (most reliable).
+        Otherwise uses exact name matching to prevent cross-prospect leakage.
+        """
         try:
-            query = self.client.table("meeting_preps")\
+            # If we have a specific prep ID, use that (most accurate)
+            if specific_prep_id:
+                response = self.client.table("meeting_preps")\
+                    .select("*")\
+                    .eq("id", specific_prep_id)\
+                    .eq("organization_id", organization_id)\
+                    .execute()
+                return response.data or []
+            
+            # Otherwise, try exact match first
+            response = self.client.table("meeting_preps")\
                 .select("*")\
                 .eq("organization_id", organization_id)\
-                .eq("status", "completed")
+                .eq("prospect_company_name", prospect_company)\
+                .eq("status", "completed")\
+                .order("created_at", desc=True)\
+                .limit(limit)\
+                .execute()
             
-            if specific_prep_id:
-                query = query.eq("id", specific_prep_id)
-            else:
-                query = query.ilike("prospect_company_name", f"%{prospect_company}%")
+            if response.data:
+                return response.data
             
-            response = query.order("created_at", desc=True).limit(limit).execute()
+            # Fallback: case-insensitive exact match
+            response = self.client.table("meeting_preps")\
+                .select("*")\
+                .eq("organization_id", organization_id)\
+                .ilike("prospect_company_name", prospect_company)\
+                .eq("status", "completed")\
+                .order("created_at", desc=True)\
+                .limit(limit)\
+                .execute()
             
             return response.data or []
         except Exception as e:
@@ -346,12 +389,29 @@ Value Propositions: {', '.join(company.get('value_propositions', [])[:3])}""")
         organization_id: str,
         limit: int = 3
     ) -> List[Dict[str, Any]]:
-        """Get previous follow-ups for prospect company."""
+        """Get previous follow-ups for prospect company.
+        
+        Uses exact name matching to prevent cross-prospect data leakage.
+        """
         try:
+            # First try exact match
             response = self.client.table("followups")\
                 .select("*")\
                 .eq("organization_id", organization_id)\
-                .ilike("prospect_company_name", f"%{prospect_company}%")\
+                .eq("prospect_company_name", prospect_company)\
+                .eq("status", "completed")\
+                .order("created_at", desc=True)\
+                .limit(limit)\
+                .execute()
+            
+            if response.data:
+                return response.data
+            
+            # Fallback: case-insensitive exact match
+            response = self.client.table("followups")\
+                .select("*")\
+                .eq("organization_id", organization_id)\
+                .ilike("prospect_company_name", prospect_company)\
                 .eq("status", "completed")\
                 .order("created_at", desc=True)\
                 .limit(limit)\
