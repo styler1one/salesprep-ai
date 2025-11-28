@@ -78,10 +78,28 @@ class PrepGeneratorService:
         custom_notes = context.get("custom_notes", "")
         
         # Base prompt
-        prompt = f"""You are a sales enablement AI helping a sales rep prepare for a {meeting_type} meeting.
+        meeting_type_labels = {
+            "discovery": "Discovery Call",
+            "demo": "Product Demo", 
+            "closing": "Closing Call",
+            "follow_up": "Follow-up Meeting",
+            "other": "Meeting"
+        }
+        meeting_label = meeting_type_labels.get(meeting_type, meeting_type)
+        
+        prompt = f"""Je bent een slimme, ervaren salesvoorbereider. Jij levert commerciële intelligentie – geen verkooppraatjes.
 
-**Prospect Company**: {prospect}
-**Meeting Type**: {meeting_type}
+Je doel: een scherpe, strategisch relevante en to-the-point briefing voor een aankomend klantgesprek.
+
+**Prospect Bedrijf**: {prospect}
+**Type Meeting**: {meeting_label}
+
+BELANGRIJK:
+- Vertaal technologie naar klantwaarde: sneller werken, betere inzichten, minder handwerk, hogere kwaliteit, meer grip
+- Focus op wat er speelt bij de prospect EN hoe dat relevant is voor wat wij aanbieden
+- Maak het persoonlijk: wat speelt er voor de specifieke contactpersonen?
+- Wees zakelijk, bondig en strategisch
+- Schrijf alles in het Nederlands
 """
         
         if custom_notes:
@@ -194,243 +212,391 @@ When generating the meeting brief:
         
         instructions = {
             "discovery": """
-Generate a comprehensive discovery call brief with the following structure:
+Genereer een uitgebreide discovery call briefing met de volgende structuur:
 
 # Meeting Brief: Discovery Call
 
 ## 1. Meeting Overview
-- Primary objective
-- Key focus areas (2-3 main topics)
+- Hoofddoel van dit gesprek
+- Key focus gebieden (2-3 hoofdonderwerpen)
 
-## 2. Company Context
-- Relevant products/services that match their needs
-- Value propositions
-- Similar customers you've helped (case studies)
+## 2. 🌍 Marktcontext & Relevantie voor Ons
+**BELANGRIJK**: Analyseer wat er speelt in de markt vanuit het perspectief van de prospect EN hoe dit relevant is voor wat wij aanbieden.
 
-## 3. Prospect Intelligence
-- Company overview
-- Recent developments
-- Potential pain points
-- Key decision makers
+### Marktontwikkelingen die deze prospect raken
+- [Trend 1 in hun sector]
+- [Trend 2 die hen beïnvloedt]
+- [Verandering waar ze mee te maken hebben]
 
-## 4. Talking Points
+### Hoe onze oplossingen hierop aansluiten
+- [Onze oplossing X helpt bij trend Y]
+- [Onze aanpak lost uitdaging Z op]
+- [Concrete waarde die wij kunnen toevoegen]
 
-### Opening (First 5 minutes)
-- Icebreaker or congratulations
+## 3. 👤 Persoonlijke Relevantie per Contactpersoon
+**BELANGRIJK**: Voor elke contactpersoon - wat speelt er voor HEN persoonlijk en vanuit hun rol waar wij bij kunnen helpen?
+
+[Per contactpersoon indien beschikbaar:]
+### [Naam] - [Rol]
+**Persoonlijke situatie**:
+- Wat speelt er voor deze persoon? (carrière, projecten, druk)
+- Welke persoonlijke doelen/ambities zijn zichtbaar?
+
+**Rol-specifieke uitdagingen**:
+- Welke problemen heeft iemand in deze rol typisch?
+- Waar is hij/zij verantwoordelijk voor?
+
+**Hoe wij kunnen helpen**:
+- [Concrete manier waarop wij deze persoon kunnen ondersteunen]
+- [Wat levert het hem/haar persoonlijk op?]
+
+## 4. 👥 DMU Overview (Decision Making Unit)
+**Als er meerdere contactpersonen zijn:**
+
+| Naam | Rol | Positie in DMU | Communicatiestijl |
+|------|-----|----------------|-------------------|
+| [Naam] | [Functie] | 🟢 Decision Maker / 🔵 Influencer / 🟡 Gatekeeper | [Formeel/Informeel/Technisch] |
+
+**Besluitvormingsanalyse**:
+- Hoe lijkt besluitvorming georganiseerd? (top-down, consensus, pragmatisch)
+- Wat zijn waarschijnlijk dominante besliscriteria? (ROI, risico, adoptie, gemak)
+- Wie moet overtuigd worden en wie beslist uiteindelijk?
+
+## 5. ⏱️ Momentum & Timing
+
+**Timing Score**: [🟢 NU-KANS / 🟡 NURTURE / 🔴 GEEN FOCUS]
+
+**Signalen**:
+- [Urgentie-signalen uit nieuws of LinkedIn]
+- [Project druk of deadlines]
+- [Budget cycli of veranderingen]
+
+**Waarom nu het juiste moment is (of niet)**:
+- [Onderbouwing van de timing]
+
+## 6. ⚠️ Waarschuwingen & Gevoeligheden
+
+**Let op bij dit gesprek**:
+- [Gevoelig onderwerp 1 - waarom vermijden]
+- [Gevoelig onderwerp 2 - waarom vermijden]
+- [Mogelijke bezwaren of weerstand]
+
+**Risico's**:
+- [Lopend contract met concurrent?]
+- [Intern conflict of wisselingen?]
+- [Budget of prioriteit issues?]
+
+## 7. Talking Points
+
+### Opening (Eerste 5 minuten)
+- Persoonlijke opener (gebaseerd op contactpersoon profiel)
 - Meeting agenda
-- Permission to ask questions
+- Toestemming voor vragen
 
-### Discovery (Next 20 minutes)
-- Topic 1 to explore
-- Topic 2 to explore
-- Topic 3 to explore
+### Discovery (Volgende 20 minuten)
+- Onderwerp 1 om te verkennen
+- Onderwerp 2 om te verkennen
+- Onderwerp 3 om te verkennen
 
-### Value Proposition (Next 10 minutes)
-- How you can help
-- Relevant case study
-- Differentiation
+### Value Proposition (Volgende 10 minuten)
+- Hoe wij kunnen helpen (specifiek voor hun situatie)
+- Relevante case study
+- Onderscheidend vermogen
 
-### Next Steps (Last 5 minutes)
-- What you're asking for
+### Next Steps (Laatste 5 minuten)
+- Concrete vervolgactie
 - Timeline
-- Follow-up actions
+- Wie betrekken we erbij?
 
-## 5. Discovery Questions
+## 8. Discovery Vragen
 
-### Situation Questions
-1. [Question about their current situation]
-2. [Question about their process]
-3. [Question about their team]
+### Situatievragen
+1. [Vraag over huidige situatie]
+2. [Vraag over hun proces]
+3. [Vraag over hun team]
 
-### Problem Questions
-1. [Question about challenges]
-2. [Question about pain points]
-3. [Question about impact]
+### Probleemvragen
+1. [Vraag over uitdagingen]
+2. [Vraag over pijnpunten]
+3. [Vraag over impact]
 
-### Implication Questions
-1. [Question about consequences]
-2. [Question about costs]
-3. [Question about risks]
+### Implicatievragen
+1. [Vraag over consequenties]
+2. [Vraag over kosten]
+3. [Vraag over risico's]
 
-### Need-Payoff Questions
-1. [Question about ideal solution]
-2. [Question about benefits]
-3. [Question about value]
+### Need-Payoff Vragen
+1. [Vraag over ideale oplossing]
+2. [Vraag over voordelen]
+3. [Vraag over waarde]
 
-## 6. Meeting Strategy
+## 9. Meeting Strategie
 
-### Primary Objective
-[What you must accomplish]
+### Primair Doel
+[Wat je MOET bereiken]
 
-### Secondary Objectives
+### Secundaire Doelen
 - [Nice to have 1]
 - [Nice to have 2]
 
-### Potential Objections & Responses
-- Objection: [Common objection]
-  Response: [How to address it]
+### Potentiële Bezwaren & Responses
+- Bezwaar: [Veelvoorkomend bezwaar]
+  Response: [Hoe te adresseren]
 
-### Success Criteria
-- [How you'll know the call was successful]
+### Aanbevolen Vervolgstap
+- [Concrete suggestie: workshop, case delen, voorstel, demo]
+- [Wie vanuit ons team moet aanhaken?]
 
 ---
 
-Remember:
-- Be specific and actionable
-- Use information from the context provided
-- Don't make up facts not in the context
-- Tailor everything to this specific prospect
-- Focus on their needs, not your features
+Onthoud:
+- Wees specifiek en actionable
+- Gebruik informatie uit de context
+- Verzin geen feiten die niet in de context staan
+- Maak alles relevant voor deze specifieke prospect
+- Focus op HUN behoeften, niet onze features
+- Schrijf in het Nederlands
 """,
             "demo": """
-Generate a product demo brief with the following structure:
+Genereer een product demo briefing met de volgende structuur:
 
 # Meeting Brief: Product Demo
 
 ## 1. Demo Overview
-- Demo objective
-- Key features to showcase
-- Time allocation
+- Demo doelstelling
+- Key features om te tonen
+- Tijdsindeling
 
-## 2. Prospect Context
-- Their specific needs
-- Pain points to address
-- Decision criteria
+## 2. 🌍 Relevantie voor Hun Situatie
+### Marktontwikkelingen
+- [Trend die hen raakt en relevant is voor de demo]
 
-## 3. Demo Flow
+### Waarom onze oplossing nu relevant is
+- [Concrete aansluiting op hun uitdagingen]
 
-### Introduction (5 min)
-- Recap discovery insights
-- Set demo agenda
-- Confirm their priorities
+## 3. 👤 Per Contactpersoon
+[Voor elke aanwezige:]
+### [Naam] - [Rol]
+- **Wat belangrijk is voor deze persoon**: [hun focus/belangen]
+- **Demo-aandachtspunten**: [wat laten zien dat hen aanspreekt]
+- **Communicatiestijl**: [formeel/technisch/strategisch]
+
+## 4. 👥 DMU & Besluitvorming
+| Naam | Rol | Positie | Focus |
+|------|-----|---------|-------|
+[Tabel met aanwezigen]
+
+**Wie beslist wat**: [analyse van besluitvormingsproces]
+
+## 5. ⚠️ Waarschuwingen
+- [Gevoelige onderwerpen om te vermijden]
+- [Mogelijke bezwaren voorbereiden]
+
+## 6. Demo Flow
+
+### Introductie (5 min)
+- Recap discovery inzichten
+- Demo agenda
+- Bevestig hun prioriteiten
 
 ### Feature Showcase (30 min)
-- Feature 1: [Addresses pain point X]
-- Feature 2: [Solves challenge Y]
-- Feature 3: [Enables outcome Z]
+- Feature 1: [Adresseert pijnpunt X]
+- Feature 2: [Lost uitdaging Y op]
+- Feature 3: [Maakt resultaat Z mogelijk]
 
 ### Q&A (15 min)
-- Anticipated questions
-- Technical details
-- Integration points
+- Verwachte vragen
+- Technische details
+- Integratiepunten
 
-### Next Steps (10 min)
-- Trial/POC proposal
+### Volgende Stappen (10 min)
+- Trial/POC voorstel
 - Timeline
-- Required resources
+- Benodigde resources
 
-## 4. Demo Talking Points
+## 7. Demo Talking Points
 - [Key message 1]
 - [Key message 2]
 - [Key message 3]
 
-## 5. Questions to Ask
-1. [Validate understanding]
-2. [Gauge interest]
-3. [Identify blockers]
+## 8. Vragen om te Stellen
+1. [Valideer begrip]
+2. [Peil interesse]
+3. [Identificeer blokkades]
 
-## 6. Demo Strategy
-- Primary goal
-- Success metrics
-- Objection handling
+## 9. Aanbevolen Vervolgstap
+- [Concrete next step na de demo]
+- [Wie betrekken?]
+
+Schrijf in het Nederlands.
 """,
             "closing": """
-Generate a closing call brief with the following structure:
+Genereer een closing call briefing met de volgende structuur:
 
 # Meeting Brief: Closing Call
 
 ## 1. Deal Overview
-- Deal size
+- Deal omvang
 - Timeline
-- Decision makers
+- Beslissers
 
-## 2. Value Summary
-- ROI demonstrated
+## 2. ⏱️ Momentum & Timing
+**Timing Score**: [🟢 NU-KANS / 🟡 NURTURE / 🔴 GEEN FOCUS]
+- Waarom nu het moment is om te closen
+- Urgentie-signalen
+
+## 3. 👥 DMU & Besluitvorming
+| Naam | Rol | Positie | Status |
+|------|-----|---------|--------|
+[Wie moet tekenen, wie moet akkoord geven]
+
+**Besluitvormingsproces**: [Hoe de beslissing wordt genomen]
+
+## 4. 👤 Per Beslisser - Wat Speelt Er
+[Per persoon die betrokken is bij de beslissing:]
+### [Naam] - [Rol]
+- **Persoonlijke stake**: [Wat levert het hen op?]
+- **Mogelijke zorgen**: [Waar zijn ze bezorgd over?]
+- **Hoe overtuigen**: [Wat hebben ze nodig om ja te zeggen?]
+
+## 5. ⚠️ Risico's & Blokkades
+- [Mogelijke deal-killers]
+- [Concurrentie?]
+- [Budget/timing issues?]
+- [Interne weerstand?]
+
+## 6. Value Summary
+- ROI aangetoond
 - Key benefits
-- Competitive advantages
+- Onderscheidend vermogen vs concurrentie
 
-## 3. Closing Talking Points
+## 7. Closing Talking Points
 
 ### Value Recap
-- [Benefit 1 with evidence]
-- [Benefit 2 with evidence]
-- [Benefit 3 with evidence]
+- [Benefit 1 met bewijs]
+- [Benefit 2 met bewijs]
+- [Benefit 3 met bewijs]
 
-### Address Concerns
-- [Concern 1 and response]
-- [Concern 2 and response]
+### Zorgen Adresseren
+- [Zorg 1 en response]
+- [Zorg 2 en response]
 
-### Create Urgency
-- [Reason to close now]
-- [Limited time offer/incentive]
+### Urgentie Creëren
+- [Reden om nu te closen]
+- [Beperkte tijd/incentive]
 
-## 4. Closing Questions
-1. [Confirm decision criteria met]
-2. [Identify remaining blockers]
-3. [Ask for the business]
+## 8. Closing Vragen
+1. [Bevestig dat besliscriteria zijn voldaan]
+2. [Identificeer resterende blokkades]
+3. [Vraag om de business]
 
-## 5. Negotiation Strategy
-- Walk-away point
-- Concessions to offer
+## 9. Onderhandelingsstrategie
+- Walk-away punt
+- Concessies die we kunnen bieden
 - Must-haves vs nice-to-haves
 
-## 6. Next Steps
-- Contract review
-- Implementation timeline
-- Success planning
+## 10. Concrete Vervolgstap
+- [Wat moet er nu gebeuren?]
+- [Contract review proces]
+- [Implementatie timeline]
+
+Schrijf in het Nederlands.
 """,
             "follow_up": """
-Generate a follow-up meeting brief with the following structure:
+Genereer een follow-up meeting briefing met de volgende structuur:
 
 # Meeting Brief: Follow-up Meeting
 
-## 1. Previous Meeting Recap
-- What was discussed
-- Commitments made
-- Open items
+## 1. Vorige Meeting Recap
+- Wat is besproken
+- Gemaakte afspraken
+- Open punten
 
-## 2. Follow-up Agenda
-- Address open questions
-- Present additional information
-- Move deal forward
+## 2. 🌍 Nieuwe Ontwikkelingen
+### Bij de prospect
+- [Nieuws of veranderingen sinds laatste contact]
+- [Relevante ontwikkelingen in hun markt]
 
-## 3. Talking Points
+### Bij ons
+- [Updates die relevant zijn voor hen]
+- [Nieuwe features/mogelijkheden]
+
+## 3. 👤 Per Contactpersoon - Update
+[Per persoon:]
+### [Naam] - [Rol]
+- **Status sinds vorige meeting**: [Wat is er veranderd?]
+- **Huidige focus**: [Waar zijn ze nu mee bezig?]
+- **Aandachtspunten voor dit gesprek**: [Waar op letten?]
+
+## 4. ⏱️ Momentum Check
+**Huidige status**: [🟢 Warm / 🟡 Lauw / 🔴 Koud]
+- Signalen van voortgang of stagnatie
+- Wat moet er gebeuren om vooruit te komen?
+
+## 5. ⚠️ Waarschuwingen
+- [Gevoeligheden of veranderde omstandigheden]
+- [Mogelijke obstakels]
+
+## 6. Follow-up Agenda
+- Open vragen adresseren
+- Aanvullende informatie presenteren
+- Deal vooruit bewegen
+
+## 7. Talking Points
 - [Update 1]
 - [Update 2]
-- [Answer to question X]
+- [Antwoord op vraag X]
 
-## 4. Questions to Ask
-1. [Progress since last meeting]
-2. [New developments]
+## 8. Vragen om te Stellen
+1. [Voortgang sinds laatste meeting]
+2. [Nieuwe ontwikkelingen aan hun kant]
 3. [Timeline update]
 
-## 5. Strategy
-- Primary objective
-- Advance criteria
-- Contingency plans
+## 9. Aanbevolen Vervolgstap
+- [Concrete next step]
+- [Wie moet erbij betrokken worden?]
+
+Schrijf in het Nederlands.
 """,
             "other": """
-Generate a meeting brief with the following structure:
+Genereer een meeting briefing met de volgende structuur:
 
 # Meeting Brief
 
 ## 1. Meeting Overview
-- Objective
+- Doelstelling
 - Context
 
-## 2. Talking Points
-- [Point 1]
-- [Point 2]
-- [Point 3]
+## 2. 🌍 Relevantie
+- Wat speelt er in hun markt?
+- Hoe sluit dit aan bij wat wij doen?
 
-## 3. Questions
-1. [Question 1]
-2. [Question 2]
-3. [Question 3]
+## 3. 👤 Per Contactpersoon
+[Per aanwezige:]
+- **Naam & Rol**: [...]
+- **Wat speelt er voor hen**: [persoonlijk en vanuit rol]
+- **Hoe kunnen wij helpen**: [concrete waarde]
 
-## 4. Strategy
-- Goal
-- Success criteria
+## 4. ⚠️ Waarschuwingen
+- [Gevoeligheden]
+- [Aandachtspunten]
+
+## 5. Talking Points
+- [Punt 1]
+- [Punt 2]
+- [Punt 3]
+
+## 6. Vragen om te Stellen
+1. [Vraag 1]
+2. [Vraag 2]
+3. [Vraag 3]
+
+## 7. Strategie & Vervolgstap
+- Doel van dit gesprek
+- Succescriteria
+- Aanbevolen vervolgactie
+
+Schrijf in het Nederlands.
 """
         }
         
