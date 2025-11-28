@@ -133,57 +133,141 @@ def get_prospect_id_from_research(research_id: str, organization_id: str) -> str
 
 async def lookup_contact_online(name: str, company_name: str, country: Optional[str] = None) -> dict:
     """
-    Lookup contact information (LinkedIn URL, role) via Gemini with Google Search.
-    
-    Uses the same approach as company_lookup.py which works reliably.
+    Lookup contact information (LinkedIn URL, role) via multiple strategies:
+    1. Direct LinkedIn URL patterns (most reliable)
+    2. Gemini with Google Search as fallback
     
     Returns a dict with:
     - name: str
     - role: Optional[str]
     - linkedin_url: Optional[str]
-    - headline: Optional[str]
     - found: bool
     - confidence: str ("high", "medium", "low")
     """
     import json
     import re
+    import aiohttp
     
     print(f"[CONTACT_LOOKUP] Starting lookup for: {name} at {company_name}")
+    
+    # Strategy 1: Try direct LinkedIn URL patterns
+    linkedin_url = await _try_linkedin_direct(name)
+    if linkedin_url:
+        print(f"[CONTACT_LOOKUP] Found via direct URL: {linkedin_url}")
+        return {
+            "name": name,
+            "found": True,
+            "linkedin_url": linkedin_url,
+            "role": None,  # Can't get role from direct lookup
+            "confidence": "high"
+        }
+    
+    # Strategy 2: Try Gemini with Google Search
+    print(f"[CONTACT_LOOKUP] Direct lookup failed, trying Gemini...")
+    result = await _try_gemini_search(name, company_name, country)
+    if result.get("found"):
+        return result
+    
+    # Strategy 3: Return not found but with suggested URL to try
+    suggested_slug = _name_to_linkedin_slug(name)
+    return {
+        "name": name,
+        "found": False,
+        "linkedin_url": None,
+        "role": None,
+        "confidence": "low",
+        "suggested_url": f"https://www.linkedin.com/in/{suggested_slug}"
+    }
+
+
+def _name_to_linkedin_slug(name: str) -> str:
+    """Convert name to potential LinkedIn slug."""
+    import re
+    # Remove special chars, lowercase, replace spaces with hyphens
+    slug = name.lower().strip()
+    slug = re.sub(r'[^a-z0-9\s-]', '', slug)
+    slug = re.sub(r'\s+', '-', slug)
+    return slug
+
+
+async def _try_linkedin_direct(name: str) -> Optional[str]:
+    """Try to find LinkedIn profile via direct URL patterns."""
+    import aiohttp
+    
+    slug = _name_to_linkedin_slug(name)
+    
+    # Generate URL variations
+    variations = [
+        f"https://www.linkedin.com/in/{slug}",
+        f"https://www.linkedin.com/in/{slug.replace('-', '')}",
+        f"https://linkedin.com/in/{slug}",
+    ]
+    
+    # Also try without "van", "de", etc. for Dutch names
+    parts = slug.split('-')
+    if len(parts) > 2:
+        # Try first-last only
+        first_last = f"{parts[0]}-{parts[-1]}"
+        variations.append(f"https://www.linkedin.com/in/{first_last}")
+    
+    print(f"[CONTACT_LOOKUP] Trying direct URLs: {variations}")
+    
+    timeout = aiohttp.ClientTimeout(total=5)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept": "text/html,application/xhtml+xml",
+        "Accept-Language": "en-US,en;q=0.9,nl;q=0.8",
+    }
+    
+    async with aiohttp.ClientSession(timeout=timeout, headers=headers) as session:
+        for url in variations:
+            try:
+                async with session.head(url, allow_redirects=True) as response:
+                    final_url = str(response.url)
+                    print(f"[CONTACT_LOOKUP] {url} -> status={response.status}, final={final_url}")
+                    
+                    # LinkedIn returns 200 for valid profiles
+                    # Redirects to /authwall or /login for invalid ones
+                    if response.status == 200:
+                        if "/authwall" not in final_url and "/login" not in final_url:
+                            # Valid profile found!
+                            return final_url
+            except Exception as e:
+                print(f"[CONTACT_LOOKUP] URL check failed for {url}: {e}")
+                continue
+    
+    return None
+
+
+async def _try_gemini_search(name: str, company_name: str, country: Optional[str]) -> dict:
+    """Try to find contact via Gemini with Google Search."""
+    import json
+    import re
     
     try:
         from google import genai
         from google.genai import types
         
-        # Get API key
         api_key = os.getenv("GOOGLE_AI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         if not api_key:
-            print("[CONTACT_LOOKUP] ERROR: No Google AI API key available")
-            return {"name": name, "found": False}
+            print("[CONTACT_LOOKUP] No API key for Gemini")
+            return {"name": name, "found": False, "confidence": "low"}
         
-        print(f"[CONTACT_LOOKUP] API key found, creating client...")
         client = genai.Client(api_key=api_key)
         
-        # Build search query exactly like you would type in Google
         search_query = f"{name} {company_name} linkedin"
         
-        # Force Gemini to actually use Google Search by making it the main instruction
-        prompt = f"""Use Google Search to find: "{search_query}"
+        prompt = f"""Search for: {search_query}
 
-Look at the search results and find the LinkedIn profile (linkedin.com/in/...) for this person.
+Find the LinkedIn profile URL for {name} at {company_name}.
 
-Person: {name}
-Company: {company_name}
+Return ONLY JSON:
+{{"found": true, "linkedin_url": "https://linkedin.com/in/...", "role": "Job Title", "confidence": "high"}}
 
-After searching, respond with ONLY this JSON (no other text before or after):
-{{"found": true, "linkedin_url": "the-url-you-found", "role": "their-job-title", "confidence": "high"}}
-
-If the search doesn't show their LinkedIn profile:
+Or if not found:
 {{"found": false, "linkedin_url": null, "role": null, "confidence": "low"}}
 """
         
-        print(f"[CONTACT_LOOKUP] Sending request to Gemini with search: {search_query}")
-        
-        # Use same config as company_lookup.py
         response = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=prompt,
@@ -194,51 +278,28 @@ If the search doesn't show their LinkedIn profile:
             )
         )
         
-        print(f"[CONTACT_LOOKUP] Got response from Gemini")
-        
         if response and response.text:
             result_text = response.text.strip()
-            print(f"[CONTACT_LOOKUP] Raw response: {result_text}")
+            print(f"[CONTACT_LOOKUP] Gemini response: {result_text[:200]}")
             
-            # Extract JSON from response - it might have text before/after
-            # First try to find JSON in code block
-            json_match = re.search(r'```(?:json)?\s*(\{[^`]+\})\s*```', result_text, re.DOTALL)
+            # Extract JSON
+            json_match = re.search(r'\{[^{}]*"found"[^{}]*\}', result_text, re.DOTALL)
             if json_match:
-                json_str = json_match.group(1)
-            else:
-                # Try to find raw JSON object
-                json_match = re.search(r'\{[^{}]*"found"[^{}]*\}', result_text, re.DOTALL)
-                if json_match:
-                    json_str = json_match.group(0)
-                else:
-                    print(f"[CONTACT_LOOKUP] Could not find JSON in response")
-                    return {"name": name, "found": False, "confidence": "low"}
-            
-            print(f"[CONTACT_LOOKUP] Extracted JSON: {json_str}")
-            
-            # Parse JSON
-            result = json.loads(json_str)
-            result["name"] = name
-            
-            # Validate LinkedIn URL format
-            linkedin_url = result.get("linkedin_url")
-            if linkedin_url:
-                if "linkedin.com/in/" not in linkedin_url.lower():
-                    result["linkedin_url"] = None
-                    result["confidence"] = "low"
-            
-            print(f"[CONTACT_LOOKUP] Parsed result: found={result.get('found')}, linkedin={result.get('linkedin_url')}")
-            return result
-        else:
-            print("[CONTACT_LOOKUP] Empty response from Gemini")
-            return {"name": name, "found": False, "confidence": "low"}
-        
-    except json.JSONDecodeError as e:
-        print(f"[CONTACT_LOOKUP] JSON parse error: {e}")
-        return {"name": name, "found": False, "confidence": "low"}
+                result = json.loads(json_match.group(0))
+                result["name"] = name
+                
+                # Validate LinkedIn URL
+                if result.get("linkedin_url"):
+                    if "linkedin.com/in/" not in result["linkedin_url"].lower():
+                        result["linkedin_url"] = None
+                        result["found"] = False
+                
+                return result
+    
     except Exception as e:
-        print(f"[CONTACT_LOOKUP] Exception: {type(e).__name__}: {e}")
-        return {"name": name, "found": False, "confidence": "low", "error": str(e)}
+        print(f"[CONTACT_LOOKUP] Gemini error: {e}")
+    
+    return {"name": name, "found": False, "confidence": "low"}
 
 
 # ==================== Background Tasks ====================
