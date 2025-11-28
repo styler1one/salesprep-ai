@@ -213,7 +213,8 @@ Extract and structure the following information in JSON format:
   "target_company_sizes": ["List", "of", "company", "sizes"],
   "quarterly_goals": "Extract quarterly goals",
   "preferred_meeting_types": ["List", "of", "meeting", "types"],
-  "ai_summary": "Write a 2-3 sentence summary of this sales rep's profile, highlighting their methodology, strengths, and focus areas."
+  "ai_summary": "Write a 2-3 sentence summary of this sales rep's profile, highlighting their methodology, strengths, and focus areas.",
+  "sales_narrative": "Write a comprehensive 4-6 paragraph narrative story about this sales professional. Include: their professional background and journey, their sales philosophy and approach, what makes them unique, how they connect with prospects, and their goals. Write in third person, making it engaging and personal. This narrative will be used as context for AI agents to personalize outputs."
 }}
 
 Important:
@@ -290,6 +291,7 @@ Return ONLY the JSON, no other text."""
             "quarterly_goals": responses.get(12, "")[:500],
             "preferred_meeting_types": [],
             "ai_summary": "Profile created from interview responses.",
+            "sales_narrative": "This sales professional is building their profile. More details will be available after the complete onboarding interview.",
             "interview_responses": responses
         }
         

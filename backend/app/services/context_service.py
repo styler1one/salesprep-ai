@@ -198,7 +198,22 @@ class ContextService:
         
         # Sales Profile Section
         if sales:
-            sales_section = f"""SALES REP CONTEXT:
+            # If there's a sales narrative, use it as the primary context (more personal)
+            if sales.get('sales_narrative'):
+                sales_section = f"""ABOUT THE SALES REP:
+{sales.get('sales_narrative')}
+
+KEY DETAILS:
+- Name: {sales.get('full_name', 'N/A')}
+- Role: {sales.get('role', 'N/A')}
+- Experience: {sales.get('experience_years', 'N/A')} years
+- Methodology: {sales.get('sales_methodology', 'N/A')}
+- Communication Style: {sales.get('communication_style', 'N/A')}
+- Strengths: {', '.join(sales.get('strengths', []))}
+- Target Industries: {', '.join(sales.get('target_industries', []))}"""
+            else:
+                # Fallback to structured format if no narrative
+                sales_section = f"""SALES REP CONTEXT:
 - Name: {sales.get('full_name', 'N/A')}
 - Role: {sales.get('role', 'N/A')}
 - Experience: {sales.get('experience_years', 'N/A')} years
@@ -209,8 +224,8 @@ class ContextService:
 - Target Regions: {', '.join(sales.get('target_regions', []))}
 - Quarterly Goals: {sales.get('quarterly_goals', 'N/A')}"""
             
-            if sales.get('ai_summary'):
-                sales_section += f"\n- AI Summary: {sales['ai_summary']}"
+                if sales.get('ai_summary'):
+                    sales_section += f"\n- AI Summary: {sales['ai_summary']}"
             
             sections.append(sales_section)
         

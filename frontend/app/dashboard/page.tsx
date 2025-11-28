@@ -204,13 +204,13 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        <div className="rounded-lg border bg-card p-6 cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push('/onboarding')}>
+                        <div className="rounded-lg border bg-card p-6 cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push(profile ? '/dashboard/profile' : '/onboarding')}>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">
                                         Profile
                                     </p>
-                                    <p className="text-2xl font-bold">{profile ? '✓' : '–'}</p>
+                                    <p className="text-2xl font-bold">{profile ? `${profile.profile_completeness || 0}%` : '–'}</p>
                                 </div>
                                 <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
                                     <Icons.user className="h-6 w-6 text-purple-600" />
@@ -275,10 +275,33 @@ export default function DashboardPage() {
                         <div className="mb-8 rounded-lg border bg-card p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-lg font-semibold">Your Sales Profile</h3>
-                                <Button variant="outline" size="sm" onClick={() => router.push('/onboarding')}>
-                                    Update Profile
-                                </Button>
+                                <div className="flex gap-2">
+                                    <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/profile')}>
+                                        View Full Profile
+                                    </Button>
+                                    <Button variant="ghost" size="sm" onClick={() => router.push('/onboarding')}>
+                                        Update
+                                    </Button>
+                                </div>
                             </div>
+                            
+                            {/* Show narrative preview if available */}
+                            {profile.sales_narrative && (
+                                <div className="mb-4 p-4 bg-primary/5 rounded-lg border border-primary/10">
+                                    <p className="text-sm text-gray-700 line-clamp-3">
+                                        {profile.sales_narrative}
+                                    </p>
+                                    <Button 
+                                        variant="link" 
+                                        size="sm" 
+                                        className="p-0 h-auto mt-2"
+                                        onClick={() => router.push('/dashboard/profile')}
+                                    >
+                                        Lees volledig verhaal →
+                                    </Button>
+                                </div>
+                            )}
+                            
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">Name</p>
