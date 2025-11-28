@@ -19,7 +19,7 @@ from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel
 from supabase import create_client, Client
 
-from app.deps import get_current_user, get_user_supabase
+from app.deps import get_current_user
 from app.services.contact_analyzer import get_contact_analyzer
 
 logger = logging.getLogger(__name__)
@@ -78,9 +78,9 @@ class ContactListResponse(BaseModel):
 
 # ==================== Helper Functions ====================
 
-def get_organization_id(user_supabase: Client, user_id: str) -> str:
+def get_organization_id(user_id: str) -> str:
     """Get organization ID for user."""
-    response = user_supabase.table("organization_members")\
+    response = supabase_service.table("organization_members")\
         .select("organization_id")\
         .eq("user_id", user_id)\
         .execute()
@@ -181,8 +181,7 @@ async def add_contact_to_research(
     research_id: str,
     contact: ContactCreate,
     background_tasks: BackgroundTasks,
-    current_user: dict = Depends(get_current_user),
-    user_supabase: Client = Depends(get_user_supabase)
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Add a contact person to a research and start analysis.
@@ -191,7 +190,7 @@ async def add_contact_to_research(
     Analysis runs in the background and updates the contact when complete.
     """
     user_id = current_user.get("sub")
-    organization_id = get_organization_id(user_supabase, user_id)
+    organization_id = get_organization_id(user_id)
     
     # Get prospect_id from research
     prospect_id = get_prospect_id_from_research(research_id, organization_id)
@@ -262,12 +261,11 @@ async def add_contact_to_research(
 @router.get("/research/{research_id}/contacts", response_model=ContactListResponse)
 async def list_contacts_for_research(
     research_id: str,
-    current_user: dict = Depends(get_current_user),
-    user_supabase: Client = Depends(get_user_supabase)
+    current_user: dict = Depends(get_current_user)
 ):
     """List all contacts for a research."""
     user_id = current_user.get("sub")
-    organization_id = get_organization_id(user_supabase, user_id)
+    organization_id = get_organization_id(user_id)
     
     # Get prospect_id from research
     prospect_id = get_prospect_id_from_research(research_id, organization_id)
@@ -309,12 +307,11 @@ async def list_contacts_for_research(
 @router.get("/prospects/{prospect_id}/contacts", response_model=ContactListResponse)
 async def list_contacts_for_prospect(
     prospect_id: str,
-    current_user: dict = Depends(get_current_user),
-    user_supabase: Client = Depends(get_user_supabase)
+    current_user: dict = Depends(get_current_user)
 ):
     """List all contacts for a prospect."""
     user_id = current_user.get("sub")
-    organization_id = get_organization_id(user_supabase, user_id)
+    organization_id = get_organization_id(user_id)
     
     # Verify prospect belongs to organization
     prospect_check = supabase_service.table("prospects")\
@@ -363,12 +360,11 @@ async def list_contacts_for_prospect(
 @router.get("/contacts/{contact_id}", response_model=ContactResponse)
 async def get_contact(
     contact_id: str,
-    current_user: dict = Depends(get_current_user),
-    user_supabase: Client = Depends(get_user_supabase)
+    current_user: dict = Depends(get_current_user)
 ):
     """Get a single contact by ID."""
     user_id = current_user.get("sub")
-    organization_id = get_organization_id(user_supabase, user_id)
+    organization_id = get_organization_id(user_id)
     
     response = supabase_service.table("prospect_contacts")\
         .select("*")\
@@ -405,12 +401,11 @@ async def get_contact(
 @router.delete("/contacts/{contact_id}")
 async def delete_contact(
     contact_id: str,
-    current_user: dict = Depends(get_current_user),
-    user_supabase: Client = Depends(get_user_supabase)
+    current_user: dict = Depends(get_current_user)
 ):
     """Delete a contact."""
     user_id = current_user.get("sub")
-    organization_id = get_organization_id(user_supabase, user_id)
+    organization_id = get_organization_id(user_id)
     
     # Verify contact exists and belongs to org
     check = supabase_service.table("prospect_contacts")\
@@ -435,12 +430,11 @@ async def delete_contact(
 async def reanalyze_contact(
     contact_id: str,
     background_tasks: BackgroundTasks,
-    current_user: dict = Depends(get_current_user),
-    user_supabase: Client = Depends(get_user_supabase)
+    current_user: dict = Depends(get_current_user)
 ):
     """Re-run analysis for a contact."""
     user_id = current_user.get("sub")
-    organization_id = get_organization_id(user_supabase, user_id)
+    organization_id = get_organization_id(user_id)
     
     # Get contact
     response = supabase_service.table("prospect_contacts")\
