@@ -15,6 +15,7 @@ export default function DashboardPage() {
     const [knowledgeBase, setKnowledgeBase] = useState<any[]>([])
     const [researchBriefs, setResearchBriefs] = useState<any[]>([])
     const [meetingPreps, setMeetingPreps] = useState<any[]>([])
+    const [followups, setFollowups] = useState<any[]>([])
 
     useEffect(() => {
         const loadData = async () => {
@@ -80,6 +81,19 @@ export default function DashboardPage() {
                     } catch (error) {
                         console.error('Failed to load meeting preps:', error)
                     }
+
+                    // Fetch followups
+                    try {
+                        const followupsRes = await fetch(`${apiUrl}/api/v1/followup/list`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        })
+                        if (followupsRes.ok) {
+                            const followupsData = await followupsRes.json()
+                            setFollowups(followupsData || [])
+                        }
+                    } catch (error) {
+                        console.error('Failed to load followups:', error)
+                    }
                 }
             }
 
@@ -133,12 +147,12 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Stats Cards */}
-                    <div className="grid gap-4 md:grid-cols-4 mb-8">
+                    <div className="grid gap-4 md:grid-cols-5 mb-8">
                         <div className="rounded-lg border bg-card p-6 cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push('/dashboard/research')}>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">
-                                        Research Reports
+                                        Research
                                     </p>
                                     <p className="text-2xl font-bold">{researchBriefs.length}</p>
                                 </div>
@@ -152,7 +166,7 @@ export default function DashboardPage() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">
-                                        Meeting Preps
+                                        Preps
                                     </p>
                                     <p className="text-2xl font-bold">{meetingPreps.length}</p>
                                 </div>
@@ -162,11 +176,25 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
+                        <div className="rounded-lg border bg-card p-6 cursor-pointer hover:border-orange-200 transition-colors" onClick={() => router.push('/dashboard/followup')}>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-muted-foreground">
+                                        Follow-ups
+                                    </p>
+                                    <p className="text-2xl font-bold">{followups.length}</p>
+                                </div>
+                                <div className="h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center">
+                                    <Icons.mail className="h-6 w-6 text-orange-600" />
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="rounded-lg border bg-card p-6 cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push('/dashboard/knowledge-base')}>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">
-                                        Knowledge Base
+                                        Knowledge
                                     </p>
                                     <p className="text-2xl font-bold">{knowledgeBase.length}</p>
                                 </div>
@@ -180,7 +208,7 @@ export default function DashboardPage() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">
-                                        Sales Profile
+                                        Profile
                                     </p>
                                     <p className="text-2xl font-bold">{profile ? '✓' : '–'}</p>
                                 </div>
@@ -192,7 +220,7 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Quick Actions */}
-                    <div className="grid gap-4 md:grid-cols-3 mb-8">
+                    <div className="grid gap-4 md:grid-cols-4 mb-8">
                         <Button 
                             variant="outline" 
                             className="h-auto p-4 flex flex-col items-start gap-2"
@@ -214,6 +242,18 @@ export default function DashboardPage() {
                             <div className="text-left">
                                 <p className="font-medium">Prepare for Meeting</p>
                                 <p className="text-xs text-muted-foreground">Generate personalized briefs</p>
+                            </div>
+                        </Button>
+
+                        <Button 
+                            variant="outline" 
+                            className="h-auto p-4 flex flex-col items-start gap-2 border-orange-200 hover:border-orange-300"
+                            onClick={() => router.push('/dashboard/followup')}
+                        >
+                            <Icons.mail className="h-5 w-5 text-orange-600" />
+                            <div className="text-left">
+                                <p className="font-medium">Meeting Follow-up</p>
+                                <p className="text-xs text-muted-foreground">Transcribe & summarize calls</p>
                             </div>
                         </Button>
                         
