@@ -36,6 +36,7 @@ export default function ResearchPage() {
   // Form state
   const [companyName, setCompanyName] = useState('')
   const [linkedinUrl, setLinkedinUrl] = useState('')
+  const [websiteUrl, setWebsiteUrl] = useState('')  // NEW: Website URL for direct scraping
   const [country, setCountry] = useState('')
   const [city, setCity] = useState('')
 
@@ -105,6 +106,7 @@ export default function ResearchPage() {
           body: JSON.stringify({
             company_name: companyName,
             company_linkedin_url: linkedinUrl || null,
+            company_website_url: websiteUrl || null,  // NEW: Website URL
             country: country || null,
             city: city || null
           })
@@ -119,6 +121,7 @@ export default function ResearchPage() {
       // Clear form
       setCompanyName('')
       setLinkedinUrl('')
+      setWebsiteUrl('')
       setCountry('')
       setCity('')
       
@@ -288,15 +291,31 @@ export default function ResearchPage() {
               />
             </div>
 
-            <div>
-              <Label htmlFor="linkedinUrl">LinkedIn URL (optional)</Label>
-              <Input
-                id="linkedinUrl"
-                value={linkedinUrl}
-                onChange={(e) => setLinkedinUrl(e.target.value)}
-                placeholder="https://linkedin.com/company/..."
-                className="mt-1"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="websiteUrl">Company Website (optional)</Label>
+                <Input
+                  id="websiteUrl"
+                  value={websiteUrl}
+                  onChange={(e) => setWebsiteUrl(e.target.value)}
+                  placeholder="https://www.company.com"
+                  className="mt-1"
+                />
+                <p className="text-xs text-slate-400 mt-1">
+                  We'll scrape this for detailed info
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="linkedinUrl">LinkedIn URL (optional)</Label>
+                <Input
+                  id="linkedinUrl"
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                  placeholder="https://linkedin.com/company/..."
+                  className="mt-1"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

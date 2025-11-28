@@ -23,3 +23,7 @@ python-multipart==0.0.6
 google-genai>=1.0.0  # New unified Google GenAI SDK
 httpx>=0.28.1  # Updated for google-genai compatibility
 reportlab==4.0.7
+
+# Website Scraper dependencies
+aiohttp>=3.9.0
+beautifulsoup4>=4.12.0

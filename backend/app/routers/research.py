@@ -38,6 +38,7 @@ def get_user_supabase_client(user_token: str) -> Client:
 class ResearchRequest(BaseModel):
     company_name: str
     company_linkedin_url: Optional[str] = None
+    company_website_url: Optional[str] = None  # NEW: Direct website scraping
     country: Optional[str] = None
     city: Optional[str] = None
 
@@ -56,11 +57,12 @@ def process_research_background(
     company_name: str,
     country: Optional[str],
     city: Optional[str],
-    linkedin_url: Optional[str]
+    linkedin_url: Optional[str],
+    website_url: Optional[str] = None  # NEW: Website URL for direct scraping
 ):
     """
     Background task to process research request.
-    1. Execute parallel searches (Claude, Gemini, KVK)
+    1. Execute parallel searches (Claude, Gemini, KVK, Website)
     2. Merge results
     3. Generate PDF
     4. Update database
@@ -70,6 +72,8 @@ def process_research_background(
     
     try:
         print(f"DEBUG: Starting research for {company_name}")
+        if website_url:
+            print(f"DEBUG: Will scrape website: {website_url}")
         
         # Update status to researching
         supabase_service.table("research_briefs").update({
@@ -84,7 +88,8 @@ def process_research_background(
             company_name=company_name,
             country=country,
             city=city,
-            linkedin_url=linkedin_url
+            linkedin_url=linkedin_url,
+            website_url=website_url  # NEW: Pass website URL
         ))
         
         print(f"DEBUG: Research completed, got {len(research_data.get('sources', {}))} sources")
@@ -184,10 +189,12 @@ async def start_research(
         result = supabase_service.table("research_briefs").insert(db_record).execute()
         
         # Update prospect with additional info if provided
-        if prospect_id and (request.company_linkedin_url or request.country or request.city):
+        if prospect_id and (request.company_linkedin_url or request.company_website_url or request.country or request.city):
             updates = {}
             if request.company_linkedin_url:
                 updates["linkedin_url"] = request.company_linkedin_url
+            if request.company_website_url:
+                updates["website"] = request.company_website_url
             if request.country:
                 updates["country"] = request.country
             if request.city:
@@ -202,7 +209,8 @@ async def start_research(
             request.company_name,
             request.country,
             request.city,
-            request.company_linkedin_url
+            request.company_linkedin_url,
+            request.company_website_url  # NEW: Pass website URL
         )
         
         return ResearchResponse(

@@ -6,6 +6,7 @@ from typing import Dict, Any, Optional, List
 from .claude_researcher import ClaudeResearcher
 from .gemini_researcher import GeminiResearcher
 from .kvk_api import KVKApi
+from .website_scraper import get_website_scraper
 
 
 class ResearchOrchestrator:
@@ -16,13 +17,15 @@ class ResearchOrchestrator:
         self.claude = ClaudeResearcher()
         self.gemini = GeminiResearcher()
         self.kvk = KVKApi()
+        self.website_scraper = get_website_scraper()
     
     async def research_company(
         self,
         company_name: str,
         country: Optional[str] = None,
         city: Optional[str] = None,
-        linkedin_url: Optional[str] = None
+        linkedin_url: Optional[str] = None,
+        website_url: Optional[str] = None  # NEW: Direct website scraping
     ) -> Dict[str, Any]:
         """
         Research company using multiple sources in parallel.
@@ -32,6 +35,7 @@ class ResearchOrchestrator:
             country: Optional country
             city: Optional city
             linkedin_url: Optional LinkedIn URL
+            website_url: Optional website URL for direct scraping
             
         Returns:
             Dictionary with combined research data
@@ -55,6 +59,11 @@ class ResearchOrchestrator:
         if self.kvk.is_dutch_company(country):
             tasks.append(self.kvk.search_company(company_name, city))
             source_names.append("kvk")
+        
+        # NEW: Use website scraper if URL provided
+        if website_url:
+            tasks.append(self.website_scraper.scrape_website(website_url))
+            source_names.append("website")
         
         # Execute all searches in parallel
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -120,6 +129,17 @@ class ResearchOrchestrator:
 - Website: {kvk_data.get('website')}
 """
             source_data.append(kvk_text)
+        
+        # NEW: Add website scraper data
+        if sources.get("website", {}).get("success"):
+            website_data = sources['website']
+            website_text = f"""## Company Website Content:
+**URL**: {website_data.get('url')}
+**Pages Scraped**: {website_data.get('pages_scraped', 0)}
+
+{website_data.get('summary', 'No summary available')}
+"""
+            source_data.append(website_text)
         
         if not source_data:
             return "# Research Failed\n\nNo data could be gathered from any source."
