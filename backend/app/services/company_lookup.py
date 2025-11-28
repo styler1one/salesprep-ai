@@ -27,7 +27,8 @@ def get_genai_client():
     global _genai_client
     if _genai_client is None:
         from google import genai
-        api_key = os.getenv("GOOGLE_API_KEY")
+        # Try both possible env var names
+        api_key = os.getenv("GOOGLE_AI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         if api_key:
             _genai_client = genai.Client(api_key=api_key)
     return _genai_client
