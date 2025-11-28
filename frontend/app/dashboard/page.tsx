@@ -231,7 +231,9 @@ export default function DashboardPage() {
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-4">
                                             <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-white text-xl font-bold">
-                                                {profile.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2) || 'SP'}
+                                                {typeof profile.full_name === 'string' && profile.full_name 
+                                                    ? profile.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() 
+                                                    : 'SP'}
                                             </div>
                                             <div>
                                                 <h3 className="font-semibold text-white text-lg">{profile.full_name || 'Sales Professional'}</h3>
@@ -266,7 +268,7 @@ export default function DashboardPage() {
                                     </div>
                                     
                                     {/* Top Strengths */}
-                                    {profile.key_strengths && profile.key_strengths.length > 0 && (
+                                    {Array.isArray(profile.key_strengths) && profile.key_strengths.length > 0 && (
                                         <div>
                                             <p className="text-xs text-slate-500 mb-2">Key Strengths</p>
                                             <div className="flex flex-wrap gap-2">
@@ -388,7 +390,7 @@ export default function DashboardPage() {
                                     </div>
                                     
                                     {/* Value Propositions */}
-                                    {companyProfile.value_propositions && companyProfile.value_propositions.length > 0 && (
+                                    {Array.isArray(companyProfile.value_propositions) && companyProfile.value_propositions.length > 0 && (
                                         <div>
                                             <p className="text-xs text-slate-500 mb-2">Value Propositions</p>
                                             <div className="flex flex-wrap gap-2">
@@ -407,7 +409,7 @@ export default function DashboardPage() {
                                     )}
                                     
                                     {/* Products/Services */}
-                                    {companyProfile.products_services && companyProfile.products_services.length > 0 && (
+                                    {Array.isArray(companyProfile.products_services) && companyProfile.products_services.length > 0 && (
                                         <div>
                                             <p className="text-xs text-slate-500 mb-2">Products & Services</p>
                                             <div className="flex flex-wrap gap-2">
