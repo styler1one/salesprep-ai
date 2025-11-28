@@ -1,7 +1,11 @@
 -- ============================================================
 -- SalesPrep-AI Complete Database Schema
--- Version: 2.0
+-- Version: 2.1
 -- Last Updated: 2024-11-28
+-- 
+-- Changes in 2.1:
+-- - Added prospect_contacts table for multiple contacts per prospect
+-- - LinkedIn analysis storage for personalized sales approach
 -- 
 -- Run this in Supabase SQL Editor to create/update all tables
 -- ============================================================
@@ -92,6 +96,61 @@ CREATE INDEX IF NOT EXISTS idx_prospects_last_activity ON prospects(organization
 
 -- Full text search on company name
 CREATE INDEX IF NOT EXISTS idx_prospects_name_search ON prospects USING gin(to_tsvector('simple', company_name));
+
+-- ============================================================
+-- 3b. PROSPECT_CONTACTS (Multiple contacts per prospect)
+-- ============================================================
+-- Supports LinkedIn analysis and personalized sales approach
+CREATE TABLE IF NOT EXISTS prospect_contacts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  prospect_id UUID NOT NULL REFERENCES prospects(id) ON DELETE CASCADE,
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  
+  -- Basic Contact Info
+  name TEXT NOT NULL,
+  role TEXT,                          -- Job title / function
+  email TEXT,
+  phone TEXT,
+  linkedin_url TEXT,
+  
+  -- LinkedIn Analysis Data
+  linkedin_headline TEXT,
+  linkedin_summary TEXT,
+  linkedin_experience JSONB,          -- [{company, title, duration}]
+  linkedin_activity_level TEXT,       -- 'active', 'moderate', 'passive'
+  linkedin_post_themes TEXT[],
+  
+  -- AI-Generated Insights
+  communication_style TEXT,           -- 'formal', 'informal', 'technical', 'strategic'
+  probable_drivers TEXT,              -- Motivations
+  decision_authority TEXT,            -- 'decision_maker', 'influencer', 'gatekeeper', 'user'
+  urgency_signals TEXT,
+  
+  -- Sales-Relevant Analysis
+  profile_brief TEXT,                 -- Full markdown analysis
+  pain_points_for_role TEXT,
+  conversation_approach TEXT,
+  opening_suggestions TEXT[],
+  questions_to_ask TEXT[],
+  topics_to_avoid TEXT[],
+  
+  -- Relationship Tracking
+  is_primary BOOLEAN DEFAULT false,
+  relationship_strength TEXT,         -- 'new', 'warm', 'strong'
+  last_contact_date TIMESTAMPTZ,
+  notes TEXT,
+  
+  -- Meta
+  analyzed_at TIMESTAMPTZ,
+  analysis_source TEXT,               -- 'linkedin', 'manual', 'crm_import'
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_prospect_contacts_prospect ON prospect_contacts(prospect_id);
+CREATE INDEX IF NOT EXISTS idx_prospect_contacts_org ON prospect_contacts(organization_id);
+CREATE INDEX IF NOT EXISTS idx_prospect_contacts_primary ON prospect_contacts(prospect_id, is_primary) WHERE is_primary = true;
 
 -- ============================================================
 -- 4. SALES_PROFILES (Per user sales profile)
