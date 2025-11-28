@@ -9,18 +9,36 @@ Enhanced with Profile Context for personalized outputs.
 
 from typing import List, Dict, Any, Optional
 import logging
-from app.services.vector_store import VectorStore
-from app.services.embeddings import EmbeddingsService
-from app.services.context_service import ContextService
 from supabase import create_client
 import os
 
 logger = logging.getLogger(__name__)
 
-# Initialize services
-embeddings_service = EmbeddingsService()
-vector_store = VectorStore()
-context_service = ContextService()
+# Lazy initialization to avoid import errors
+_embeddings_service = None
+_vector_store = None
+_context_service = None
+
+def get_embeddings_service():
+    global _embeddings_service
+    if _embeddings_service is None:
+        from app.services.embeddings import EmbeddingsService
+        _embeddings_service = EmbeddingsService()
+    return _embeddings_service
+
+def get_vector_store():
+    global _vector_store
+    if _vector_store is None:
+        from app.services.vector_store import VectorStore
+        _vector_store = VectorStore()
+    return _vector_store
+
+def get_context_service():
+    global _context_service
+    if _context_service is None:
+        from app.services.context_service import ContextService
+        _context_service = ContextService()
+    return _context_service
 
 
 class RAGService:
@@ -51,10 +69,10 @@ class RAGService:
         """
         try:
             # Generate embedding for query
-            query_embedding = await embeddings_service.embed_text(query)
+            query_embedding = await get_embeddings_service().embed_text(query)
             
             # Query Pinecone with organization filter
-            results = vector_store.query(
+            results = get_vector_store().query(
                 vector=query_embedding,
                 filter={"organization_id": organization_id},
                 top_k=top_k,
@@ -243,12 +261,13 @@ class RAGService:
         # Add profile context if user_id provided
         if user_id:
             try:
-                profile_context = context_service.get_user_context(user_id, organization_id)
+                ctx_service = get_context_service()
+                profile_context = ctx_service.get_user_context(user_id, organization_id)
                 context["profile_context"] = profile_context
                 context["has_profile_context"] = True
                 
                 # Add formatted profile context for prompt
-                formatted_profile = context_service.get_context_for_prompt(
+                formatted_profile = ctx_service.get_context_for_prompt(
                     user_id, organization_id, max_tokens=1500
                 )
                 context["formatted_profile_context"] = formatted_profile
