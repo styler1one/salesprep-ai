@@ -207,66 +207,66 @@ export default function KnowledgeBasePage() {
           </p>
         </div>
 
-          {/* Stats */}
-          <div className="grid gap-4 md:grid-cols-3 mb-8">
-            <div className="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm hover:shadow-lg transition-all">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
-                    Completed Files
-                  </p>
-                  <p className="text-3xl font-bold text-green-600 dark:text-green-400">{completedFiles}</p>
-                </div>
-                <div className="h-14 w-14 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Icons.checkCircle className="h-7 w-7 text-green-600 dark:text-green-400" />
-                </div>
+        {/* Stats */}
+        <div className="grid gap-4 md:grid-cols-3 mb-8">
+          <div className="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm hover:shadow-lg transition-all">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Completed Files
+                </p>
+                <p className="text-3xl font-bold text-green-600 dark:text-green-400">{completedFiles}</p>
               </div>
-            </div>
-
-            <div className="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm hover:shadow-lg transition-all">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
-                    Processing
-                  </p>
-                  <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{processingFiles}</p>
-                </div>
-                <div className="h-14 w-14 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                  <Icons.spinner className="h-7 w-7 text-blue-600 dark:text-blue-400 animate-spin" />
-                </div>
-              </div>
-            </div>
-
-            <div className="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm hover:shadow-lg transition-all">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
-                    Failed
-                  </p>
-                  <p className="text-3xl font-bold text-red-600 dark:text-red-400">{failedFiles}</p>
-                </div>
-                <div className="h-14 w-14 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Icons.alertCircle className="h-7 w-7 text-red-600 dark:text-red-400" />
-                </div>
+              <div className="h-14 w-14 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Icons.checkCircle className="h-7 w-7 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </div>
 
-          {/* Upload Zone */}
-          <FileUploadZone 
-            onUpload={handleFileUpload}
-            uploading={uploading}
-          />
+          <div className="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm hover:shadow-lg transition-all">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Processing
+                </p>
+                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{processingFiles}</p>
+              </div>
+              <div className="h-14 w-14 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                <Icons.spinner className="h-7 w-7 text-blue-600 dark:text-blue-400 animate-spin" />
+              </div>
+            </div>
+          </div>
 
-          {/* File List */}
-          <div className="mt-8">
-            <FileList 
-              files={files}
-              onDelete={handleDeleteFile}
-              onRefresh={fetchFiles}
-            />
+          <div className="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm hover:shadow-lg transition-all">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Failed
+                </p>
+                <p className="text-3xl font-bold text-red-600 dark:text-red-400">{failedFiles}</p>
+              </div>
+              <div className="h-14 w-14 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Icons.alertCircle className="h-7 w-7 text-red-600 dark:text-red-400" />
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Upload Zone */}
+        <FileUploadZone 
+          onUpload={handleFileUpload}
+          uploading={uploading}
+        />
+
+        {/* File List */}
+        <div className="mt-8">
+          <FileList 
+            files={files}
+            onDelete={handleDeleteFile}
+            onRefresh={fetchFiles}
+          />
+        </div>
+        
         <Toaster />
       </div>
     </DashboardLayout>
