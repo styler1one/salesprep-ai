@@ -468,7 +468,7 @@ export default function ResearchPage() {
                 ) : (
                   <>
                     <Icons.search className="mr-2 h-4 w-4" />
-                    🔍 Zoek bedrijf op Google
+                    🔍 Zoek bedrijf online
                   </>
                 )}
               </Button>
@@ -479,7 +479,7 @@ export default function ResearchPage() {
               <p className="text-sm text-slate-500 text-center">
                 {companyName.length < 3 ? '⚠️ Vul minimaal 3 tekens in voor bedrijfsnaam' :
                  country.length < 2 ? '⚠️ Vul een land in' :
-                 '👆 Klik op "Zoek bedrijf" om het juiste bedrijf te vinden'}
+                 '👆 Klik op "Zoek bedrijf online" om het juiste bedrijf te vinden'}
               </p>
             )}
             
