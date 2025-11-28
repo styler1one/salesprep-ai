@@ -2,7 +2,12 @@
 Follow-up Generator Service
 
 Generates meeting summaries, action items, and follow-up emails
-using AI based on transcription and context.
+using AI based on transcription and FULL context including:
+- Sales/Company profile narratives
+- Research data (company info, key people, news)
+- Meeting preparation (talking points, questions, strategy)
+- Previous follow-ups
+- Knowledge base (case studies, product info)
 """
 
 import os
@@ -24,6 +29,8 @@ class FollowupGenerator:
     async def generate_summary(
         self,
         transcription: str,
+        prospect_context: Optional[Dict[str, Any]] = None,
+        # Legacy params for backwards compatibility
         meeting_prep_context: Optional[str] = None,
         profile_context: Optional[str] = None,
         prospect_company: Optional[str] = None
@@ -43,9 +50,11 @@ class FollowupGenerator:
         
         prompt = self._build_summary_prompt(
             transcription,
-            meeting_prep_context,
-            profile_context,
-            prospect_company
+            prospect_context=prospect_context,
+            # Legacy fallback
+            meeting_prep_context=meeting_prep_context,
+            profile_context=profile_context,
+            prospect_company=prospect_company
         )
         
         try:
@@ -126,6 +135,8 @@ Als er geen actie-items zijn, retourneer een lege array: []"""
         self,
         summary: Dict[str, Any],
         action_items: List[Dict[str, Any]],
+        prospect_context: Optional[Dict[str, Any]] = None,
+        # Legacy params for backwards compatibility
         profile_context: Optional[str] = None,
         prospect_company: Optional[str] = None,
         tone: str = "professional"
@@ -147,9 +158,10 @@ Als er geen actie-items zijn, retourneer een lege array: []"""
         prompt = self._build_email_prompt(
             summary,
             action_items,
-            profile_context,
-            prospect_company,
-            tone
+            prospect_context=prospect_context,
+            profile_context=profile_context,
+            prospect_company=prospect_company,
+            tone=tone
         )
         
         try:
@@ -168,45 +180,141 @@ Als er geen actie-items zijn, retourneer een lege array: []"""
     def _build_summary_prompt(
         self,
         transcription: str,
-        meeting_prep_context: Optional[str],
-        profile_context: Optional[str],
-        prospect_company: Optional[str]
+        prospect_context: Optional[Dict[str, Any]] = None,
+        meeting_prep_context: Optional[str] = None,
+        profile_context: Optional[str] = None,
+        prospect_company: Optional[str] = None
     ) -> str:
-        """Build the summary generation prompt"""
+        """Build the summary generation prompt with full context"""
         
         prompt = """Je bent een expert sales analist die een meeting transcriptie analyseert.
-Genereer een uitgebreide, gestructureerde samenvatting.
+Je hebt toegang tot uitgebreide context over de sales rep, het bedrijf, de prospect, en voorbereiding.
+Gebruik deze context om een diepgaande, gepersonaliseerde analyse te maken.
 
 """
         
-        if prospect_company:
-            prompt += f"PROSPECT BEDRIJF: {prospect_company}\n\n"
-        
-        if meeting_prep_context:
-            prompt += f"""MEETING PREP CONTEXT (doelen en voorbereiding):
+        # Use new unified context if available
+        if prospect_context:
+            # Prospect company name
+            company_name = prospect_context.get("prospect_company", prospect_company or "Onbekend")
+            prompt += f"## PROSPECT BEDRIJF: {company_name}\n\n"
+            
+            # Sales Profile with narrative
+            if prospect_context.get("sales_profile"):
+                sales = prospect_context["sales_profile"]
+                if sales.get("sales_narrative"):
+                    prompt += f"""## OVER JOU (DE SALES REP):
+{sales['sales_narrative'][:1000]}
+
+"""
+                else:
+                    prompt += f"""## OVER JOU:
+- Naam: {sales.get('full_name', 'N/A')}
+- Stijl: {sales.get('sales_methodology', 'N/A')}
+
+"""
+            
+            # Company Profile with narrative
+            if prospect_context.get("company_profile"):
+                company = prospect_context["company_profile"]
+                if company.get("company_narrative"):
+                    prompt += f"""## JE BEDRIJF:
+{company['company_narrative'][:1000]}
+
+"""
+            
+            # Research data - IMPORTANT for context
+            if prospect_context.get("research"):
+                research = prospect_context["research"]
+                prompt += f"""## RESEARCH OVER DE PROSPECT:
+**Bedrijfsinformatie:**
+{research.get('brief_content', research.get('company_data', 'Niet beschikbaar'))[:1500]}
+
+**Key People:**
+{research.get('key_people', 'Niet beschikbaar')[:500]}
+
+**Recent Nieuws:**
+{research.get('recent_news', 'Niet beschikbaar')[:500]}
+
+"""
+            
+            # Meeting Prep - what was prepared
+            if prospect_context.get("meeting_preps"):
+                prep = prospect_context["meeting_preps"][0]
+                questions = prep.get("questions", [])
+                questions_text = "\n".join([f"- {q}" for q in questions[:10]]) if questions else "Geen vragen voorbereid"
+                
+                prompt += f"""## MEETING VOORBEREIDING:
+**Type meeting:** {prep.get('meeting_type', 'N/A')}
+
+**Talking Points die je wilde bespreken:**
+{prep.get('talking_points', 'Niet beschikbaar')[:500]}
+
+**Vragen die je wilde stellen:**
+{questions_text}
+
+**Strategie:**
+{prep.get('strategy', 'Niet beschikbaar')[:500]}
+
+Analyseer of deze punten zijn besproken en de vragen beantwoord.
+
+"""
+            
+            # Previous followups
+            if prospect_context.get("previous_followups"):
+                prev = prospect_context["previous_followups"][0]
+                prompt += f"""## VORIGE MEETING MET DEZE PROSPECT:
+**Samenvatting:** {prev.get('executive_summary', 'N/A')[:500]}
+
+**Open actiepunten van vorige keer:**
+{chr(10).join(['- ' + item.get('task', '') for item in prev.get('action_items', [])[:5]])}
+
+Check of deze actiepunten zijn opgevolgd.
+
+"""
+            
+            # KB chunks - case studies etc
+            if prospect_context.get("kb_chunks"):
+                kb_text = "\n".join([
+                    f"- {chunk.get('source', 'Doc')}: {chunk.get('text', '')[:150]}..."
+                    for chunk in prospect_context["kb_chunks"][:3]
+                ])
+                prompt += f"""## RELEVANTE BEDRIJFSINFORMATIE (Case studies/producten):
+{kb_text}
+
+"""
+        else:
+            # Legacy fallback - use old params
+            if prospect_company:
+                prompt += f"PROSPECT BEDRIJF: {prospect_company}\n\n"
+            
+            if meeting_prep_context:
+                prompt += f"""MEETING PREP CONTEXT (doelen en voorbereiding):
 {meeting_prep_context}
 
 """
-        
-        if profile_context:
-            prompt += f"""SALES PROFIEL CONTEXT:
+            
+            if profile_context:
+                prompt += f"""SALES PROFIEL CONTEXT:
 {profile_context}
 
 """
         
-        prompt += f"""MEETING TRANSCRIPTIE:
+        prompt += f"""## MEETING TRANSCRIPTIE:
 {transcription[:12000]}
+
+---
 
 Genereer een gestructureerde samenvatting met EXACT deze secties:
 
 ## Executive Summary
-[2-3 zinnen die de essentie van de meeting vatten]
+[2-3 zinnen die de essentie van de meeting vatten, refereer naar de context die je hebt]
 
 ## Key Discussion Points
 - [Belangrijkste besproken onderwerpen als bullet points]
 
 ## Client Concerns
-- [Bezwaren, zorgen of vragen van de klant]
+- [Bezwaren, zorgen of vragen van de klant - vergelijk met research insights]
 
 ## Decisions Made
 - [Beslissingen die tijdens de meeting zijn genomen]
@@ -214,10 +322,16 @@ Genereer een gestructureerde samenvatting met EXACT deze secties:
 ## Next Steps
 - [Afgesproken vervolgstappen]
 
-## Sales Insights
-- [Inzichten voor sales follow-up: koopsignalen, bezwaren, timing, etc.]
+## Prep Evaluation
+- [Welke voorbereide punten zijn besproken? Welke vragen beantwoord?]
+- [Wat is niet aan bod gekomen maar nog relevant?]
 
-Schrijf in het Nederlands. Focus op actionable insights."""
+## Sales Insights
+- [Inzichten voor sales follow-up: koopsignalen, bezwaren, timing]
+- [Hoe past dit bij wat je in research hebt gevonden?]
+- [Aanbevelingen voor volgende stappen gebaseerd op alle context]
+
+Schrijf in het Nederlands. Focus op actionable insights en gebruik de volledige context die je hebt."""
 
         return prompt
     
@@ -284,11 +398,12 @@ Schrijf in het Nederlands. Focus op actionable insights."""
         self,
         summary: Dict[str, Any],
         action_items: List[Dict[str, Any]],
-        profile_context: Optional[str],
-        prospect_company: Optional[str],
-        tone: str
+        prospect_context: Optional[Dict[str, Any]] = None,
+        profile_context: Optional[str] = None,
+        prospect_company: Optional[str] = None,
+        tone: str = "professional"
     ) -> str:
-        """Build the email generation prompt"""
+        """Build the email generation prompt with full context"""
         
         tone_instructions = {
             "professional": "Schrijf professioneel maar warm en persoonlijk.",
@@ -298,11 +413,60 @@ Schrijf in het Nederlands. Focus op actionable insights."""
         }
         
         prompt = f"""Je bent een sales professional die een follow-up email schrijft na een meeting.
+Je hebt toegang tot uitgebreide context - gebruik dit voor een gepersonaliseerde, relevante email.
 
 """
         
-        if prospect_company:
-            prompt += f"PROSPECT: {prospect_company}\n\n"
+        # Use new unified context if available
+        if prospect_context:
+            company_name = prospect_context.get("prospect_company", prospect_company or "de prospect")
+            prompt += f"PROSPECT: {company_name}\n\n"
+            
+            # Sales profile for personalization
+            if prospect_context.get("sales_profile"):
+                sales = prospect_context["sales_profile"]
+                prompt += f"""OVER JOU:
+- Naam: {sales.get('full_name', 'N/A')}
+- Communicatiestijl: {sales.get('communication_style', 'professional')}
+- Sales methodologie: {sales.get('sales_methodology', 'consultative')}
+
+"""
+            
+            # Company info for value props
+            if prospect_context.get("company_profile"):
+                company = prospect_context["company_profile"]
+                prompt += f"""JE BEDRIJF:
+- Bedrijf: {company.get('company_name', 'N/A')}
+- Value props: {', '.join(company.get('value_propositions', [])[:3])}
+
+"""
+            
+            # Research for personalization
+            if prospect_context.get("research"):
+                research = prospect_context["research"]
+                prompt += f"""PROSPECT CONTEXT (uit research):
+{research.get('brief_content', '')[:500]}
+
+"""
+            
+            # KB for case studies to mention
+            if prospect_context.get("kb_chunks"):
+                kb_mentions = [chunk.get('source', '') for chunk in prospect_context["kb_chunks"][:2]]
+                if kb_mentions:
+                    prompt += f"""RELEVANTE MATERIALEN OM TE DELEN:
+{', '.join(kb_mentions)}
+
+"""
+        else:
+            # Legacy fallback
+            if prospect_company:
+                prompt += f"PROSPECT: {prospect_company}\n\n"
+            
+            if profile_context:
+                prompt += f"""JOUW PROFIEL (voor personalisatie):
+{profile_context}
+
+"""
         
         prompt += f"""MEETING SAMENVATTING:
 {summary.get('executive_summary', 'Geen samenvatting beschikbaar')}
@@ -316,22 +480,15 @@ NEXT STEPS:
 ACTIE-ITEMS:
 {chr(10).join('- ' + item.get('task', '') for item in action_items[:5])}
 
-"""
-        
-        if profile_context:
-            prompt += f"""JOUW PROFIEL (voor personalisatie):
-{profile_context}
-
-"""
-        
-        prompt += f"""TONE: {tone_instructions.get(tone, tone_instructions['professional'])}
+TONE: {tone_instructions.get(tone, tone_instructions['professional'])}
 
 Schrijf een follow-up email die:
 1. Bedankt voor hun tijd
-2. De belangrijkste punten kort samenvat
-3. De actie-items en vervolgstappen bevestigt
-4. Eventueel een volgende meeting voorstelt
-5. Professioneel en persoonlijk is
+2. De belangrijkste punten kort samenvat (gebruik je kennis van hun bedrijf)
+3. De actie-items en vervolgstappen bevestigt met duidelijke owners
+4. Waar relevant, bied aan om case studies of materialen te delen
+5. Stel een concrete volgende stap voor (meeting, call, demo)
+6. Past bij jouw communicatiestijl en de relatie
 
 Begin direct met de email (geen "Hier is de email:" of dergelijke intro).
 Gebruik [NAAM] als placeholder voor de ontvanger naam.

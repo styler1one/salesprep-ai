@@ -17,6 +17,7 @@ from app.deps import get_current_user
 from app.services.transcription_service import get_transcription_service
 from app.services.followup_generator import get_followup_generator
 from app.services.transcript_parser import get_transcript_parser
+from app.services.prospect_context_service import get_prospect_context_service
 
 logger = logging.getLogger(__name__)
 
@@ -142,41 +143,34 @@ async def process_followup_background(
             "audio_duration_seconds": int(transcription_result.duration_seconds)
         }).eq("id", followup_id).execute()
         
-        # Step 3: Get context for summary
-        meeting_prep_context = None
-        profile_context = None
+        # Step 3: Get FULL prospect context using new unified service
+        prospect_context = None
         
-        # Get meeting prep context if linked
-        if meeting_prep_id:
-            prep_response = supabase.table("meeting_preps").select(
-                "brief_content, talking_points, strategy"
-            ).eq("id", meeting_prep_id).limit(1).execute()
-            
-            if prep_response.data:
-                prep = prep_response.data[0]
-                meeting_prep_context = f"""
-Voorbereide talking points: {prep.get('talking_points', [])}
-Strategie: {prep.get('strategy', '')}
-Brief: {prep.get('brief_content', '')[:2000]}
-"""
-        
-        # Get profile context
         try:
-            from app.services.context_service import ContextService
-            context_service = ContextService()
-            profile_context = context_service.get_context_for_prompt(
-                user_id, organization_id, max_tokens=1000
+            context_service = get_prospect_context_service()
+            prospect_context = await context_service.get_full_prospect_context(
+                prospect_company=prospect_company or "Unknown",
+                organization_id=organization_id,
+                user_id=user_id,
+                meeting_prep_id=meeting_prep_id,
+                include_kb=True,
+                max_kb_chunks=5
+            )
+            logger.info(
+                f"Got full prospect context: {prospect_context.get('context_completeness', 0)}% complete, "
+                f"sources: {prospect_context.get('available_sources', [])}"
             )
         except Exception as e:
-            logger.warning(f"Could not get profile context: {e}")
+            logger.warning(f"Could not get full prospect context: {e}")
+            # Fall back to basic context
+            prospect_context = None
         
-        # Step 4: Generate summary
+        # Step 4: Generate summary with full context
         followup_generator = get_followup_generator()
         
         summary = await followup_generator.generate_summary(
             transcription=transcription_result.full_text,
-            meeting_prep_context=meeting_prep_context,
-            profile_context=profile_context,
+            prospect_context=prospect_context,
             prospect_company=prospect_company
         )
         
@@ -186,11 +180,11 @@ Brief: {prep.get('brief_content', '')[:2000]}
             summary=summary.get("executive_summary")
         )
         
-        # Step 6: Generate email draft
+        # Step 6: Generate email draft with full context
         email_draft = await followup_generator.generate_email_draft(
             summary=summary,
             action_items=action_items,
-            profile_context=profile_context,
+            prospect_context=prospect_context,
             prospect_company=prospect_company,
             tone="professional"
         )
@@ -349,41 +343,32 @@ async def process_transcript_background(
             "audio_duration_seconds": int(estimated_duration) if estimated_duration else None
         }).eq("id", followup_id).execute()
         
-        # Get context for summary
-        meeting_prep_context = None
-        profile_context = None
+        # Get FULL prospect context using new unified service
+        prospect_context = None
         
-        # Get meeting prep context if linked
-        if meeting_prep_id:
-            prep_response = supabase.table("meeting_preps").select(
-                "brief_content, talking_points, strategy"
-            ).eq("id", meeting_prep_id).limit(1).execute()
-            
-            if prep_response.data:
-                prep = prep_response.data[0]
-                meeting_prep_context = f"""
-Voorbereide talking points: {prep.get('talking_points', [])}
-Strategie: {prep.get('strategy', '')}
-Brief: {prep.get('brief_content', '')[:2000]}
-"""
-        
-        # Get profile context
         try:
-            from app.services.context_service import ContextService
-            context_service = ContextService()
-            profile_context = context_service.get_context_for_prompt(
-                user_id, organization_id, max_tokens=1000
+            context_service = get_prospect_context_service()
+            prospect_context = await context_service.get_full_prospect_context(
+                prospect_company=prospect_company or "Unknown",
+                organization_id=organization_id,
+                user_id=user_id,
+                meeting_prep_id=meeting_prep_id,
+                include_kb=True,
+                max_kb_chunks=5
+            )
+            logger.info(
+                f"Got full prospect context for transcript: {prospect_context.get('context_completeness', 0)}% complete"
             )
         except Exception as e:
-            logger.warning(f"Could not get profile context: {e}")
+            logger.warning(f"Could not get full prospect context: {e}")
+            prospect_context = None
         
-        # Generate summary
+        # Generate summary with full context
         followup_generator = get_followup_generator()
         
         summary = await followup_generator.generate_summary(
             transcription=transcription_text,
-            meeting_prep_context=meeting_prep_context,
-            profile_context=profile_context,
+            prospect_context=prospect_context,
             prospect_company=prospect_company
         )
         
@@ -393,11 +378,11 @@ Brief: {prep.get('brief_content', '')[:2000]}
             summary=summary.get("executive_summary")
         )
         
-        # Generate email draft
+        # Generate email draft with full context
         email_draft = await followup_generator.generate_email_draft(
             summary=summary,
             action_items=action_items,
-            profile_context=profile_context,
+            prospect_context=prospect_context,
             prospect_company=prospect_company,
             tone="professional"
         )
@@ -750,18 +735,24 @@ async def regenerate_email(
         if followup["status"] != "completed":
             raise HTTPException(status_code=400, detail="Follow-up not yet completed")
         
-        # Get profile context
-        profile_context = None
+        # Get full prospect context for regeneration
+        prospect_context = None
+        prospect_company = followup.get("prospect_company_name")
+        
         try:
-            from app.services.context_service import ContextService
-            context_service = ContextService()
-            profile_context = context_service.get_context_for_prompt(
-                user_id, organization_id, max_tokens=1000
+            context_service = get_prospect_context_service()
+            prospect_context = await context_service.get_full_prospect_context(
+                prospect_company=prospect_company or "Unknown",
+                organization_id=organization_id,
+                user_id=user_id,
+                meeting_prep_id=followup.get("meeting_prep_id"),
+                include_kb=True,
+                max_kb_chunks=3
             )
         except Exception as e:
-            logger.warning(f"Could not get profile context: {e}")
+            logger.warning(f"Could not get prospect context for email regen: {e}")
         
-        # Regenerate email
+        # Regenerate email with full context
         followup_generator = get_followup_generator()
         
         summary = {
@@ -773,8 +764,8 @@ async def regenerate_email(
         email_draft = await followup_generator.generate_email_draft(
             summary=summary,
             action_items=followup.get("action_items", []),
-            profile_context=profile_context,
-            prospect_company=followup.get("prospect_company_name"),
+            prospect_context=prospect_context,
+            prospect_company=prospect_company,
             tone=request.tone
         )
         
