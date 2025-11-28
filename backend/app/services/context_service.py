@@ -231,37 +231,59 @@ KEY DETAILS:
         
         # Company Profile Section
         if company:
-            company_section = f"""COMPANY CONTEXT:
+            # If there's a company narrative, use it as the primary context (more compelling)
+            if company.get('company_narrative'):
+                company_section = f"""ABOUT THE COMPANY:
+{company.get('company_narrative')}
+
+KEY DETAILS:
 - Company: {company.get('company_name', 'N/A')}
 - Industry: {company.get('industry', 'N/A')}"""
-            
-            # Products
-            products = company.get('products', [])
-            if products:
-                company_section += "\n- Products:"
-                for p in products[:3]:  # Limit to 3 products
-                    company_section += f"\n  • {p.get('name', 'N/A')}: {p.get('value_proposition', 'N/A')}"
-            
-            # Value Props
-            value_props = company.get('core_value_props', [])
-            if value_props:
-                company_section += f"\n- Value Propositions: {', '.join(value_props[:5])}"
-            
-            # ICP
-            icp = company.get('ideal_customer_profile', {})
-            if icp:
-                if icp.get('industries'):
-                    company_section += f"\n- Target Industries: {', '.join(icp['industries'][:5])}"
-                if icp.get('company_sizes'):
-                    company_section += f"\n- Target Company Sizes: {', '.join(icp['company_sizes'])}"
-            
-            # Case Studies
-            case_studies = company.get('case_studies', [])
-            if case_studies:
-                company_section += f"\n- Case Studies: {len(case_studies)} available"
-            
-            if company.get('ai_summary'):
-                company_section += f"\n- AI Summary: {company['ai_summary']}"
+                
+                # Add products summary
+                products = company.get('products', [])
+                if products:
+                    company_section += "\n- Products:"
+                    for p in products[:3]:
+                        company_section += f"\n  • {p.get('name', 'N/A')}: {p.get('value_proposition', 'N/A')}"
+                
+                # Add differentiators
+                differentiators = company.get('differentiators', [])
+                if differentiators:
+                    company_section += f"\n- Key Differentiators: {', '.join(differentiators[:5])}"
+            else:
+                # Fallback to structured format if no narrative
+                company_section = f"""COMPANY CONTEXT:
+- Company: {company.get('company_name', 'N/A')}
+- Industry: {company.get('industry', 'N/A')}"""
+                
+                # Products
+                products = company.get('products', [])
+                if products:
+                    company_section += "\n- Products:"
+                    for p in products[:3]:  # Limit to 3 products
+                        company_section += f"\n  • {p.get('name', 'N/A')}: {p.get('value_proposition', 'N/A')}"
+                
+                # Value Props
+                value_props = company.get('core_value_props', [])
+                if value_props:
+                    company_section += f"\n- Value Propositions: {', '.join(value_props[:5])}"
+                
+                # ICP
+                icp = company.get('ideal_customer_profile', {})
+                if icp:
+                    if icp.get('industries'):
+                        company_section += f"\n- Target Industries: {', '.join(icp['industries'][:5])}"
+                    if icp.get('company_sizes'):
+                        company_section += f"\n- Target Company Sizes: {', '.join(icp['company_sizes'])}"
+                
+                # Case Studies
+                case_studies = company.get('case_studies', [])
+                if case_studies:
+                    company_section += f"\n- Case Studies: {len(case_studies)} available"
+                
+                if company.get('ai_summary'):
+                    company_section += f"\n- AI Summary: {company['ai_summary']}"
             
             sections.append(company_section)
         

@@ -1,0 +1,476 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { 
+  ArrowLeft, 
+  Building2, 
+  Package, 
+  Target, 
+  Users,
+  Trophy,
+  Edit,
+  Loader2,
+  BookOpen,
+  Zap,
+  TrendingUp
+} from 'lucide-react'
+
+interface Product {
+  name: string
+  description: string
+  value_proposition: string
+  target_persona?: string
+}
+
+interface BuyerPersona {
+  title: string
+  seniority: string
+  pain_points: string[]
+  goals: string[]
+  objections: string[]
+}
+
+interface CaseStudy {
+  customer: string
+  industry: string
+  challenge: string
+  solution: string
+  results: string
+}
+
+interface ICP {
+  industries: string[]
+  company_sizes: string[]
+  regions: string[]
+  pain_points: string[]
+  buying_triggers: string[]
+}
+
+interface CompanyProfile {
+  id: string
+  organization_id: string
+  company_name: string
+  industry: string | null
+  company_size: string | null
+  headquarters: string | null
+  website: string | null
+  products: Product[]
+  core_value_props: string[]
+  differentiators: string[]
+  unique_selling_points: string | null
+  ideal_customer_profile: ICP | null
+  buyer_personas: BuyerPersona[]
+  case_studies: CaseStudy[]
+  competitors: string[]
+  competitive_advantages: string | null
+  typical_sales_cycle: string | null
+  average_deal_size: string | null
+  ai_summary: string | null
+  company_narrative: string | null
+  profile_completeness: number
+  created_at: string
+  updated_at: string
+}
+
+export default function CompanyProfilePage() {
+  const router = useRouter()
+  const supabase = createClientComponentClient()
+  
+  const [profile, setProfile] = useState<CompanyProfile | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+          router.push('/login')
+          return
+        }
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/profile/company`,
+          {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          }
+        )
+
+        if (response.ok) {
+          const data = await response.json()
+          setProfile(data)
+        } else if (response.status === 404) {
+          // No profile yet
+          setProfile(null)
+        }
+      } catch (error) {
+        console.error('Error fetching company profile:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProfile()
+  }, [supabase, router])
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (!profile) {
+    return (
+      <div className="container mx-auto py-8 px-4 max-w-4xl">
+        <Button 
+          variant="ghost" 
+          onClick={() => router.push('/dashboard')}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Dashboard
+        </Button>
+        <div className="text-center py-16">
+          <Building2 className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Geen bedrijfsprofiel gevonden</h2>
+          <p className="text-muted-foreground mb-6">
+            Maak een bedrijfsprofiel aan om gepersonaliseerde AI-output te krijgen
+          </p>
+          <Button onClick={() => router.push('/onboarding/company')}>
+            <Building2 className="h-4 w-4 mr-2" />
+            Bedrijfsprofiel Aanmaken
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto py-8 px-4 max-w-4xl">
+      {/* Header */}
+      <div className="mb-8">
+        <Button 
+          variant="ghost" 
+          onClick={() => router.push('/dashboard')}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Dashboard
+        </Button>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">{profile.company_name}</h1>
+            <p className="text-muted-foreground mt-1">
+              {profile.industry || 'Bedrijfsprofiel'}
+            </p>
+          </div>
+          <Button onClick={() => router.push('/onboarding/company')}>
+            <Edit className="h-4 w-4 mr-2" />
+            Update Profiel
+          </Button>
+        </div>
+      </div>
+
+      {/* Profile Completeness */}
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium">Profiel Compleetheid</span>
+            <span className="text-sm font-bold">{profile.profile_completeness}%</span>
+          </div>
+          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className={`h-full transition-all ${
+                profile.profile_completeness >= 80 ? 'bg-green-500' :
+                profile.profile_completeness >= 50 ? 'bg-yellow-500' :
+                'bg-red-500'
+              }`}
+              style={{ width: `${profile.profile_completeness}%` }}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Company Story - Narrative */}
+      {profile.company_narrative && (
+        <Card className="mb-6 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              Ons Verhaal
+            </CardTitle>
+            <CardDescription>
+              Dit verhaal wordt gebruikt door de AI om gepersonaliseerde sales content te genereren
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="prose prose-sm max-w-none">
+              {profile.company_narrative.split('\n\n').map((paragraph, idx) => (
+                <p key={idx} className="text-gray-700 leading-relaxed mb-4">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Quick Summary */}
+      {profile.ai_summary && !profile.company_narrative && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              Samenvatting
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700">{profile.ai_summary}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Products & Services */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Producten & Diensten
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {profile.products && profile.products.length > 0 ? (
+              profile.products.map((product, i) => (
+                <div key={i} className="p-3 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium">{product.name}</h4>
+                  {product.description && (
+                    <p className="text-sm text-gray-600 mt-1">{product.description}</p>
+                  )}
+                  {product.value_proposition && (
+                    <p className="text-sm text-primary mt-1">
+                      <strong>Value:</strong> {product.value_proposition}
+                    </p>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground text-sm">Nog geen producten toegevoegd</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Value Propositions */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="h-5 w-5" />
+              Value Propositions
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {profile.core_value_props && profile.core_value_props.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {profile.core_value_props.map((prop, i) => (
+                  <span 
+                    key={i} 
+                    className="px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full"
+                  >
+                    {prop}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">Nog niet ingesteld</p>
+            )}
+            
+            {profile.differentiators && profile.differentiators.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-2">Differentiators</p>
+                <div className="flex flex-wrap gap-2">
+                  {profile.differentiators.map((diff, i) => (
+                    <span 
+                      key={i} 
+                      className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full"
+                    >
+                      {diff}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Ideal Customer Profile */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Ideale Klant Profiel
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {profile.ideal_customer_profile ? (
+              <>
+                {profile.ideal_customer_profile.industries?.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Industries</p>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.ideal_customer_profile.industries.map((ind, i) => (
+                        <span key={i} className="px-2 py-1 bg-primary/10 text-primary text-sm rounded">
+                          {ind}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {profile.ideal_customer_profile.company_sizes?.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Bedrijfsgrootte</p>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.ideal_customer_profile.company_sizes.map((size, i) => (
+                        <span key={i} className="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded">
+                          {size}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {profile.ideal_customer_profile.pain_points?.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Pain Points</p>
+                    <ul className="text-sm text-gray-700 space-y-1">
+                      {profile.ideal_customer_profile.pain_points.map((point, i) => (
+                        <li key={i}>• {point}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-muted-foreground text-sm">Nog niet ingesteld</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Buyer Personas */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Buyer Personas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {profile.buyer_personas && profile.buyer_personas.length > 0 ? (
+              profile.buyer_personas.map((persona, i) => (
+                <div key={i} className="p-3 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium">{persona.title}</h4>
+                  <p className="text-sm text-muted-foreground">{persona.seniority}</p>
+                  {persona.pain_points?.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-xs font-medium text-muted-foreground">Pain points:</p>
+                      <p className="text-sm text-gray-700">{persona.pain_points.join(', ')}</p>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground text-sm">Nog geen personas toegevoegd</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Case Studies */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="h-5 w-5" />
+              Case Studies
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {profile.case_studies && profile.case_studies.length > 0 ? (
+              profile.case_studies.map((cs, i) => (
+                <div key={i} className="p-3 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium">{cs.customer}</h4>
+                  <p className="text-sm text-muted-foreground">{cs.industry}</p>
+                  {cs.results && (
+                    <p className="text-sm text-green-700 mt-1">
+                      <strong>Resultaat:</strong> {cs.results}
+                    </p>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground text-sm">Nog geen case studies toegevoegd</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Sales Info */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Sales Informatie
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {profile.typical_sales_cycle && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Sales Cycle</p>
+                <p className="text-base">{profile.typical_sales_cycle}</p>
+              </div>
+            )}
+            {profile.average_deal_size && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Gemiddelde Deal</p>
+                <p className="text-base">{profile.average_deal_size}</p>
+              </div>
+            )}
+            {profile.competitors && profile.competitors.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-2">Concurrenten</p>
+                <div className="flex flex-wrap gap-2">
+                  {profile.competitors.map((comp, i) => (
+                    <span key={i} className="px-2 py-1 bg-red-100 text-red-700 text-sm rounded">
+                      {comp}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {profile.competitive_advantages && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Competitief Voordeel</p>
+                <p className="text-base text-gray-700">{profile.competitive_advantages}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* How this is used */}
+      <Card className="mt-6 bg-muted/50">
+        <CardContent className="pt-6">
+          <h3 className="font-semibold mb-2">Hoe wordt dit gebruikt?</h3>
+          <ul className="text-sm text-muted-foreground space-y-1">
+            <li>• <strong>Meeting Prep:</strong> AI gebruikt jullie value props en case studies in briefs</li>
+            <li>• <strong>Follow-up Emails:</strong> Relevant productinformatie wordt automatisch toegevoegd</li>
+            <li>• <strong>Research:</strong> ICP wordt gebruikt om relevante prospect info te filteren</li>
+          </ul>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+

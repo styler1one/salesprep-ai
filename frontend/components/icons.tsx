@@ -15,7 +15,8 @@ import {
     Copy,
     Book,
     User,
-    Mail
+    Mail,
+    Building2
 } from 'lucide-react'
 
 export const Icons = {
@@ -36,4 +37,5 @@ export const Icons = {
     book: Book,
     user: User,
     mail: Mail,
+    building: Building2,
 }

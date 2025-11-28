@@ -12,6 +12,7 @@ export default function DashboardPage() {
     const [user, setUser] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [profile, setProfile] = useState<any>(null)
+    const [companyProfile, setCompanyProfile] = useState<any>(null)
     const [knowledgeBase, setKnowledgeBase] = useState<any[]>([])
     const [researchBriefs, setResearchBriefs] = useState<any[]>([])
     const [meetingPreps, setMeetingPreps] = useState<any[]>([])
@@ -41,6 +42,19 @@ export default function DashboardPage() {
                         }
                     } catch (error) {
                         console.error('Failed to load profile:', error)
+                    }
+
+                    // Fetch company profile
+                    try {
+                        const companyRes = await fetch(`${apiUrl}/api/v1/profile/company`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        })
+                        if (companyRes.ok) {
+                            const companyData = await companyRes.json()
+                            setCompanyProfile(companyData)
+                        }
+                    } catch (error) {
+                        console.error('Failed to load company profile:', error)
                     }
 
                     // Fetch knowledge base
@@ -147,7 +161,7 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Stats Cards */}
-                    <div className="grid gap-4 md:grid-cols-5 mb-8">
+                    <div className="grid gap-4 md:grid-cols-6 mb-8">
                         <div className="rounded-lg border bg-card p-6 cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push('/dashboard/research')}>
                             <div className="flex items-center justify-between">
                                 <div>
@@ -208,12 +222,26 @@ export default function DashboardPage() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">
-                                        Profile
+                                        Sales Profile
                                     </p>
                                     <p className="text-2xl font-bold">{profile ? `${profile.profile_completeness || 0}%` : '–'}</p>
                                 </div>
                                 <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
                                     <Icons.user className="h-6 w-6 text-purple-600" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="rounded-lg border bg-card p-6 cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push(companyProfile ? '/dashboard/company-profile' : '/onboarding/company')}>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-muted-foreground">
+                                        Company
+                                    </p>
+                                    <p className="text-2xl font-bold">{companyProfile ? `${companyProfile.profile_completeness || 0}%` : '–'}</p>
+                                </div>
+                                <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                                    <Icons.building className="h-6 w-6 text-indigo-600" />
                                 </div>
                             </div>
                         </div>
@@ -270,70 +298,140 @@ export default function DashboardPage() {
                         </Button>
                     </div>
 
-                    {/* Sales Profile Card */}
-                    {profile && (
-                        <div className="mb-8 rounded-lg border bg-card p-6">
+                    {/* Profiles Section */}
+                    <div className="grid gap-4 md:grid-cols-2 mb-8">
+                        {/* Sales Profile Card */}
+                        <div className="rounded-lg border bg-card p-6">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold">Your Sales Profile</h3>
+                                <h3 className="text-lg font-semibold flex items-center gap-2">
+                                    <Icons.user className="h-5 w-5 text-purple-600" />
+                                    Sales Profile
+                                </h3>
                                 <div className="flex gap-2">
-                                    <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/profile')}>
-                                        View Full Profile
-                                    </Button>
-                                    <Button variant="ghost" size="sm" onClick={() => router.push('/onboarding')}>
-                                        Update
-                                    </Button>
+                                    {profile ? (
+                                        <>
+                                            <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/profile')}>
+                                                View
+                                            </Button>
+                                            <Button variant="ghost" size="sm" onClick={() => router.push('/onboarding')}>
+                                                Update
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <Button size="sm" onClick={() => router.push('/onboarding')}>
+                                            Create Profile
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                             
-                            {/* Show narrative preview if available */}
-                            {profile.sales_narrative && (
-                                <div className="mb-4 p-4 bg-primary/5 rounded-lg border border-primary/10">
-                                    <p className="text-sm text-gray-700 line-clamp-3">
-                                        {profile.sales_narrative}
-                                    </p>
-                                    <Button 
-                                        variant="link" 
-                                        size="sm" 
-                                        className="p-0 h-auto mt-2"
-                                        onClick={() => router.push('/dashboard/profile')}
-                                    >
-                                        Lees volledig verhaal →
-                                    </Button>
-                                </div>
-                            )}
-                            
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Name</p>
-                                    <p className="text-base">{profile.full_name || 'Not set'}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Role</p>
-                                    <p className="text-base">{profile.role || 'Not set'}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Experience</p>
-                                    <p className="text-base">{profile.experience_years ? `${profile.experience_years} years` : 'Not set'}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Methodology</p>
-                                    <p className="text-base">{profile.sales_methodology || 'Not set'}</p>
-                                </div>
-                                {profile.target_industries && profile.target_industries.length > 0 && (
-                                    <div className="md:col-span-2">
-                                        <p className="text-sm font-medium text-muted-foreground mb-1">Target Industries</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {profile.target_industries.map((industry: string, i: number) => (
-                                                <span key={i} className="px-2 py-1 bg-primary/10 text-primary text-xs rounded">
-                                                    {industry}
-                                                </span>
-                                            ))}
+                            {profile ? (
+                                <>
+                                    {profile.sales_narrative && (
+                                        <div className="mb-4 p-3 bg-purple-50 rounded-lg border border-purple-100">
+                                            <p className="text-sm text-gray-700 line-clamp-2">
+                                                {profile.sales_narrative}
+                                            </p>
+                                            <Button 
+                                                variant="link" 
+                                                size="sm" 
+                                                className="p-0 h-auto mt-1 text-purple-600"
+                                                onClick={() => router.push('/dashboard/profile')}
+                                            >
+                                                Lees volledig verhaal →
+                                            </Button>
+                                        </div>
+                                    )}
+                                    <div className="grid gap-2 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">Name</span>
+                                            <span className="font-medium">{profile.full_name || '–'}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">Methodology</span>
+                                            <span className="font-medium">{profile.sales_methodology || '–'}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">Completeness</span>
+                                            <span className="font-medium">{profile.profile_completeness || 0}%</span>
                                         </div>
                                     </div>
-                                )}
-                            </div>
+                                </>
+                            ) : (
+                                <div className="text-center py-4">
+                                    <p className="text-muted-foreground text-sm mb-2">
+                                        Maak een sales profiel aan voor gepersonaliseerde AI output
+                                    </p>
+                                </div>
+                            )}
                         </div>
-                    )}
+
+                        {/* Company Profile Card */}
+                        <div className="rounded-lg border bg-card p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold flex items-center gap-2">
+                                    <Icons.building className="h-5 w-5 text-indigo-600" />
+                                    Company Profile
+                                </h3>
+                                <div className="flex gap-2">
+                                    {companyProfile ? (
+                                        <>
+                                            <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/company-profile')}>
+                                                View
+                                            </Button>
+                                            <Button variant="ghost" size="sm" onClick={() => router.push('/onboarding/company')}>
+                                                Update
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <Button size="sm" onClick={() => router.push('/onboarding/company')}>
+                                            Create Profile
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                            
+                            {companyProfile ? (
+                                <>
+                                    {companyProfile.company_narrative && (
+                                        <div className="mb-4 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                                            <p className="text-sm text-gray-700 line-clamp-2">
+                                                {companyProfile.company_narrative}
+                                            </p>
+                                            <Button 
+                                                variant="link" 
+                                                size="sm" 
+                                                className="p-0 h-auto mt-1 text-indigo-600"
+                                                onClick={() => router.push('/dashboard/company-profile')}
+                                            >
+                                                Lees volledig verhaal →
+                                            </Button>
+                                        </div>
+                                    )}
+                                    <div className="grid gap-2 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">Company</span>
+                                            <span className="font-medium">{companyProfile.company_name || '–'}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">Industry</span>
+                                            <span className="font-medium">{companyProfile.industry || '–'}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">Completeness</span>
+                                            <span className="font-medium">{companyProfile.profile_completeness || 0}%</span>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="text-center py-4">
+                                    <p className="text-muted-foreground text-sm mb-2">
+                                        Maak een bedrijfsprofiel aan voor betere AI content
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
                     {/* Knowledge Base, Research & Meeting Preps */}
                     <div className="grid gap-4 md:grid-cols-3 mb-8">

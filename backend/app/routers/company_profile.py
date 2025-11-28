@@ -4,11 +4,55 @@ Company Profile Router - API endpoints for company profiles
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
+import uuid
+import os
+from supabase import create_client, Client
 from app.deps import get_current_user
 from app.services.profile_service import ProfileService
+from app.services.company_interview_service import get_company_interview_service
 
+# Initialize Supabase client
+supabase: Client = create_client(
+    os.getenv("SUPABASE_URL"),
+    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+)
 
 router = APIRouter(prefix="/api/v1/profile/company", tags=["company_profile"])
+
+
+# ==========================================
+# Interview Models
+# ==========================================
+
+class CompanyInterviewStartResponse(BaseModel):
+    """Response for starting company interview."""
+    session_id: str
+    question_id: int
+    question: str
+    progress: int
+    total_questions: int
+
+
+class CompanyInterviewAnswerRequest(BaseModel):
+    """Request for submitting company interview answer."""
+    session_id: str
+    question_id: int
+    answer: str
+
+
+class CompanyInterviewAnswerResponse(BaseModel):
+    """Response after submitting answer."""
+    question_id: Optional[int] = None
+    question: Optional[str] = None
+    progress: int
+    total_questions: int
+    completed: bool = False
+
+
+class CompanyInterviewCompleteRequest(BaseModel):
+    """Request for completing company interview."""
+    session_id: str
+    responses: Optional[Dict[int, str]] = Field(None, description="Map of question_id to answer")
 
 
 # ==========================================
@@ -121,6 +165,7 @@ class CompanyProfileResponse(BaseModel):
     typical_sales_cycle: Optional[str] = None
     average_deal_size: Optional[str] = None
     ai_summary: Optional[str] = None
+    company_narrative: Optional[str] = None
     profile_completeness: int
     version: int
     created_at: str
@@ -158,6 +203,160 @@ def check_admin_access(current_user: dict) -> str:
     # For now, allow all users (will be restricted by RLS policies)
     
     return organization_id
+
+
+# ==========================================
+# Interview Endpoints
+# ==========================================
+
+@router.post("/interview/start", response_model=CompanyInterviewStartResponse)
+async def start_company_interview(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Start a new company profile onboarding interview.
+    
+    Returns the first question and session ID.
+    """
+    try:
+        interview_service = get_company_interview_service()
+        result = interview_service.start_interview()
+        
+        return CompanyInterviewStartResponse(**result)
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to start company interview: {str(e)}"
+        )
+
+
+@router.post("/interview/answer", response_model=CompanyInterviewAnswerResponse)
+async def submit_company_answer(
+    request: CompanyInterviewAnswerRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Submit an answer to a company interview question.
+    
+    Returns the next question or completion status.
+    """
+    try:
+        interview_service = get_company_interview_service()
+        
+        next_question = interview_service.get_next_question(
+            current_question_id=request.question_id,
+            responses={}
+        )
+        
+        if next_question is None:
+            return CompanyInterviewAnswerResponse(
+                progress=12,
+                total_questions=12,
+                completed=True
+            )
+        
+        return CompanyInterviewAnswerResponse(
+            question_id=next_question["question_id"],
+            question=next_question["question"],
+            progress=next_question["progress"],
+            total_questions=next_question["total_questions"],
+            completed=False
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to submit answer: {str(e)}"
+        )
+
+
+@router.post("/interview/complete", response_model=CompanyProfileResponse)
+async def complete_company_interview(
+    request: CompanyInterviewCompleteRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Complete the company interview and generate profile.
+    
+    Analyzes all responses with AI and creates structured company profile.
+    """
+    try:
+        interview_service = get_company_interview_service()
+        profile_service = ProfileService()
+        
+        # Get responses from request
+        responses = request.responses
+        if not responses or len(responses) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No responses provided. Please complete the interview first."
+            )
+        
+        # Analyze responses with AI
+        print(f"DEBUG: Analyzing company interview for user {current_user['sub']}")
+        profile_data = interview_service.analyze_responses(responses)
+        
+        # Get or create organization for user
+        organization_id = current_user.get("organization_id")
+        if not organization_id:
+            # Try to find existing org for user
+            result = supabase.table("organizations").select("id").eq("name", f"Personal - {current_user['email']}").execute()
+            
+            if result.data and len(result.data) > 0:
+                organization_id = result.data[0]["id"]
+            else:
+                # Create new organization
+                email = current_user.get('email', 'User')
+                slug = email.split('@')[0].lower().replace('.', '-').replace('_', '-')
+                
+                org_data = {
+                    "id": str(uuid.uuid4()),
+                    "name": f"Personal - {email}",
+                    "slug": slug,
+                    "created_at": "now()",
+                    "updated_at": "now()"
+                }
+                org_result = supabase.table("organizations").insert(org_data).execute()
+                organization_id = org_result.data[0]["id"] if org_result.data else str(uuid.uuid4())
+        
+        # Check if company profile exists - upsert logic
+        existing = profile_service.get_company_profile(organization_id)
+        
+        if existing:
+            # Update existing profile
+            print(f"DEBUG: Company profile exists for org {organization_id}, updating")
+            profile = profile_service.update_company_profile(
+                organization_id=organization_id,
+                updates=profile_data,
+                updated_by=current_user["sub"]
+            )
+        else:
+            # Create new profile
+            print(f"DEBUG: Creating company profile for org {organization_id}")
+            profile = profile_service.create_company_profile(
+                organization_id=organization_id,
+                profile_data=profile_data,
+                created_by=current_user["sub"]
+            )
+        
+        if not profile:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create/update company profile"
+            )
+        
+        print(f"DEBUG: Company profile saved: {profile['id']}")
+        return CompanyProfileResponse(**profile)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"ERROR: Failed to complete company interview: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to complete interview: {str(e)}"
+        )
 
 
 # ==========================================
