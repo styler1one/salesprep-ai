@@ -40,7 +40,9 @@ import {
     Shield,
     Globe,
     Play,
-    Check
+    Check,
+    Eye,
+    Edit,
 } from 'lucide-react'
 
 export const Icons = {
@@ -86,4 +88,6 @@ export const Icons = {
     globe: Globe,
     play: Play,
     check: Check,
+    eye: Eye,
+    edit: Edit,
 }

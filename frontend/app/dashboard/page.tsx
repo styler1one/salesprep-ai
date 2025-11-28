@@ -223,133 +223,264 @@ export default function DashboardPage() {
                 {/* Profile Cards */}
                 <div className="grid lg:grid-cols-2 gap-6 mb-8">
                     {/* Sales Profile */}
-                    <div className="bg-white rounded-xl border p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center">
-                                    <Icons.user className="h-5 w-5 text-violet-600" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-slate-900">Sales Profile</h3>
-                                    <p className="text-sm text-slate-500">Your AI personalization</p>
-                                </div>
-                            </div>
-                            {profile ? (
-                                <div className="flex gap-2">
-                                    <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/profile')}>
-                                        View
-                                    </Button>
-                                    <Button variant="ghost" size="sm" onClick={() => router.push('/onboarding')}>
-                                        Update
-                                    </Button>
-                                </div>
-                            ) : (
-                                <Button size="sm" onClick={() => router.push('/onboarding')}>
-                                    Create
-                                </Button>
-                            )}
-                        </div>
-                        
+                    <div className="bg-white rounded-xl border overflow-hidden">
                         {profile ? (
                             <>
-                                {profile.sales_narrative && (
-                                    <div className="p-4 bg-violet-50 rounded-lg border border-violet-100 mb-4">
-                                        <p className="text-sm text-slate-700 line-clamp-2">
-                                            {profile.sales_narrative}
-                                        </p>
-                                        <button 
-                                            className="text-sm text-violet-600 hover:text-violet-700 font-medium mt-2"
-                                            onClick={() => router.push('/dashboard/profile')}
-                                        >
-                                            Read full story →
-                                        </button>
-                                    </div>
-                                )}
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="text-slate-500">Completeness</span>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                            <div 
-                                                className="h-full bg-gradient-to-r from-violet-500 to-purple-500 rounded-full"
-                                                style={{ width: `${profile.profile_completeness || 0}%` }}
-                                            />
+                                {/* Header with gradient */}
+                                <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-white text-xl font-bold">
+                                                {profile.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2) || 'SP'}
+                                            </div>
+                                            <div>
+                                                <h3 className="font-semibold text-white text-lg">{profile.full_name || 'Sales Professional'}</h3>
+                                                <p className="text-violet-100 text-sm">{profile.job_title || 'Sales Rep'}</p>
+                                            </div>
                                         </div>
-                                        <span className="font-medium text-slate-900">{profile.profile_completeness || 0}%</span>
+                                        <div className="flex gap-2">
+                                            <Button variant="secondary" size="sm" onClick={() => router.push('/dashboard/profile')} className="bg-white/20 hover:bg-white/30 text-white border-0">
+                                                <Icons.eye className="h-4 w-4 mr-1" />
+                                                View
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {/* Content */}
+                                <div className="p-6 space-y-4">
+                                    {/* Quick Stats */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-slate-50 rounded-lg p-3">
+                                            <p className="text-xs text-slate-500 mb-1">Experience</p>
+                                            <p className="font-semibold text-slate-900">
+                                                {profile.years_experience ? `${profile.years_experience} years` : 'Not set'}
+                                            </p>
+                                        </div>
+                                        <div className="bg-slate-50 rounded-lg p-3">
+                                            <p className="text-xs text-slate-500 mb-1">Sales Style</p>
+                                            <p className="font-semibold text-slate-900 truncate">
+                                                {profile.sales_methodology || 'Consultative'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Top Strengths */}
+                                    {profile.key_strengths && profile.key_strengths.length > 0 && (
+                                        <div>
+                                            <p className="text-xs text-slate-500 mb-2">Key Strengths</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {profile.key_strengths.slice(0, 4).map((strength: string, i: number) => (
+                                                    <span key={i} className="px-2.5 py-1 bg-violet-100 text-violet-700 rounded-full text-xs font-medium">
+                                                        {strength}
+                                                    </span>
+                                                ))}
+                                                {profile.key_strengths.length > 4 && (
+                                                    <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs">
+                                                        +{profile.key_strengths.length - 4} more
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {/* AI Summary */}
+                                    {profile.sales_narrative && (
+                                        <div className="pt-3 border-t">
+                                            <p className="text-xs text-slate-500 mb-2">AI-Generated Summary</p>
+                                            <p className="text-sm text-slate-600 line-clamp-2">
+                                                {profile.sales_narrative}
+                                            </p>
+                                            <button 
+                                                className="text-xs text-violet-600 hover:text-violet-700 font-medium mt-2 flex items-center gap-1"
+                                                onClick={() => router.push('/dashboard/profile')}
+                                            >
+                                                Read full story <Icons.arrowRight className="h-3 w-3" />
+                                            </button>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Completeness */}
+                                    <div className="flex items-center justify-between pt-3 border-t">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                <div 
+                                                    className="h-full bg-gradient-to-r from-violet-500 to-purple-500 rounded-full transition-all"
+                                                    style={{ width: `${profile.profile_completeness || 0}%` }}
+                                                />
+                                            </div>
+                                            <span className="text-xs text-slate-500">{profile.profile_completeness || 0}% complete</span>
+                                        </div>
+                                        <Button variant="ghost" size="sm" onClick={() => router.push('/onboarding')} className="text-xs h-7">
+                                            <Icons.edit className="h-3 w-3 mr-1" />
+                                            Update
+                                        </Button>
                                     </div>
                                 </div>
                             </>
                         ) : (
-                            <div className="text-center py-6">
-                                <Icons.user className="h-12 w-12 text-slate-200 mx-auto mb-3" />
-                                <p className="text-slate-500 text-sm">
-                                    Create a profile to get personalized AI outputs
-                                </p>
+                            <div className="p-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center">
+                                        <Icons.user className="h-5 w-5 text-violet-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-slate-900">Sales Profile</h3>
+                                        <p className="text-sm text-slate-500">Your AI personalization</p>
+                                    </div>
+                                </div>
+                                <div className="text-center py-8 bg-slate-50 rounded-lg">
+                                    <Icons.user className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                                    <p className="text-slate-600 font-medium mb-1">Create your sales profile</p>
+                                    <p className="text-slate-500 text-sm mb-4">
+                                        Get personalized AI outputs tailored to your style
+                                    </p>
+                                    <Button size="sm" onClick={() => router.push('/onboarding')}>
+                                        <Icons.plus className="h-4 w-4 mr-1" />
+                                        Create Profile
+                                    </Button>
+                                </div>
                             </div>
                         )}
                     </div>
 
                     {/* Company Profile */}
-                    <div className="bg-white rounded-xl border p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                                    <Icons.building className="h-5 w-5 text-indigo-600" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-slate-900">Company Profile</h3>
-                                    <p className="text-sm text-slate-500">Your company context</p>
-                                </div>
-                            </div>
-                            {companyProfile ? (
-                                <div className="flex gap-2">
-                                    <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/company-profile')}>
-                                        View
-                                    </Button>
-                                    <Button variant="ghost" size="sm" onClick={() => router.push('/onboarding/company')}>
-                                        Update
-                                    </Button>
-                                </div>
-                            ) : (
-                                <Button size="sm" onClick={() => router.push('/onboarding/company')}>
-                                    Create
-                                </Button>
-                            )}
-                        </div>
-                        
+                    <div className="bg-white rounded-xl border overflow-hidden">
                         {companyProfile ? (
                             <>
-                                {companyProfile.company_narrative && (
-                                    <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-100 mb-4">
-                                        <p className="text-sm text-slate-700 line-clamp-2">
-                                            {companyProfile.company_narrative}
-                                        </p>
-                                        <button 
-                                            className="text-sm text-indigo-600 hover:text-indigo-700 font-medium mt-2"
-                                            onClick={() => router.push('/dashboard/company-profile')}
-                                        >
-                                            Read full story →
-                                        </button>
-                                    </div>
-                                )}
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="text-slate-500">Completeness</span>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                            <div 
-                                                className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full"
-                                                style={{ width: `${companyProfile.profile_completeness || 0}%` }}
-                                            />
+                                {/* Header with gradient */}
+                                <div className="bg-gradient-to-r from-indigo-500 to-blue-600 px-6 py-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+                                                <Icons.building className="h-7 w-7 text-white" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-semibold text-white text-lg">{companyProfile.company_name || 'Your Company'}</h3>
+                                                <p className="text-indigo-100 text-sm">{companyProfile.industry || 'Industry not set'}</p>
+                                            </div>
                                         </div>
-                                        <span className="font-medium text-slate-900">{companyProfile.profile_completeness || 0}%</span>
+                                        <div className="flex gap-2">
+                                            <Button variant="secondary" size="sm" onClick={() => router.push('/dashboard/company-profile')} className="bg-white/20 hover:bg-white/30 text-white border-0">
+                                                <Icons.eye className="h-4 w-4 mr-1" />
+                                                View
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {/* Content */}
+                                <div className="p-6 space-y-4">
+                                    {/* Quick Stats */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-slate-50 rounded-lg p-3">
+                                            <p className="text-xs text-slate-500 mb-1">Company Size</p>
+                                            <p className="font-semibold text-slate-900">
+                                                {companyProfile.company_size || 'Not set'}
+                                            </p>
+                                        </div>
+                                        <div className="bg-slate-50 rounded-lg p-3">
+                                            <p className="text-xs text-slate-500 mb-1">Target Market</p>
+                                            <p className="font-semibold text-slate-900 truncate">
+                                                {companyProfile.target_market || companyProfile.ideal_customer_profile?.split(',')[0] || 'B2B'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Value Propositions */}
+                                    {companyProfile.value_propositions && companyProfile.value_propositions.length > 0 && (
+                                        <div>
+                                            <p className="text-xs text-slate-500 mb-2">Value Propositions</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {companyProfile.value_propositions.slice(0, 3).map((vp: string, i: number) => (
+                                                    <span key={i} className="px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium truncate max-w-[150px]">
+                                                        {vp}
+                                                    </span>
+                                                ))}
+                                                {companyProfile.value_propositions.length > 3 && (
+                                                    <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs">
+                                                        +{companyProfile.value_propositions.length - 3} more
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Products/Services */}
+                                    {companyProfile.products_services && companyProfile.products_services.length > 0 && (
+                                        <div>
+                                            <p className="text-xs text-slate-500 mb-2">Products & Services</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {companyProfile.products_services.slice(0, 3).map((ps: string, i: number) => (
+                                                    <span key={i} className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium truncate max-w-[150px]">
+                                                        {ps}
+                                                    </span>
+                                                ))}
+                                                {companyProfile.products_services.length > 3 && (
+                                                    <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs">
+                                                        +{companyProfile.products_services.length - 3} more
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {/* AI Summary */}
+                                    {companyProfile.company_narrative && (
+                                        <div className="pt-3 border-t">
+                                            <p className="text-xs text-slate-500 mb-2">AI-Generated Summary</p>
+                                            <p className="text-sm text-slate-600 line-clamp-2">
+                                                {companyProfile.company_narrative}
+                                            </p>
+                                            <button 
+                                                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium mt-2 flex items-center gap-1"
+                                                onClick={() => router.push('/dashboard/company-profile')}
+                                            >
+                                                Read full story <Icons.arrowRight className="h-3 w-3" />
+                                            </button>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Completeness */}
+                                    <div className="flex items-center justify-between pt-3 border-t">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                <div 
+                                                    className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all"
+                                                    style={{ width: `${companyProfile.profile_completeness || 0}%` }}
+                                                />
+                                            </div>
+                                            <span className="text-xs text-slate-500">{companyProfile.profile_completeness || 0}% complete</span>
+                                        </div>
+                                        <Button variant="ghost" size="sm" onClick={() => router.push('/onboarding/company')} className="text-xs h-7">
+                                            <Icons.edit className="h-3 w-3 mr-1" />
+                                            Update
+                                        </Button>
                                     </div>
                                 </div>
                             </>
                         ) : (
-                            <div className="text-center py-6">
-                                <Icons.building className="h-12 w-12 text-slate-200 mx-auto mb-3" />
-                                <p className="text-slate-500 text-sm">
-                                    Add company info for better AI content
-                                </p>
+                            <div className="p-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                                        <Icons.building className="h-5 w-5 text-indigo-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-slate-900">Company Profile</h3>
+                                        <p className="text-sm text-slate-500">Your company context</p>
+                                    </div>
+                                </div>
+                                <div className="text-center py-8 bg-slate-50 rounded-lg">
+                                    <Icons.building className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                                    <p className="text-slate-600 font-medium mb-1">Add your company profile</p>
+                                    <p className="text-slate-500 text-sm mb-4">
+                                        Help AI understand your products and value props
+                                    </p>
+                                    <Button size="sm" onClick={() => router.push('/onboarding/company')}>
+                                        <Icons.plus className="h-4 w-4 mr-1" />
+                                        Create Profile
+                                    </Button>
+                                </div>
                             </div>
                         )}
                     </div>
