@@ -25,21 +25,26 @@ class ProfileService:
     # Sales Profile Methods
     # ==========================================
     
-    def get_sales_profile(self, user_id: str) -> Optional[Dict[str, Any]]:
+    def get_sales_profile(self, user_id: str, organization_id: str = None) -> Optional[Dict[str, Any]]:
         """
         Get sales profile for a user.
         
         Args:
             user_id: User ID
+            organization_id: Optional organization ID to filter by
             
         Returns:
             Profile dict or None if not found
         """
         try:
-            response = self.client.table("sales_profiles")\
+            query = self.client.table("sales_profiles")\
                 .select("*")\
-                .eq("user_id", user_id)\
-                .execute()
+                .eq("user_id", user_id)
+            
+            if organization_id:
+                query = query.eq("organization_id", organization_id)
+            
+            response = query.execute()
             
             if response.data and len(response.data) > 0:
                 return response.data[0]
@@ -67,13 +72,13 @@ class ProfileService:
             Created/updated profile dict or None if error
         """
         try:
-            # Check if profile already exists
-            existing = self.get_sales_profile(user_id)
+            # Check if profile already exists for this user+org combination
+            existing = self.get_sales_profile(user_id, organization_id)
             
             if existing:
                 # Update existing profile
-                print(f"Profile exists for user {user_id}, updating instead of creating")
-                return self.update_sales_profile(user_id, profile_data)
+                print(f"Profile exists for user {user_id} in org {organization_id}, updating instead of creating")
+                return self.update_sales_profile(user_id, profile_data, organization_id)
             
             # Prepare data for new profile
             data = {
@@ -114,7 +119,8 @@ class ProfileService:
     def update_sales_profile(
         self,
         user_id: str,
-        updates: Dict[str, Any]
+        updates: Dict[str, Any],
+        organization_id: str = None
     ) -> Optional[Dict[str, Any]]:
         """
         Update a sales profile.
@@ -122,13 +128,14 @@ class ProfileService:
         Args:
             user_id: User ID
             updates: Fields to update
+            organization_id: Optional organization ID to filter by
             
         Returns:
             Updated profile dict or None if error
         """
         try:
             # Get current profile
-            current = self.get_sales_profile(user_id)
+            current = self.get_sales_profile(user_id, organization_id)
             if not current:
                 return None
             
@@ -141,10 +148,10 @@ class ProfileService:
             new_version = current.get("version", 1) + 1
             updates["version"] = new_version
             
-            # Update
+            # Update using the profile's ID for precision
             response = self.client.table("sales_profiles")\
                 .update(updates)\
-                .eq("user_id", user_id)\
+                .eq("id", current["id"])\
                 .execute()
             
             if response.data and len(response.data) > 0:
