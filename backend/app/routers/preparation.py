@@ -117,7 +117,10 @@ async def start_prep(
     Returns immediately with prep ID, generation happens in background
     """
     try:
-        user_id = current_user["id"]
+        # Supabase JWT stores user id as 'sub' (subject)
+        user_id = current_user.get("sub") or current_user.get("id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Could not get user ID from token")
         
         # Get user's organization
         org_response = supabase.table("organization_members").select(
@@ -197,7 +200,7 @@ async def list_preps(
 ):
     """List all meeting preps for user's organization"""
     try:
-        user_id = current_user["id"]
+        user_id = current_user.get("sub") or current_user.get("id")
         
         # Get user's organization
         org_response = supabase.table("organization_members").select(
@@ -250,7 +253,7 @@ async def get_prep(
 ):
     """Get specific meeting prep with full details"""
     try:
-        user_id = current_user["id"]
+        user_id = current_user.get("sub") or current_user.get("id")
         
         # Get user's organization
         org_response = supabase.table("organization_members").select(
@@ -289,7 +292,7 @@ async def update_prep(
 ):
     """Update meeting prep notes"""
     try:
-        user_id = current_user["id"]
+        user_id = current_user.get("sub") or current_user.get("id")
         
         # Get user's organization
         org_response = supabase.table("organization_members").select(
@@ -325,7 +328,7 @@ async def delete_prep(
 ):
     """Delete a meeting prep"""
     try:
-        user_id = current_user["id"]
+        user_id = current_user.get("sub") or current_user.get("id")
         
         # Get user's organization
         org_response = supabase.table("organization_members").select(
