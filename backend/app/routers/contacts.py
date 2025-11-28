@@ -148,6 +148,8 @@ async def lookup_contact_online(name: str, company_name: str, country: Optional[
     import json
     import re
     
+    print(f"[CONTACT_LOOKUP] Starting lookup for: {name} at {company_name}")
+    
     try:
         from google import genai
         from google.genai import types
@@ -155,50 +157,37 @@ async def lookup_contact_online(name: str, company_name: str, country: Optional[
         # Get API key
         api_key = os.getenv("GOOGLE_AI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         if not api_key:
-            logger.warning("No Google AI API key available for contact lookup")
+            print("[CONTACT_LOOKUP] ERROR: No Google AI API key available")
             return {"name": name, "found": False}
         
+        print(f"[CONTACT_LOOKUP] API key found, creating client...")
         client = genai.Client(api_key=api_key)
         
-        # Build search context
-        location_context = f" {country}" if country else ""
+        # Build search query exactly like you would type in Google
+        search_query = f"{name} {company_name} linkedin"
         
-        # Create explicit search query like a human would type
-        search_terms = f"{name} {company_name} linkedin"
-        
-        prompt = f"""Je bent een onderzoeker. Zoek het LinkedIn profiel van deze persoon.
+        prompt = f"""Search Google for: {search_query}
 
-ZOEK OP GOOGLE NAAR: {search_terms}
+Find the LinkedIn profile URL for {name} who works at {company_name}.
 
-Persoon: {name}
-Bedrijf: {company_name}
-{f"Land: {country}" if country else ""}
-
-Geef het LinkedIn profiel URL terug als je het vindt.
-
-Antwoord ALLEEN met JSON (geen uitleg, geen markdown):
+Return JSON only:
 {{
   "found": true,
-  "confidence": "high",
-  "linkedin_url": "https://www.linkedin.com/in/de-echte-username",
-  "role": "Functietitel bij {company_name}",
-  "headline": "De LinkedIn headline van de persoon"
+  "linkedin_url": "https://www.linkedin.com/in/actual-username",
+  "role": "Their job title",
+  "confidence": "high"
 }}
 
-Of als niet gevonden:
+Or if not found:
 {{
   "found": false,
-  "confidence": "low",
   "linkedin_url": null,
   "role": null,
-  "headline": null
+  "confidence": "low"
 }}
-
-LET OP:
-- Zoek actief op Google naar "{search_terms}"
-- LinkedIn URL moet beginnen met linkedin.com/in/ (persoonlijk profiel, NIET /company/)
-- Als je de persoon vindt, geef dan found=true
 """
+        
+        print(f"[CONTACT_LOOKUP] Sending request to Gemini with search: {search_query}")
         
         # Use same config as company_lookup.py
         response = client.models.generate_content(
@@ -211,9 +200,11 @@ LET OP:
             )
         )
         
+        print(f"[CONTACT_LOOKUP] Got response from Gemini")
+        
         if response and response.text:
             result_text = response.text.strip()
-            logger.info(f"Contact lookup for '{name}' at '{company_name}' - Full response: {result_text}")
+            print(f"[CONTACT_LOOKUP] Raw response: {result_text}")
             
             # Remove markdown code blocks if present
             if result_text.startswith("```"):
@@ -231,16 +222,17 @@ LET OP:
                     result["linkedin_url"] = None
                     result["confidence"] = "low"
             
+            print(f"[CONTACT_LOOKUP] Parsed result: found={result.get('found')}, linkedin={result.get('linkedin_url')}")
             return result
         else:
-            logger.warning("Empty response from Gemini")
+            print("[CONTACT_LOOKUP] Empty response from Gemini")
             return {"name": name, "found": False, "confidence": "low"}
         
     except json.JSONDecodeError as e:
-        logger.warning(f"Failed to parse contact lookup response: {e}")
+        print(f"[CONTACT_LOOKUP] JSON parse error: {e}")
         return {"name": name, "found": False, "confidence": "low"}
     except Exception as e:
-        logger.error(f"Contact lookup failed: {e}")
+        print(f"[CONTACT_LOOKUP] Exception: {type(e).__name__}: {e}")
         return {"name": name, "found": False, "confidence": "low", "error": str(e)}
 
 
