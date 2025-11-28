@@ -114,10 +114,80 @@ class PrepGeneratorService:
         else:
             prompt += "## Prospect Intelligence:\nNo prior research available. Focus on discovery questions to learn about the prospect.\n\n"
         
+        # Add contact persons context (NEW - personalized approach per person)
+        if context.get("has_contacts") and context.get("contacts"):
+            prompt += self._format_contacts_context(context["contacts"])
+        
         # Add meeting type-specific instructions
         prompt += self._get_meeting_type_instructions(meeting_type)
         
         return prompt
+    
+    def _format_contacts_context(self, contacts: list) -> str:
+        """Format contact persons into prompt context"""
+        if not contacts:
+            return ""
+        
+        context = "## Contact Persons for This Meeting\n\n"
+        context += "**IMPORTANT**: Personalize the meeting brief for these specific people. "
+        context += "Use their communication style, role-specific pain points, and suggested approach.\n\n"
+        
+        for i, contact in enumerate(contacts, 1):
+            context += f"### Contact {i}: {contact.get('name', 'Unknown')}\n"
+            
+            if contact.get('role'):
+                context += f"**Role**: {contact['role']}\n"
+            
+            if contact.get('decision_authority'):
+                authority_labels = {
+                    'decision_maker': '🟢 Decision Maker',
+                    'influencer': '🔵 Influencer',
+                    'gatekeeper': '🟡 Gatekeeper',
+                    'user': '⚪ End User'
+                }
+                context += f"**Decision Authority**: {authority_labels.get(contact['decision_authority'], contact['decision_authority'])}\n"
+            
+            if contact.get('communication_style'):
+                context += f"**Communication Style**: {contact['communication_style']}\n"
+            
+            if contact.get('probable_drivers'):
+                context += f"**Motivations**: {contact['probable_drivers']}\n"
+            
+            if contact.get('profile_brief'):
+                # Include a condensed version of the profile brief
+                brief = contact['profile_brief']
+                if len(brief) > 500:
+                    brief = brief[:500] + "..."
+                context += f"\n**Profile Summary**:\n{brief}\n"
+            
+            if contact.get('opening_suggestions') and len(contact['opening_suggestions']) > 0:
+                context += "\n**Suggested Opening Lines**:\n"
+                for suggestion in contact['opening_suggestions'][:3]:
+                    context += f"- \"{suggestion}\"\n"
+            
+            if contact.get('questions_to_ask') and len(contact['questions_to_ask']) > 0:
+                context += "\n**Recommended Questions**:\n"
+                for question in contact['questions_to_ask'][:3]:
+                    context += f"- {question}\n"
+            
+            if contact.get('topics_to_avoid') and len(contact['topics_to_avoid']) > 0:
+                context += "\n**Topics to Avoid**:\n"
+                for topic in contact['topics_to_avoid']:
+                    context += f"- {topic}\n"
+            
+            context += "\n"
+        
+        context += """
+When generating the meeting brief:
+1. Tailor talking points to these specific people's roles and styles
+2. Use their suggested opening lines in the Opening section
+3. Include their recommended questions in the Discovery section
+4. Mention their decision authority when discussing next steps
+5. Avoid topics they might be sensitive about
+6. Match communication style (formal/informal/technical)
+
+"""
+        return context
     
     def _get_meeting_type_instructions(self, meeting_type: str) -> str:
         """Get specific instructions based on meeting type"""

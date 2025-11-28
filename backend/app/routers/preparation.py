@@ -25,6 +25,7 @@ class PrepStartRequest(BaseModel):
     prospect_company_name: str = Field(..., min_length=1, max_length=255)
     meeting_type: str = Field(..., pattern="^(discovery|demo|closing|follow_up|other)$")
     custom_notes: Optional[str] = None
+    contact_ids: Optional[List[str]] = None  # Selected contact persons for this meeting
 
 
 class PrepResponse(BaseModel):
@@ -60,7 +61,8 @@ async def generate_prep_background(
     meeting_type: str,
     organization_id: str,
     user_id: str,
-    custom_notes: Optional[str]
+    custom_notes: Optional[str],
+    contact_ids: Optional[List[str]] = None
 ):
     """Background task to generate meeting prep"""
     try:
@@ -79,6 +81,24 @@ async def generate_prep_background(
             user_id=user_id,
             custom_notes=custom_notes
         )
+        
+        # Fetch contact persons if specified
+        contacts_data = []
+        if contact_ids:
+            logger.info(f"Fetching {len(contact_ids)} contacts for prep")
+            contacts_response = supabase.table("prospect_contacts")\
+                .select("*")\
+                .in_("id", contact_ids)\
+                .eq("organization_id", organization_id)\
+                .execute()
+            
+            if contacts_response.data:
+                contacts_data = contacts_response.data
+                logger.info(f"Found {len(contacts_data)} contacts with analysis")
+        
+        # Add contacts to context
+        context["contacts"] = contacts_data
+        context["has_contacts"] = len(contacts_data) > 0
         
         # Generate brief with AI
         result = await prep_generator.generate_meeting_brief(context)
@@ -186,10 +206,12 @@ async def start_prep(
             request.meeting_type,
             organization_id,
             user_id,  # Pass user_id for personalized briefs
-            request.custom_notes
+            request.custom_notes,
+            request.contact_ids  # Pass selected contacts
         )
         
-        logger.info(f"Created prep {prep_id} for {request.prospect_company_name} (prospect: {prospect_id})")
+        contact_count = len(request.contact_ids) if request.contact_ids else 0
+        logger.info(f"Created prep {prep_id} for {request.prospect_company_name} (prospect: {prospect_id}, contacts: {contact_count})")
         
         return {
             "id": prep_id,

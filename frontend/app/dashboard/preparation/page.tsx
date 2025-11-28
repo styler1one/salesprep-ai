@@ -38,6 +38,15 @@ interface ResearchBrief {
     created_at: string
 }
 
+interface Contact {
+    id: string
+    name: string
+    role?: string
+    decision_authority?: string
+    communication_style?: string
+    analyzed_at?: string
+}
+
 export default function PreparationPage() {
     const router = useRouter()
     const supabase = createClientComponentClient()
@@ -55,6 +64,11 @@ export default function PreparationPage() {
     const [meetingType, setMeetingType] = useState('discovery')
     const [customNotes, setCustomNotes] = useState('')
     const [showSuggestions, setShowSuggestions] = useState(false)
+    
+    // Contact persons state
+    const [availableContacts, setAvailableContacts] = useState<Contact[]>([])
+    const [selectedContactIds, setSelectedContactIds] = useState<string[]>([])
+    const [contactsLoading, setContactsLoading] = useState(false)
 
     // Company suggestions based on research briefs
     const companySuggestions = useMemo(() => {
@@ -122,6 +136,66 @@ export default function PreparationPage() {
         }
     }
 
+    // Load contacts when company name changes
+    const loadContactsForProspect = async (prospectName: string) => {
+        if (!prospectName || prospectName.length < 2) {
+            setAvailableContacts([])
+            setSelectedContactIds([])
+            return
+        }
+
+        try {
+            const { data: { session } } = await supabase.auth.getSession()
+            if (!session) return
+
+            setContactsLoading(true)
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+            
+            // First find the prospect to get their ID
+            const prospectResponse = await fetch(
+                `${apiUrl}/api/v1/prospects/search?q=${encodeURIComponent(prospectName)}`,
+                { headers: { 'Authorization': `Bearer ${session.access_token}` } }
+            )
+
+            if (prospectResponse.ok) {
+                const prospects = await prospectResponse.json()
+                // Find exact match
+                const exactMatch = prospects.find(
+                    (p: any) => p.company_name.toLowerCase() === prospectName.toLowerCase()
+                )
+
+                if (exactMatch) {
+                    // Fetch contacts for this prospect
+                    const contactsResponse = await fetch(
+                        `${apiUrl}/api/v1/prospects/${exactMatch.id}/contacts`,
+                        { headers: { 'Authorization': `Bearer ${session.access_token}` } }
+                    )
+
+                    if (contactsResponse.ok) {
+                        const data = await contactsResponse.json()
+                        setAvailableContacts(data.contacts || [])
+                    }
+                } else {
+                    setAvailableContacts([])
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load contacts:', error)
+            setAvailableContacts([])
+        } finally {
+            setContactsLoading(false)
+        }
+    }
+
+    // Effect to load contacts when company changes
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            loadContactsForProspect(companyName)
+        }, 500) // Debounce
+
+        return () => clearTimeout(timeoutId)
+    }, [companyName])
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
@@ -143,7 +217,8 @@ export default function PreparationPage() {
                 body: JSON.stringify({
                     prospect_company_name: companyName,
                     meeting_type: meetingType,
-                    custom_notes: customNotes || null
+                    custom_notes: customNotes || null,
+                    contact_ids: selectedContactIds.length > 0 ? selectedContactIds : null
                 })
             })
 
@@ -151,6 +226,8 @@ export default function PreparationPage() {
                 toast({ title: 'Success', description: 'Meeting prep started! Generation in progress...' })
                 setCompanyName('')
                 setCustomNotes('')
+                setSelectedContactIds([])
+                setAvailableContacts([])
                 loadPreps()
             } else {
                 const error = await response.json()
@@ -311,6 +388,75 @@ export default function PreparationPage() {
                                         </SelectContent>
                                     </Select>
                                 </div>
+
+                                {/* Contact Persons Selection */}
+                                {availableContacts.length > 0 && (
+                                    <div>
+                                        <Label className="flex items-center gap-2">
+                                            👥 Contactpersonen voor deze meeting
+                                            <span className="text-xs text-muted-foreground font-normal">
+                                                (optioneel - voor gepersonaliseerde voorbereiding)
+                                            </span>
+                                        </Label>
+                                        <div className="mt-2 space-y-2 max-h-40 overflow-y-auto p-2 border rounded-md bg-muted/30">
+                                            {availableContacts.map((contact) => {
+                                                const isSelected = selectedContactIds.includes(contact.id)
+                                                return (
+                                                    <label
+                                                        key={contact.id}
+                                                        className={`flex items-center gap-3 p-2 rounded cursor-pointer transition-colors ${
+                                                            isSelected 
+                                                                ? 'bg-primary/10 border border-primary/30' 
+                                                                : 'hover:bg-muted'
+                                                        }`}
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isSelected}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setSelectedContactIds(prev => [...prev, contact.id])
+                                                                } else {
+                                                                    setSelectedContactIds(prev => prev.filter(id => id !== contact.id))
+                                                                }
+                                                            }}
+                                                            className="rounded border-gray-300"
+                                                        />
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="font-medium text-sm truncate">{contact.name}</div>
+                                                            {contact.role && (
+                                                                <div className="text-xs text-muted-foreground truncate">{contact.role}</div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex gap-1">
+                                                            {contact.decision_authority === 'decision_maker' && (
+                                                                <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">DM</span>
+                                                            )}
+                                                            {contact.decision_authority === 'influencer' && (
+                                                                <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">INF</span>
+                                                            )}
+                                                            {contact.analyzed_at && (
+                                                                <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">✓</span>
+                                                            )}
+                                                        </div>
+                                                    </label>
+                                                )
+                                            })}
+                                        </div>
+                                        {selectedContactIds.length > 0 && (
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                {selectedContactIds.length} contactperso{selectedContactIds.length === 1 ? 'on' : 'nen'} geselecteerd
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {contactsLoading && (
+                                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Contactpersonen laden...
+                                    </div>
+                                )}
 
                                 {/* Custom Notes */}
                                 <div>
