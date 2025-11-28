@@ -9,10 +9,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, FileText, Download, Trash2, RefreshCw, ArrowLeft, Copy, CheckCircle, Clock, AlertCircle, Building2 } from 'lucide-react'
+import { Loader2, FileText, Download, Trash2, RefreshCw, ArrowLeft, Copy, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 import ReactMarkdown from 'react-markdown'
 import { DashboardLayout } from '@/components/layout'
+import { ProspectAutocomplete } from '@/components/prospect-autocomplete'
 
 interface MeetingPrep {
     id: string
@@ -285,42 +286,13 @@ export default function PreparationPage() {
                         <CardContent>
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 {/* Company Name with Autocomplete */}
-                                <div className="relative">
+                                <div>
                                     <Label htmlFor="company">Prospect Company *</Label>
-                                    <Input
-                                        id="company"
+                                    <ProspectAutocomplete
                                         value={companyName}
-                                        onChange={(e) => {
-                                            setCompanyName(e.target.value)
-                                            setShowSuggestions(true)
-                                        }}
-                                        onFocus={() => setShowSuggestions(true)}
-                                        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                                        placeholder="e.g., Ordina, Shell, ING..."
-                                        required
+                                        onChange={setCompanyName}
+                                        placeholder="Zoek of voer bedrijfsnaam in..."
                                     />
-                                    {/* Autocomplete Suggestions */}
-                                    {showSuggestions && companySuggestions.length > 0 && (
-                                        <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-md">
-                                            {companySuggestions.map((brief) => (
-                                                <button
-                                                    key={brief.id}
-                                                    type="button"
-                                                    className="w-full px-3 py-2 text-left hover:bg-muted flex items-center gap-2"
-                                                    onClick={() => {
-                                                        setCompanyName(brief.company_name)
-                                                        setShowSuggestions(false)
-                                                    }}
-                                                >
-                                                    <Building2 className="h-4 w-4 text-muted-foreground" />
-                                                    <span>{brief.company_name}</span>
-                                                    <span className="text-xs text-muted-foreground ml-auto">
-                                                        Research available
-                                                    </span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
                                 </div>
 
                                 {/* Meeting Type */}

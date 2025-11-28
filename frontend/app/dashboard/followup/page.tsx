@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/use-toast'
 import { DashboardLayout } from '@/components/layout'
+import { ProspectAutocomplete } from '@/components/prospect-autocomplete'
 import { 
   ArrowLeft, 
   Upload, 
@@ -404,11 +405,10 @@ export default function FollowupPage() {
             {/* Optional fields */}
             <div className="space-y-2">
               <Label htmlFor="prospect">Prospect Bedrijf</Label>
-              <Input
-                id="prospect"
-                placeholder="Bijv. Ordina"
+              <ProspectAutocomplete
                 value={prospectCompany}
-                onChange={(e) => setProspectCompany(e.target.value)}
+                onChange={setProspectCompany}
+                placeholder="Zoek of voer bedrijfsnaam in..."
                 disabled={uploading}
               />
             </div>
