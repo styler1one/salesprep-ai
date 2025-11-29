@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS subscription_plans (
   id TEXT PRIMARY KEY,  -- 'free', 'solo_monthly', 'solo_yearly', 'teams'
   name TEXT NOT NULL,
   description TEXT,
-  price_cents INTEGER NOT NULL,  -- Price in cents (0, 2900, 1900, NULL for custom)
+  price_cents INTEGER,  -- Price in cents (0, 2900, 1900, NULL for custom)
   billing_interval TEXT,  -- 'month', 'year', NULL for free/custom
   stripe_price_id TEXT,  -- Stripe Price ID (set after creating in Stripe)
   features JSONB NOT NULL DEFAULT '{}',  -- Feature flags & limits
