@@ -405,7 +405,8 @@ export default function ResearchBriefPage() {
 
   return (
     <DashboardLayout user={user}>
-      <div className="p-6 lg:p-8 max-w-5xl mx-auto">
+      <>
+        <div className="p-6 lg:p-8 max-w-5xl mx-auto">
         {/* Page Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
@@ -753,9 +754,9 @@ export default function ResearchBriefPage() {
             )}
           </div>
         </div>
-      </div>
       
-      <Toaster />
+        <Toaster />
+      </>
     </DashboardLayout>
   )
 }
