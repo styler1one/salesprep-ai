@@ -651,6 +651,46 @@
       "hi": "हिन्दी",
       "ar": "العربية"
     }
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "Manage your preferences and settings",
+    "language": {
+      "title": "Language Settings",
+      "description": "Configure your language preferences for the application",
+      "appLanguage": "App Language",
+      "appLanguageDesc": "The language of the application interface",
+      "outputLanguage": "Default Output Language",
+      "outputLanguageDesc": "The language for AI-generated content (research briefs, preparations)",
+      "outputLanguageHint": "You can override this per action",
+      "emailLanguage": "Default Email Language",
+      "emailLanguageDesc": "The language for generated emails to clients",
+      "emailLanguageHint": "You can override this per follow-up"
+    },
+    "save": "Save",
+    "saving": "Saving...",
+    "saved": "Settings saved",
+    "savedDesc": "Your preferences have been updated",
+    "error": "Save failed",
+    "errorDesc": "Could not save your settings. Please try again.",
+    "unsavedChanges": "Unsaved changes",
+    "sections": {
+      "language": "Language",
+      "account": "Account",
+      "subscription": "Subscription",
+      "integrations": "Integrations",
+      "notifications": "Notifications"
+    },
+    "subscription": {
+      "description": "Manage your subscription, view usage and invoices"
+    },
+    "integrations": {
+      "description": "Connect your CRM, calendar and other tools"
+    },
+    "notifications": {
+      "description": "Configure your email and push notifications"
+    },
+    "comingSoon": "Coming Soon"
   }
 }
 

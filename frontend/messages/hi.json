@@ -634,6 +634,46 @@
       "hi": "हिन्दी",
       "ar": "العربية"
     }
+  },
+  "settings": {
+    "title": "सेटिंग्स",
+    "description": "अपनी प्राथमिकताएं और सेटिंग्स प्रबंधित करें",
+    "language": {
+      "title": "भाषा सेटिंग्स",
+      "description": "एप्लिकेशन के लिए अपनी भाषा प्राथमिकताएं कॉन्फ़िगर करें",
+      "appLanguage": "ऐप भाषा",
+      "appLanguageDesc": "एप्लिकेशन इंटरफ़ेस की भाषा",
+      "outputLanguage": "डिफ़ॉल्ट आउटपुट भाषा",
+      "outputLanguageDesc": "AI-जनित सामग्री के लिए भाषा (रिसर्च ब्रीफ़, तैयारी)",
+      "outputLanguageHint": "आप इसे प्रति क्रिया बदल सकते हैं",
+      "emailLanguage": "डिफ़ॉल्ट ईमेल भाषा",
+      "emailLanguageDesc": "ग्राहकों को भेजे जाने वाले ईमेल के लिए भाषा",
+      "emailLanguageHint": "आप इसे प्रति फॉलो-अप बदल सकते हैं"
+    },
+    "save": "सहेजें",
+    "saving": "सहेज रहा है...",
+    "saved": "सेटिंग्स सहेजी गईं",
+    "savedDesc": "आपकी प्राथमिकताएं अपडेट हो गई हैं",
+    "error": "सहेजना विफल",
+    "errorDesc": "आपकी सेटिंग्स सहेजी नहीं जा सकीं। कृपया पुनः प्रयास करें।",
+    "unsavedChanges": "असहेजे परिवर्तन",
+    "sections": {
+      "language": "भाषा",
+      "account": "खाता",
+      "subscription": "सदस्यता",
+      "integrations": "एकीकरण",
+      "notifications": "सूचनाएं"
+    },
+    "subscription": {
+      "description": "अपनी सदस्यता, उपयोग और चालान प्रबंधित करें"
+    },
+    "integrations": {
+      "description": "अपना CRM, कैलेंडर और अन्य उपकरण कनेक्ट करें"
+    },
+    "notifications": {
+      "description": "अपनी ईमेल और पुश सूचनाएं कॉन्फ़िगर करें"
+    },
+    "comingSoon": "जल्द आ रहा है"
   }
 }
 

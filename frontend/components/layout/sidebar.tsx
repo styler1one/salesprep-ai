@@ -60,6 +60,15 @@ const profileItems = [
   },
 ]
 
+const settingsItems = [
+  {
+    key: 'settings',
+    href: '/dashboard/settings',
+    icon: Icons.settings,
+    color: 'text-slate-400',
+  },
+]
+
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
@@ -151,6 +160,34 @@ export function Sidebar({ className }: SidebarProps) {
             </p>
           )}
           {profileItems.map((item) => {
+            const Icon = item.icon
+            const active = isActive(item.href)
+            const name = t(item.key)
+            return (
+              <button
+                key={item.key}
+                onClick={() => router.push(item.href)}
+                className={cn(
+                  'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
+                  active
+                    ? 'bg-slate-800 text-white'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50',
+                  collapsed && 'justify-center px-2'
+                )}
+                title={collapsed ? name : undefined}
+              >
+                <Icon className={cn('h-5 w-5 flex-shrink-0', active ? item.color : '')} />
+                {!collapsed && (
+                  <span className="truncate">{name}</span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Settings Section */}
+        <div className="pt-4 border-t border-slate-800">
+          {settingsItems.map((item) => {
             const Icon = item.icon
             const active = isActive(item.href)
             const name = t(item.key)

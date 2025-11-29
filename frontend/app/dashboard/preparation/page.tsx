@@ -15,6 +15,8 @@ import { DashboardLayout } from '@/components/layout'
 import { ProspectAutocomplete } from '@/components/prospect-autocomplete'
 import { LanguageSelect } from '@/components/language-select'
 import { useTranslations } from 'next-intl'
+import { useSettings } from '@/lib/settings-context'
+import { Locale } from '@/i18n/config'
 
 interface MeetingPrep {
   id: string
@@ -47,6 +49,7 @@ export default function PreparationPage() {
   const { toast } = useToast()
   const t = useTranslations('preparation')
   const tLang = useTranslations('language')
+  const { settings, loaded: settingsLoaded } = useSettings()
 
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -57,8 +60,15 @@ export default function PreparationPage() {
   const [companyName, setCompanyName] = useState('')
   const [meetingType, setMeetingType] = useState('discovery')
   const [customNotes, setCustomNotes] = useState('')
-  const [outputLanguage, setOutputLanguage] = useState('nl')
+  const [outputLanguage, setOutputLanguage] = useState<Locale>('nl')
   const [showAdvanced, setShowAdvanced] = useState(false)
+  
+  // Set language from settings on load
+  useEffect(() => {
+    if (settingsLoaded) {
+      setOutputLanguage(settings.output_language as Locale)
+    }
+  }, [settingsLoaded, settings.output_language])
   
   // Contact persons state
   const [availableContacts, setAvailableContacts] = useState<Contact[]>([])

@@ -13,6 +13,8 @@ import { DashboardLayout } from '@/components/layout'
 import { LanguageSelect } from '@/components/language-select'
 import { suggestLanguageFromCountry } from '@/lib/language-utils'
 import { useTranslations } from 'next-intl'
+import { useSettings } from '@/lib/settings-context'
+import { Locale } from '@/i18n/config'
 
 interface ResearchBrief {
   id: string
@@ -33,6 +35,7 @@ export default function ResearchPage() {
   const { toast } = useToast()
   const t = useTranslations('research')
   const tLang = useTranslations('language')
+  const { settings, loaded: settingsLoaded } = useSettings()
   
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -45,7 +48,16 @@ export default function ResearchPage() {
   const [websiteUrl, setWebsiteUrl] = useState('')
   const [country, setCountry] = useState('')
   const [city, setCity] = useState('')
-  const [outputLanguage, setOutputLanguage] = useState('nl') // Default to Dutch
+  const [outputLanguage, setOutputLanguage] = useState<Locale>('nl') // Will be updated from settings
+  const [languageSetFromSettings, setLanguageSetFromSettings] = useState(false)
+  
+  // Set language from settings on load
+  useEffect(() => {
+    if (settingsLoaded && !languageSetFromSettings) {
+      setOutputLanguage(settings.output_language as Locale)
+      setLanguageSetFromSettings(true)
+    }
+  }, [settingsLoaded, settings.output_language, languageSetFromSettings])
   
   // Company search state
   const [isSearching, setIsSearching] = useState(false)

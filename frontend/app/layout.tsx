@@ -4,6 +4,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
+import { SettingsProvider } from '@/lib/settings-context'
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -38,7 +39,9 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <SettingsProvider>
+              {children}
+            </SettingsProvider>
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>

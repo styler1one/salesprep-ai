@@ -634,6 +634,46 @@
       "hi": "हिन्दी",
       "ar": "العربية"
     }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "description": "Gérez vos préférences et paramètres",
+    "language": {
+      "title": "Paramètres de langue",
+      "description": "Configurez vos préférences linguistiques pour l'application",
+      "appLanguage": "Langue de l'application",
+      "appLanguageDesc": "La langue de l'interface utilisateur",
+      "outputLanguage": "Langue de sortie par défaut",
+      "outputLanguageDesc": "La langue pour le contenu généré par l'IA (briefs de recherche, préparations)",
+      "outputLanguageHint": "Vous pouvez modifier cela par action",
+      "emailLanguage": "Langue d'e-mail par défaut",
+      "emailLanguageDesc": "La langue pour les e-mails générés aux clients",
+      "emailLanguageHint": "Vous pouvez modifier cela par suivi"
+    },
+    "save": "Enregistrer",
+    "saving": "Enregistrement...",
+    "saved": "Paramètres enregistrés",
+    "savedDesc": "Vos préférences ont été mises à jour",
+    "error": "Échec de l'enregistrement",
+    "errorDesc": "Impossible d'enregistrer vos paramètres. Veuillez réessayer.",
+    "unsavedChanges": "Modifications non enregistrées",
+    "sections": {
+      "language": "Langue",
+      "account": "Compte",
+      "subscription": "Abonnement",
+      "integrations": "Intégrations",
+      "notifications": "Notifications"
+    },
+    "subscription": {
+      "description": "Gérez votre abonnement, consultez l'utilisation et les factures"
+    },
+    "integrations": {
+      "description": "Connectez votre CRM, calendrier et autres outils"
+    },
+    "notifications": {
+      "description": "Configurez vos notifications e-mail et push"
+    },
+    "comingSoon": "Bientôt disponible"
   }
 }
 

@@ -634,6 +634,46 @@
       "hi": "हिन्दी",
       "ar": "العربية"
     }
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "description": "إدارة تفضيلاتك وإعداداتك",
+    "language": {
+      "title": "إعدادات اللغة",
+      "description": "تكوين تفضيلات اللغة للتطبيق",
+      "appLanguage": "لغة التطبيق",
+      "appLanguageDesc": "لغة واجهة التطبيق",
+      "outputLanguage": "لغة الإخراج الافتراضية",
+      "outputLanguageDesc": "اللغة للمحتوى المُنشأ بالذكاء الاصطناعي (ملخصات البحث، التحضيرات)",
+      "outputLanguageHint": "يمكنك تغيير هذا لكل إجراء",
+      "emailLanguage": "لغة البريد الإلكتروني الافتراضية",
+      "emailLanguageDesc": "اللغة لرسائل البريد الإلكتروني المُنشأة للعملاء",
+      "emailLanguageHint": "يمكنك تغيير هذا لكل متابعة"
+    },
+    "save": "حفظ",
+    "saving": "جاري الحفظ...",
+    "saved": "تم حفظ الإعدادات",
+    "savedDesc": "تم تحديث تفضيلاتك",
+    "error": "فشل الحفظ",
+    "errorDesc": "تعذر حفظ إعداداتك. يرجى المحاولة مرة أخرى.",
+    "unsavedChanges": "تغييرات غير محفوظة",
+    "sections": {
+      "language": "اللغة",
+      "account": "الحساب",
+      "subscription": "الاشتراك",
+      "integrations": "التكاملات",
+      "notifications": "الإشعارات"
+    },
+    "subscription": {
+      "description": "إدارة اشتراكك والاستخدام والفواتير"
+    },
+    "integrations": {
+      "description": "ربط نظام CRM والتقويم والأدوات الأخرى"
+    },
+    "notifications": {
+      "description": "تكوين إشعارات البريد الإلكتروني والدفع"
+    },
+    "comingSoon": "قريباً"
   }
 }
 

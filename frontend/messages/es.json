@@ -634,6 +634,46 @@
       "hi": "हिन्दी",
       "ar": "العربية"
     }
+  },
+  "settings": {
+    "title": "Configuración",
+    "description": "Gestiona tus preferencias y configuración",
+    "language": {
+      "title": "Configuración de idioma",
+      "description": "Configura tus preferencias de idioma para la aplicación",
+      "appLanguage": "Idioma de la aplicación",
+      "appLanguageDesc": "El idioma de la interfaz de usuario",
+      "outputLanguage": "Idioma de salida predeterminado",
+      "outputLanguageDesc": "El idioma para el contenido generado por IA (briefs de investigación, preparaciones)",
+      "outputLanguageHint": "Puedes cambiar esto por acción",
+      "emailLanguage": "Idioma de correo predeterminado",
+      "emailLanguageDesc": "El idioma para los correos generados a clientes",
+      "emailLanguageHint": "Puedes cambiar esto por seguimiento"
+    },
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "saved": "Configuración guardada",
+    "savedDesc": "Tus preferencias han sido actualizadas",
+    "error": "Error al guardar",
+    "errorDesc": "No se pudo guardar tu configuración. Por favor, inténtalo de nuevo.",
+    "unsavedChanges": "Cambios sin guardar",
+    "sections": {
+      "language": "Idioma",
+      "account": "Cuenta",
+      "subscription": "Suscripción",
+      "integrations": "Integraciones",
+      "notifications": "Notificaciones"
+    },
+    "subscription": {
+      "description": "Gestiona tu suscripción, uso y facturas"
+    },
+    "integrations": {
+      "description": "Conecta tu CRM, calendario y otras herramientas"
+    },
+    "notifications": {
+      "description": "Configura tus notificaciones de correo y push"
+    },
+    "comingSoon": "Próximamente"
   }
 }
 

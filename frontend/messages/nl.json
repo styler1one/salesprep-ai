@@ -651,6 +651,46 @@
       "hi": "हिन्दी",
       "ar": "العربية"
     }
+  },
+  "settings": {
+    "title": "Instellingen",
+    "description": "Beheer je voorkeuren en instellingen",
+    "language": {
+      "title": "Taalinstellingen",
+      "description": "Configureer je taalvoorkeuren voor de applicatie",
+      "appLanguage": "App Taal",
+      "appLanguageDesc": "De taal van de applicatie interface",
+      "outputLanguage": "Standaard Output Taal",
+      "outputLanguageDesc": "De taal voor AI-gegenereerde content (research briefs, voorbereidingen)",
+      "outputLanguageHint": "Je kunt dit per actie overschrijven",
+      "emailLanguage": "Standaard E-mail Taal",
+      "emailLanguageDesc": "De taal voor gegenereerde e-mails naar klanten",
+      "emailLanguageHint": "Je kunt dit per follow-up overschrijven"
+    },
+    "save": "Opslaan",
+    "saving": "Opslaan...",
+    "saved": "Instellingen opgeslagen",
+    "savedDesc": "Je voorkeuren zijn bijgewerkt",
+    "error": "Opslaan mislukt",
+    "errorDesc": "Kon je instellingen niet opslaan. Probeer opnieuw.",
+    "unsavedChanges": "Niet-opgeslagen wijzigingen",
+    "sections": {
+      "language": "Taal",
+      "account": "Account",
+      "subscription": "Abonnement",
+      "integrations": "Integraties",
+      "notifications": "Meldingen"
+    },
+    "subscription": {
+      "description": "Beheer je abonnement, bekijk gebruik en facturen"
+    },
+    "integrations": {
+      "description": "Koppel je CRM, kalender en andere tools"
+    },
+    "notifications": {
+      "description": "Stel je e-mail en push notificaties in"
+    },
+    "comingSoon": "Binnenkort"
   }
 }
 

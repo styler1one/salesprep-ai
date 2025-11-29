@@ -640,6 +640,46 @@
       "hi": "हिन्दी",
       "ar": "العربية"
     }
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "description": "Verwalte deine Präferenzen und Einstellungen",
+    "language": {
+      "title": "Spracheinstellungen",
+      "description": "Konfiguriere deine Sprachpräferenzen für die Anwendung",
+      "appLanguage": "App-Sprache",
+      "appLanguageDesc": "Die Sprache der Benutzeroberfläche",
+      "outputLanguage": "Standard-Ausgabesprache",
+      "outputLanguageDesc": "Die Sprache für KI-generierte Inhalte (Research-Briefs, Vorbereitungen)",
+      "outputLanguageHint": "Du kannst dies pro Aktion überschreiben",
+      "emailLanguage": "Standard-E-Mail-Sprache",
+      "emailLanguageDesc": "Die Sprache für generierte E-Mails an Kunden",
+      "emailLanguageHint": "Du kannst dies pro Follow-up überschreiben"
+    },
+    "save": "Speichern",
+    "saving": "Speichern...",
+    "saved": "Einstellungen gespeichert",
+    "savedDesc": "Deine Präferenzen wurden aktualisiert",
+    "error": "Speichern fehlgeschlagen",
+    "errorDesc": "Deine Einstellungen konnten nicht gespeichert werden. Bitte versuche es erneut.",
+    "unsavedChanges": "Nicht gespeicherte Änderungen",
+    "sections": {
+      "language": "Sprache",
+      "account": "Konto",
+      "subscription": "Abonnement",
+      "integrations": "Integrationen",
+      "notifications": "Benachrichtigungen"
+    },
+    "subscription": {
+      "description": "Verwalte dein Abonnement, Nutzung und Rechnungen"
+    },
+    "integrations": {
+      "description": "Verbinde dein CRM, Kalender und andere Tools"
+    },
+    "notifications": {
+      "description": "Konfiguriere deine E-Mail- und Push-Benachrichtigungen"
+    },
+    "comingSoon": "Demnächst"
   }
 }
 
