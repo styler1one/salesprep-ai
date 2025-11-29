@@ -736,20 +736,20 @@ export default function ResearchBriefPage() {
                   <div className="rounded-xl border-2 border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950 dark:to-yellow-950 p-4 shadow-sm">
                     <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
                       <Icons.user className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                      Voeg Contactpersoon Toe
+                      {t('nextStep.addContact.title')}
                     </h3>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
-                      Voeg minimaal één contactpersoon toe voor een gepersonaliseerde voorbereiding.
+                      {t('nextStep.addContact.description')}
                     </p>
                     <Button 
                       className="w-full bg-amber-600 hover:bg-amber-700"
                       onClick={() => setShowAddContact(true)}
                     >
                       <Icons.userPlus className="h-4 w-4 mr-2" />
-                      Contactpersoon Toevoegen
+                      {t('nextStep.addContact.button')}
                     </Button>
                     <p className="text-xs text-amber-700 dark:text-amber-400 mt-2 text-center">
-                      Daarna kun je de voorbereiding starten
+                      {t('nextStep.addContact.hint')}
                     </p>
                   </div>
                 ) : (
@@ -757,20 +757,20 @@ export default function ResearchBriefPage() {
                   <div className="rounded-xl border-2 border-green-200 dark:border-green-800 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 p-4 shadow-sm">
                     <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
                       <Icons.arrowRight className="h-4 w-4 text-green-600 dark:text-green-400" />
-                      Volgende Stap
+                      {t('nextStep.ready.title')}
                     </h3>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
-                      Genereer een gepersonaliseerde gespreksvoorbereiding met alle verzamelde context.
+                      {t('nextStep.ready.description')}
                     </p>
                     <Button 
                       className="w-full bg-green-600 hover:bg-green-700"
                       onClick={handleStartPreparation}
                     >
                       <Icons.fileText className="h-4 w-4 mr-2" />
-                      Start Preparation
+                      {t('nextStep.ready.button')}
                     </Button>
                     <p className="text-xs text-green-700 dark:text-green-400 mt-2 text-center">
-                      Met {contacts.length} contactperso{contacts.length === 1 ? 'on' : 'nen'}
+                      {t('nextStep.ready.withContacts', { count: contacts.length })}
                     </p>
                   </div>
                 )}

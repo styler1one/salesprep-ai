@@ -246,10 +246,18 @@
       "contacts": "Contact Persons"
     },
     "nextStep": {
-      "addContact": "Add Contact Person",
-      "addContactDesc": "Add a contact person first before going to preparation",
-      "startPrep": "Start Preparation",
-      "startPrepDesc": "Go to Meeting Prep with {count} contact(s)"
+      "addContact": {
+        "title": "Add Contact Person",
+        "description": "Add at least one contact person for a personalized preparation.",
+        "button": "Add Contact",
+        "hint": "Then you can start the preparation"
+      },
+      "ready": {
+        "title": "Next Step",
+        "description": "Generate a personalized meeting preparation with all collected context.",
+        "button": "Start Preparation",
+        "withContacts": "With {count} contact(s)"
+      }
     }
   },
   "preparation": {

@@ -246,10 +246,18 @@
       "contacts": "Contactpersonen"
     },
     "nextStep": {
-      "addContact": "Voeg Contactpersoon Toe",
-      "addContactDesc": "Voeg eerst een contactpersoon toe voordat je naar de voorbereiding gaat",
-      "startPrep": "Start Voorbereiding",
-      "startPrepDesc": "Ga naar Meeting Prep met {count} contact(en)"
+      "addContact": {
+        "title": "Voeg Contactpersoon Toe",
+        "description": "Voeg minimaal één contactpersoon toe voor een gepersonaliseerde voorbereiding.",
+        "button": "Contactpersoon Toevoegen",
+        "hint": "Daarna kun je de voorbereiding starten"
+      },
+      "ready": {
+        "title": "Volgende Stap",
+        "description": "Genereer een gepersonaliseerde gespreksvoorbereiding met alle verzamelde context.",
+        "button": "Start Preparation",
+        "withContacts": "Met {count} contactpersoon"
+      }
     }
   },
   "preparation": {
