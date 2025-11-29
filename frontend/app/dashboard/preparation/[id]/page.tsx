@@ -282,7 +282,7 @@ export default function PreparationDetailPage() {
               ) : prep.status === 'failed' ? (
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-sm text-center">
                   <Icons.alertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-                  <h3 className="font-bold text-lg mb-2 text-slate-900 dark:text-white">Generatie Mislukt</h3>
+                  <h3 className="font-bold text-lg mb-2 text-slate-900 dark:text-white">{t('toast.failed')}</h3>
                   <p className="text-slate-500 dark:text-slate-400 mb-4">{prep.error_message || 'Er is een fout opgetreden'}</p>
                   <Button onClick={() => router.push('/dashboard/preparation')}>
                     Probeer Opnieuw
@@ -360,7 +360,7 @@ export default function PreparationDetailPage() {
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400" />
-                      <span className="text-slate-700 dark:text-slate-200">Meeting Context</span>
+                      <span className="text-slate-700 dark:text-slate-200">{t('detail.meetingContext')}</span>
                     </div>
                   </div>
                 </div>
@@ -422,7 +422,7 @@ export default function PreparationDetailPage() {
 
                 {/* Quick Actions */}
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
-                  <h3 className="font-semibold text-slate-900 dark:text-white mb-3 text-sm">Snelle Acties</h3>
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-3 text-sm">{t('detail.quickActions')}</h3>
                   <div className="space-y-2">
                     {prep.pdf_url && (
                       <Button variant="outline" size="sm" className="w-full justify-start" asChild>

@@ -299,6 +299,10 @@
       "selectProspect": "Select a prospect",
       "selectContacts": "Select contacts"
     },
+    "detail": {
+      "meetingContext": "Meeting Context",
+      "quickActions": "Quick Actions"
+    },
     "nextStep": {
       "title": "After your Meeting",
       "description": "Upload your meeting recording for automatic transcription and follow-up",
@@ -319,7 +323,9 @@
       "supportedFormats": "Supported formats: MP3, WAV, M4A, WebM",
       "includeCoaching": "Include coaching feedback",
       "startFollowup": "Start Follow-up",
-      "processing": "Processing..."
+      "processing": "Processing...",
+      "subject": "Subject",
+      "date": "Date"
     },
     "history": {
       "title": "Recent Follow-ups",
@@ -349,6 +355,7 @@
       "emailDraft": "Email Draft",
       "transcription": "Transcription",
       "meetingInfo": "Meeting Info",
+      "date": "Date",
       "duration": "Duration",
       "speakers": "Speakers",
       "linkedResearch": "Linked Research",
@@ -391,7 +398,9 @@
       "personal": "Personal Details",
       "experience": "Experience & Expertise",
       "style": "Sales Style",
-      "goals": "Goals & Targets"
+      "goals": "Goals & Targets",
+      "targetMarket": "Target Market",
+      "goalsPrefs": "Goals & Preferences"
     },
     "fields": {
       "fullName": "Full Name",
@@ -404,7 +413,20 @@
       "sellingStyle": "Selling Style",
       "communicationPreference": "Communication Preference",
       "targetMarket": "Target Market",
-      "quotaTarget": "Quota Target"
+      "quotaTarget": "Quota Target",
+      "regions": "Regions",
+      "companySizes": "Company Sizes",
+      "quarterlyGoals": "Quarterly Goals",
+      "meetingTypes": "Meeting Types"
+    },
+    "howUsed": {
+      "title": "How is this used?",
+      "prep": "Meeting Prep",
+      "prepDesc": "AI generates briefs tailored to your style and strengths",
+      "followup": "Follow-up Emails",
+      "followupDesc": "Emails are written in your tone of voice",
+      "research": "Research",
+      "researchDesc": "Focus on information relevant to your target market"
     },
     "toast": {
       "saved": "Profile saved",
@@ -427,11 +449,39 @@
     "ourStory": "Our Story",
     "ourStoryDesc": "This story is used by the AI to generate personalized sales content",
     "summary": "Summary",
+    "notSet": "Not set",
+    "noProducts": "No products added yet",
+    "noPersonas": "No personas added yet",
+    "noCaseStudies": "No case studies added yet",
     "sections": {
       "basic": "Basic Information",
       "products": "Products & Services",
       "market": "Market & Competition",
-      "values": "Values & USPs"
+      "values": "Values & USPs",
+      "valueProps": "Value Propositions",
+      "differentiators": "Differentiators",
+      "icp": "Ideal Customer Profile",
+      "personas": "Buyer Personas",
+      "caseStudies": "Case Studies",
+      "salesInfo": "Sales Information"
+    },
+    "fields": {
+      "industries": "Industries",
+      "companySizes": "Company Sizes",
+      "painPoints": "Pain Points",
+      "salesCycle": "Sales Cycle",
+      "avgDeal": "Average Deal",
+      "competitors": "Competitors",
+      "competitiveAdvantage": "Competitive Advantage"
+    },
+    "howUsed": {
+      "title": "How is this used?",
+      "prep": "Meeting Prep",
+      "prepDesc": "AI uses your value props and case studies in briefs",
+      "followup": "Follow-up Emails",
+      "followupDesc": "Relevant product info is added automatically",
+      "research": "Research",
+      "researchDesc": "ICP is used to filter relevant prospect info"
     },
     "fields": {
       "companyName": "Company Name",

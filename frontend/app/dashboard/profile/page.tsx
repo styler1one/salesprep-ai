@@ -256,7 +256,7 @@ export default function ProfilePage() {
             )}
             {profile.areas_to_improve && profile.areas_to_improve.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Ontwikkelpunten</p>
+                <p className="text-sm font-medium text-muted-foreground mb-2">{t('weaknesses')}</p>
                 <div className="flex flex-wrap gap-2">
                   {profile.areas_to_improve.map((area, i) => (
                     <span 
@@ -277,13 +277,13 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
-              Doelmarkt
+              {t('sections.targetMarket')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {profile.target_industries && profile.target_industries.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Industries</p>
+                <p className="text-sm font-medium text-muted-foreground mb-2">{t('fields.industries')}</p>
                 <div className="flex flex-wrap gap-2">
                   {profile.target_industries.map((industry, i) => (
                     <span 
@@ -298,7 +298,7 @@ export default function ProfilePage() {
             )}
             {profile.target_regions && profile.target_regions.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Regio's</p>
+                <p className="text-sm font-medium text-muted-foreground mb-2">{t('fields.regions')}</p>
                 <div className="flex flex-wrap gap-2">
                   {profile.target_regions.map((region, i) => (
                     <span 
@@ -313,7 +313,7 @@ export default function ProfilePage() {
             )}
             {profile.target_company_sizes && profile.target_company_sizes.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Bedrijfsgroottes</p>
+                <p className="text-sm font-medium text-muted-foreground mb-2">{t('fields.companySizes')}</p>
                 <div className="flex flex-wrap gap-2">
                   {profile.target_company_sizes.map((size, i) => (
                     <span 
@@ -334,19 +334,19 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <RefreshCw className="h-5 w-5" />
-              Doelen & Voorkeuren
+              {t('sections.goalsPrefs')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {profile.quarterly_goals && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Kwartaaldoelen</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('fields.quarterlyGoals')}</p>
                 <p className="text-base text-gray-700 dark:text-slate-300">{profile.quarterly_goals}</p>
               </div>
             )}
             {profile.preferred_meeting_types && profile.preferred_meeting_types.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Meeting Types</p>
+                <p className="text-sm font-medium text-muted-foreground mb-2">{t('fields.meetingTypes')}</p>
                 <div className="flex flex-wrap gap-2">
                   {profile.preferred_meeting_types.map((type, i) => (
                     <span 
@@ -366,11 +366,11 @@ export default function ProfilePage() {
       {/* How this is used */}
       <Card className="mt-6 bg-muted/50">
         <CardContent className="pt-6">
-          <h3 className="font-semibold mb-2">Hoe wordt dit gebruikt?</h3>
+          <h3 className="font-semibold mb-2">{t('howUsed.title')}</h3>
           <ul className="text-sm text-muted-foreground space-y-1">
-            <li>• <strong>Meeting Prep:</strong> AI genereert briefs afgestemd op jouw stijl en sterktes</li>
-            <li>• <strong>Follow-up Emails:</strong> Emails worden geschreven in jouw tone of voice</li>
-            <li>• <strong>Research:</strong> Focus op informatie relevant voor jouw doelmarkt</li>
+            <li>• <strong>{t('howUsed.prep')}:</strong> {t('howUsed.prepDesc')}</li>
+            <li>• <strong>{t('howUsed.followup')}:</strong> {t('howUsed.followupDesc')}</li>
+            <li>• <strong>{t('howUsed.research')}:</strong> {t('howUsed.researchDesc')}</li>
           </ul>
         </CardContent>
       </Card>

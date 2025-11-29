@@ -552,7 +552,7 @@ export default function FollowupPage() {
                   {showAdvanced && (
                     <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-700">
                       <div>
-                        <Label className="text-xs text-slate-700 dark:text-slate-300">Onderwerp</Label>
+                        <Label className="text-xs text-slate-700 dark:text-slate-300">{t('form.subject')}</Label>
                         <Input
                           placeholder="Bijv. Demo gesprek"
                           value={meetingSubject}
@@ -562,7 +562,7 @@ export default function FollowupPage() {
                         />
                       </div>
                       <div>
-                        <Label className="text-xs text-slate-700 dark:text-slate-300">Datum</Label>
+                        <Label className="text-xs text-slate-700 dark:text-slate-300">{t('form.date')}</Label>
                         <Input
                           type="date"
                           value={meetingDate}

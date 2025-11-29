@@ -612,14 +612,14 @@ export default function DashboardPage() {
                                         className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors text-center"
                                     >
                                         <Icons.search className="h-5 w-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
-                                        <span className="text-xs font-medium text-blue-700 dark:text-blue-300">Research</span>
+                                        <span className="text-xs font-medium text-blue-700 dark:text-blue-300">{tNavigation('research')}</span>
                                     </button>
                                     <button
                                         onClick={() => router.push('/dashboard/preparation')}
                                         className="p-3 rounded-lg bg-green-50 dark:bg-green-900/50 hover:bg-green-100 dark:hover:bg-green-900 transition-colors text-center"
                                     >
                                         <Icons.fileText className="h-5 w-5 text-green-600 dark:text-green-400 mx-auto mb-1" />
-                                        <span className="text-xs font-medium text-green-700 dark:text-green-300">Prep</span>
+                                        <span className="text-xs font-medium text-green-700 dark:text-green-300">{tNavigation('preparation')}</span>
                                     </button>
                                     <button
                                         onClick={() => router.push('/dashboard/followup')}

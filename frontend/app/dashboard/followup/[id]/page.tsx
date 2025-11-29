@@ -648,19 +648,19 @@ export default function FollowupDetailPage() {
                     <div className="space-y-2 text-sm">
                       {followup.meeting_date && (
                         <div className="flex justify-between">
-                          <span className="text-slate-500 dark:text-slate-400">Datum</span>
+                          <span className="text-slate-500 dark:text-slate-400">{t('detail.date')}</span>
                           <span className="font-medium text-slate-900 dark:text-white">{new Date(followup.meeting_date).toLocaleDateString('nl-NL')}</span>
                         </div>
                       )}
                       {followup.audio_duration_seconds && (
                         <div className="flex justify-between">
-                          <span className="text-slate-500 dark:text-slate-400">Duur</span>
+                          <span className="text-slate-500 dark:text-slate-400">{t('detail.duration')}</span>
                           <span className="font-medium text-slate-900 dark:text-white">{formatDuration(followup.audio_duration_seconds)}</span>
                         </div>
                       )}
                       {followup.speaker_count > 0 && (
                         <div className="flex justify-between">
-                          <span className="text-slate-500 dark:text-slate-400">Sprekers</span>
+                          <span className="text-slate-500 dark:text-slate-400">{t('detail.speakers')}</span>
                           <span className="font-medium text-slate-900 dark:text-white">{followup.speaker_count}</span>
                         </div>
                       )}

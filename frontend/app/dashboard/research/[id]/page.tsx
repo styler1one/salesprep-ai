@@ -589,7 +589,7 @@ export default function ResearchBriefPage() {
                           )}
                         </div>
                         <div>
-                          <Label htmlFor="contact-role" className="text-xs text-slate-700 dark:text-slate-300">Functie</Label>
+                          <Label htmlFor="contact-role" className="text-xs text-slate-700 dark:text-slate-300">{t('detail.contactsPanel.role')}</Label>
                           <Input
                             id="contact-role"
                             placeholder="CTO"
@@ -637,7 +637,7 @@ export default function ResearchBriefPage() {
                   ) : contacts.length === 0 ? (
                     <div className="text-center py-4">
                       <Icons.user className="h-8 w-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Nog geen contactpersonen</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{t('detail.contactsPanel.noContacts')}</p>
                       <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                         Voeg toe voor een gepersonaliseerde voorbereiding
                       </p>
@@ -694,7 +694,7 @@ export default function ResearchBriefPage() {
                                 {/* Bekijk profiel indicator */}
                                 {hasAnalysis && (
                                   <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 mr-1">
-                                    <span className="text-xs font-medium hidden sm:inline">Bekijk</span>
+                                    <span className="text-xs font-medium hidden sm:inline">{tCommon('view')}</span>
                                     <Icons.chevronRight className="h-4 w-4" />
                                   </div>
                                 )}

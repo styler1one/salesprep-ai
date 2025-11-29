@@ -259,7 +259,7 @@ export default function CompanyProfilePage() {
                 </div>
               ))
             ) : (
-              <p className="text-muted-foreground text-sm">Nog geen producten toegevoegd</p>
+              <p className="text-muted-foreground text-sm">{t('noProducts')}</p>
             )}
           </CardContent>
         </Card>
@@ -269,7 +269,7 @@ export default function CompanyProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Zap className="h-5 w-5" />
-              Value Propositions
+              {t('sections.valueProps')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -285,12 +285,12 @@ export default function CompanyProfilePage() {
                 ))}
               </div>
             ) : (
-              <p className="text-muted-foreground text-sm">Nog niet ingesteld</p>
+              <p className="text-muted-foreground text-sm">{t('notSet')}</p>
             )}
             
             {profile.differentiators && profile.differentiators.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Differentiators</p>
+                <p className="text-sm font-medium text-muted-foreground mb-2">{t('sections.differentiators')}</p>
                 <div className="flex flex-wrap gap-2">
                   {profile.differentiators.map((diff, i) => (
                     <span 
@@ -311,7 +311,7 @@ export default function CompanyProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
-              Ideale Klant Profiel
+              {t('sections.icp')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -319,7 +319,7 @@ export default function CompanyProfilePage() {
               <>
                 {profile.ideal_customer_profile.industries?.length > 0 && (
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">Industries</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">{t('fields.industries')}</p>
                     <div className="flex flex-wrap gap-2">
                       {profile.ideal_customer_profile.industries.map((ind, i) => (
                         <span key={i} className="px-2 py-1 bg-primary/10 text-primary text-sm rounded">
@@ -331,7 +331,7 @@ export default function CompanyProfilePage() {
                 )}
                 {profile.ideal_customer_profile.company_sizes?.length > 0 && (
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">Bedrijfsgrootte</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">{t('fields.companySizes')}</p>
                     <div className="flex flex-wrap gap-2">
                       {profile.ideal_customer_profile.company_sizes.map((size, i) => (
                         <span key={i} className="px-2 py-1 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 text-sm rounded">
@@ -343,7 +343,7 @@ export default function CompanyProfilePage() {
                 )}
                 {profile.ideal_customer_profile.pain_points?.length > 0 && (
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">Pain Points</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">{t('fields.painPoints')}</p>
                     <ul className="text-sm text-gray-700 dark:text-slate-300 space-y-1">
                       {profile.ideal_customer_profile.pain_points.map((point, i) => (
                         <li key={i}>• {point}</li>
@@ -353,7 +353,7 @@ export default function CompanyProfilePage() {
                 )}
               </>
             ) : (
-              <p className="text-muted-foreground text-sm">Nog niet ingesteld</p>
+              <p className="text-muted-foreground text-sm">{t('notSet')}</p>
             )}
           </CardContent>
         </Card>
@@ -363,7 +363,7 @@ export default function CompanyProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Buyer Personas
+              {t('sections.personas')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -381,7 +381,7 @@ export default function CompanyProfilePage() {
                 </div>
               ))
             ) : (
-              <p className="text-muted-foreground text-sm">Nog geen personas toegevoegd</p>
+              <p className="text-muted-foreground text-sm">{t('noPersonas')}</p>
             )}
           </CardContent>
         </Card>
@@ -391,7 +391,7 @@ export default function CompanyProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5" />
-              Case Studies
+              {t('sections.caseStudies')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -408,7 +408,7 @@ export default function CompanyProfilePage() {
                 </div>
               ))
             ) : (
-              <p className="text-muted-foreground text-sm">Nog geen case studies toegevoegd</p>
+              <p className="text-muted-foreground text-sm">{t('noCaseStudies')}</p>
             )}
           </CardContent>
         </Card>
@@ -418,25 +418,25 @@ export default function CompanyProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              Sales Informatie
+              {t('sections.salesInfo')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {profile.typical_sales_cycle && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Sales Cycle</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('fields.salesCycle')}</p>
                 <p className="text-base">{profile.typical_sales_cycle}</p>
               </div>
             )}
             {profile.average_deal_size && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Gemiddelde Deal</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('fields.avgDeal')}</p>
                 <p className="text-base">{profile.average_deal_size}</p>
               </div>
             )}
             {profile.competitors && profile.competitors.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Concurrenten</p>
+                <p className="text-sm font-medium text-muted-foreground mb-2">{t('fields.competitors')}</p>
                 <div className="flex flex-wrap gap-2">
                   {profile.competitors.map((comp, i) => (
                     <span key={i} className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm rounded">
@@ -448,7 +448,7 @@ export default function CompanyProfilePage() {
             )}
             {profile.competitive_advantages && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Competitief Voordeel</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('fields.competitiveAdvantage')}</p>
                 <p className="text-base text-gray-700 dark:text-slate-300">{profile.competitive_advantages}</p>
               </div>
             )}
@@ -459,11 +459,11 @@ export default function CompanyProfilePage() {
       {/* How this is used */}
       <Card className="mt-6 bg-muted/50">
         <CardContent className="pt-6">
-          <h3 className="font-semibold mb-2">Hoe wordt dit gebruikt?</h3>
+          <h3 className="font-semibold mb-2">{t('howUsed.title')}</h3>
           <ul className="text-sm text-muted-foreground space-y-1">
-            <li>• <strong>Meeting Prep:</strong> AI gebruikt jullie value props en case studies in briefs</li>
-            <li>• <strong>Follow-up Emails:</strong> Relevant productinformatie wordt automatisch toegevoegd</li>
-            <li>• <strong>Research:</strong> ICP wordt gebruikt om relevante prospect info te filteren</li>
+            <li>• <strong>{t('howUsed.prep')}:</strong> {t('howUsed.prepDesc')}</li>
+            <li>• <strong>{t('howUsed.followup')}:</strong> {t('howUsed.followupDesc')}</li>
+            <li>• <strong>{t('howUsed.research')}:</strong> {t('howUsed.researchDesc')}</li>
           </ul>
         </CardContent>
       </Card>

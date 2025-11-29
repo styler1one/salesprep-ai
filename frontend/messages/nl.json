@@ -299,6 +299,10 @@
       "selectProspect": "Selecteer een prospect",
       "selectContacts": "Selecteer contactpersonen"
     },
+    "detail": {
+      "meetingContext": "Meeting Context",
+      "quickActions": "Snelle Acties"
+    },
     "nextStep": {
       "title": "Na je Meeting",
       "description": "Upload je meeting opname voor automatische transcriptie en follow-up",
@@ -319,7 +323,9 @@
       "supportedFormats": "Ondersteunde formaten: MP3, WAV, M4A, WebM",
       "includeCoaching": "Ontvang coaching feedback",
       "startFollowup": "Start Follow-up",
-      "processing": "Verwerken..."
+      "processing": "Verwerken...",
+      "subject": "Onderwerp",
+      "date": "Datum"
     },
     "history": {
       "title": "Recente Follow-ups",
@@ -349,6 +355,7 @@
       "emailDraft": "Email Concept",
       "transcription": "Transcriptie",
       "meetingInfo": "Meeting Info",
+      "date": "Datum",
       "duration": "Duur",
       "speakers": "Sprekers",
       "linkedResearch": "Gekoppelde Research",
@@ -391,7 +398,9 @@
       "personal": "Persoonlijke Gegevens",
       "experience": "Ervaring & Expertise",
       "style": "Verkoopstijl",
-      "goals": "Doelen & Targets"
+      "goals": "Doelen & Targets",
+      "targetMarket": "Doelmarkt",
+      "goalsPrefs": "Doelen & Voorkeuren"
     },
     "fields": {
       "fullName": "Volledige Naam",
@@ -404,7 +413,20 @@
       "sellingStyle": "Verkoopstijl",
       "communicationPreference": "Communicatie Voorkeur",
       "targetMarket": "Doelmarkt",
-      "quotaTarget": "Quota Target"
+      "quotaTarget": "Quota Target",
+      "regions": "Regio's",
+      "companySizes": "Bedrijfsgroottes",
+      "quarterlyGoals": "Kwartaaldoelen",
+      "meetingTypes": "Meeting Types"
+    },
+    "howUsed": {
+      "title": "Hoe wordt dit gebruikt?",
+      "prep": "Meeting Prep",
+      "prepDesc": "AI genereert briefs afgestemd op jouw stijl en sterktes",
+      "followup": "Follow-up Emails",
+      "followupDesc": "Emails worden geschreven in jouw tone of voice",
+      "research": "Research",
+      "researchDesc": "Focus op informatie relevant voor jouw doelmarkt"
     },
     "toast": {
       "saved": "Profiel opgeslagen",
@@ -427,11 +449,39 @@
     "ourStory": "Ons Verhaal",
     "ourStoryDesc": "Dit verhaal wordt gebruikt door de AI om gepersonaliseerde sales content te genereren",
     "summary": "Samenvatting",
+    "notSet": "Nog niet ingesteld",
+    "noProducts": "Nog geen producten toegevoegd",
+    "noPersonas": "Nog geen personas toegevoegd",
+    "noCaseStudies": "Nog geen case studies toegevoegd",
     "sections": {
       "basic": "Basisinformatie",
       "products": "Producten & Diensten",
       "market": "Markt & Concurrentie",
-      "values": "Waarden & USPs"
+      "values": "Waarden & USPs",
+      "valueProps": "Value Propositions",
+      "differentiators": "Differentiators",
+      "icp": "Ideale Klant Profiel",
+      "personas": "Buyer Personas",
+      "caseStudies": "Case Studies",
+      "salesInfo": "Sales Informatie"
+    },
+    "fields": {
+      "industries": "Industrieën",
+      "companySizes": "Bedrijfsgrootte",
+      "painPoints": "Pain Points",
+      "salesCycle": "Sales Cycle",
+      "avgDeal": "Gemiddelde Deal",
+      "competitors": "Concurrenten",
+      "competitiveAdvantage": "Competitief Voordeel"
+    },
+    "howUsed": {
+      "title": "Hoe wordt dit gebruikt?",
+      "prep": "Meeting Prep",
+      "prepDesc": "AI gebruikt jullie value props en case studies in briefs",
+      "followup": "Follow-up Emails",
+      "followupDesc": "Relevant productinformatie wordt automatisch toegevoegd",
+      "research": "Research",
+      "researchDesc": "ICP wordt gebruikt om relevante prospect info te filteren"
     },
     "fields": {
       "companyName": "Bedrijfsnaam",
