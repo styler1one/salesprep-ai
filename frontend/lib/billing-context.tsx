@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 interface UsageMetric {
   used: number
@@ -71,7 +71,7 @@ export function BillingProvider({ children }: { children: React.ReactNode }) {
       setLoading(true)
       setError(null)
 
-      const supabase = createClient()
+      const supabase = createClientComponentClient()
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session?.access_token) {
@@ -121,7 +121,7 @@ export function BillingProvider({ children }: { children: React.ReactNode }) {
 
   const checkLimit = async (metric: string) => {
     try {
-      const supabase = createClient()
+      const supabase = createClientComponentClient()
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session?.access_token) {
@@ -151,7 +151,7 @@ export function BillingProvider({ children }: { children: React.ReactNode }) {
 
   const createCheckoutSession = async (planId: string): Promise<string> => {
     try {
-      const supabase = createClient()
+      const supabase = createClientComponentClient()
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session?.access_token) {
@@ -192,7 +192,7 @@ export function BillingProvider({ children }: { children: React.ReactNode }) {
 
   const openBillingPortal = async (): Promise<string> => {
     try {
-      const supabase = createClient()
+      const supabase = createClientComponentClient()
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session?.access_token) {
