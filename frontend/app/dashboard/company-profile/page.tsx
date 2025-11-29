@@ -19,6 +19,7 @@ import {
   Zap,
   TrendingUp
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 interface Product {
   name: string

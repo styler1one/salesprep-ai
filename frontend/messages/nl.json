@@ -303,6 +303,218 @@
       "description": "Upload je meeting opname voor automatische transcriptie en follow-up",
       "button": "Naar Follow-up"
     }
+  },
+  "followup": {
+    "title": "Follow-up Agent",
+    "subtitle": "AI-transcriptie en samenvatting van je verkoopgesprekken",
+    "loading": "Laden...",
+    "form": {
+      "title": "Nieuwe Follow-up",
+      "selectProspect": "Selecteer Prospect",
+      "selectProspectPlaceholder": "Kies een bedrijf...",
+      "uploadAudio": "Audio Bestand",
+      "uploadTranscript": "Transcript Bestand",
+      "dragDrop": "Sleep bestand hierheen of klik om te uploaden",
+      "supportedFormats": "Ondersteunde formaten: MP3, WAV, M4A, WebM",
+      "includeCoaching": "Ontvang coaching feedback",
+      "startFollowup": "Start Follow-up",
+      "processing": "Verwerken..."
+    },
+    "history": {
+      "title": "Recente Follow-ups",
+      "empty": "Nog geen follow-ups",
+      "emptyDesc": "Upload je eerste meeting opname hiernaast →"
+    },
+    "stats": {
+      "title": "Overzicht",
+      "completed": "Voltooid",
+      "processing": "Bezig"
+    },
+    "whatYouGet": {
+      "title": "Wat krijg je?",
+      "item1": "Transcriptie",
+      "item1Desc": "Automatische spraak-naar-tekst",
+      "item2": "Samenvatting",
+      "item2Desc": "Key points en acties",
+      "item3": "Follow-up Email",
+      "item3Desc": "Kant-en-klare email"
+    },
+    "detail": {
+      "summary": "Samenvatting",
+      "commercialSignals": "Commerciële Signalen",
+      "observations": "Observaties & Signalen",
+      "coachingFeedback": "Coaching Feedback",
+      "actionItems": "Actiepunten",
+      "emailDraft": "Email Concept",
+      "transcription": "Transcriptie",
+      "meetingInfo": "Meeting Info",
+      "duration": "Duur",
+      "speakers": "Sprekers",
+      "linkedResearch": "Gekoppelde Research",
+      "linkedPreparation": "Gekoppelde Voorbereiding",
+      "audioPlayer": "Audio Speler",
+      "nextProspect": "Volgende Prospect?",
+      "startNewResearch": "Start nieuwe research"
+    },
+    "toast": {
+      "started": "Follow-up gestart",
+      "startedDesc": "Je opname wordt verwerkt. Dit duurt 2-5 minuten.",
+      "failed": "Follow-up mislukt",
+      "failedDesc": "Kon de follow-up niet starten",
+      "copied": "Gekopieerd!",
+      "selectProspect": "Selecteer een prospect",
+      "selectFile": "Selecteer een bestand"
+    }
+  },
+  "profile": {
+    "title": "Sales Profiel",
+    "subtitle": "Je persoonlijke verkoopprofiel voor gepersonaliseerde AI outputs",
+    "loading": "Profiel laden...",
+    "completeness": "Profiel volledigheid",
+    "edit": "Bewerken",
+    "save": "Opslaan",
+    "saving": "Opslaan...",
+    "sections": {
+      "personal": "Persoonlijke Gegevens",
+      "experience": "Ervaring & Expertise",
+      "style": "Verkoopstijl",
+      "goals": "Doelen & Targets"
+    },
+    "fields": {
+      "fullName": "Volledige Naam",
+      "email": "E-mail",
+      "phone": "Telefoon",
+      "jobTitle": "Functietitel",
+      "yearsExperience": "Jaren Ervaring",
+      "industries": "Industrieën",
+      "specializations": "Specialisaties",
+      "sellingStyle": "Verkoopstijl",
+      "communicationPreference": "Communicatie Voorkeur",
+      "targetMarket": "Doelmarkt",
+      "quotaTarget": "Quota Target"
+    },
+    "toast": {
+      "saved": "Profiel opgeslagen",
+      "savedDesc": "Je wijzigingen zijn opgeslagen",
+      "failed": "Opslaan mislukt",
+      "failedDesc": "Kon profiel niet opslaan"
+    }
+  },
+  "companyProfile": {
+    "title": "Bedrijfsprofiel",
+    "subtitle": "Je bedrijfsinformatie voor contextuele AI outputs",
+    "loading": "Profiel laden...",
+    "completeness": "Profiel volledigheid",
+    "edit": "Bewerken",
+    "save": "Opslaan",
+    "saving": "Opslaan...",
+    "sections": {
+      "basic": "Basisinformatie",
+      "products": "Producten & Diensten",
+      "market": "Markt & Concurrentie",
+      "values": "Waarden & USPs"
+    },
+    "fields": {
+      "companyName": "Bedrijfsnaam",
+      "website": "Website",
+      "industry": "Industrie",
+      "companySize": "Bedrijfsgrootte",
+      "products": "Producten/Diensten",
+      "targetAudience": "Doelgroep",
+      "competitors": "Concurrenten",
+      "uniqueSellingPoints": "Unique Selling Points",
+      "companyValues": "Bedrijfswaarden"
+    },
+    "toast": {
+      "saved": "Profiel opgeslagen",
+      "savedDesc": "Je wijzigingen zijn opgeslagen",
+      "failed": "Opslaan mislukt",
+      "failedDesc": "Kon profiel niet opslaan"
+    }
+  },
+  "knowledgeBase": {
+    "title": "Knowledge Base",
+    "subtitle": "Upload documenten om de AI te trainen met je bedrijfskennis",
+    "loading": "Documenten laden...",
+    "upload": {
+      "title": "Documenten Uploaden",
+      "dragDrop": "Sleep bestanden hierheen of klik om te uploaden",
+      "supportedFormats": "Ondersteunde formaten: PDF, DOCX, TXT, MD",
+      "uploading": "Uploaden...",
+      "maxSize": "Max 10MB per bestand"
+    },
+    "files": {
+      "title": "Geüploade Documenten",
+      "empty": "Nog geen documenten",
+      "emptyDesc": "Upload je eerste document hierboven",
+      "processing": "Verwerken...",
+      "processed": "Verwerkt",
+      "failed": "Mislukt",
+      "delete": "Verwijderen"
+    },
+    "toast": {
+      "uploaded": "Document geüpload",
+      "uploadedDesc": "Het document wordt verwerkt",
+      "deleted": "Document verwijderd",
+      "deletedDesc": "Het document is verwijderd uit de knowledge base",
+      "failed": "Upload mislukt",
+      "failedDesc": "Kon document niet uploaden"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Welkom terug",
+      "subtitle": "Log in om verder te gaan",
+      "email": "E-mailadres",
+      "password": "Wachtwoord",
+      "forgotPassword": "Wachtwoord vergeten?",
+      "submit": "Inloggen",
+      "noAccount": "Nog geen account?",
+      "signUp": "Registreer"
+    },
+    "signup": {
+      "title": "Account aanmaken",
+      "subtitle": "Start je gratis proefperiode",
+      "fullName": "Volledige naam",
+      "email": "E-mailadres",
+      "password": "Wachtwoord",
+      "confirmPassword": "Bevestig wachtwoord",
+      "submit": "Registreren",
+      "hasAccount": "Al een account?",
+      "logIn": "Log in"
+    },
+    "errors": {
+      "invalidCredentials": "Ongeldige inloggegevens",
+      "emailInUse": "E-mailadres is al in gebruik",
+      "weakPassword": "Wachtwoord is te zwak",
+      "passwordMismatch": "Wachtwoorden komen niet overeen"
+    }
+  },
+  "onboarding": {
+    "title": "Welkom bij SalesPrep AI",
+    "subtitle": "Laten we je account instellen",
+    "steps": {
+      "profile": "Sales Profiel",
+      "company": "Bedrijfsprofiel",
+      "complete": "Klaar!"
+    },
+    "profile": {
+      "title": "Vertel ons over jezelf",
+      "description": "Deze informatie helpt de AI om gepersonaliseerde outputs te genereren"
+    },
+    "company": {
+      "title": "Vertel ons over je bedrijf",
+      "description": "Dit helpt de AI om je producten en diensten te begrijpen"
+    },
+    "complete": {
+      "title": "Je bent klaar!",
+      "description": "Je kunt nu beginnen met je eerste prospect research",
+      "button": "Ga naar Dashboard"
+    },
+    "skip": "Overslaan",
+    "next": "Volgende",
+    "back": "Terug",
+    "finish": "Afronden"
   }
 }
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
+import { useTranslations } from 'next-intl'
 
 export default function Home() {
   const router = useRouter()

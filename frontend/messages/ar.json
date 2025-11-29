@@ -303,6 +303,218 @@
       "description": "ارفع تسجيلك للنسخ التلقائي والمتابعة",
       "button": "انتقل للمتابعة"
     }
+  },
+  "followup": {
+    "title": "وكيل المتابعة",
+    "subtitle": "نسخ وتلخيص محادثات المبيعات بالذكاء الاصطناعي",
+    "loading": "جاري التحميل...",
+    "form": {
+      "title": "متابعة جديدة",
+      "selectProspect": "اختر العميل المحتمل",
+      "selectProspectPlaceholder": "اختر شركة...",
+      "uploadAudio": "ملف صوتي",
+      "uploadTranscript": "ملف النسخ",
+      "dragDrop": "اسحب الملف هنا أو انقر للرفع",
+      "supportedFormats": "الصيغ المدعومة: MP3, WAV, M4A, WebM",
+      "includeCoaching": "تضمين ملاحظات التدريب",
+      "startFollowup": "بدء المتابعة",
+      "processing": "جاري المعالجة..."
+    },
+    "history": {
+      "title": "المتابعات الأخيرة",
+      "empty": "لا توجد متابعات بعد",
+      "emptyDesc": "ارفع أول تسجيل لك على اليمين ←"
+    },
+    "stats": {
+      "title": "نظرة عامة",
+      "completed": "مكتمل",
+      "processing": "قيد التنفيذ"
+    },
+    "whatYouGet": {
+      "title": "ماذا تحصل؟",
+      "item1": "النسخ",
+      "item1Desc": "تحويل الكلام لنص تلقائياً",
+      "item2": "الملخص",
+      "item2Desc": "النقاط الرئيسية والإجراءات",
+      "item3": "بريد المتابعة",
+      "item3Desc": "بريد جاهز للإرسال"
+    },
+    "detail": {
+      "summary": "الملخص",
+      "commercialSignals": "الإشارات التجارية",
+      "observations": "الملاحظات والإشارات",
+      "coachingFeedback": "ملاحظات التدريب",
+      "actionItems": "عناصر العمل",
+      "emailDraft": "مسودة البريد",
+      "transcription": "النسخ",
+      "meetingInfo": "معلومات الاجتماع",
+      "duration": "المدة",
+      "speakers": "المتحدثون",
+      "linkedResearch": "البحث المرتبط",
+      "linkedPreparation": "التحضير المرتبط",
+      "audioPlayer": "مشغل الصوت",
+      "nextProspect": "العميل المحتمل التالي؟",
+      "startNewResearch": "بدء بحث جديد"
+    },
+    "toast": {
+      "started": "بدأت المتابعة",
+      "startedDesc": "جاري معالجة تسجيلك. يستغرق 2-5 دقائق.",
+      "failed": "فشلت المتابعة",
+      "failedDesc": "تعذر بدء المتابعة",
+      "copied": "تم النسخ!",
+      "selectProspect": "اختر عميلاً محتملاً",
+      "selectFile": "اختر ملفاً"
+    }
+  },
+  "profile": {
+    "title": "ملف المبيعات",
+    "subtitle": "ملفك الشخصي للمبيعات لمخرجات ذكاء اصطناعي مخصصة",
+    "loading": "جاري تحميل الملف...",
+    "completeness": "اكتمال الملف",
+    "edit": "تعديل",
+    "save": "حفظ",
+    "saving": "جاري الحفظ...",
+    "sections": {
+      "personal": "البيانات الشخصية",
+      "experience": "الخبرة والتخصص",
+      "style": "أسلوب البيع",
+      "goals": "الأهداف والغايات"
+    },
+    "fields": {
+      "fullName": "الاسم الكامل",
+      "email": "البريد الإلكتروني",
+      "phone": "الهاتف",
+      "jobTitle": "المسمى الوظيفي",
+      "yearsExperience": "سنوات الخبرة",
+      "industries": "الصناعات",
+      "specializations": "التخصصات",
+      "sellingStyle": "أسلوب البيع",
+      "communicationPreference": "تفضيل التواصل",
+      "targetMarket": "السوق المستهدف",
+      "quotaTarget": "هدف الحصة"
+    },
+    "toast": {
+      "saved": "تم حفظ الملف",
+      "savedDesc": "تم حفظ تغييراتك",
+      "failed": "فشل الحفظ",
+      "failedDesc": "تعذر حفظ الملف"
+    }
+  },
+  "companyProfile": {
+    "title": "ملف الشركة",
+    "subtitle": "معلومات شركتك لمخرجات ذكاء اصطناعي سياقية",
+    "loading": "جاري تحميل الملف...",
+    "completeness": "اكتمال الملف",
+    "edit": "تعديل",
+    "save": "حفظ",
+    "saving": "جاري الحفظ...",
+    "sections": {
+      "basic": "المعلومات الأساسية",
+      "products": "المنتجات والخدمات",
+      "market": "السوق والمنافسة",
+      "values": "القيم والمميزات"
+    },
+    "fields": {
+      "companyName": "اسم الشركة",
+      "website": "الموقع الإلكتروني",
+      "industry": "الصناعة",
+      "companySize": "حجم الشركة",
+      "products": "المنتجات/الخدمات",
+      "targetAudience": "الجمهور المستهدف",
+      "competitors": "المنافسون",
+      "uniqueSellingPoints": "نقاط البيع الفريدة",
+      "companyValues": "قيم الشركة"
+    },
+    "toast": {
+      "saved": "تم حفظ الملف",
+      "savedDesc": "تم حفظ تغييراتك",
+      "failed": "فشل الحفظ",
+      "failedDesc": "تعذر حفظ الملف"
+    }
+  },
+  "knowledgeBase": {
+    "title": "قاعدة المعرفة",
+    "subtitle": "ارفع مستندات لتدريب الذكاء الاصطناعي بمعرفة شركتك",
+    "loading": "جاري تحميل المستندات...",
+    "upload": {
+      "title": "رفع المستندات",
+      "dragDrop": "اسحب الملفات هنا أو انقر للرفع",
+      "supportedFormats": "الصيغ المدعومة: PDF, DOCX, TXT, MD",
+      "uploading": "جاري الرفع...",
+      "maxSize": "الحد الأقصى 10MB لكل ملف"
+    },
+    "files": {
+      "title": "المستندات المرفوعة",
+      "empty": "لا توجد مستندات بعد",
+      "emptyDesc": "ارفع أول مستند أعلاه",
+      "processing": "جاري المعالجة...",
+      "processed": "تمت المعالجة",
+      "failed": "فشل",
+      "delete": "حذف"
+    },
+    "toast": {
+      "uploaded": "تم رفع المستند",
+      "uploadedDesc": "جاري معالجة المستند",
+      "deleted": "تم حذف المستند",
+      "deletedDesc": "تم حذف المستند من قاعدة المعرفة",
+      "failed": "فشل الرفع",
+      "failedDesc": "تعذر رفع المستند"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "مرحباً بعودتك",
+      "subtitle": "سجل الدخول للمتابعة",
+      "email": "البريد الإلكتروني",
+      "password": "كلمة المرور",
+      "forgotPassword": "نسيت كلمة المرور؟",
+      "submit": "تسجيل الدخول",
+      "noAccount": "ليس لديك حساب؟",
+      "signUp": "سجل الآن"
+    },
+    "signup": {
+      "title": "إنشاء حساب",
+      "subtitle": "ابدأ تجربتك المجانية",
+      "fullName": "الاسم الكامل",
+      "email": "البريد الإلكتروني",
+      "password": "كلمة المرور",
+      "confirmPassword": "تأكيد كلمة المرور",
+      "submit": "تسجيل",
+      "hasAccount": "لديك حساب بالفعل؟",
+      "logIn": "تسجيل الدخول"
+    },
+    "errors": {
+      "invalidCredentials": "بيانات اعتماد غير صالحة",
+      "emailInUse": "البريد الإلكتروني مستخدم بالفعل",
+      "weakPassword": "كلمة المرور ضعيفة جداً",
+      "passwordMismatch": "كلمات المرور غير متطابقة"
+    }
+  },
+  "onboarding": {
+    "title": "مرحباً بك في SalesPrep AI",
+    "subtitle": "لنقم بإعداد حسابك",
+    "steps": {
+      "profile": "ملف المبيعات",
+      "company": "ملف الشركة",
+      "complete": "تم!"
+    },
+    "profile": {
+      "title": "أخبرنا عن نفسك",
+      "description": "تساعد هذه المعلومات الذكاء الاصطناعي في إنشاء مخرجات مخصصة"
+    },
+    "company": {
+      "title": "أخبرنا عن شركتك",
+      "description": "يساعد هذا الذكاء الاصطناعي في فهم منتجاتك وخدماتك"
+    },
+    "complete": {
+      "title": "أنت جاهز!",
+      "description": "يمكنك الآن البدء في أول بحث عن عميل محتمل",
+      "button": "انتقل للوحة التحكم"
+    },
+    "skip": "تخطي",
+    "next": "التالي",
+    "back": "رجوع",
+    "finish": "إنهاء"
   }
 }
 

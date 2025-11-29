@@ -10,6 +10,7 @@ import { FileList } from '@/components/knowledge-base/file-list'
 import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout'
+import { useTranslations } from 'next-intl'
 
 interface KnowledgeBaseFile {
   id: string

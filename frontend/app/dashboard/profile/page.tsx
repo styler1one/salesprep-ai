@@ -17,6 +17,7 @@ import {
   Loader2,
   BookOpen
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 interface SalesProfile {
   id: string

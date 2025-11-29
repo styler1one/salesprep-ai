@@ -12,6 +12,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout'
 import { ProspectAutocomplete } from '@/components/prospect-autocomplete'
+import { useTranslations } from 'next-intl'
 
 interface Followup {
   id: string

@@ -303,6 +303,218 @@
       "description": "स्वचालित ट्रांसक्रिप्शन और फॉलो-अप के लिए अपनी रिकॉर्डिंग अपलोड करें",
       "button": "फॉलो-अप पर जाएं"
     }
+  },
+  "followup": {
+    "title": "फॉलो-अप एजेंट",
+    "subtitle": "आपकी बिक्री वार्ताओं का AI ट्रांसक्रिप्शन और सारांश",
+    "loading": "लोड हो रहा है...",
+    "form": {
+      "title": "नया फॉलो-अप",
+      "selectProspect": "प्रॉस्पेक्ट चुनें",
+      "selectProspectPlaceholder": "एक कंपनी चुनें...",
+      "uploadAudio": "ऑडियो फाइल",
+      "uploadTranscript": "ट्रांसक्रिप्ट फाइल",
+      "dragDrop": "फाइल यहां खींचें या अपलोड करने के लिए क्लिक करें",
+      "supportedFormats": "समर्थित फॉर्मेट: MP3, WAV, M4A, WebM",
+      "includeCoaching": "कोचिंग फीडबैक शामिल करें",
+      "startFollowup": "फॉलो-अप शुरू करें",
+      "processing": "प्रोसेस हो रहा है..."
+    },
+    "history": {
+      "title": "हाल के फॉलो-अप्स",
+      "empty": "अभी कोई फॉलो-अप नहीं",
+      "emptyDesc": "दाईं ओर अपनी पहली रिकॉर्डिंग अपलोड करें →"
+    },
+    "stats": {
+      "title": "अवलोकन",
+      "completed": "पूर्ण",
+      "processing": "प्रगति में"
+    },
+    "whatYouGet": {
+      "title": "आपको क्या मिलता है?",
+      "item1": "ट्रांसक्रिप्शन",
+      "item1Desc": "स्वचालित स्पीच-टू-टेक्स्ट",
+      "item2": "सारांश",
+      "item2Desc": "मुख्य बिंदु और कार्य",
+      "item3": "फॉलो-अप ईमेल",
+      "item3Desc": "भेजने के लिए तैयार ईमेल"
+    },
+    "detail": {
+      "summary": "सारांश",
+      "commercialSignals": "व्यावसायिक संकेत",
+      "observations": "अवलोकन और संकेत",
+      "coachingFeedback": "कोचिंग फीडबैक",
+      "actionItems": "कार्य आइटम",
+      "emailDraft": "ईमेल ड्राफ्ट",
+      "transcription": "ट्रांसक्रिप्शन",
+      "meetingInfo": "मीटिंग जानकारी",
+      "duration": "अवधि",
+      "speakers": "वक्ता",
+      "linkedResearch": "लिंक्ड रिसर्च",
+      "linkedPreparation": "लिंक्ड तैयारी",
+      "audioPlayer": "ऑडियो प्लेयर",
+      "nextProspect": "अगला प्रॉस्पेक्ट?",
+      "startNewResearch": "नई रिसर्च शुरू करें"
+    },
+    "toast": {
+      "started": "फॉलो-अप शुरू",
+      "startedDesc": "आपकी रिकॉर्डिंग प्रोसेस हो रही है। 2-5 मिनट लगेंगे।",
+      "failed": "फॉलो-अप विफल",
+      "failedDesc": "फॉलो-अप शुरू नहीं हो सका",
+      "copied": "कॉपी हो गया!",
+      "selectProspect": "एक प्रॉस्पेक्ट चुनें",
+      "selectFile": "एक फाइल चुनें"
+    }
+  },
+  "profile": {
+    "title": "सेल्स प्रोफाइल",
+    "subtitle": "व्यक्तिगत AI आउटपुट के लिए आपका व्यक्तिगत बिक्री प्रोफाइल",
+    "loading": "प्रोफाइल लोड हो रहा है...",
+    "completeness": "प्रोफाइल पूर्णता",
+    "edit": "संपादित करें",
+    "save": "सहेजें",
+    "saving": "सहेजा जा रहा है...",
+    "sections": {
+      "personal": "व्यक्तिगत विवरण",
+      "experience": "अनुभव और विशेषज्ञता",
+      "style": "बिक्री शैली",
+      "goals": "लक्ष्य और टारगेट"
+    },
+    "fields": {
+      "fullName": "पूरा नाम",
+      "email": "ईमेल",
+      "phone": "फोन",
+      "jobTitle": "पद",
+      "yearsExperience": "अनुभव के वर्ष",
+      "industries": "उद्योग",
+      "specializations": "विशेषज्ञता",
+      "sellingStyle": "बिक्री शैली",
+      "communicationPreference": "संचार वरीयता",
+      "targetMarket": "लक्ष्य बाजार",
+      "quotaTarget": "कोटा लक्ष्य"
+    },
+    "toast": {
+      "saved": "प्रोफाइल सहेजा गया",
+      "savedDesc": "आपके परिवर्तन सहेजे गए",
+      "failed": "सहेजना विफल",
+      "failedDesc": "प्रोफाइल सहेज नहीं सका"
+    }
+  },
+  "companyProfile": {
+    "title": "कंपनी प्रोफाइल",
+    "subtitle": "संदर्भात्मक AI आउटपुट के लिए आपकी कंपनी की जानकारी",
+    "loading": "प्रोफाइल लोड हो रहा है...",
+    "completeness": "प्रोफाइल पूर्णता",
+    "edit": "संपादित करें",
+    "save": "सहेजें",
+    "saving": "सहेजा जा रहा है...",
+    "sections": {
+      "basic": "मूल जानकारी",
+      "products": "उत्पाद और सेवाएं",
+      "market": "बाजार और प्रतिस्पर्धा",
+      "values": "मूल्य और USPs"
+    },
+    "fields": {
+      "companyName": "कंपनी का नाम",
+      "website": "वेबसाइट",
+      "industry": "उद्योग",
+      "companySize": "कंपनी का आकार",
+      "products": "उत्पाद/सेवाएं",
+      "targetAudience": "लक्षित दर्शक",
+      "competitors": "प्रतिस्पर्धी",
+      "uniqueSellingPoints": "अद्वितीय विक्रय बिंदु",
+      "companyValues": "कंपनी मूल्य"
+    },
+    "toast": {
+      "saved": "प्रोफाइल सहेजा गया",
+      "savedDesc": "आपके परिवर्तन सहेजे गए",
+      "failed": "सहेजना विफल",
+      "failedDesc": "प्रोफाइल सहेज नहीं सका"
+    }
+  },
+  "knowledgeBase": {
+    "title": "ज्ञान आधार",
+    "subtitle": "AI को आपके कंपनी ज्ञान से प्रशिक्षित करने के लिए दस्तावेज़ अपलोड करें",
+    "loading": "दस्तावेज़ लोड हो रहे हैं...",
+    "upload": {
+      "title": "दस्तावेज़ अपलोड करें",
+      "dragDrop": "फाइलें यहां खींचें या अपलोड करने के लिए क्लिक करें",
+      "supportedFormats": "समर्थित फॉर्मेट: PDF, DOCX, TXT, MD",
+      "uploading": "अपलोड हो रहा है...",
+      "maxSize": "अधिकतम 10MB प्रति फाइल"
+    },
+    "files": {
+      "title": "अपलोड किए गए दस्तावेज़",
+      "empty": "अभी कोई दस्तावेज़ नहीं",
+      "emptyDesc": "ऊपर अपना पहला दस्तावेज़ अपलोड करें",
+      "processing": "प्रोसेस हो रहा है...",
+      "processed": "प्रोसेस हो गया",
+      "failed": "विफल",
+      "delete": "हटाएं"
+    },
+    "toast": {
+      "uploaded": "दस्तावेज़ अपलोड हो गया",
+      "uploadedDesc": "दस्तावेज़ प्रोसेस हो रहा है",
+      "deleted": "दस्तावेज़ हटाया गया",
+      "deletedDesc": "दस्तावेज़ ज्ञान आधार से हटा दिया गया है",
+      "failed": "अपलोड विफल",
+      "failedDesc": "दस्तावेज़ अपलोड नहीं हो सका"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "वापस स्वागत है",
+      "subtitle": "जारी रखने के लिए लॉग इन करें",
+      "email": "ईमेल पता",
+      "password": "पासवर्ड",
+      "forgotPassword": "पासवर्ड भूल गए?",
+      "submit": "लॉग इन करें",
+      "noAccount": "अकाउंट नहीं है?",
+      "signUp": "साइन अप करें"
+    },
+    "signup": {
+      "title": "अकाउंट बनाएं",
+      "subtitle": "अपना मुफ्त ट्रायल शुरू करें",
+      "fullName": "पूरा नाम",
+      "email": "ईमेल पता",
+      "password": "पासवर्ड",
+      "confirmPassword": "पासवर्ड की पुष्टि करें",
+      "submit": "साइन अप करें",
+      "hasAccount": "पहले से अकाउंट है?",
+      "logIn": "लॉग इन करें"
+    },
+    "errors": {
+      "invalidCredentials": "अमान्य क्रेडेंशियल",
+      "emailInUse": "ईमेल पहले से उपयोग में है",
+      "weakPassword": "पासवर्ड बहुत कमजोर है",
+      "passwordMismatch": "पासवर्ड मेल नहीं खाते"
+    }
+  },
+  "onboarding": {
+    "title": "SalesPrep AI में स्वागत है",
+    "subtitle": "चलिए आपका अकाउंट सेट करते हैं",
+    "steps": {
+      "profile": "सेल्स प्रोफाइल",
+      "company": "कंपनी प्रोफाइल",
+      "complete": "हो गया!"
+    },
+    "profile": {
+      "title": "अपने बारे में बताएं",
+      "description": "यह जानकारी AI को व्यक्तिगत आउटपुट बनाने में मदद करती है"
+    },
+    "company": {
+      "title": "अपनी कंपनी के बारे में बताएं",
+      "description": "यह AI को आपके उत्पादों और सेवाओं को समझने में मदद करता है"
+    },
+    "complete": {
+      "title": "आप तैयार हैं!",
+      "description": "अब आप अपनी पहली प्रॉस्पेक्ट रिसर्च शुरू कर सकते हैं",
+      "button": "डैशबोर्ड पर जाएं"
+    },
+    "skip": "छोड़ें",
+    "next": "अगला",
+    "back": "वापस",
+    "finish": "समाप्त करें"
   }
 }
 

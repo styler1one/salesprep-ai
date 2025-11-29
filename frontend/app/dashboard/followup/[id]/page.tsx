@@ -9,6 +9,7 @@ import { Icons } from '@/components/icons'
 import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
+import { useTranslations } from 'next-intl'
 
 interface Followup {
   id: string

@@ -303,6 +303,218 @@
       "description": "Lade deine Aufnahme hoch für automatische Transkription und Nachverfolgung",
       "button": "Zur Nachverfolgung"
     }
+  },
+  "followup": {
+    "title": "Follow-up Agent",
+    "subtitle": "KI-Transkription und Zusammenfassung deiner Verkaufsgespräche",
+    "loading": "Laden...",
+    "form": {
+      "title": "Neues Follow-up",
+      "selectProspect": "Interessent auswählen",
+      "selectProspectPlaceholder": "Wähle ein Unternehmen...",
+      "uploadAudio": "Audio-Datei",
+      "uploadTranscript": "Transkript-Datei",
+      "dragDrop": "Datei hierher ziehen oder klicken zum Hochladen",
+      "supportedFormats": "Unterstützte Formate: MP3, WAV, M4A, WebM",
+      "includeCoaching": "Coaching-Feedback einbeziehen",
+      "startFollowup": "Follow-up starten",
+      "processing": "Verarbeiten..."
+    },
+    "history": {
+      "title": "Aktuelle Follow-ups",
+      "empty": "Noch keine Follow-ups",
+      "emptyDesc": "Lade deine erste Aufnahme rechts hoch →"
+    },
+    "stats": {
+      "title": "Übersicht",
+      "completed": "Abgeschlossen",
+      "processing": "In Bearbeitung"
+    },
+    "whatYouGet": {
+      "title": "Was bekommst du?",
+      "item1": "Transkription",
+      "item1Desc": "Automatische Spracherkennung",
+      "item2": "Zusammenfassung",
+      "item2Desc": "Wichtige Punkte und Aktionen",
+      "item3": "Follow-up E-Mail",
+      "item3Desc": "Fertige E-Mail"
+    },
+    "detail": {
+      "summary": "Zusammenfassung",
+      "commercialSignals": "Kommerzielle Signale",
+      "observations": "Beobachtungen & Signale",
+      "coachingFeedback": "Coaching-Feedback",
+      "actionItems": "Aktionspunkte",
+      "emailDraft": "E-Mail-Entwurf",
+      "transcription": "Transkription",
+      "meetingInfo": "Meeting-Info",
+      "duration": "Dauer",
+      "speakers": "Sprecher",
+      "linkedResearch": "Verknüpfte Recherche",
+      "linkedPreparation": "Verknüpfte Vorbereitung",
+      "audioPlayer": "Audio-Player",
+      "nextProspect": "Nächster Interessent?",
+      "startNewResearch": "Neue Recherche starten"
+    },
+    "toast": {
+      "started": "Follow-up gestartet",
+      "startedDesc": "Deine Aufnahme wird verarbeitet. Dies dauert 2-5 Minuten.",
+      "failed": "Follow-up fehlgeschlagen",
+      "failedDesc": "Konnte das Follow-up nicht starten",
+      "copied": "Kopiert!",
+      "selectProspect": "Wähle einen Interessenten",
+      "selectFile": "Wähle eine Datei"
+    }
+  },
+  "profile": {
+    "title": "Verkaufsprofil",
+    "subtitle": "Dein persönliches Verkaufsprofil für personalisierte KI-Ausgaben",
+    "loading": "Profil laden...",
+    "completeness": "Profilvollständigkeit",
+    "edit": "Bearbeiten",
+    "save": "Speichern",
+    "saving": "Speichern...",
+    "sections": {
+      "personal": "Persönliche Daten",
+      "experience": "Erfahrung & Expertise",
+      "style": "Verkaufsstil",
+      "goals": "Ziele & Targets"
+    },
+    "fields": {
+      "fullName": "Vollständiger Name",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "jobTitle": "Berufsbezeichnung",
+      "yearsExperience": "Jahre Erfahrung",
+      "industries": "Branchen",
+      "specializations": "Spezialisierungen",
+      "sellingStyle": "Verkaufsstil",
+      "communicationPreference": "Kommunikationspräferenz",
+      "targetMarket": "Zielmarkt",
+      "quotaTarget": "Quota-Ziel"
+    },
+    "toast": {
+      "saved": "Profil gespeichert",
+      "savedDesc": "Deine Änderungen wurden gespeichert",
+      "failed": "Speichern fehlgeschlagen",
+      "failedDesc": "Konnte Profil nicht speichern"
+    }
+  },
+  "companyProfile": {
+    "title": "Unternehmensprofil",
+    "subtitle": "Deine Unternehmensinformationen für kontextuelle KI-Ausgaben",
+    "loading": "Profil laden...",
+    "completeness": "Profilvollständigkeit",
+    "edit": "Bearbeiten",
+    "save": "Speichern",
+    "saving": "Speichern...",
+    "sections": {
+      "basic": "Grundinformationen",
+      "products": "Produkte & Dienstleistungen",
+      "market": "Markt & Wettbewerb",
+      "values": "Werte & USPs"
+    },
+    "fields": {
+      "companyName": "Firmenname",
+      "website": "Website",
+      "industry": "Branche",
+      "companySize": "Unternehmensgröße",
+      "products": "Produkte/Dienstleistungen",
+      "targetAudience": "Zielgruppe",
+      "competitors": "Wettbewerber",
+      "uniqueSellingPoints": "Alleinstellungsmerkmale",
+      "companyValues": "Unternehmenswerte"
+    },
+    "toast": {
+      "saved": "Profil gespeichert",
+      "savedDesc": "Deine Änderungen wurden gespeichert",
+      "failed": "Speichern fehlgeschlagen",
+      "failedDesc": "Konnte Profil nicht speichern"
+    }
+  },
+  "knowledgeBase": {
+    "title": "Wissensdatenbank",
+    "subtitle": "Lade Dokumente hoch, um die KI mit deinem Firmenwissen zu trainieren",
+    "loading": "Dokumente laden...",
+    "upload": {
+      "title": "Dokumente hochladen",
+      "dragDrop": "Dateien hierher ziehen oder klicken zum Hochladen",
+      "supportedFormats": "Unterstützte Formate: PDF, DOCX, TXT, MD",
+      "uploading": "Hochladen...",
+      "maxSize": "Max 10MB pro Datei"
+    },
+    "files": {
+      "title": "Hochgeladene Dokumente",
+      "empty": "Noch keine Dokumente",
+      "emptyDesc": "Lade dein erstes Dokument oben hoch",
+      "processing": "Verarbeiten...",
+      "processed": "Verarbeitet",
+      "failed": "Fehlgeschlagen",
+      "delete": "Löschen"
+    },
+    "toast": {
+      "uploaded": "Dokument hochgeladen",
+      "uploadedDesc": "Das Dokument wird verarbeitet",
+      "deleted": "Dokument gelöscht",
+      "deletedDesc": "Das Dokument wurde aus der Wissensdatenbank entfernt",
+      "failed": "Upload fehlgeschlagen",
+      "failedDesc": "Konnte Dokument nicht hochladen"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Willkommen zurück",
+      "subtitle": "Melde dich an, um fortzufahren",
+      "email": "E-Mail-Adresse",
+      "password": "Passwort",
+      "forgotPassword": "Passwort vergessen?",
+      "submit": "Anmelden",
+      "noAccount": "Noch kein Konto?",
+      "signUp": "Registrieren"
+    },
+    "signup": {
+      "title": "Konto erstellen",
+      "subtitle": "Starte deine kostenlose Testversion",
+      "fullName": "Vollständiger Name",
+      "email": "E-Mail-Adresse",
+      "password": "Passwort",
+      "confirmPassword": "Passwort bestätigen",
+      "submit": "Registrieren",
+      "hasAccount": "Bereits ein Konto?",
+      "logIn": "Anmelden"
+    },
+    "errors": {
+      "invalidCredentials": "Ungültige Anmeldedaten",
+      "emailInUse": "E-Mail wird bereits verwendet",
+      "weakPassword": "Passwort ist zu schwach",
+      "passwordMismatch": "Passwörter stimmen nicht überein"
+    }
+  },
+  "onboarding": {
+    "title": "Willkommen bei SalesPrep AI",
+    "subtitle": "Lass uns dein Konto einrichten",
+    "steps": {
+      "profile": "Verkaufsprofil",
+      "company": "Unternehmensprofil",
+      "complete": "Fertig!"
+    },
+    "profile": {
+      "title": "Erzähl uns von dir",
+      "description": "Diese Informationen helfen der KI, personalisierte Ausgaben zu generieren"
+    },
+    "company": {
+      "title": "Erzähl uns von deinem Unternehmen",
+      "description": "Dies hilft der KI, deine Produkte und Dienstleistungen zu verstehen"
+    },
+    "complete": {
+      "title": "Du bist startklar!",
+      "description": "Du kannst jetzt mit deiner ersten Interessenten-Recherche beginnen",
+      "button": "Zum Dashboard"
+    },
+    "skip": "Überspringen",
+    "next": "Weiter",
+    "back": "Zurück",
+    "finish": "Abschließen"
   }
 }
 

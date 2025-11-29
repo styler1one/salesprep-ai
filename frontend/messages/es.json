@@ -303,6 +303,218 @@
       "description": "Sube tu grabación para transcripción automática y seguimiento",
       "button": "Ir a Seguimiento"
     }
+  },
+  "followup": {
+    "title": "Agente de Seguimiento",
+    "subtitle": "Transcripción IA y resumen de tus conversaciones de ventas",
+    "loading": "Cargando...",
+    "form": {
+      "title": "Nuevo Seguimiento",
+      "selectProspect": "Seleccionar Prospecto",
+      "selectProspectPlaceholder": "Elige una empresa...",
+      "uploadAudio": "Archivo de Audio",
+      "uploadTranscript": "Archivo de Transcripción",
+      "dragDrop": "Arrastra el archivo aquí o haz clic para subir",
+      "supportedFormats": "Formatos soportados: MP3, WAV, M4A, WebM",
+      "includeCoaching": "Incluir feedback de coaching",
+      "startFollowup": "Iniciar Seguimiento",
+      "processing": "Procesando..."
+    },
+    "history": {
+      "title": "Seguimientos Recientes",
+      "empty": "Sin seguimientos aún",
+      "emptyDesc": "Sube tu primera grabación a la derecha →"
+    },
+    "stats": {
+      "title": "Resumen",
+      "completed": "Completado",
+      "processing": "En Progreso"
+    },
+    "whatYouGet": {
+      "title": "¿Qué obtienes?",
+      "item1": "Transcripción",
+      "item1Desc": "Reconocimiento de voz automático",
+      "item2": "Resumen",
+      "item2Desc": "Puntos clave y acciones",
+      "item3": "Email de Seguimiento",
+      "item3Desc": "Email listo para enviar"
+    },
+    "detail": {
+      "summary": "Resumen",
+      "commercialSignals": "Señales Comerciales",
+      "observations": "Observaciones y Señales",
+      "coachingFeedback": "Feedback de Coaching",
+      "actionItems": "Puntos de Acción",
+      "emailDraft": "Borrador de Email",
+      "transcription": "Transcripción",
+      "meetingInfo": "Info de Reunión",
+      "duration": "Duración",
+      "speakers": "Participantes",
+      "linkedResearch": "Investigación Vinculada",
+      "linkedPreparation": "Preparación Vinculada",
+      "audioPlayer": "Reproductor de Audio",
+      "nextProspect": "¿Siguiente Prospecto?",
+      "startNewResearch": "Iniciar nueva investigación"
+    },
+    "toast": {
+      "started": "Seguimiento iniciado",
+      "startedDesc": "Tu grabación está siendo procesada. Toma 2-5 minutos.",
+      "failed": "Seguimiento fallido",
+      "failedDesc": "No se pudo iniciar el seguimiento",
+      "copied": "¡Copiado!",
+      "selectProspect": "Selecciona un prospecto",
+      "selectFile": "Selecciona un archivo"
+    }
+  },
+  "profile": {
+    "title": "Perfil de Ventas",
+    "subtitle": "Tu perfil de ventas personal para salidas de IA personalizadas",
+    "loading": "Cargando perfil...",
+    "completeness": "Completitud del perfil",
+    "edit": "Editar",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "sections": {
+      "personal": "Datos Personales",
+      "experience": "Experiencia y Especialización",
+      "style": "Estilo de Ventas",
+      "goals": "Metas y Objetivos"
+    },
+    "fields": {
+      "fullName": "Nombre Completo",
+      "email": "Email",
+      "phone": "Teléfono",
+      "jobTitle": "Cargo",
+      "yearsExperience": "Años de Experiencia",
+      "industries": "Industrias",
+      "specializations": "Especializaciones",
+      "sellingStyle": "Estilo de Ventas",
+      "communicationPreference": "Preferencia de Comunicación",
+      "targetMarket": "Mercado Objetivo",
+      "quotaTarget": "Objetivo de Cuota"
+    },
+    "toast": {
+      "saved": "Perfil guardado",
+      "savedDesc": "Tus cambios han sido guardados",
+      "failed": "Error al guardar",
+      "failedDesc": "No se pudo guardar el perfil"
+    }
+  },
+  "companyProfile": {
+    "title": "Perfil de Empresa",
+    "subtitle": "Información de tu empresa para salidas de IA contextuales",
+    "loading": "Cargando perfil...",
+    "completeness": "Completitud del perfil",
+    "edit": "Editar",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "sections": {
+      "basic": "Información Básica",
+      "products": "Productos y Servicios",
+      "market": "Mercado y Competencia",
+      "values": "Valores y USPs"
+    },
+    "fields": {
+      "companyName": "Nombre de Empresa",
+      "website": "Sitio Web",
+      "industry": "Industria",
+      "companySize": "Tamaño de Empresa",
+      "products": "Productos/Servicios",
+      "targetAudience": "Audiencia Objetivo",
+      "competitors": "Competidores",
+      "uniqueSellingPoints": "Puntos de Venta Únicos",
+      "companyValues": "Valores de Empresa"
+    },
+    "toast": {
+      "saved": "Perfil guardado",
+      "savedDesc": "Tus cambios han sido guardados",
+      "failed": "Error al guardar",
+      "failedDesc": "No se pudo guardar el perfil"
+    }
+  },
+  "knowledgeBase": {
+    "title": "Base de Conocimiento",
+    "subtitle": "Sube documentos para entrenar la IA con tu conocimiento empresarial",
+    "loading": "Cargando documentos...",
+    "upload": {
+      "title": "Subir Documentos",
+      "dragDrop": "Arrastra archivos aquí o haz clic para subir",
+      "supportedFormats": "Formatos soportados: PDF, DOCX, TXT, MD",
+      "uploading": "Subiendo...",
+      "maxSize": "Máx 10MB por archivo"
+    },
+    "files": {
+      "title": "Documentos Subidos",
+      "empty": "Sin documentos aún",
+      "emptyDesc": "Sube tu primer documento arriba",
+      "processing": "Procesando...",
+      "processed": "Procesado",
+      "failed": "Fallido",
+      "delete": "Eliminar"
+    },
+    "toast": {
+      "uploaded": "Documento subido",
+      "uploadedDesc": "El documento está siendo procesado",
+      "deleted": "Documento eliminado",
+      "deletedDesc": "El documento ha sido eliminado de la base de conocimiento",
+      "failed": "Subida fallida",
+      "failedDesc": "No se pudo subir el documento"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Bienvenido de vuelta",
+      "subtitle": "Inicia sesión para continuar",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "submit": "Iniciar sesión",
+      "noAccount": "¿No tienes cuenta?",
+      "signUp": "Regístrate"
+    },
+    "signup": {
+      "title": "Crear cuenta",
+      "subtitle": "Comienza tu prueba gratuita",
+      "fullName": "Nombre completo",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "submit": "Registrarse",
+      "hasAccount": "¿Ya tienes cuenta?",
+      "logIn": "Iniciar sesión"
+    },
+    "errors": {
+      "invalidCredentials": "Credenciales inválidas",
+      "emailInUse": "Email ya está en uso",
+      "weakPassword": "Contraseña muy débil",
+      "passwordMismatch": "Las contraseñas no coinciden"
+    }
+  },
+  "onboarding": {
+    "title": "Bienvenido a SalesPrep AI",
+    "subtitle": "Configuremos tu cuenta",
+    "steps": {
+      "profile": "Perfil de Ventas",
+      "company": "Perfil de Empresa",
+      "complete": "¡Listo!"
+    },
+    "profile": {
+      "title": "Cuéntanos sobre ti",
+      "description": "Esta información ayuda a la IA a generar salidas personalizadas"
+    },
+    "company": {
+      "title": "Cuéntanos sobre tu empresa",
+      "description": "Esto ayuda a la IA a entender tus productos y servicios"
+    },
+    "complete": {
+      "title": "¡Todo listo!",
+      "description": "Ahora puedes comenzar tu primera investigación de prospectos",
+      "button": "Ir al Panel"
+    },
+    "skip": "Saltar",
+    "next": "Siguiente",
+    "back": "Atrás",
+    "finish": "Finalizar"
   }
 }
 

@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Loader2, CheckCircle2, ArrowRight, Sparkles } from "lucide-react"
+import { useTranslations } from 'next-intl'
 
 interface InterviewResponse {
   session_id: string

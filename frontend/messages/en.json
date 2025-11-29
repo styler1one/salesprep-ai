@@ -303,6 +303,218 @@
       "description": "Upload your meeting recording for automatic transcription and follow-up",
       "button": "Go to Follow-up"
     }
+  },
+  "followup": {
+    "title": "Follow-up Agent",
+    "subtitle": "AI transcription and summary of your sales conversations",
+    "loading": "Loading...",
+    "form": {
+      "title": "New Follow-up",
+      "selectProspect": "Select Prospect",
+      "selectProspectPlaceholder": "Choose a company...",
+      "uploadAudio": "Audio File",
+      "uploadTranscript": "Transcript File",
+      "dragDrop": "Drag file here or click to upload",
+      "supportedFormats": "Supported formats: MP3, WAV, M4A, WebM",
+      "includeCoaching": "Include coaching feedback",
+      "startFollowup": "Start Follow-up",
+      "processing": "Processing..."
+    },
+    "history": {
+      "title": "Recent Follow-ups",
+      "empty": "No follow-ups yet",
+      "emptyDesc": "Upload your first meeting recording on the right →"
+    },
+    "stats": {
+      "title": "Overview",
+      "completed": "Completed",
+      "processing": "In Progress"
+    },
+    "whatYouGet": {
+      "title": "What do you get?",
+      "item1": "Transcription",
+      "item1Desc": "Automatic speech-to-text",
+      "item2": "Summary",
+      "item2Desc": "Key points and actions",
+      "item3": "Follow-up Email",
+      "item3Desc": "Ready-to-send email"
+    },
+    "detail": {
+      "summary": "Summary",
+      "commercialSignals": "Commercial Signals",
+      "observations": "Observations & Signals",
+      "coachingFeedback": "Coaching Feedback",
+      "actionItems": "Action Items",
+      "emailDraft": "Email Draft",
+      "transcription": "Transcription",
+      "meetingInfo": "Meeting Info",
+      "duration": "Duration",
+      "speakers": "Speakers",
+      "linkedResearch": "Linked Research",
+      "linkedPreparation": "Linked Preparation",
+      "audioPlayer": "Audio Player",
+      "nextProspect": "Next Prospect?",
+      "startNewResearch": "Start new research"
+    },
+    "toast": {
+      "started": "Follow-up started",
+      "startedDesc": "Your recording is being processed. This takes 2-5 minutes.",
+      "failed": "Follow-up failed",
+      "failedDesc": "Could not start the follow-up",
+      "copied": "Copied!",
+      "selectProspect": "Select a prospect",
+      "selectFile": "Select a file"
+    }
+  },
+  "profile": {
+    "title": "Sales Profile",
+    "subtitle": "Your personal sales profile for personalized AI outputs",
+    "loading": "Loading profile...",
+    "completeness": "Profile completeness",
+    "edit": "Edit",
+    "save": "Save",
+    "saving": "Saving...",
+    "sections": {
+      "personal": "Personal Details",
+      "experience": "Experience & Expertise",
+      "style": "Sales Style",
+      "goals": "Goals & Targets"
+    },
+    "fields": {
+      "fullName": "Full Name",
+      "email": "Email",
+      "phone": "Phone",
+      "jobTitle": "Job Title",
+      "yearsExperience": "Years of Experience",
+      "industries": "Industries",
+      "specializations": "Specializations",
+      "sellingStyle": "Selling Style",
+      "communicationPreference": "Communication Preference",
+      "targetMarket": "Target Market",
+      "quotaTarget": "Quota Target"
+    },
+    "toast": {
+      "saved": "Profile saved",
+      "savedDesc": "Your changes have been saved",
+      "failed": "Save failed",
+      "failedDesc": "Could not save profile"
+    }
+  },
+  "companyProfile": {
+    "title": "Company Profile",
+    "subtitle": "Your company information for contextual AI outputs",
+    "loading": "Loading profile...",
+    "completeness": "Profile completeness",
+    "edit": "Edit",
+    "save": "Save",
+    "saving": "Saving...",
+    "sections": {
+      "basic": "Basic Information",
+      "products": "Products & Services",
+      "market": "Market & Competition",
+      "values": "Values & USPs"
+    },
+    "fields": {
+      "companyName": "Company Name",
+      "website": "Website",
+      "industry": "Industry",
+      "companySize": "Company Size",
+      "products": "Products/Services",
+      "targetAudience": "Target Audience",
+      "competitors": "Competitors",
+      "uniqueSellingPoints": "Unique Selling Points",
+      "companyValues": "Company Values"
+    },
+    "toast": {
+      "saved": "Profile saved",
+      "savedDesc": "Your changes have been saved",
+      "failed": "Save failed",
+      "failedDesc": "Could not save profile"
+    }
+  },
+  "knowledgeBase": {
+    "title": "Knowledge Base",
+    "subtitle": "Upload documents to train the AI with your company knowledge",
+    "loading": "Loading documents...",
+    "upload": {
+      "title": "Upload Documents",
+      "dragDrop": "Drag files here or click to upload",
+      "supportedFormats": "Supported formats: PDF, DOCX, TXT, MD",
+      "uploading": "Uploading...",
+      "maxSize": "Max 10MB per file"
+    },
+    "files": {
+      "title": "Uploaded Documents",
+      "empty": "No documents yet",
+      "emptyDesc": "Upload your first document above",
+      "processing": "Processing...",
+      "processed": "Processed",
+      "failed": "Failed",
+      "delete": "Delete"
+    },
+    "toast": {
+      "uploaded": "Document uploaded",
+      "uploadedDesc": "The document is being processed",
+      "deleted": "Document deleted",
+      "deletedDesc": "The document has been removed from the knowledge base",
+      "failed": "Upload failed",
+      "failedDesc": "Could not upload document"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Log in to continue",
+      "email": "Email address",
+      "password": "Password",
+      "forgotPassword": "Forgot password?",
+      "submit": "Log in",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up"
+    },
+    "signup": {
+      "title": "Create account",
+      "subtitle": "Start your free trial",
+      "fullName": "Full name",
+      "email": "Email address",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "submit": "Sign up",
+      "hasAccount": "Already have an account?",
+      "logIn": "Log in"
+    },
+    "errors": {
+      "invalidCredentials": "Invalid credentials",
+      "emailInUse": "Email is already in use",
+      "weakPassword": "Password is too weak",
+      "passwordMismatch": "Passwords do not match"
+    }
+  },
+  "onboarding": {
+    "title": "Welcome to SalesPrep AI",
+    "subtitle": "Let's set up your account",
+    "steps": {
+      "profile": "Sales Profile",
+      "company": "Company Profile",
+      "complete": "Done!"
+    },
+    "profile": {
+      "title": "Tell us about yourself",
+      "description": "This information helps the AI generate personalized outputs"
+    },
+    "company": {
+      "title": "Tell us about your company",
+      "description": "This helps the AI understand your products and services"
+    },
+    "complete": {
+      "title": "You're all set!",
+      "description": "You can now start your first prospect research",
+      "button": "Go to Dashboard"
+    },
+    "skip": "Skip",
+    "next": "Next",
+    "back": "Back",
+    "finish": "Finish"
   }
 }
 
