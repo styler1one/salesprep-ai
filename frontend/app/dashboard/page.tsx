@@ -252,12 +252,14 @@ export default function DashboardPage() {
             icon: Icons.search,
             color: 'blue'
         }
-        if (meetingPreps.length === 0 && researchBriefs.some(b => b.status === 'completed')) return { 
-            text: 'Je hebt research klaar staan - maak nu een gepersonaliseerde gespreksvoorbereiding', 
-            action: '/dashboard/preparation', 
-            actionText: 'Maak Voorbereiding',
-            icon: Icons.fileText,
-            color: 'green'
+        // Find a completed research without contacts to suggest adding contacts first
+        const completedResearch = researchBriefs.find(b => b.status === 'completed')
+        if (meetingPreps.length === 0 && completedResearch) return { 
+            text: `Research voor ${completedResearch.company_name} is klaar - voeg nu een contactpersoon toe`, 
+            action: `/dashboard/research/${completedResearch.id}`, 
+            actionText: 'Voeg Contact Toe',
+            icon: Icons.userPlus,
+            color: 'amber'
         }
         if (followups.length === 0 && meetingPreps.some(p => p.status === 'completed')) return { 
             text: 'Na je meeting: upload de opname voor transcriptie en follow-up acties', 
@@ -267,14 +269,14 @@ export default function DashboardPage() {
             color: 'orange'
         }
         
-        // Check for prospects that need attention
-        const needsPrep = prospects.find(p => p.hasResearch && p.researchStatus === 'completed' && !p.hasPrep)
-        if (needsPrep) return {
-            text: `Je research voor ${needsPrep.company_name} is klaar - maak nu een voorbereiding`,
-            action: '/dashboard/preparation',
-            actionText: 'Voorbereiden',
-            icon: Icons.fileText,
-            color: 'green'
+        // Check for prospects that need attention - first add contact, then prep
+        const needsContact = prospects.find(p => p.hasResearch && p.researchStatus === 'completed' && !p.hasPrep)
+        if (needsContact) return {
+            text: `Je research voor ${needsContact.company_name} is klaar - voeg nu een contactpersoon toe`,
+            action: `/dashboard/research/${needsContact.researchId}`,
+            actionText: 'Contact Toevoegen',
+            icon: Icons.userPlus,
+            color: 'amber'
         }
         
         const needsFollowup = prospects.find(p => p.hasPrep && p.prepStatus === 'completed' && !p.hasFollowup)
@@ -302,6 +304,7 @@ export default function DashboardPage() {
         blue: { bg: 'bg-blue-50 dark:bg-blue-950', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800', gradient: 'from-blue-500 to-blue-600' },
         green: { bg: 'bg-green-50 dark:bg-green-950', text: 'text-green-600 dark:text-green-400', border: 'border-green-200 dark:border-green-800', gradient: 'from-green-500 to-green-600' },
         orange: { bg: 'bg-orange-50 dark:bg-orange-950', text: 'text-orange-600 dark:text-orange-400', border: 'border-orange-200 dark:border-orange-800', gradient: 'from-orange-500 to-orange-600' },
+        amber: { bg: 'bg-amber-50 dark:bg-amber-950', text: 'text-amber-600 dark:text-amber-400', border: 'border-amber-200 dark:border-amber-800', gradient: 'from-amber-500 to-amber-600' },
         purple: { bg: 'bg-purple-50 dark:bg-purple-950', text: 'text-purple-600 dark:text-purple-400', border: 'border-purple-200 dark:border-purple-800', gradient: 'from-purple-500 to-purple-600' },
         violet: { bg: 'bg-violet-50 dark:bg-violet-950', text: 'text-violet-600 dark:text-violet-400', border: 'border-violet-200 dark:border-violet-800', gradient: 'from-violet-500 to-violet-600' },
         indigo: { bg: 'bg-indigo-50 dark:bg-indigo-950', text: 'text-indigo-600 dark:text-indigo-400', border: 'border-indigo-200 dark:border-indigo-800', gradient: 'from-indigo-500 to-indigo-600' },

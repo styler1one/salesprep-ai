@@ -730,28 +730,50 @@ export default function ResearchBriefPage() {
                   )}
                 </div>
 
-                {/* CTA Panel */}
-                <div className="rounded-xl border-2 border-green-200 dark:border-green-800 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 p-4 shadow-sm">
-                  <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
-                    <Icons.arrowRight className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    Volgende Stap
-                  </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
-                    Genereer een gepersonaliseerde gespreksvoorbereiding met alle verzamelde context.
-                  </p>
-                  <Button 
-                    className="w-full bg-green-600 hover:bg-green-700"
-                    onClick={handleStartPreparation}
-                  >
-                    <Icons.fileText className="h-4 w-4 mr-2" />
-                    Start Preparation
-                  </Button>
-                  {contacts.length > 0 && (
+                {/* CTA Panel - Conditional based on contacts */}
+                {contacts.length === 0 ? (
+                  // No contacts yet - prompt to add contact first
+                  <div className="rounded-xl border-2 border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950 dark:to-yellow-950 p-4 shadow-sm">
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                      <Icons.user className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                      Voeg Contactpersoon Toe
+                    </h3>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
+                      Voeg minimaal één contactpersoon toe voor een gepersonaliseerde voorbereiding.
+                    </p>
+                    <Button 
+                      className="w-full bg-amber-600 hover:bg-amber-700"
+                      onClick={() => setShowAddContact(true)}
+                    >
+                      <Icons.userPlus className="h-4 w-4 mr-2" />
+                      Contactpersoon Toevoegen
+                    </Button>
+                    <p className="text-xs text-amber-700 dark:text-amber-400 mt-2 text-center">
+                      Daarna kun je de voorbereiding starten
+                    </p>
+                  </div>
+                ) : (
+                  // Has contacts - can proceed to preparation
+                  <div className="rounded-xl border-2 border-green-200 dark:border-green-800 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 p-4 shadow-sm">
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                      <Icons.arrowRight className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      Volgende Stap
+                    </h3>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
+                      Genereer een gepersonaliseerde gespreksvoorbereiding met alle verzamelde context.
+                    </p>
+                    <Button 
+                      className="w-full bg-green-600 hover:bg-green-700"
+                      onClick={handleStartPreparation}
+                    >
+                      <Icons.fileText className="h-4 w-4 mr-2" />
+                      Start Preparation
+                    </Button>
                     <p className="text-xs text-green-700 dark:text-green-400 mt-2 text-center">
                       Met {contacts.length} contactperso{contacts.length === 1 ? 'on' : 'nen'}
                     </p>
-                  )}
-                </div>
+                  </div>
+                )}
 
               </div>
             </div>
@@ -759,12 +781,21 @@ export default function ResearchBriefPage() {
 
           {/* Mobile: Floating Action Button for Contacts/Preparation */}
           <div className="lg:hidden fixed bottom-6 right-6 flex flex-col gap-2">
-            <Button 
-              className="rounded-full h-14 w-14 shadow-lg bg-green-600 hover:bg-green-700"
-              onClick={handleStartPreparation}
-            >
-              <Icons.arrowRight className="h-6 w-6" />
-            </Button>
+            {contacts.length === 0 ? (
+              <Button 
+                className="rounded-full h-14 w-14 shadow-lg bg-amber-600 hover:bg-amber-700"
+                onClick={() => setShowAddContact(true)}
+              >
+                <Icons.userPlus className="h-6 w-6" />
+              </Button>
+            ) : (
+              <Button 
+                className="rounded-full h-14 w-14 shadow-lg bg-green-600 hover:bg-green-700"
+                onClick={handleStartPreparation}
+              >
+                <Icons.arrowRight className="h-6 w-6" />
+              </Button>
+            )}
           </div>
 
         </div>

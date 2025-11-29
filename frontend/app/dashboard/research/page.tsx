@@ -429,19 +429,6 @@ export default function ResearchPage() {
                         {brief.status === 'completed' && (
                           <>
                             <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                sessionStorage.setItem('prepareForCompany', brief.company_name)
-                                router.push('/dashboard/preparation')
-                              }}
-                            >
-                              <Icons.arrowRight className="h-3 w-3 mr-1" />
-                              Preparation
-                            </Button>
-                            <Button
                               variant="default"
                               size="sm"
                               className="h-8 text-xs bg-blue-600 hover:bg-blue-700"
@@ -450,8 +437,8 @@ export default function ResearchPage() {
                                 router.push(`/dashboard/research/${brief.id}`)
                               }}
                             >
-                              <Icons.eye className="h-3 w-3 mr-1" />
-                              Bekijk
+                              <Icons.arrowRight className="h-3 w-3 mr-1" />
+                              Volgende Stap
                             </Button>
                           </>
                         )}
