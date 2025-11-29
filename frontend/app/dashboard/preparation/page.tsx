@@ -13,6 +13,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout'
 import { ProspectAutocomplete } from '@/components/prospect-autocomplete'
+import { useTranslations } from 'next-intl'
 
 interface MeetingPrep {
   id: string
@@ -43,6 +44,7 @@ export default function PreparationPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const { toast } = useToast()
+  const t = useTranslations('preparation')
 
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(false)

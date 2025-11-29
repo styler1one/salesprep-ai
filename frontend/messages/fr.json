@@ -247,6 +247,62 @@
       "startPrep": "Démarrer Préparation",
       "startPrepDesc": "Aller au Brief de Réunion avec {count} contact(s)"
     }
+  },
+  "preparation": {
+    "title": "Préparation de Réunion",
+    "subtitle": "Briefings générés par IA pour vos conversations commerciales",
+    "loading": "Chargement...",
+    "form": {
+      "title": "Nouvelle Préparation",
+      "selectProspect": "Sélectionner Prospect",
+      "selectProspectPlaceholder": "Choisir une entreprise...",
+      "selectContacts": "Sélectionner Contacts",
+      "noContacts": "Aucun contact disponible",
+      "addContactsFirst": "Ajoutez d'abord des contacts dans Recherche",
+      "customNotes": "Contexte Supplémentaire",
+      "customNotesPlaceholder": "Optionnel: info supplémentaire pour cette réunion...",
+      "startPrep": "Générer Préparation",
+      "generating": "Génération..."
+    },
+    "history": {
+      "title": "Mes Préparations",
+      "empty": "Pas encore de préparations",
+      "emptyDesc": "Démarrez votre première préparation à droite →"
+    },
+    "stats": {
+      "title": "Aperçu",
+      "completed": "Terminé",
+      "generating": "En cours"
+    },
+    "whatYouGet": {
+      "title": "Qu'obtenez-vous ?",
+      "item1": "Ouverture personnalisée",
+      "item1Desc": "Adaptée au prospect",
+      "item2": "Sujets de conversation",
+      "item2Desc": "Points de discussion pertinents",
+      "item3": "Aperçu DMU",
+      "item3Desc": "Décideurs cartographiés"
+    },
+    "brief": {
+      "view": "Voir",
+      "copy": "Copier",
+      "copied": "Copié !",
+      "download": "Télécharger PDF",
+      "generatedFor": "Préparation pour"
+    },
+    "toast": {
+      "started": "Préparation démarrée",
+      "startedDesc": "Votre brief de réunion est en cours de génération. Cela prend 1-2 minutes.",
+      "failed": "Préparation échouée",
+      "failedDesc": "Impossible de démarrer la préparation",
+      "selectProspect": "Sélectionnez un prospect",
+      "selectContacts": "Sélectionnez des contacts"
+    },
+    "nextStep": {
+      "title": "Après votre Réunion",
+      "description": "Téléchargez votre enregistrement pour transcription automatique et suivi",
+      "button": "Aller au Suivi"
+    }
   }
 }
 

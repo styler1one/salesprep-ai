@@ -247,6 +247,62 @@
       "startPrep": "بدء التحضير",
       "startPrepDesc": "الانتقال لملخص الاجتماع مع {count} جهة اتصال"
     }
+  },
+  "preparation": {
+    "title": "تحضير الاجتماع",
+    "subtitle": "ملخصات مولدة بالذكاء الاصطناعي لمحادثات المبيعات",
+    "loading": "جاري التحميل...",
+    "form": {
+      "title": "تحضير جديد",
+      "selectProspect": "اختر العميل المحتمل",
+      "selectProspectPlaceholder": "اختر شركة...",
+      "selectContacts": "اختر جهات الاتصال",
+      "noContacts": "لا توجد جهات اتصال متاحة",
+      "addContactsFirst": "أضف جهات اتصال أولاً في البحث",
+      "customNotes": "سياق إضافي",
+      "customNotesPlaceholder": "اختياري: معلومات إضافية لهذا الاجتماع...",
+      "startPrep": "إنشاء التحضير",
+      "generating": "جاري الإنشاء..."
+    },
+    "history": {
+      "title": "تحضيراتي",
+      "empty": "لا توجد تحضيرات بعد",
+      "emptyDesc": "ابدأ أول تحضير لك على اليمين ←"
+    },
+    "stats": {
+      "title": "نظرة عامة",
+      "completed": "مكتمل",
+      "generating": "قيد التنفيذ"
+    },
+    "whatYouGet": {
+      "title": "ماذا تحصل؟",
+      "item1": "افتتاحية مخصصة",
+      "item1Desc": "مصممة للعميل المحتمل",
+      "item2": "مواضيع المحادثة",
+      "item2Desc": "نقاط نقاش ذات صلة",
+      "item3": "نظرة عامة على DMU",
+      "item3Desc": "صناع القرار محددين"
+    },
+    "brief": {
+      "view": "عرض",
+      "copy": "نسخ",
+      "copied": "تم النسخ!",
+      "download": "تحميل PDF",
+      "generatedFor": "تحضير لـ"
+    },
+    "toast": {
+      "started": "بدأ التحضير",
+      "startedDesc": "جاري إنشاء ملخص اجتماعك. يستغرق 1-2 دقيقة.",
+      "failed": "فشل التحضير",
+      "failedDesc": "تعذر بدء التحضير",
+      "selectProspect": "اختر عميلاً محتملاً",
+      "selectContacts": "اختر جهات اتصال"
+    },
+    "nextStep": {
+      "title": "بعد اجتماعك",
+      "description": "ارفع تسجيلك للنسخ التلقائي والمتابعة",
+      "button": "انتقل للمتابعة"
+    }
   }
 }
 

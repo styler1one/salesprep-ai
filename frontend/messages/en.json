@@ -247,6 +247,62 @@
       "startPrep": "Start Preparation",
       "startPrepDesc": "Go to Meeting Prep with {count} contact(s)"
     }
+  },
+  "preparation": {
+    "title": "Meeting Preparation",
+    "subtitle": "AI-generated briefings for your sales conversations",
+    "loading": "Loading...",
+    "form": {
+      "title": "New Preparation",
+      "selectProspect": "Select Prospect",
+      "selectProspectPlaceholder": "Choose a company...",
+      "selectContacts": "Select Contacts",
+      "noContacts": "No contacts available",
+      "addContactsFirst": "Add contacts first in Research",
+      "customNotes": "Extra Context",
+      "customNotesPlaceholder": "Optional: extra info for this meeting...",
+      "startPrep": "Generate Preparation",
+      "generating": "Generating..."
+    },
+    "history": {
+      "title": "My Preparations",
+      "empty": "No preparations yet",
+      "emptyDesc": "Start your first meeting preparation on the right →"
+    },
+    "stats": {
+      "title": "Overview",
+      "completed": "Completed",
+      "generating": "In Progress"
+    },
+    "whatYouGet": {
+      "title": "What do you get?",
+      "item1": "Personalized opening",
+      "item1Desc": "Tailored to the prospect",
+      "item2": "Conversation topics",
+      "item2Desc": "Relevant talking points",
+      "item3": "DMU Overview",
+      "item3Desc": "Decision makers mapped"
+    },
+    "brief": {
+      "view": "View",
+      "copy": "Copy",
+      "copied": "Copied!",
+      "download": "Download PDF",
+      "generatedFor": "Preparation for"
+    },
+    "toast": {
+      "started": "Preparation started",
+      "startedDesc": "Your meeting brief is being generated. This takes 1-2 minutes.",
+      "failed": "Preparation failed",
+      "failedDesc": "Could not start the preparation",
+      "selectProspect": "Select a prospect",
+      "selectContacts": "Select contacts"
+    },
+    "nextStep": {
+      "title": "After your Meeting",
+      "description": "Upload your meeting recording for automatic transcription and follow-up",
+      "button": "Go to Follow-up"
+    }
   }
 }
 

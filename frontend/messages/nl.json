@@ -247,6 +247,62 @@
       "startPrep": "Start Voorbereiding",
       "startPrepDesc": "Ga naar Meeting Prep met {count} contact(en)"
     }
+  },
+  "preparation": {
+    "title": "Meeting Voorbereiding",
+    "subtitle": "AI-gegenereerde briefings voor je verkoopgesprekken",
+    "loading": "Laden...",
+    "form": {
+      "title": "Nieuwe Voorbereiding",
+      "selectProspect": "Selecteer Prospect",
+      "selectProspectPlaceholder": "Kies een bedrijf...",
+      "selectContacts": "Selecteer Contactpersonen",
+      "noContacts": "Geen contactpersonen beschikbaar",
+      "addContactsFirst": "Voeg eerst contactpersonen toe in Research",
+      "customNotes": "Extra Context",
+      "customNotesPlaceholder": "Optioneel: extra info voor deze meeting...",
+      "startPrep": "Genereer Voorbereiding",
+      "generating": "Genereren..."
+    },
+    "history": {
+      "title": "Mijn Voorbereidingen",
+      "empty": "Nog geen voorbereidingen",
+      "emptyDesc": "Start je eerste meeting voorbereiding hiernaast →"
+    },
+    "stats": {
+      "title": "Overzicht",
+      "completed": "Voltooid",
+      "generating": "Bezig"
+    },
+    "whatYouGet": {
+      "title": "Wat krijg je?",
+      "item1": "Gepersonaliseerde opening",
+      "item1Desc": "Afgestemd op de prospect",
+      "item2": "Gespreksonderwerpen",
+      "item2Desc": "Relevante talking points",
+      "item3": "DMU Overzicht",
+      "item3Desc": "Besluitvormers in kaart"
+    },
+    "brief": {
+      "view": "Bekijk",
+      "copy": "Kopieer",
+      "copied": "Gekopieerd!",
+      "download": "Download PDF",
+      "generatedFor": "Voorbereiding voor"
+    },
+    "toast": {
+      "started": "Voorbereiding gestart",
+      "startedDesc": "Je meeting brief wordt gegenereerd. Dit duurt 1-2 minuten.",
+      "failed": "Voorbereiding mislukt",
+      "failedDesc": "Kon de voorbereiding niet starten",
+      "selectProspect": "Selecteer een prospect",
+      "selectContacts": "Selecteer contactpersonen"
+    },
+    "nextStep": {
+      "title": "Na je Meeting",
+      "description": "Upload je meeting opname voor automatische transcriptie en follow-up",
+      "button": "Naar Follow-up"
+    }
   }
 }
 

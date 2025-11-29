@@ -247,6 +247,62 @@
       "startPrep": "Vorbereitung starten",
       "startPrepDesc": "Zum Meeting-Brief mit {count} Kontakt(en)"
     }
+  },
+  "preparation": {
+    "title": "Meeting-Vorbereitung",
+    "subtitle": "KI-generierte Briefings für deine Verkaufsgespräche",
+    "loading": "Laden...",
+    "form": {
+      "title": "Neue Vorbereitung",
+      "selectProspect": "Interessent auswählen",
+      "selectProspectPlaceholder": "Wähle ein Unternehmen...",
+      "selectContacts": "Kontakte auswählen",
+      "noContacts": "Keine Kontakte verfügbar",
+      "addContactsFirst": "Erst Kontakte in Recherche hinzufügen",
+      "customNotes": "Extra Kontext",
+      "customNotesPlaceholder": "Optional: Extra Info für dieses Meeting...",
+      "startPrep": "Vorbereitung generieren",
+      "generating": "Generieren..."
+    },
+    "history": {
+      "title": "Meine Vorbereitungen",
+      "empty": "Noch keine Vorbereitungen",
+      "emptyDesc": "Starte deine erste Meeting-Vorbereitung rechts →"
+    },
+    "stats": {
+      "title": "Übersicht",
+      "completed": "Abgeschlossen",
+      "generating": "In Bearbeitung"
+    },
+    "whatYouGet": {
+      "title": "Was bekommst du?",
+      "item1": "Personalisierte Eröffnung",
+      "item1Desc": "Auf den Interessenten abgestimmt",
+      "item2": "Gesprächsthemen",
+      "item2Desc": "Relevante Talking Points",
+      "item3": "DMU-Übersicht",
+      "item3Desc": "Entscheidungsträger kartiert"
+    },
+    "brief": {
+      "view": "Ansehen",
+      "copy": "Kopieren",
+      "copied": "Kopiert!",
+      "download": "PDF herunterladen",
+      "generatedFor": "Vorbereitung für"
+    },
+    "toast": {
+      "started": "Vorbereitung gestartet",
+      "startedDesc": "Dein Meeting-Brief wird generiert. Dies dauert 1-2 Minuten.",
+      "failed": "Vorbereitung fehlgeschlagen",
+      "failedDesc": "Konnte die Vorbereitung nicht starten",
+      "selectProspect": "Wähle einen Interessenten",
+      "selectContacts": "Wähle Kontakte aus"
+    },
+    "nextStep": {
+      "title": "Nach deinem Meeting",
+      "description": "Lade deine Aufnahme hoch für automatische Transkription und Nachverfolgung",
+      "button": "Zur Nachverfolgung"
+    }
   }
 }
 

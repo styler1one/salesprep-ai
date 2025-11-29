@@ -247,6 +247,62 @@
       "startPrep": "Iniciar Preparación",
       "startPrepDesc": "Ir al Brief de Reunión con {count} contacto(s)"
     }
+  },
+  "preparation": {
+    "title": "Preparación de Reunión",
+    "subtitle": "Briefings generados por IA para tus conversaciones de ventas",
+    "loading": "Cargando...",
+    "form": {
+      "title": "Nueva Preparación",
+      "selectProspect": "Seleccionar Prospecto",
+      "selectProspectPlaceholder": "Elige una empresa...",
+      "selectContacts": "Seleccionar Contactos",
+      "noContacts": "No hay contactos disponibles",
+      "addContactsFirst": "Primero agrega contactos en Investigación",
+      "customNotes": "Contexto Adicional",
+      "customNotesPlaceholder": "Opcional: info extra para esta reunión...",
+      "startPrep": "Generar Preparación",
+      "generating": "Generando..."
+    },
+    "history": {
+      "title": "Mis Preparaciones",
+      "empty": "Aún no hay preparaciones",
+      "emptyDesc": "Inicia tu primera preparación a la derecha →"
+    },
+    "stats": {
+      "title": "Resumen",
+      "completed": "Completado",
+      "generating": "En Progreso"
+    },
+    "whatYouGet": {
+      "title": "¿Qué obtienes?",
+      "item1": "Apertura personalizada",
+      "item1Desc": "Adaptada al prospecto",
+      "item2": "Temas de conversación",
+      "item2Desc": "Puntos de discusión relevantes",
+      "item3": "Resumen DMU",
+      "item3Desc": "Tomadores de decisiones mapeados"
+    },
+    "brief": {
+      "view": "Ver",
+      "copy": "Copiar",
+      "copied": "¡Copiado!",
+      "download": "Descargar PDF",
+      "generatedFor": "Preparación para"
+    },
+    "toast": {
+      "started": "Preparación iniciada",
+      "startedDesc": "Tu brief de reunión se está generando. Toma 1-2 minutos.",
+      "failed": "Preparación fallida",
+      "failedDesc": "No se pudo iniciar la preparación",
+      "selectProspect": "Selecciona un prospecto",
+      "selectContacts": "Selecciona contactos"
+    },
+    "nextStep": {
+      "title": "Después de tu Reunión",
+      "description": "Sube tu grabación para transcripción automática y seguimiento",
+      "button": "Ir a Seguimiento"
+    }
   }
 }
 
