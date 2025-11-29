@@ -16,13 +16,18 @@ import {
   Save,
   CreditCard,
   Link,
-  Bell
+  Bell,
+  ExternalLink,
+  Sparkles,
+  Crown
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useToast } from '@/components/ui/use-toast'
 import { useSettings } from '@/lib/settings-context'
 import { LanguageSelect } from '@/components/language-select'
 import { Badge } from '@/components/ui/badge'
+import { useBilling } from '@/lib/billing-context'
+import { UsageMeter } from '@/components/usage-meter'
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -32,10 +37,12 @@ export default function SettingsPage() {
   const { toast } = useToast()
   
   const { settings, updateSettings, loading: settingsLoading } = useSettings()
+  const { subscription, usage, loading: billingLoading, createCheckoutSession, openBillingPortal } = useBilling()
   
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [billingActionLoading, setBillingActionLoading] = useState(false)
   
   // Local state for form
   const [appLanguage, setAppLanguage] = useState('en')
@@ -103,6 +110,58 @@ export default function SettingsPage() {
     appLanguage !== settings.app_language ||
     outputLanguage !== settings.output_language ||
     emailLanguage !== settings.email_language
+
+  const handleUpgrade = async () => {
+    setBillingActionLoading(true)
+    try {
+      const checkoutUrl = await createCheckoutSession('solo_monthly')
+      window.location.href = checkoutUrl
+    } catch (error) {
+      console.error('Failed to start checkout:', error)
+      toast({
+        title: 'Error',
+        description: 'Kon checkout niet starten. Probeer opnieuw.',
+        variant: 'destructive',
+      })
+    } finally {
+      setBillingActionLoading(false)
+    }
+  }
+
+  const handleManageSubscription = async () => {
+    setBillingActionLoading(true)
+    try {
+      const portalUrl = await openBillingPortal()
+      window.location.href = portalUrl
+    } catch (error) {
+      console.error('Failed to open portal:', error)
+      toast({
+        title: 'Error',
+        description: 'Kon beheerportaal niet openen. Probeer opnieuw.',
+        variant: 'destructive',
+      })
+    } finally {
+      setBillingActionLoading(false)
+    }
+  }
+
+  const getPlanBadge = () => {
+    if (!subscription) return null
+    
+    if (subscription.plan_id === 'free') {
+      return <Badge variant="secondary">Free</Badge>
+    }
+    if (subscription.is_trialing) {
+      return <Badge className="bg-amber-500">Trial</Badge>
+    }
+    if (subscription.plan_id.startsWith('solo')) {
+      return <Badge className="bg-gradient-to-r from-blue-500 to-indigo-500">Solo</Badge>
+    }
+    if (subscription.plan_id === 'teams') {
+      return <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">Teams</Badge>
+    }
+    return null
+  }
 
   if (loading || settingsLoading) {
     return (
@@ -232,22 +291,133 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Coming Soon: Subscription */}
-          <Card className="opacity-60">
+          {/* Subscription & Billing */}
+          <Card>
             <CardHeader>
-              <div className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-emerald-500" />
-                <CardTitle className="flex items-center gap-2">
-                  {t('sections.subscription')}
-                  <Badge variant="secondary" className="text-xs">
-                    {t('comingSoon')}
-                  </Badge>
-                </CardTitle>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-emerald-500" />
+                  <CardTitle>{t('sections.subscription')}</CardTitle>
+                </div>
+                {getPlanBadge()}
               </div>
               <CardDescription>
                 {t('subscription.description')}
               </CardDescription>
             </CardHeader>
+            <CardContent className="space-y-6">
+              {billingLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                </div>
+              ) : (
+                <>
+                  {/* Current Plan Info */}
+                  <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                        Huidig plan
+                      </span>
+                      {subscription?.is_trialing && (
+                        <span className="text-xs text-amber-600 dark:text-amber-400">
+                          Trial eindigt {subscription.trial_end ? new Date(subscription.trial_end).toLocaleDateString('nl-NL') : 'binnenkort'}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {subscription?.plan_id !== 'free' && (
+                        <Crown className="h-5 w-5 text-amber-500" />
+                      )}
+                      <span className="text-lg font-semibold text-slate-900 dark:text-white">
+                        {subscription?.plan_name || 'Free'}
+                      </span>
+                      {subscription?.price_cents && subscription.price_cents > 0 && (
+                        <span className="text-sm text-slate-500">
+                          €{(subscription.price_cents / 100).toFixed(0)}/{subscription.billing_interval === 'year' ? 'jaar' : 'maand'}
+                        </span>
+                      )}
+                    </div>
+                    {subscription?.cancel_at_period_end && (
+                      <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                        ⚠️ Je abonnement wordt geannuleerd op {subscription.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString('nl-NL') : 'het einde van de periode'}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Usage Meters */}
+                  {usage && (
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Gebruik deze maand
+                      </h4>
+                      <UsageMeter
+                        label="Research"
+                        used={usage.research.used}
+                        limit={usage.research.limit}
+                        unlimited={usage.research.unlimited}
+                        showUpgrade={subscription?.plan_id === 'free'}
+                        onUpgrade={handleUpgrade}
+                      />
+                      <UsageMeter
+                        label="Preparation"
+                        used={usage.preparation.used}
+                        limit={usage.preparation.limit}
+                        unlimited={usage.preparation.unlimited}
+                        showUpgrade={subscription?.plan_id === 'free'}
+                        onUpgrade={handleUpgrade}
+                      />
+                      <UsageMeter
+                        label="Follow-up"
+                        used={usage.followup.used}
+                        limit={usage.followup.limit}
+                        unlimited={usage.followup.unlimited}
+                        showUpgrade={subscription?.plan_id === 'free'}
+                        onUpgrade={handleUpgrade}
+                      />
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="pt-4 border-t flex flex-wrap gap-3">
+                    {subscription?.plan_id === 'free' ? (
+                      <Button 
+                        onClick={handleUpgrade}
+                        disabled={billingActionLoading}
+                        className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                      >
+                        {billingActionLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-4 w-4" />
+                        )}
+                        Upgrade naar Solo
+                      </Button>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        onClick={handleManageSubscription}
+                        disabled={billingActionLoading}
+                        className="gap-2"
+                      >
+                        {billingActionLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <ExternalLink className="h-4 w-4" />
+                        )}
+                        Beheer abonnement
+                      </Button>
+                    )}
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => router.push('/pricing')}
+                      className="gap-2"
+                    >
+                      Bekijk alle plannen
+                    </Button>
+                  </div>
+                </>
+              )}
+            </CardContent>
           </Card>
 
           {/* Coming Soon: Integrations */}
