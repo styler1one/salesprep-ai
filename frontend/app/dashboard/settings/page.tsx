@@ -366,7 +366,7 @@ export default function SettingsPage() {
                         used={usage.research.used}
                         limit={usage.research.limit}
                         unlimited={usage.research.unlimited}
-                        showUpgrade={subscription?.plan_id === 'free'}
+                        showUpgrade={!subscription || subscription.plan_id === 'free' || !subscription.is_paid}
                         onUpgrade={handleUpgrade}
                       />
                       <UsageMeter
@@ -374,7 +374,7 @@ export default function SettingsPage() {
                         used={usage.preparation.used}
                         limit={usage.preparation.limit}
                         unlimited={usage.preparation.unlimited}
-                        showUpgrade={subscription?.plan_id === 'free'}
+                        showUpgrade={!subscription || subscription.plan_id === 'free' || !subscription.is_paid}
                         onUpgrade={handleUpgrade}
                       />
                       <UsageMeter
@@ -382,7 +382,7 @@ export default function SettingsPage() {
                         used={usage.followup.used}
                         limit={usage.followup.limit}
                         unlimited={usage.followup.unlimited}
-                        showUpgrade={subscription?.plan_id === 'free'}
+                        showUpgrade={!subscription || subscription.plan_id === 'free' || !subscription.is_paid}
                         onUpgrade={handleUpgrade}
                       />
                     </div>
@@ -390,7 +390,8 @@ export default function SettingsPage() {
 
                   {/* Action Buttons */}
                   <div className="pt-4 border-t flex flex-wrap gap-3">
-                    {subscription?.plan_id === 'free' ? (
+                    {/* Show upgrade button for free users or when subscription not loaded */}
+                    {(!subscription || subscription.plan_id === 'free' || !subscription.is_paid) ? (
                       <Button 
                         onClick={handleUpgrade}
                         disabled={billingActionLoading}
@@ -404,6 +405,7 @@ export default function SettingsPage() {
                         {tBilling('upgradeToSolo')}
                       </Button>
                     ) : (
+                      /* Only show manage button for paid subscribers */
                       <Button 
                         variant="outline" 
                         onClick={handleManageSubscription}
