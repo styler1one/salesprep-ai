@@ -108,7 +108,10 @@ export function Header({ user, className }: HeaderProps) {
                     </button>
                     <button
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded-md text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                      onClick={() => setDropdownOpen(false)}
+                      onClick={() => {
+                        router.push('/dashboard/settings')
+                        setDropdownOpen(false)
+                      }}
                     >
                       <Icons.settings className="h-4 w-4" />
                       {t('settings')}
