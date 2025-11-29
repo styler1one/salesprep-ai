@@ -5,57 +5,55 @@ import { cn } from '@/lib/utils'
 import { Icons } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface SidebarProps {
   className?: string
 }
 
-const navigation = [
+// Navigation items with translation keys
+const navigationItems = [
   {
-    name: 'Dashboard',
+    key: 'dashboard',
     href: '/dashboard',
     icon: Icons.home,
     color: 'text-slate-500',
   },
   {
-    name: 'Research',
+    key: 'research',
     href: '/dashboard/research',
     icon: Icons.search,
     color: 'text-blue-500',
-    description: 'Prospect research',
   },
   {
-    name: 'Preparation',
+    key: 'preparation',
     href: '/dashboard/preparation',
     icon: Icons.fileText,
     color: 'text-green-500',
-    description: 'Meeting briefs',
   },
   {
-    name: 'Follow-up',
+    key: 'followup',
     href: '/dashboard/followup',
     icon: Icons.mail,
     color: 'text-orange-500',
-    description: 'Call summaries',
   },
   {
-    name: 'Knowledge Base',
+    key: 'knowledgeBase',
     href: '/dashboard/knowledge-base',
     icon: Icons.book,
     color: 'text-purple-500',
-    description: 'Documents',
   },
 ]
 
-const profileNavigation = [
+const profileItems = [
   {
-    name: 'Sales Profile',
+    key: 'profile',
     href: '/dashboard/profile',
     icon: Icons.user,
     color: 'text-violet-500',
   },
   {
-    name: 'Company Profile',
+    key: 'companyProfile',
     href: '/dashboard/company-profile',
     icon: Icons.building,
     color: 'text-indigo-500',
@@ -66,6 +64,7 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
+  const t = useTranslations('navigation')
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {
@@ -118,12 +117,13 @@ export function Sidebar({ className }: SidebarProps) {
               Main
             </p>
           )}
-          {navigation.map((item) => {
+          {navigationItems.map((item) => {
             const Icon = item.icon
             const active = isActive(item.href)
+            const name = t(item.key)
             return (
               <button
-                key={item.name}
+                key={item.key}
                 onClick={() => router.push(item.href)}
                 className={cn(
                   'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
@@ -132,11 +132,11 @@ export function Sidebar({ className }: SidebarProps) {
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/50',
                   collapsed && 'justify-center px-2'
                 )}
-                title={collapsed ? item.name : undefined}
+                title={collapsed ? name : undefined}
               >
                 <Icon className={cn('h-5 w-5 flex-shrink-0', active ? item.color : '')} />
                 {!collapsed && (
-                  <span className="truncate">{item.name}</span>
+                  <span className="truncate">{name}</span>
                 )}
               </button>
             )
@@ -150,12 +150,13 @@ export function Sidebar({ className }: SidebarProps) {
               Profiles
             </p>
           )}
-          {profileNavigation.map((item) => {
+          {profileItems.map((item) => {
             const Icon = item.icon
             const active = isActive(item.href)
+            const name = t(item.key)
             return (
               <button
-                key={item.name}
+                key={item.key}
                 onClick={() => router.push(item.href)}
                 className={cn(
                   'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
@@ -164,11 +165,11 @@ export function Sidebar({ className }: SidebarProps) {
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/50',
                   collapsed && 'justify-center px-2'
                 )}
-                title={collapsed ? item.name : undefined}
+                title={collapsed ? name : undefined}
               >
                 <Icon className={cn('h-5 w-5 flex-shrink-0', active ? item.color : '')} />
                 {!collapsed && (
-                  <span className="truncate">{item.name}</span>
+                  <span className="truncate">{name}</span>
                 )}
               </button>
             )

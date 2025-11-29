@@ -29,7 +29,9 @@
     "companyProfile": "Company Profile",
     "knowledgeBase": "Knowledge Base",
     "settings": "Settings",
-    "logout": "Log out"
+    "logout": "Log out",
+    "main": "Main",
+    "profiles": "Profiles"
   },
   "auth": {
     "login": "Log in",

@@ -29,7 +29,9 @@
     "companyProfile": "Unternehmensprofil",
     "knowledgeBase": "Wissensdatenbank",
     "settings": "Einstellungen",
-    "logout": "Abmelden"
+    "logout": "Abmelden",
+    "main": "Hauptmenü",
+    "profiles": "Profile"
   },
   "auth": {
     "login": "Anmelden",

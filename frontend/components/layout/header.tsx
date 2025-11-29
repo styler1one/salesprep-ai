@@ -8,7 +8,7 @@ import { Icons } from '@/components/icons'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { LanguageSelector } from '@/components/language-selector'
 import { cn } from '@/lib/utils'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import type { Locale } from '@/i18n/config'
 
 interface HeaderProps {
@@ -21,6 +21,7 @@ export function Header({ user, className }: HeaderProps) {
   const supabase = createClientComponentClient()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const locale = useLocale() as Locale
+  const t = useTranslations('navigation')
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -93,7 +94,7 @@ export function Header({ user, className }: HeaderProps) {
                       }}
                     >
                       <Icons.user className="h-4 w-4" />
-                      Sales Profile
+                      {t('profile')}
                     </button>
                     <button
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded-md text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
@@ -103,14 +104,14 @@ export function Header({ user, className }: HeaderProps) {
                       }}
                     >
                       <Icons.building className="h-4 w-4" />
-                      Company Profile
+                      {t('companyProfile')}
                     </button>
                     <button
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded-md text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                       onClick={() => setDropdownOpen(false)}
                     >
                       <Icons.settings className="h-4 w-4" />
-                      Settings
+                      {t('settings')}
                     </button>
                   </div>
                   <div className="p-1 border-t border-slate-200 dark:border-slate-700">
@@ -119,7 +120,7 @@ export function Header({ user, className }: HeaderProps) {
                       onClick={handleSignOut}
                     >
                       <Icons.logOut className="h-4 w-4" />
-                      Sign Out
+                      {t('logout')}
                     </button>
                   </div>
                 </div>

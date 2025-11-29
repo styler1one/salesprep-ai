@@ -29,7 +29,9 @@
     "companyProfile": "Bedrijfsprofiel",
     "knowledgeBase": "Kennisbank",
     "settings": "Instellingen",
-    "logout": "Uitloggen"
+    "logout": "Uitloggen",
+    "main": "Hoofdmenu",
+    "profiles": "Profielen"
   },
   "auth": {
     "login": "Inloggen",

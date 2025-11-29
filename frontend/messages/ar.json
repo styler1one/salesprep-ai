@@ -29,7 +29,9 @@
     "companyProfile": "ملف الشركة",
     "knowledgeBase": "قاعدة المعرفة",
     "settings": "الإعدادات",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "main": "الرئيسي",
+    "profiles": "الملفات الشخصية"
   },
   "auth": {
     "login": "تسجيل الدخول",

@@ -29,7 +29,9 @@
     "companyProfile": "Profil d'entreprise",
     "knowledgeBase": "Base de connaissances",
     "settings": "Paramètres",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "main": "Principal",
+    "profiles": "Profils"
   },
   "auth": {
     "login": "Connexion",
