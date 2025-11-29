@@ -13,21 +13,21 @@ function getRelativeTime(dateString: string): string {
     const now = new Date()
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
     
-    if (diffInSeconds < 60) return 'Just now'
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min ago`
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`
-    if (diffInSeconds < 172800) return 'Yesterday'
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`
-    return date.toLocaleDateString()
+    if (diffInSeconds < 60) return 'Zojuist'
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min geleden`
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} uur geleden`
+    if (diffInSeconds < 172800) return 'Gisteren'
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} dagen geleden`
+    return date.toLocaleDateString('nl-NL')
 }
 
 // Helper function for time-based greeting
 function getGreeting(): { greeting: string; emoji: string } {
     const hour = new Date().getHours()
-    if (hour < 12) return { greeting: 'Good morning', emoji: '☀️' }
-    if (hour < 17) return { greeting: 'Good afternoon', emoji: '👋' }
-    if (hour < 21) return { greeting: 'Good evening', emoji: '🌆' }
-    return { greeting: 'Good night', emoji: '🌙' }
+    if (hour < 12) return { greeting: 'Goedemorgen', emoji: '☀️' }
+    if (hour < 17) return { greeting: 'Goedemiddag', emoji: '👋' }
+    if (hour < 21) return { greeting: 'Goedenavond', emoji: '🌆' }
+    return { greeting: 'Goedenacht', emoji: '🌙' }
 }
 
 // Helper to count items from last 7 days
@@ -35,6 +35,22 @@ function countRecentItems(items: any[], dateField: string = 'created_at'): numbe
     const weekAgo = new Date()
     weekAgo.setDate(weekAgo.getDate() - 7)
     return items.filter(item => new Date(item[dateField]) > weekAgo).length
+}
+
+interface ProspectWithStatus {
+    id: string
+    company_name: string
+    hasResearch: boolean
+    researchId?: string
+    researchStatus?: string
+    hasPrep: boolean
+    prepId?: string
+    prepStatus?: string
+    hasFollowup: boolean
+    followupId?: string
+    followupStatus?: string
+    lastActivity: string
+    nextAction: 'research' | 'prep' | 'followup' | 'complete'
 }
 
 export default function DashboardPage() {
@@ -61,7 +77,6 @@ export default function DashboardPage() {
                 if (token) {
                     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-                    // Fetch all data in parallel
                     const fetchPromises = [
                         fetch(`${apiUrl}/api/v1/profile/sales`, { headers: { 'Authorization': `Bearer ${token}` } }),
                         fetch(`${apiUrl}/api/v1/profile/company`, { headers: { 'Authorization': `Bearer ${token}` } }),
@@ -103,594 +118,588 @@ export default function DashboardPage() {
         loadData()
     }, [supabase])
 
-    // Calculate trends (items from last 7 days) - hooks must be before any early returns
+    // Calculate trends (items from last 7 days)
     const recentResearch = useMemo(() => countRecentItems(researchBriefs), [researchBriefs])
     const recentPreps = useMemo(() => countRecentItems(meetingPreps), [meetingPreps])
     const recentFollowups = useMemo(() => countRecentItems(followups), [followups])
-    const recentDocs = useMemo(() => countRecentItems(knowledgeBase), [knowledgeBase])
+
+    // Build prospect-centric view
+    const prospects = useMemo(() => {
+        const prospectMap = new Map<string, ProspectWithStatus>()
+
+        // Add from research briefs
+        researchBriefs.forEach(brief => {
+            const name = brief.company_name.toLowerCase()
+            if (!prospectMap.has(name)) {
+                prospectMap.set(name, {
+                    id: brief.id,
+                    company_name: brief.company_name,
+                    hasResearch: true,
+                    researchId: brief.id,
+                    researchStatus: brief.status,
+                    hasPrep: false,
+                    hasFollowup: false,
+                    lastActivity: brief.created_at,
+                    nextAction: brief.status === 'completed' ? 'prep' : 'research'
+                })
+            } else {
+                const existing = prospectMap.get(name)!
+                existing.hasResearch = true
+                existing.researchId = brief.id
+                existing.researchStatus = brief.status
+                if (new Date(brief.created_at) > new Date(existing.lastActivity)) {
+                    existing.lastActivity = brief.created_at
+                }
+            }
+        })
+
+        // Add from meeting preps
+        meetingPreps.forEach(prep => {
+            const name = prep.prospect_company_name.toLowerCase()
+            if (!prospectMap.has(name)) {
+                prospectMap.set(name, {
+                    id: prep.id,
+                    company_name: prep.prospect_company_name,
+                    hasResearch: false,
+                    hasPrep: true,
+                    prepId: prep.id,
+                    prepStatus: prep.status,
+                    hasFollowup: false,
+                    lastActivity: prep.created_at,
+                    nextAction: prep.status === 'completed' ? 'followup' : 'prep'
+                })
+            } else {
+                const existing = prospectMap.get(name)!
+                existing.hasPrep = true
+                existing.prepId = prep.id
+                existing.prepStatus = prep.status
+                if (prep.status === 'completed') {
+                    existing.nextAction = 'followup'
+                }
+                if (new Date(prep.created_at) > new Date(existing.lastActivity)) {
+                    existing.lastActivity = prep.created_at
+                }
+            }
+        })
+
+        // Add from followups
+        followups.forEach(followup => {
+            const name = (followup.prospect_company_name || followup.meeting_subject || '').toLowerCase()
+            if (!name) return
+            
+            if (!prospectMap.has(name)) {
+                prospectMap.set(name, {
+                    id: followup.id,
+                    company_name: followup.prospect_company_name || followup.meeting_subject,
+                    hasResearch: false,
+                    hasPrep: false,
+                    hasFollowup: true,
+                    followupId: followup.id,
+                    followupStatus: followup.status,
+                    lastActivity: followup.created_at,
+                    nextAction: 'complete'
+                })
+            } else {
+                const existing = prospectMap.get(name)!
+                existing.hasFollowup = true
+                existing.followupId = followup.id
+                existing.followupStatus = followup.status
+                if (followup.status === 'completed') {
+                    existing.nextAction = 'complete'
+                }
+                if (new Date(followup.created_at) > new Date(existing.lastActivity)) {
+                    existing.lastActivity = followup.created_at
+                }
+            }
+        })
+
+        // Sort by last activity (most recent first)
+        return Array.from(prospectMap.values())
+            .sort((a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime())
+    }, [researchBriefs, meetingPreps, followups])
 
     if (loading) {
         return (
             <div className="flex h-screen items-center justify-center bg-slate-50">
                 <div className="text-center">
                     <Icons.spinner className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-                    <p className="text-sm text-slate-500">Loading your dashboard...</p>
+                    <p className="text-sm text-slate-500">Dashboard laden...</p>
                 </div>
             </div>
         )
     }
 
-    const stats = [
-        { 
-            name: 'Research', 
-            value: researchBriefs.length, 
-            recentCount: recentResearch,
-            icon: Icons.search, 
-            color: 'blue',
-            href: '/dashboard/research',
-            description: 'Prospects researched'
-        },
-        { 
-            name: 'Preparations', 
-            value: meetingPreps.length, 
-            recentCount: recentPreps,
-            icon: Icons.fileText, 
-            color: 'green',
-            href: '/dashboard/preparation',
-            description: 'Meeting briefs'
-        },
-        { 
-            name: 'Follow-ups', 
-            value: followups.length, 
-            recentCount: recentFollowups,
-            icon: Icons.mail, 
-            color: 'orange',
-            href: '/dashboard/followup',
-            description: 'Calls summarized'
-        },
-        { 
-            name: 'Knowledge', 
-            value: knowledgeBase.length, 
-            recentCount: recentDocs,
-            icon: Icons.book, 
-            color: 'purple',
-            href: '/dashboard/knowledge-base',
-            description: 'Documents uploaded'
-        },
-    ]
-
-    // Get smart suggestion based on activity
+    // Smart suggestion based on activity
     const getSuggestion = () => {
-        if (!profile) return { text: 'Start by creating your sales profile', action: '/onboarding', actionText: 'Create Profile' }
-        if (!companyProfile) return { text: 'Add your company profile for better AI context', action: '/onboarding/company', actionText: 'Add Company' }
-        if (researchBriefs.length === 0) return { text: 'Research your first prospect to get started', action: '/dashboard/research', actionText: 'Start Research' }
-        if (meetingPreps.length === 0) return { text: 'Generate your first meeting brief', action: '/dashboard/preparation', actionText: 'Prepare Meeting' }
-        if (meetingPreps.length > researchBriefs.length) return { text: 'Research more prospects to expand your pipeline', action: '/dashboard/research', actionText: 'Research' }
-        return { text: 'Keep up the great work! Your sales prep is on track', action: null, actionText: null }
+        if (!profile?.full_name) return { 
+            text: 'Start met het aanmaken van je sales profiel voor gepersonaliseerde AI outputs', 
+            action: '/onboarding', 
+            actionText: 'Profiel Maken',
+            icon: Icons.user,
+            color: 'violet'
+        }
+        if (!companyProfile?.company_name) return { 
+            text: 'Voeg je bedrijfsprofiel toe zodat de AI je producten en diensten kent', 
+            action: '/onboarding/company', 
+            actionText: 'Bedrijf Toevoegen',
+            icon: Icons.building,
+            color: 'indigo'
+        }
+        if (researchBriefs.length === 0) return { 
+            text: 'Research je eerste prospect om te beginnen met je sales voorbereiding', 
+            action: '/dashboard/research', 
+            actionText: 'Start Research',
+            icon: Icons.search,
+            color: 'blue'
+        }
+        if (meetingPreps.length === 0 && researchBriefs.some(b => b.status === 'completed')) return { 
+            text: 'Je hebt research klaar staan - maak nu een gepersonaliseerde gespreksvoorbereiding', 
+            action: '/dashboard/preparation', 
+            actionText: 'Maak Voorbereiding',
+            icon: Icons.fileText,
+            color: 'green'
+        }
+        if (followups.length === 0 && meetingPreps.some(p => p.status === 'completed')) return { 
+            text: 'Na je meeting: upload de opname voor transcriptie en follow-up acties', 
+            action: '/dashboard/followup', 
+            actionText: 'Upload Meeting',
+            icon: Icons.mic,
+            color: 'orange'
+        }
+        
+        // Check for prospects that need attention
+        const needsPrep = prospects.find(p => p.hasResearch && p.researchStatus === 'completed' && !p.hasPrep)
+        if (needsPrep) return {
+            text: `Je research voor ${needsPrep.company_name} is klaar - maak nu een voorbereiding`,
+            action: '/dashboard/preparation',
+            actionText: 'Voorbereiden',
+            icon: Icons.fileText,
+            color: 'green'
+        }
+        
+        const needsFollowup = prospects.find(p => p.hasPrep && p.prepStatus === 'completed' && !p.hasFollowup)
+        if (needsFollowup) return {
+            text: `Meeting met ${needsFollowup.company_name} gehad? Upload de opname voor follow-up`,
+            action: '/dashboard/followup',
+            actionText: 'Follow-up',
+            icon: Icons.mic,
+            color: 'orange'
+        }
+
+        return { 
+            text: 'Goed bezig! Je sales voorbereiding loopt op schema 🎉', 
+            action: '/dashboard/research', 
+            actionText: 'Nieuwe Prospect',
+            icon: Icons.sparkles,
+            color: 'emerald'
+        }
     }
     
     const suggestion = getSuggestion()
     const { greeting, emoji } = getGreeting()
 
-    const quickActions = [
-        {
-            name: 'Research Prospect',
-            description: 'AI-powered company research',
-            icon: Icons.search,
-            color: 'blue',
-            href: '/dashboard/research',
-        },
-        {
-            name: 'Prepare Meeting',
-            description: 'Generate personalized brief',
-            icon: Icons.fileText,
-            color: 'green',
-            href: '/dashboard/preparation',
-        },
-        {
-            name: 'Meeting Follow-up',
-            description: 'Transcribe & summarize calls',
-            icon: Icons.mail,
-            color: 'orange',
-            href: '/dashboard/followup',
-        },
-        {
-            name: 'Upload Documents',
-            description: 'Add to knowledge base',
-            icon: Icons.upload,
-            color: 'purple',
-            href: '/dashboard/knowledge-base',
-        },
-    ]
+    const colorClasses: Record<string, { bg: string; text: string; border: string; gradient: string }> = {
+        blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200', gradient: 'from-blue-500 to-blue-600' },
+        green: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200', gradient: 'from-green-500 to-green-600' },
+        orange: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200', gradient: 'from-orange-500 to-orange-600' },
+        purple: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200', gradient: 'from-purple-500 to-purple-600' },
+        violet: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200', gradient: 'from-violet-500 to-violet-600' },
+        indigo: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200', gradient: 'from-indigo-500 to-indigo-600' },
+        emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200', gradient: 'from-emerald-500 to-emerald-600' },
+    }
 
-    const colorClasses: Record<string, { bg: string; text: string; border: string }> = {
-        blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200 hover:border-blue-300' },
-        green: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200 hover:border-green-300' },
-        orange: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200 hover:border-orange-300' },
-        purple: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200 hover:border-purple-300' },
-        violet: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200 hover:border-violet-300' },
-        indigo: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200 hover:border-indigo-300' },
+    const suggestionColors = colorClasses[suggestion.color] || colorClasses.blue
+    const SuggestionIcon = suggestion.icon
+
+    const getNextActionButton = (prospect: ProspectWithStatus) => {
+        switch (prospect.nextAction) {
+            case 'research':
+                return (
+                    <span className="text-xs text-blue-600 flex items-center gap-1">
+                        <Icons.spinner className="h-3 w-3 animate-spin" />
+                        Research bezig...
+                    </span>
+                )
+            case 'prep':
+                return (
+                    <Button size="sm" className="h-7 text-xs bg-green-600 hover:bg-green-700" onClick={(e) => {
+                        e.stopPropagation()
+                        sessionStorage.setItem('prepareForCompany', prospect.company_name)
+                        router.push('/dashboard/preparation')
+                    }}>
+                        <Icons.fileText className="h-3 w-3 mr-1" />
+                        Voorbereiden
+                    </Button>
+                )
+            case 'followup':
+                return (
+                    <Button size="sm" className="h-7 text-xs bg-orange-600 hover:bg-orange-700" onClick={(e) => {
+                        e.stopPropagation()
+                        sessionStorage.setItem('followupForCompany', prospect.company_name)
+                        router.push('/dashboard/followup')
+                    }}>
+                        <Icons.mic className="h-3 w-3 mr-1" />
+                        Follow-up
+                    </Button>
+                )
+            case 'complete':
+                return (
+                    <span className="text-xs text-emerald-600 flex items-center gap-1">
+                        <Icons.check className="h-3 w-3" />
+                        Compleet
+                    </span>
+                )
+        }
+    }
+
+    const getProspectLink = (prospect: ProspectWithStatus) => {
+        if (prospect.followupId && prospect.followupStatus === 'completed') {
+            return `/dashboard/followup/${prospect.followupId}`
+        }
+        if (prospect.prepId && prospect.prepStatus === 'completed') {
+            return `/dashboard/preparation/${prospect.prepId}`
+        }
+        if (prospect.researchId && prospect.researchStatus === 'completed') {
+            return `/dashboard/research/${prospect.researchId}`
+        }
+        return null
     }
 
     return (
         <DashboardLayout user={user}>
-            <div className="p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
-                {/* Welcome Section */}
-                <div className="mb-8">
-                    <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
+            <div className="p-4 lg:p-6">
+                {/* Welcome + Suggestion */}
+                <div className="mb-6">
+                    <h1 className="text-2xl font-bold text-slate-900 mb-1">
                         {greeting}{typeof profile?.full_name === 'string' && profile.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! {emoji}
                     </h1>
-                    <p className="text-slate-500 mb-4">
-                        Here's what's happening with your sales activities.
+                    <p className="text-slate-500 text-sm mb-4">
+                        Hier is je sales voorbereiding overzicht.
                     </p>
                     
-                    {/* Smart Suggestion */}
-                    <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                            <Icons.sparkles className="h-4 w-4 text-blue-600" />
+                    {/* Smart Suggestion - Prominent */}
+                    <div className={`flex items-center gap-4 p-4 rounded-xl border-2 ${suggestionColors.border} ${suggestionColors.bg}`}>
+                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${suggestionColors.gradient} flex items-center justify-center flex-shrink-0 shadow-lg`}>
+                            <SuggestionIcon className="h-6 w-6 text-white" />
                         </div>
-                        <p className="text-sm text-slate-700 flex-1">{suggestion.text}</p>
+                        <div className="flex-1 min-w-0">
+                            <p className="font-medium text-slate-900">{suggestion.text}</p>
+                        </div>
                         {suggestion.action && (
-                            <Button size="sm" variant="outline" onClick={() => router.push(suggestion.action!)} className="flex-shrink-0">
+                            <Button 
+                                onClick={() => router.push(suggestion.action!)} 
+                                className={`flex-shrink-0 bg-gradient-to-r ${suggestionColors.gradient} hover:opacity-90`}
+                            >
                                 {suggestion.actionText}
+                                <Icons.arrowRight className="h-4 w-4 ml-2" />
                             </Button>
                         )}
                     </div>
                 </div>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                    {stats.map((stat) => {
-                        const Icon = stat.icon
-                        const colors = colorClasses[stat.color]
-                        return (
-                            <button
-                                key={stat.name}
-                                onClick={() => router.push(stat.href)}
-                                className="bg-white rounded-xl border p-5 text-left hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group"
-                            >
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                        <Icon className={`h-5 w-5 ${colors.text}`} />
-                                    </div>
-                                    <Icons.chevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
-                                </div>
-                                <div className="flex items-baseline gap-2">
-                                    <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-                                    {stat.recentCount > 0 && (
-                                        <span className="text-xs font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                                            <Icons.trendingUp className="h-3 w-3" />
-                                            +{stat.recentCount} this week
-                                        </span>
-                                    )}
-                                </div>
-                                <p className="text-sm text-slate-500">{stat.description}</p>
-                            </button>
-                        )
-                    })}
-                </div>
-
-                {/* Quick Actions */}
-                <div className="mb-8">
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">Quick Actions</h2>
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {quickActions.map((action) => {
-                            const Icon = action.icon
-                            const colors = colorClasses[action.color]
-                            return (
-                                <button
-                                    key={action.name}
-                                    onClick={() => router.push(action.href)}
-                                    className={`bg-white rounded-xl border ${colors.border} p-5 text-left hover:shadow-md transition-all duration-200 group`}
-                                >
-                                    <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
-                                        <Icon className={`h-5 w-5 ${colors.text}`} />
-                                    </div>
-                                    <p className="font-medium text-slate-900">{action.name}</p>
-                                    <p className="text-sm text-slate-500">{action.description}</p>
-                                </button>
-                            )
-                        })}
-                    </div>
-                </div>
-
-                {/* Profile Cards */}
-                <div className="grid lg:grid-cols-2 gap-6 mb-8">
-                    {/* Sales Profile */}
-                    <div className="bg-white rounded-xl border overflow-hidden">
-                        {profile ? (
-                            <>
-                                {/* Header with gradient */}
-                                <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-white text-xl font-bold">
-                                                {typeof profile.full_name === 'string' && profile.full_name 
-                                                    ? profile.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() 
-                                                    : 'SP'}
-                                            </div>
-                                            <div>
-                                                <h3 className="font-semibold text-white text-lg">{profile.full_name || 'Sales Professional'}</h3>
-                                                <p className="text-violet-100 text-sm">{profile.job_title || 'Sales Rep'}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <Button variant="secondary" size="sm" onClick={() => router.push('/dashboard/profile')} className="bg-white/20 hover:bg-white/30 text-white border-0">
-                                                <Icons.eye className="h-4 w-4 mr-1" />
-                                                View
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                {/* Content */}
-                                <div className="p-6 space-y-4">
-                                    {/* Quick Stats */}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-slate-50 rounded-lg p-3">
-                                            <p className="text-xs text-slate-500 mb-1">Experience</p>
-                                            <p className="font-semibold text-slate-900">
-                                                {profile.years_experience ? `${profile.years_experience} years` : 'Not set'}
-                                            </p>
-                                        </div>
-                                        <div className="bg-slate-50 rounded-lg p-3">
-                                            <p className="text-xs text-slate-500 mb-1">Sales Style</p>
-                                            <p className="font-semibold text-slate-900 truncate">
-                                                {profile.sales_methodology || 'Consultative'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Top Strengths */}
-                                    {Array.isArray(profile.key_strengths) && profile.key_strengths.length > 0 && (
-                                        <div>
-                                            <p className="text-xs text-slate-500 mb-2">Key Strengths</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {profile.key_strengths.slice(0, 4).map((strength: string, i: number) => (
-                                                    <span key={i} className="px-2.5 py-1 bg-violet-100 text-violet-700 rounded-full text-xs font-medium">
-                                                        {strength}
-                                                    </span>
-                                                ))}
-                                                {profile.key_strengths.length > 4 && (
-                                                    <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs">
-                                                        +{profile.key_strengths.length - 4} more
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-                                    
-                                    {/* AI Summary */}
-                                    {profile.sales_narrative && (
-                                        <div className="pt-3 border-t">
-                                            <p className="text-xs text-slate-500 mb-2">AI-Generated Summary</p>
-                                            <p className="text-sm text-slate-600 line-clamp-2">
-                                                {profile.sales_narrative}
-                                            </p>
-                                            <button 
-                                                className="text-xs text-violet-600 hover:text-violet-700 font-medium mt-2 flex items-center gap-1"
-                                                onClick={() => router.push('/dashboard/profile')}
-                                            >
-                                                Read full story <Icons.arrowRight className="h-3 w-3" />
-                                            </button>
-                                        </div>
-                                    )}
-                                    
-                                    {/* Completeness */}
-                                    <div className="flex items-center justify-between pt-3 border-t">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                                <div 
-                                                    className="h-full bg-gradient-to-r from-violet-500 to-purple-500 rounded-full transition-all"
-                                                    style={{ width: `${profile.profile_completeness || 0}%` }}
-                                                />
-                                            </div>
-                                            <span className="text-xs text-slate-500">{profile.profile_completeness || 0}% complete</span>
-                                        </div>
-                                        <Button variant="ghost" size="sm" onClick={() => router.push('/onboarding')} className="text-xs h-7">
-                                            <Icons.edit className="h-3 w-3 mr-1" />
-                                            Update
-                                        </Button>
-                                    </div>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="p-6">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center">
-                                        <Icons.user className="h-5 w-5 text-violet-600" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-slate-900">Sales Profile</h3>
-                                        <p className="text-sm text-slate-500">Your AI personalization</p>
-                                    </div>
-                                </div>
-                                <div className="text-center py-8 bg-slate-50 rounded-lg">
-                                    <Icons.user className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                                    <p className="text-slate-600 font-medium mb-1">Create your sales profile</p>
-                                    <p className="text-slate-500 text-sm mb-4">
-                                        Get personalized AI outputs tailored to your style
-                                    </p>
-                                    <Button size="sm" onClick={() => router.push('/onboarding')}>
-                                        <Icons.plus className="h-4 w-4 mr-1" />
-                                        Create Profile
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Company Profile */}
-                    <div className="bg-white rounded-xl border overflow-hidden">
-                        {companyProfile ? (
-                            <>
-                                {/* Header with gradient */}
-                                <div className="bg-gradient-to-r from-indigo-500 to-blue-600 px-6 py-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
-                                                <Icons.building className="h-7 w-7 text-white" />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-semibold text-white text-lg">{companyProfile.company_name || 'Your Company'}</h3>
-                                                <p className="text-indigo-100 text-sm">{companyProfile.industry || 'Industry not set'}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <Button variant="secondary" size="sm" onClick={() => router.push('/dashboard/company-profile')} className="bg-white/20 hover:bg-white/30 text-white border-0">
-                                                <Icons.eye className="h-4 w-4 mr-1" />
-                                                View
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                {/* Content */}
-                                <div className="p-6 space-y-4">
-                                    {/* Quick Stats */}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-slate-50 rounded-lg p-3">
-                                            <p className="text-xs text-slate-500 mb-1">Company Size</p>
-                                            <p className="font-semibold text-slate-900">
-                                                {companyProfile.company_size || 'Not set'}
-                                            </p>
-                                        </div>
-                                        <div className="bg-slate-50 rounded-lg p-3">
-                                            <p className="text-xs text-slate-500 mb-1">Target Market</p>
-                                            <p className="font-semibold text-slate-900 truncate">
-                                                {companyProfile.target_market || (typeof companyProfile.ideal_customer_profile === 'string' ? companyProfile.ideal_customer_profile.split(',')[0] : 'B2B')}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Value Propositions */}
-                                    {Array.isArray(companyProfile.value_propositions) && companyProfile.value_propositions.length > 0 && (
-                                        <div>
-                                            <p className="text-xs text-slate-500 mb-2">Value Propositions</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {companyProfile.value_propositions.slice(0, 3).map((vp: string, i: number) => (
-                                                    <span key={i} className="px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium truncate max-w-[150px]">
-                                                        {vp}
-                                                    </span>
-                                                ))}
-                                                {companyProfile.value_propositions.length > 3 && (
-                                                    <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs">
-                                                        +{companyProfile.value_propositions.length - 3} more
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-                                    
-                                    {/* Products/Services */}
-                                    {Array.isArray(companyProfile.products_services) && companyProfile.products_services.length > 0 && (
-                                        <div>
-                                            <p className="text-xs text-slate-500 mb-2">Products & Services</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {companyProfile.products_services.slice(0, 3).map((ps: string, i: number) => (
-                                                    <span key={i} className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium truncate max-w-[150px]">
-                                                        {ps}
-                                                    </span>
-                                                ))}
-                                                {companyProfile.products_services.length > 3 && (
-                                                    <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs">
-                                                        +{companyProfile.products_services.length - 3} more
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-                                    
-                                    {/* AI Summary */}
-                                    {companyProfile.company_narrative && (
-                                        <div className="pt-3 border-t">
-                                            <p className="text-xs text-slate-500 mb-2">AI-Generated Summary</p>
-                                            <p className="text-sm text-slate-600 line-clamp-2">
-                                                {companyProfile.company_narrative}
-                                            </p>
-                                            <button 
-                                                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium mt-2 flex items-center gap-1"
-                                                onClick={() => router.push('/dashboard/company-profile')}
-                                            >
-                                                Read full story <Icons.arrowRight className="h-3 w-3" />
-                                            </button>
-                                        </div>
-                                    )}
-                                    
-                                    {/* Completeness */}
-                                    <div className="flex items-center justify-between pt-3 border-t">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                                <div 
-                                                    className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all"
-                                                    style={{ width: `${companyProfile.profile_completeness || 0}%` }}
-                                                />
-                                            </div>
-                                            <span className="text-xs text-slate-500">{companyProfile.profile_completeness || 0}% complete</span>
-                                        </div>
-                                        <Button variant="ghost" size="sm" onClick={() => router.push('/onboarding/company')} className="text-xs h-7">
-                                            <Icons.edit className="h-3 w-3 mr-1" />
-                                            Update
-                                        </Button>
-                                    </div>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="p-6">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                                        <Icons.building className="h-5 w-5 text-indigo-600" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-slate-900">Company Profile</h3>
-                                        <p className="text-sm text-slate-500">Your company context</p>
-                                    </div>
-                                </div>
-                                <div className="text-center py-8 bg-slate-50 rounded-lg">
-                                    <Icons.building className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                                    <p className="text-slate-600 font-medium mb-1">Add your company profile</p>
-                                    <p className="text-slate-500 text-sm mb-4">
-                                        Help AI understand your products and value props
-                                    </p>
-                                    <Button size="sm" onClick={() => router.push('/onboarding/company')}>
-                                        <Icons.plus className="h-4 w-4 mr-1" />
-                                        Create Profile
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Recent Activity */}
-                <div className="grid lg:grid-cols-3 gap-6">
-                    {/* Recent Research */}
-                    <div className="bg-white rounded-xl border p-6">
+                {/* Two Column Layout */}
+                <div className="flex gap-6">
+                    {/* Left: Prospects */}
+                    <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-semibold text-slate-900">Recent Research</h3>
-                            <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/research')}>
-                                View All
+                            <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                                <Icons.users className="h-5 w-5 text-slate-400" />
+                                Mijn Prospects
+                                <span className="text-sm font-normal text-slate-400">({prospects.length})</span>
+                            </h2>
+                            <Button size="sm" onClick={() => router.push('/dashboard/research')}>
+                                <Icons.plus className="h-4 w-4 mr-1" />
+                                Nieuwe Prospect
                             </Button>
                         </div>
-                        {researchBriefs.length === 0 ? (
-                            <div className="text-center py-6">
-                                <Icons.search className="h-10 w-10 text-slate-200 mx-auto mb-2" />
-                                <p className="text-sm text-slate-500 mb-3">No research yet</p>
-                                <Button size="sm" variant="outline" onClick={() => router.push('/dashboard/research')}>
+
+                        {prospects.length === 0 ? (
+                            <div className="bg-white rounded-xl border p-12 text-center">
+                                <Icons.users className="h-16 w-16 text-slate-200 mx-auto mb-4" />
+                                <h3 className="font-semibold text-slate-700 mb-2">Nog geen prospects</h3>
+                                <p className="text-slate-500 text-sm mb-4">
+                                    Start met je eerste prospect research
+                                </p>
+                                <Button onClick={() => router.push('/dashboard/research')}>
+                                    <Icons.search className="h-4 w-4 mr-2" />
                                     Start Research
                                 </Button>
                             </div>
                         ) : (
                             <div className="space-y-3">
-                                {researchBriefs.slice(0, 4).map((brief: any) => (
-                                    <button
-                                        key={brief.id}
-                                        onClick={() => router.push(`/dashboard/research/${brief.id}`)}
-                                        className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors text-left"
+                                {prospects.slice(0, 8).map((prospect) => {
+                                    const link = getProspectLink(prospect)
+                                    return (
+                                        <div
+                                            key={prospect.id}
+                                            className={`bg-white rounded-xl border p-4 hover:shadow-md transition-all ${link ? 'cursor-pointer' : ''}`}
+                                            onClick={() => link && router.push(link)}
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-4 min-w-0 flex-1">
+                                                    {/* Company Initial */}
+                                                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                                                        <span className="font-bold text-slate-600">
+                                                            {prospect.company_name.charAt(0).toUpperCase()}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    {/* Company Info */}
+                                                    <div className="min-w-0 flex-1">
+                                                        <h3 className="font-semibold text-slate-900 truncate">{prospect.company_name}</h3>
+                                                        <p className="text-xs text-slate-500">{getRelativeTime(prospect.lastActivity)}</p>
+                                                    </div>
+
+                                                    {/* Status Indicators */}
+                                                    <div className="flex items-center gap-2">
+                                                        {/* Research */}
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                                            prospect.hasResearch && prospect.researchStatus === 'completed' 
+                                                                ? 'bg-blue-100' 
+                                                                : prospect.hasResearch 
+                                                                    ? 'bg-blue-50' 
+                                                                    : 'bg-slate-100'
+                                                        }`} title="Research">
+                                                            {prospect.hasResearch && prospect.researchStatus === 'completed' ? (
+                                                                <Icons.check className="h-4 w-4 text-blue-600" />
+                                                            ) : prospect.hasResearch ? (
+                                                                <Icons.spinner className="h-4 w-4 text-blue-400 animate-spin" />
+                                                            ) : (
+                                                                <Icons.search className="h-4 w-4 text-slate-300" />
+                                                            )}
+                                                        </div>
+                                                        
+                                                        {/* Prep */}
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                                            prospect.hasPrep && prospect.prepStatus === 'completed' 
+                                                                ? 'bg-green-100' 
+                                                                : prospect.hasPrep 
+                                                                    ? 'bg-green-50' 
+                                                                    : 'bg-slate-100'
+                                                        }`} title="Voorbereiding">
+                                                            {prospect.hasPrep && prospect.prepStatus === 'completed' ? (
+                                                                <Icons.check className="h-4 w-4 text-green-600" />
+                                                            ) : prospect.hasPrep ? (
+                                                                <Icons.spinner className="h-4 w-4 text-green-400 animate-spin" />
+                                                            ) : (
+                                                                <Icons.fileText className="h-4 w-4 text-slate-300" />
+                                                            )}
+                                                        </div>
+                                                        
+                                                        {/* Follow-up */}
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                                            prospect.hasFollowup && prospect.followupStatus === 'completed' 
+                                                                ? 'bg-orange-100' 
+                                                                : prospect.hasFollowup 
+                                                                    ? 'bg-orange-50' 
+                                                                    : 'bg-slate-100'
+                                                        }`} title="Follow-up">
+                                                            {prospect.hasFollowup && prospect.followupStatus === 'completed' ? (
+                                                                <Icons.check className="h-4 w-4 text-orange-600" />
+                                                            ) : prospect.hasFollowup ? (
+                                                                <Icons.spinner className="h-4 w-4 text-orange-400 animate-spin" />
+                                                            ) : (
+                                                                <Icons.mail className="h-4 w-4 text-slate-300" />
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Next Action */}
+                                                <div className="ml-4 flex-shrink-0">
+                                                    {getNextActionButton(prospect)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                                
+                                {prospects.length > 8 && (
+                                    <button 
+                                        className="w-full py-3 text-sm text-slate-500 hover:text-slate-700 flex items-center justify-center gap-2"
+                                        onClick={() => router.push('/dashboard/research')}
                                     >
-                                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                                            <Icons.search className="h-4 w-4 text-blue-600" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-slate-900 truncate">{brief.company_name}</p>
-                                            <p className="text-xs text-slate-500">{getRelativeTime(brief.created_at)}</p>
-                                        </div>
+                                        Bekijk alle {prospects.length} prospects
+                                        <Icons.arrowRight className="h-4 w-4" />
                                     </button>
-                                ))}
+                                )}
                             </div>
                         )}
                     </div>
 
-                    {/* Recent Preps */}
-                    <div className="bg-white rounded-xl border p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-semibold text-slate-900">Recent Preps</h3>
-                            <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/preparation')}>
-                                View All
-                            </Button>
-                        </div>
-                        {meetingPreps.length === 0 ? (
-                            <div className="text-center py-6">
-                                <Icons.fileText className="h-10 w-10 text-slate-200 mx-auto mb-2" />
-                                <p className="text-sm text-slate-500 mb-3">No preps yet</p>
-                                <Button size="sm" variant="outline" onClick={() => router.push('/dashboard/preparation')}>
-                                    Create Brief
-                                </Button>
+                    {/* Right: Sidebar */}
+                    <div className="w-80 flex-shrink-0 hidden lg:block">
+                        <div className="sticky top-4 space-y-4">
+                            
+                            {/* Stats */}
+                            <div className="rounded-xl border bg-white p-4 shadow-sm">
+                                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                                    <Icons.barChart className="h-4 w-4 text-slate-400" />
+                                    Deze Week
+                                </h3>
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                                                <Icons.search className="h-4 w-4 text-blue-600" />
+                                            </div>
+                                            <span className="text-sm text-slate-600">Research</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold text-slate-900">{researchBriefs.length}</span>
+                                            {recentResearch > 0 && (
+                                                <span className="text-xs font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">
+                                                    +{recentResearch}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+                                                <Icons.fileText className="h-4 w-4 text-green-600" />
+                                            </div>
+                                            <span className="text-sm text-slate-600">Voorbereidingen</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold text-slate-900">{meetingPreps.length}</span>
+                                            {recentPreps > 0 && (
+                                                <span className="text-xs font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">
+                                                    +{recentPreps}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
+                                                <Icons.mail className="h-4 w-4 text-orange-600" />
+                                            </div>
+                                            <span className="text-sm text-slate-600">Follow-ups</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold text-slate-900">{followups.length}</span>
+                                            {recentFollowups > 0 && (
+                                                <span className="text-xs font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">
+                                                    +{recentFollowups}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        ) : (
-                            <div className="space-y-3">
-                                {meetingPreps.slice(0, 4).map((prep: any) => (
+
+                            {/* Quick Actions */}
+                            <div className="rounded-xl border bg-white p-4 shadow-sm">
+                                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                                    <Icons.zap className="h-4 w-4 text-amber-500" />
+                                    Snelle Acties
+                                </h3>
+                                <div className="grid grid-cols-2 gap-2">
                                     <button
-                                        key={prep.id}
+                                        onClick={() => router.push('/dashboard/research')}
+                                        className="p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors text-center"
+                                    >
+                                        <Icons.search className="h-5 w-5 text-blue-600 mx-auto mb-1" />
+                                        <span className="text-xs font-medium text-blue-700">Research</span>
+                                    </button>
+                                    <button
                                         onClick={() => router.push('/dashboard/preparation')}
-                                        className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors text-left"
+                                        className="p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors text-center"
                                     >
-                                        <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                                            <Icons.fileText className="h-4 w-4 text-green-600" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-slate-900 truncate">{prep.prospect_company_name}</p>
-                                            <p className="text-xs text-slate-500">{getRelativeTime(prep.created_at)}</p>
-                                        </div>
-                                        <span className={`text-xs px-2 py-1 rounded-full ${
-                                            prep.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                            prep.status === 'generating' ? 'bg-blue-100 text-blue-700' :
-                                            'bg-yellow-100 text-yellow-700'
-                                        }`}>
-                                            {prep.status}
-                                        </span>
+                                        <Icons.fileText className="h-5 w-5 text-green-600 mx-auto mb-1" />
+                                        <span className="text-xs font-medium text-green-700">Prep</span>
                                     </button>
-                                ))}
+                                    <button
+                                        onClick={() => router.push('/dashboard/followup')}
+                                        className="p-3 rounded-lg bg-orange-50 hover:bg-orange-100 transition-colors text-center"
+                                    >
+                                        <Icons.mic className="h-5 w-5 text-orange-600 mx-auto mb-1" />
+                                        <span className="text-xs font-medium text-orange-700">Follow-up</span>
+                                    </button>
+                                    <button
+                                        onClick={() => router.push('/dashboard/knowledge-base')}
+                                        className="p-3 rounded-lg bg-purple-50 hover:bg-purple-100 transition-colors text-center"
+                                    >
+                                        <Icons.book className="h-5 w-5 text-purple-600 mx-auto mb-1" />
+                                        <span className="text-xs font-medium text-purple-700">Docs</span>
+                                    </button>
+                                </div>
                             </div>
-                        )}
-                    </div>
 
-                    {/* Recent Follow-ups */}
-                    <div className="bg-white rounded-xl border p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-semibold text-slate-900">Recent Follow-ups</h3>
-                            <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/followup')}>
-                                View All
-                            </Button>
-                        </div>
-                        {followups.length === 0 ? (
-                            <div className="text-center py-6">
-                                <Icons.mail className="h-10 w-10 text-slate-200 mx-auto mb-2" />
-                                <p className="text-sm text-slate-500 mb-3">No follow-ups yet</p>
-                                <Button size="sm" variant="outline" onClick={() => router.push('/dashboard/followup')}>
-                                    Upload Recording
+                            {/* Profiles Status */}
+                            <div className="rounded-xl border bg-white p-4 shadow-sm">
+                                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                                    <Icons.user className="h-4 w-4 text-slate-400" />
+                                    Profielen
+                                </h3>
+                                <div className="space-y-2">
+                                    <button
+                                        onClick={() => router.push(profile?.full_name ? '/dashboard/profile' : '/onboarding')}
+                                        className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                                profile?.full_name ? 'bg-violet-100' : 'bg-slate-100'
+                                            }`}>
+                                                <Icons.user className={`h-4 w-4 ${profile?.full_name ? 'text-violet-600' : 'text-slate-400'}`} />
+                                            </div>
+                                            <span className="text-sm text-slate-700">Sales Profiel</span>
+                                        </div>
+                                        {profile?.full_name ? (
+                                            <span className="text-xs text-green-600 flex items-center gap-1">
+                                                <Icons.check className="h-3 w-3" />
+                                                {profile.profile_completeness || 0}%
+                                            </span>
+                                        ) : (
+                                            <span className="text-xs text-amber-600">Invullen →</span>
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={() => router.push(companyProfile?.company_name ? '/dashboard/company-profile' : '/onboarding/company')}
+                                        className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                                companyProfile?.company_name ? 'bg-indigo-100' : 'bg-slate-100'
+                                            }`}>
+                                                <Icons.building className={`h-4 w-4 ${companyProfile?.company_name ? 'text-indigo-600' : 'text-slate-400'}`} />
+                                            </div>
+                                            <span className="text-sm text-slate-700">Bedrijfsprofiel</span>
+                                        </div>
+                                        {companyProfile?.company_name ? (
+                                            <span className="text-xs text-green-600 flex items-center gap-1">
+                                                <Icons.check className="h-3 w-3" />
+                                                {companyProfile.profile_completeness || 0}%
+                                            </span>
+                                        ) : (
+                                            <span className="text-xs text-amber-600">Invullen →</span>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Knowledge Base */}
+                            <div className="rounded-xl border bg-gradient-to-br from-purple-50 to-indigo-50 p-4 shadow-sm">
+                                <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
+                                    <Icons.book className="h-4 w-4 text-purple-600" />
+                                    Knowledge Base
+                                </h3>
+                                <p className="text-xs text-slate-600 mb-3">
+                                    {knowledgeBase.length} document{knowledgeBase.length !== 1 ? 'en' : ''} geüpload
+                                </p>
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="w-full"
+                                    onClick={() => router.push('/dashboard/knowledge-base')}
+                                >
+                                    <Icons.upload className="h-4 w-4 mr-2" />
+                                    Upload Documenten
                                 </Button>
                             </div>
-                        ) : (
-                            <div className="space-y-3">
-                                {followups.slice(0, 4).map((followup: any) => (
-                                    <button
-                                        key={followup.id}
-                                        onClick={() => router.push(`/dashboard/followup/${followup.id}`)}
-                                        className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors text-left"
-                                    >
-                                        <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
-                                            <Icons.mail className="h-4 w-4 text-orange-600" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-slate-900 truncate">
-                                                {followup.prospect_company_name || followup.meeting_subject || 'Meeting'}
-                                            </p>
-                                            <p className="text-xs text-slate-500">
-                                                {followup.created_at ? getRelativeTime(followup.created_at) : 'No date'}
-                                            </p>
-                                        </div>
-                                        <span className={`text-xs px-2 py-1 rounded-full ${
-                                            followup.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                            followup.status === 'failed' ? 'bg-red-100 text-red-700' :
-                                            'bg-blue-100 text-blue-700'
-                                        }`}>
-                                            {followup.status}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
+
+                        </div>
                     </div>
                 </div>
             </div>
