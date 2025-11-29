@@ -1,28 +1,26 @@
-import { Metadata } from 'next'
+'use client'
+
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { AuthForm } from '@/components/auth/auth-form'
 import { Icons } from '@/components/icons'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useTranslations } from 'next-intl'
 
-export const metadata: Metadata = {
-    title: 'Login - SalesPrep AI',
-    description: 'Login to your account',
-}
+export default function LoginPage() {
+    const searchParams = useSearchParams()
+    const error = searchParams.get('error')
+    const t = useTranslations('authForm')
+    const tAuth = useTranslations('auth.login')
 
-// Error messages for OAuth errors
-const errorMessages: Record<string, string> = {
-    oauth_error: 'Authentication failed. Please try again.',
-    access_denied: 'Sign in was cancelled.',
-    server_error: 'The authentication provider is temporarily unavailable. Please try again later.',
-}
+    // Error messages for OAuth errors
+    const errorMessages: Record<string, string> = {
+        oauth_error: t('errors.oauthError'),
+        access_denied: t('errors.accessDenied'),
+        server_error: t('errors.serverError'),
+    }
 
-export default async function LoginPage({
-    searchParams,
-}: {
-    searchParams: Promise<{ error?: string }>
-}) {
-    const params = await searchParams
-    const errorMessage = params.error ? errorMessages[params.error] || 'An error occurred during sign in.' : null
+    const errorMessage = error ? errorMessages[error] || t('errors.genericSignIn') : null
 
     return (
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-950">
@@ -41,10 +39,10 @@ export default async function LoginPage({
                     <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border dark:border-slate-800 p-8">
                         <div className="flex flex-col space-y-2 text-center mb-6">
                             <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                                Welcome back
+                                {tAuth('title')}
                             </h1>
                             <p className="text-sm text-muted-foreground">
-                                Sign in to your account to continue
+                                {tAuth('subtitle')}
                             </p>
                         </div>
 
@@ -61,12 +59,12 @@ export default async function LoginPage({
 
                     {/* Footer Link */}
                     <p className="text-center text-sm text-muted-foreground">
-                        Don&apos;t have an account?{' '}
+                        {tAuth('noAccount')}{' '}
                         <Link
                             href="/signup"
                             className="font-medium text-blue-600 hover:text-blue-500 underline underline-offset-4"
                         >
-                            Sign up for free
+                            {tAuth('signUp')}
                         </Link>
                     </p>
                 </div>

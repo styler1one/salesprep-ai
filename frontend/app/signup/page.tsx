@@ -1,28 +1,26 @@
-import { Metadata } from 'next'
+'use client'
+
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { AuthForm } from '@/components/auth/auth-form'
 import { Icons } from '@/components/icons'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useTranslations } from 'next-intl'
 
-export const metadata: Metadata = {
-    title: 'Sign Up - SalesPrep AI',
-    description: 'Create your account',
-}
+export default function SignupPage() {
+    const searchParams = useSearchParams()
+    const error = searchParams.get('error')
+    const t = useTranslations('authForm')
+    const tAuth = useTranslations('auth.signup')
 
-// Error messages for OAuth errors
-const errorMessages: Record<string, string> = {
-    oauth_error: 'Account creation failed. Please try again.',
-    access_denied: 'Sign up was cancelled.',
-    server_error: 'The authentication provider is temporarily unavailable. Please try again later.',
-}
+    // Error messages for OAuth errors
+    const errorMessages: Record<string, string> = {
+        oauth_error: t('errors.oauthError'),
+        access_denied: t('errors.accessDenied'),
+        server_error: t('errors.serverError'),
+    }
 
-export default async function SignupPage({
-    searchParams,
-}: {
-    searchParams: Promise<{ error?: string }>
-}) {
-    const params = await searchParams
-    const errorMessage = params.error ? errorMessages[params.error] || 'An error occurred during sign up.' : null
+    const errorMessage = error ? errorMessages[error] || t('errors.genericSignUp') : null
 
     return (
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-950">
@@ -41,10 +39,10 @@ export default async function SignupPage({
                     <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border dark:border-slate-800 p-8">
                         <div className="flex flex-col space-y-2 text-center mb-6">
                             <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                                Create an account
+                                {tAuth('title')}
                             </h1>
                             <p className="text-sm text-muted-foreground">
-                                Get started with SalesPrep AI for free
+                                {tAuth('subtitle')}
                             </p>
                         </div>
 
@@ -60,25 +58,25 @@ export default async function SignupPage({
 
                         {/* Terms */}
                         <p className="mt-6 text-center text-xs text-muted-foreground">
-                            By signing up, you agree to our{' '}
+                            {t('termsPrefix')}{' '}
                             <Link href="/terms" className="underline hover:text-foreground">
-                                Terms of Service
+                                {t('termsOfService')}
                             </Link>{' '}
-                            and{' '}
+                            {t('and')}{' '}
                             <Link href="/privacy" className="underline hover:text-foreground">
-                                Privacy Policy
+                                {t('privacyPolicy')}
                             </Link>
                         </p>
                     </div>
 
                     {/* Footer Link */}
                     <p className="text-center text-sm text-muted-foreground">
-                        Already have an account?{' '}
+                        {tAuth('hasAccount')}{' '}
                         <Link
                             href="/login"
                             className="font-medium text-blue-600 hover:text-blue-500 underline underline-offset-4"
                         >
-                            Sign in
+                            {tAuth('logIn')}
                         </Link>
                     </p>
                 </div>

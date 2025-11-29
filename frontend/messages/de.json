@@ -784,6 +784,76 @@
       "description": "Deine Zahlung wurde abgebrochen. Du kannst es jederzeit erneut versuchen.",
       "backToPricing": "Zurück zu Preisen"
     }
+  },
+  "homepage": {
+    "nav": {
+      "login": "Anmelden",
+      "getStarted": "Loslegen"
+    },
+    "hero": {
+      "badge": "KI-gestützte Sales-Unterstützung",
+      "title": "Bereite Meetings vor",
+      "titleHighlight": "in Sekunden",
+      "description": "Recherchiere Interessenten, erstelle personalisierte Briefings und führe Follow-ups mit KI-generierten Zusammenfassungen durch. Alles, was du brauchst, um mehr Deals schneller abzuschließen.",
+      "startTrial": "Kostenlos testen",
+      "watchDemo": "Demo ansehen"
+    },
+    "preview": {
+      "research": "Research",
+      "brief": "Briefing",
+      "aiMeetingBrief": "KI Meeting-Briefing",
+      "generatedIn": "Generiert in 30 Sekunden"
+    },
+    "features": {
+      "title": "Alles, was du brauchst, um mehr Deals zu gewinnen",
+      "description": "Von der Recherche bis zum Follow-up – SalesPrep AI unterstützt dich bei jedem Schritt deines Vertriebsprozesses.",
+      "research": {
+        "title": "Interessenten-Recherche",
+        "description": "KI-gestützte Recherche zu jedem Unternehmen. Erhalte Einblicke in ihr Geschäft, ihre Herausforderungen und Chancen."
+      },
+      "preparation": {
+        "title": "Meeting-Vorbereitung",
+        "description": "Erstelle personalisierte Meeting-Briefings mit Gesprächspunkten, Fragen und Strategieempfehlungen."
+      },
+      "followup": {
+        "title": "Meeting-Nachbereitung",
+        "description": "Lade Aufnahmen hoch, erhalte KI-Zusammenfassungen, Aktionspunkte und automatische Follow-up-E-Mail-Entwürfe."
+      },
+      "knowledgeBase": {
+        "title": "Wissensdatenbank",
+        "description": "Lade deine Unternehmensdokumente hoch. Die KI nutzt deinen Kontext, um relevante, markengerechte Inhalte zu erstellen."
+      }
+    },
+    "socialProof": {
+      "trustedBy": "VERTRAUT VON VERTRIEBSTEAMS BEI"
+    },
+    "cta": {
+      "title": "Bereit, deinen Vertriebsprozess zu transformieren?",
+      "description": "Schließe dich Tausenden von Vertriebsprofis an, die mit SalesPrep AI mehr Deals abschließen.",
+      "button": "Kostenlos starten"
+    },
+    "footer": {
+      "rights": "Alle Rechte vorbehalten."
+    }
+  },
+  "authForm": {
+    "orContinueWith": "Oder mit E-Mail fortfahren",
+    "email": "E-Mail",
+    "emailPlaceholder": "name@beispiel.de",
+    "password": "Passwort",
+    "signInEmail": "Mit E-Mail anmelden",
+    "signUpEmail": "Mit E-Mail registrieren",
+    "termsPrefix": "Mit der Anmeldung stimmst du unseren",
+    "termsOfService": "Nutzungsbedingungen",
+    "and": "und",
+    "privacyPolicy": "Datenschutzrichtlinien",
+    "errors": {
+      "oauthError": "Authentifizierung fehlgeschlagen. Bitte versuche es erneut.",
+      "accessDenied": "Anmeldung wurde abgebrochen.",
+      "serverError": "Der Authentifizierungsanbieter ist vorübergehend nicht verfügbar. Bitte versuche es später erneut.",
+      "genericSignIn": "Bei der Anmeldung ist ein Fehler aufgetreten.",
+      "genericSignUp": "Bei der Registrierung ist ein Fehler aufgetreten."
+    }
   }
 }
 

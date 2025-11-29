@@ -795,6 +795,76 @@
       "description": "Je betaling is geannuleerd. Je kunt het opnieuw proberen wanneer je wilt.",
       "backToPricing": "Terug naar Prijzen"
     }
+  },
+  "homepage": {
+    "nav": {
+      "login": "Inloggen",
+      "getStarted": "Aan de slag"
+    },
+    "hero": {
+      "badge": "AI-Powered Sales Enablement",
+      "title": "Bereid meetings voor",
+      "titleHighlight": "in seconden",
+      "description": "Research prospects, genereer gepersonaliseerde briefs en volg op met AI-gestuurde samenvattingen. Alles wat je nodig hebt om meer deals te sluiten, sneller.",
+      "startTrial": "Start Gratis Proefperiode",
+      "watchDemo": "Bekijk Demo"
+    },
+    "preview": {
+      "research": "Research",
+      "brief": "Brief",
+      "aiMeetingBrief": "AI Meeting Brief",
+      "generatedIn": "Gegenereerd in 30 seconden"
+    },
+    "features": {
+      "title": "Alles wat je nodig hebt om meer deals te winnen",
+      "description": "Van research tot follow-up, SalesPrep AI helpt je bij elke stap van je salesproces.",
+      "research": {
+        "title": "Prospect Research",
+        "description": "AI-gestuurde research over elk bedrijf. Krijg inzichten in hun business, uitdagingen en kansen."
+      },
+      "preparation": {
+        "title": "Meeting Voorbereiding",
+        "description": "Genereer gepersonaliseerde meeting briefs met gesprekspunten, vragen en strategie-aanbevelingen."
+      },
+      "followup": {
+        "title": "Meeting Follow-up",
+        "description": "Upload opnames, krijg AI-samenvattingen, actiepunten en concept follow-up emails automatisch."
+      },
+      "knowledgeBase": {
+        "title": "Knowledge Base",
+        "description": "Upload je bedrijfsdocumenten. De AI gebruikt jouw context om relevante, on-brand content te genereren."
+      }
+    },
+    "socialProof": {
+      "trustedBy": "VERTROUWD DOOR SALES TEAMS BIJ"
+    },
+    "cta": {
+      "title": "Klaar om je salesproces te transformeren?",
+      "description": "Sluit je aan bij duizenden sales professionals die meer deals sluiten met SalesPrep AI.",
+      "button": "Start Gratis"
+    },
+    "footer": {
+      "rights": "Alle rechten voorbehouden."
+    }
+  },
+  "authForm": {
+    "orContinueWith": "Of ga verder met email",
+    "email": "Email",
+    "emailPlaceholder": "naam@voorbeeld.nl",
+    "password": "Wachtwoord",
+    "signInEmail": "Inloggen met Email",
+    "signUpEmail": "Registreren met Email",
+    "termsPrefix": "Door je aan te melden, ga je akkoord met onze",
+    "termsOfService": "Servicevoorwaarden",
+    "and": "en",
+    "privacyPolicy": "Privacybeleid",
+    "errors": {
+      "oauthError": "Authenticatie mislukt. Probeer het opnieuw.",
+      "accessDenied": "Aanmelden is geannuleerd.",
+      "serverError": "De authenticatieprovider is tijdelijk niet beschikbaar. Probeer het later opnieuw.",
+      "genericSignIn": "Er is een fout opgetreden tijdens het inloggen.",
+      "genericSignUp": "Er is een fout opgetreden tijdens het registreren."
+    }
   }
 }
 

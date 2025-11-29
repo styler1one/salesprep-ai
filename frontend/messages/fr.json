@@ -778,6 +778,76 @@
       "description": "Votre paiement a été annulé. Vous pouvez réessayer quand vous voulez.",
       "backToPricing": "Retour aux tarifs"
     }
+  },
+  "homepage": {
+    "nav": {
+      "login": "Connexion",
+      "getStarted": "Commencer"
+    },
+    "hero": {
+      "badge": "Aide à la vente alimentée par l'IA",
+      "title": "Préparez vos réunions",
+      "titleHighlight": "en quelques secondes",
+      "description": "Recherchez des prospects, générez des briefings personnalisés et effectuez des suivis avec des résumés générés par l'IA. Tout ce dont vous avez besoin pour conclure plus de ventes, plus rapidement.",
+      "startTrial": "Essai gratuit",
+      "watchDemo": "Voir la démo"
+    },
+    "preview": {
+      "research": "Recherche",
+      "brief": "Briefing",
+      "aiMeetingBrief": "Briefing IA",
+      "generatedIn": "Généré en 30 secondes"
+    },
+    "features": {
+      "title": "Tout ce dont vous avez besoin pour gagner plus de contrats",
+      "description": "De la recherche au suivi, SalesPrep AI vous accompagne à chaque étape de votre processus de vente.",
+      "research": {
+        "title": "Recherche de prospects",
+        "description": "Recherche alimentée par l'IA sur n'importe quelle entreprise. Obtenez des informations sur leur activité, leurs défis et leurs opportunités."
+      },
+      "preparation": {
+        "title": "Préparation de réunion",
+        "description": "Générez des briefings de réunion personnalisés avec des points de discussion, des questions et des recommandations stratégiques."
+      },
+      "followup": {
+        "title": "Suivi de réunion",
+        "description": "Téléchargez des enregistrements, obtenez des résumés IA, des actions à entreprendre et des brouillons d'e-mails de suivi automatiquement."
+      },
+      "knowledgeBase": {
+        "title": "Base de connaissances",
+        "description": "Téléchargez vos documents d'entreprise. L'IA utilise votre contexte pour générer du contenu pertinent et conforme à votre marque."
+      }
+    },
+    "socialProof": {
+      "trustedBy": "APPROUVÉ PAR LES ÉQUIPES COMMERCIALES DE"
+    },
+    "cta": {
+      "title": "Prêt à transformer votre processus de vente ?",
+      "description": "Rejoignez des milliers de professionnels de la vente qui concluent plus de contrats avec SalesPrep AI.",
+      "button": "Commencer gratuitement"
+    },
+    "footer": {
+      "rights": "Tous droits réservés."
+    }
+  },
+  "authForm": {
+    "orContinueWith": "Ou continuer avec l'e-mail",
+    "email": "E-mail",
+    "emailPlaceholder": "nom@exemple.fr",
+    "password": "Mot de passe",
+    "signInEmail": "Se connecter avec l'e-mail",
+    "signUpEmail": "S'inscrire avec l'e-mail",
+    "termsPrefix": "En vous inscrivant, vous acceptez nos",
+    "termsOfService": "Conditions d'utilisation",
+    "and": "et",
+    "privacyPolicy": "Politique de confidentialité",
+    "errors": {
+      "oauthError": "L'authentification a échoué. Veuillez réessayer.",
+      "accessDenied": "La connexion a été annulée.",
+      "serverError": "Le fournisseur d'authentification est temporairement indisponible. Veuillez réessayer plus tard.",
+      "genericSignIn": "Une erreur s'est produite lors de la connexion.",
+      "genericSignUp": "Une erreur s'est produite lors de l'inscription."
+    }
   }
 }
 

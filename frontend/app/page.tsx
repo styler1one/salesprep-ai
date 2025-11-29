@@ -11,6 +11,7 @@ export default function Home() {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const [loading, setLoading] = useState(true)
+  const t = useTranslations('homepage')
 
   useEffect(() => {
     const checkUser = async () => {
@@ -45,10 +46,10 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-4">
               <Button variant="ghost" onClick={() => router.push('/login')}>
-                Log in
+                {t('nav.login')}
               </Button>
               <Button onClick={() => router.push('/signup')} className="bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700">
-                Get Started
+                {t('nav.getStarted')}
               </Button>
             </div>
           </div>
@@ -61,17 +62,16 @@ export default function Home() {
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-sm font-medium mb-6">
               <Icons.sparkles className="h-4 w-4" />
-              AI-Powered Sales Enablement
+              {t('hero.badge')}
             </div>
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-slate-900 dark:text-white mb-6">
-              Prepare for meetings{' '}
+              {t('hero.title')}{' '}
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600">
-                in seconds
+                {t('hero.titleHighlight')}
               </span>
             </h1>
             <p className="text-xl text-slate-600 dark:text-slate-300 mb-10 max-w-2xl mx-auto">
-              Research prospects, generate personalized briefs, and follow up with AI-powered summaries. 
-              Everything you need to close more deals, faster.
+              {t('hero.description')}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button 
@@ -79,7 +79,7 @@ export default function Home() {
                 onClick={() => router.push('/signup')}
                 className="bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-lg px-8 h-14"
               >
-                Start Free Trial
+                {t('hero.startTrial')}
                 <Icons.arrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button 
@@ -89,7 +89,7 @@ export default function Home() {
                 className="text-lg px-8 h-14"
               >
                 <Icons.play className="mr-2 h-5 w-5" />
-                Watch Demo
+                {t('hero.watchDemo')}
               </Button>
             </div>
           </div>
@@ -112,7 +112,7 @@ export default function Home() {
                         <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                           <Icons.search className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <span className="font-medium text-sm text-slate-900 dark:text-white">Research</span>
+                        <span className="font-medium text-sm text-slate-900 dark:text-white">{t('preview.research')}</span>
                       </div>
                       <div className="space-y-2">
                         <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded w-full" />
@@ -124,7 +124,7 @@ export default function Home() {
                         <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                           <Icons.fileText className="h-4 w-4 text-green-600 dark:text-green-400" />
                         </div>
-                        <span className="font-medium text-sm text-slate-900 dark:text-white">Brief</span>
+                        <span className="font-medium text-sm text-slate-900 dark:text-white">{t('preview.brief')}</span>
                       </div>
                       <div className="space-y-2">
                         <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded w-full" />
@@ -138,8 +138,8 @@ export default function Home() {
                         <Icons.sparkles className="h-5 w-5 text-white" />
                       </div>
                       <div>
-                        <p className="font-medium text-slate-900 dark:text-white">AI Meeting Brief</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">Generated in 30 seconds</p>
+                        <p className="font-medium text-slate-900 dark:text-white">{t('preview.aiMeetingBrief')}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{t('preview.generatedIn')}</p>
                       </div>
                     </div>
                     <div className="space-y-3">
@@ -162,10 +162,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-4">
-              Everything you need to win more deals
+              {t('features.title')}
             </h2>
             <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-              From research to follow-up, SalesPrep AI helps you at every step of your sales process.
+              {t('features.description')}
             </p>
           </div>
 
@@ -175,9 +175,9 @@ export default function Home() {
               <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Icons.search className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white">Prospect Research</h3>
+              <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white">{t('features.research.title')}</h3>
               <p className="text-slate-600 dark:text-slate-300 text-sm">
-                AI-powered research on any company. Get insights on their business, challenges, and opportunities.
+                {t('features.research.description')}
               </p>
             </div>
 
@@ -186,9 +186,9 @@ export default function Home() {
               <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Icons.fileText className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white">Meeting Preparation</h3>
+              <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white">{t('features.preparation.title')}</h3>
               <p className="text-slate-600 dark:text-slate-300 text-sm">
-                Generate personalized meeting briefs with talking points, questions, and strategy recommendations.
+                {t('features.preparation.description')}
               </p>
             </div>
 
@@ -197,9 +197,9 @@ export default function Home() {
               <div className="w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Icons.mail className="h-6 w-6 text-orange-600 dark:text-orange-400" />
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white">Meeting Follow-up</h3>
+              <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white">{t('features.followup.title')}</h3>
               <p className="text-slate-600 dark:text-slate-300 text-sm">
-                Upload recordings, get AI summaries, action items, and draft follow-up emails automatically.
+                {t('features.followup.description')}
               </p>
             </div>
 
@@ -208,9 +208,9 @@ export default function Home() {
               <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Icons.book className="h-6 w-6 text-purple-600 dark:text-purple-400" />
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white">Knowledge Base</h3>
+              <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white">{t('features.knowledgeBase.title')}</h3>
               <p className="text-slate-600 dark:text-slate-300 text-sm">
-                Upload your company docs. The AI uses your context to generate relevant, on-brand content.
+                {t('features.knowledgeBase.description')}
               </p>
             </div>
           </div>
@@ -220,7 +220,7 @@ export default function Home() {
       {/* Social Proof */}
       <section className="py-20 px-4 bg-slate-50 dark:bg-slate-800">
         <div className="max-w-7xl mx-auto text-center">
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-8">TRUSTED BY SALES TEAMS AT</p>
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-8">{t('socialProof.trustedBy')}</p>
           <div className="flex flex-wrap items-center justify-center gap-8 opacity-50">
             {['Microsoft', 'Salesforce', 'HubSpot', 'Oracle', 'SAP'].map((company) => (
               <span key={company} className="text-2xl font-bold text-slate-400 dark:text-slate-500">
@@ -235,10 +235,10 @@ export default function Home() {
       <section className="py-20 px-4 bg-gradient-to-r from-blue-600 to-violet-600">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
-            Ready to transform your sales process?
+            {t('cta.title')}
           </h2>
           <p className="text-xl text-blue-100 mb-10">
-            Join thousands of sales professionals who close more deals with SalesPrep AI.
+            {t('cta.description')}
           </p>
           <Button 
             size="lg" 
@@ -246,7 +246,7 @@ export default function Home() {
             onClick={() => router.push('/signup')}
             className="text-lg px-8 h-14 bg-white text-blue-600 hover:bg-blue-50"
           >
-            Get Started Free
+            {t('cta.button')}
             <Icons.arrowRight className="ml-2 h-5 w-5" />
           </Button>
         </div>
@@ -263,7 +263,7 @@ export default function Home() {
               <span className="font-bold text-white">SalesPrep AI</span>
             </div>
             <p className="text-sm">
-              © {new Date().getFullYear()} SalesPrep AI. All rights reserved.
+              © {new Date().getFullYear()} SalesPrep AI. {t('footer.rights')}
             </p>
           </div>
         </div>

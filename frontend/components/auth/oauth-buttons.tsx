@@ -4,11 +4,13 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
+import { useTranslations } from 'next-intl'
 
 export function OAuthButtons() {
     const supabase = createClientComponentClient()
     const [loadingGoogle, setLoadingGoogle] = useState(false)
     const [loadingMicrosoft, setLoadingMicrosoft] = useState(false)
+    const t = useTranslations('auth')
 
     const handleGoogleLogin = async () => {
         setLoadingGoogle(true)
@@ -62,7 +64,7 @@ export function OAuthButtons() {
                 ) : (
                     <Icons.google className="mr-2 h-5 w-5" />
                 )}
-                Continue with Google
+                {t('continueWithGoogle')}
             </Button>
 
             <Button
@@ -76,7 +78,7 @@ export function OAuthButtons() {
                 ) : (
                     <Icons.microsoft className="mr-2 h-5 w-5" />
                 )}
-                Continue with Microsoft
+                {t('continueWithMicrosoft')}
             </Button>
         </div>
     )

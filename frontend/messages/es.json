@@ -778,6 +778,76 @@
       "description": "Tu pago fue cancelado. Puedes intentarlo de nuevo cuando quieras.",
       "backToPricing": "Volver a Precios"
     }
+  },
+  "homepage": {
+    "nav": {
+      "login": "Iniciar sesión",
+      "getStarted": "Comenzar"
+    },
+    "hero": {
+      "badge": "Habilitación de ventas con IA",
+      "title": "Prepara reuniones",
+      "titleHighlight": "en segundos",
+      "description": "Investiga prospectos, genera informes personalizados y haz seguimiento con resúmenes generados por IA. Todo lo que necesitas para cerrar más ventas, más rápido.",
+      "startTrial": "Prueba gratis",
+      "watchDemo": "Ver demo"
+    },
+    "preview": {
+      "research": "Investigación",
+      "brief": "Informe",
+      "aiMeetingBrief": "Informe IA",
+      "generatedIn": "Generado en 30 segundos"
+    },
+    "features": {
+      "title": "Todo lo que necesitas para ganar más ventas",
+      "description": "Desde la investigación hasta el seguimiento, SalesPrep AI te ayuda en cada paso de tu proceso de ventas.",
+      "research": {
+        "title": "Investigación de prospectos",
+        "description": "Investigación impulsada por IA sobre cualquier empresa. Obtén información sobre su negocio, desafíos y oportunidades."
+      },
+      "preparation": {
+        "title": "Preparación de reuniones",
+        "description": "Genera informes de reuniones personalizados con puntos de conversación, preguntas y recomendaciones estratégicas."
+      },
+      "followup": {
+        "title": "Seguimiento de reuniones",
+        "description": "Sube grabaciones, obtén resúmenes de IA, elementos de acción y borradores de correos de seguimiento automáticamente."
+      },
+      "knowledgeBase": {
+        "title": "Base de conocimientos",
+        "description": "Sube tus documentos de empresa. La IA usa tu contexto para generar contenido relevante y acorde a tu marca."
+      }
+    },
+    "socialProof": {
+      "trustedBy": "CONFIADO POR EQUIPOS DE VENTAS EN"
+    },
+    "cta": {
+      "title": "¿Listo para transformar tu proceso de ventas?",
+      "description": "Únete a miles de profesionales de ventas que cierran más tratos con SalesPrep AI.",
+      "button": "Comenzar gratis"
+    },
+    "footer": {
+      "rights": "Todos los derechos reservados."
+    }
+  },
+  "authForm": {
+    "orContinueWith": "O continuar con correo",
+    "email": "Correo",
+    "emailPlaceholder": "nombre@ejemplo.com",
+    "password": "Contraseña",
+    "signInEmail": "Iniciar sesión con correo",
+    "signUpEmail": "Registrarse con correo",
+    "termsPrefix": "Al registrarte, aceptas nuestros",
+    "termsOfService": "Términos de servicio",
+    "and": "y",
+    "privacyPolicy": "Política de privacidad",
+    "errors": {
+      "oauthError": "La autenticación falló. Inténtalo de nuevo.",
+      "accessDenied": "El inicio de sesión fue cancelado.",
+      "serverError": "El proveedor de autenticación no está disponible temporalmente. Inténtalo más tarde.",
+      "genericSignIn": "Ocurrió un error durante el inicio de sesión.",
+      "genericSignUp": "Ocurrió un error durante el registro."
+    }
   }
 }
 

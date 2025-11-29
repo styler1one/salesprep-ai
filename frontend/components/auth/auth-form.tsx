@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Icons } from '@/components/icons'
 import { OAuthButtons } from './oauth-buttons'
+import { useTranslations } from 'next-intl'
 
 interface AuthFormProps {
     view: 'login' | 'signup'
@@ -21,6 +22,7 @@ export function AuthForm({ view }: AuthFormProps) {
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const t = useTranslations('authForm')
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -69,7 +71,7 @@ export function AuthForm({ view }: AuthFormProps) {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                     <span className="bg-background px-2 text-muted-foreground">
-                        Or continue with email
+                        {t('orContinueWith')}
                     </span>
                 </div>
             </div>
@@ -78,10 +80,10 @@ export function AuthForm({ view }: AuthFormProps) {
             <form onSubmit={handleSubmit}>
                 <div className="grid gap-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="email">Email</Label>
+                        <Label htmlFor="email">{t('email')}</Label>
                         <Input
                             id="email"
-                            placeholder="name@example.com"
+                            placeholder={t('emailPlaceholder')}
                             type="email"
                             autoCapitalize="none"
                             autoComplete="email"
@@ -93,7 +95,7 @@ export function AuthForm({ view }: AuthFormProps) {
                         />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="password">Password</Label>
+                        <Label htmlFor="password">{t('password')}</Label>
                         <Input
                             id="password"
                             type="password"
@@ -114,7 +116,7 @@ export function AuthForm({ view }: AuthFormProps) {
                         {loading && (
                             <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
                         )}
-                        {view === 'login' ? 'Sign In with Email' : 'Sign Up with Email'}
+                        {view === 'login' ? t('signInEmail') : t('signUpEmail')}
                     </Button>
                 </div>
             </form>
