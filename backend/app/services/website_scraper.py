@@ -30,12 +30,15 @@ class WebsiteScraper:
     
     def __init__(self):
         """Initialize scraper with default settings."""
-        self.timeout = aiohttp.ClientTimeout(total=30)
-        self.max_pages = 10  # Limit pages to scrape
+        # Faster timeouts - 10s total, 5s per connection
+        self.timeout = aiohttp.ClientTimeout(total=10, connect=5, sock_read=5)
+        self.max_pages = 5  # Reduced for faster results
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (compatible; SalesPrepAI/1.0; Research Bot)",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Accept-Language": "en-US,en;q=0.5,nl;q=0.3",
+            "Accept-Encoding": "gzip, deflate",
+            "Connection": "keep-alive",
         }
         
         # Pages to look for
@@ -153,8 +156,10 @@ class WebsiteScraper:
     ) -> Optional[Dict[str, Any]]:
         """Fetch and parse a single page."""
         try:
-            async with session.get(url, allow_redirects=True) as response:
+            async with session.get(url, allow_redirects=True, ssl=False) as response:
+                # Fast fail on non-200 status
                 if response.status != 200:
+                    logger.debug(f"Non-200 status {response.status} for {url}")
                     return None
                 
                 # Check content type
@@ -162,7 +167,23 @@ class WebsiteScraper:
                 if "text/html" not in content_type:
                     return None
                 
+                # Check for Cloudflare/bot protection in headers
+                server = response.headers.get("Server", "").lower()
+                if "cloudflare" in server:
+                    logger.debug(f"Cloudflare detected for {url}, skipping")
+                    return None
+                
                 html = await response.text()
+                
+                # Quick check for bot protection pages
+                if any(block in html.lower() for block in [
+                    "just a moment", "checking your browser", 
+                    "enable javascript", "access denied",
+                    "captcha", "blocked", "rate limit"
+                ]):
+                    logger.debug(f"Bot protection detected for {url}")
+                    return None
+                
                 soup = BeautifulSoup(html, "html.parser")
                 
                 # Remove script and style elements
@@ -190,6 +211,9 @@ class WebsiteScraper:
                     "html": html[:50000]  # Keep some HTML for link discovery
                 }
                 
+        except asyncio.TimeoutError:
+            logger.debug(f"Timeout fetching {url}")
+            return None
         except Exception as e:
             logger.debug(f"Failed to fetch {url}: {e}")
             return None

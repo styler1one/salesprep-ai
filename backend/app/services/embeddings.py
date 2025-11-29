@@ -61,3 +61,18 @@ class EmbeddingsService:
         """
         embeddings = self.generate_embeddings([text], input_type)
         return embeddings[0] if embeddings else []
+    
+    async def embed_text(self, text: str, input_type: str = "query") -> List[float]:
+        """
+        Async wrapper for embedding a single text (for search queries).
+        
+        Args:
+            text: Text string to embed
+            input_type: "query" for search, "document" for knowledge base
+            
+        Returns:
+            Embedding vector (1024 dimensions)
+        """
+        # The underlying API is synchronous, but we provide async interface
+        # for compatibility with async code
+        return self.generate_embedding(text, input_type)
