@@ -273,7 +273,7 @@ export default function FollowupPage() {
         <div className="flex items-center justify-center h-full">
           <div className="text-center space-y-4">
             <Icons.spinner className="h-8 w-8 animate-spin text-orange-600 mx-auto" />
-            <p className="text-slate-500">Laden...</p>
+            <p className="text-slate-500 dark:text-slate-400">Laden...</p>
           </div>
         </div>
       </DashboardLayout>
@@ -285,10 +285,10 @@ export default function FollowupPage() {
       <div className="p-4 lg:p-6">
         {/* Page Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900 mb-1">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
             Follow-up Agent
           </h1>
-          <p className="text-slate-500 text-sm">
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
             Upload meeting opnames voor transcriptie, samenvatting en follow-up acties
           </p>
         </div>
@@ -299,7 +299,7 @@ export default function FollowupPage() {
           {/* Left Column - Follow-ups History */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <Icons.mail className="h-5 w-5 text-slate-400" />
                 Mijn Follow-ups
                 <span className="text-sm font-normal text-slate-400">({followups.length})</span>
@@ -310,10 +310,10 @@ export default function FollowupPage() {
             </div>
 
             {followups.length === 0 ? (
-              <div className="bg-white rounded-xl border p-12 text-center">
-                <Icons.mic className="h-16 w-16 text-slate-200 mx-auto mb-4" />
-                <h3 className="font-semibold text-slate-700 mb-2">Nog geen follow-ups</h3>
-                <p className="text-slate-500 text-sm mb-4">
+              <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center">
+                <Icons.mic className="h-16 w-16 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
+                <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-2">Nog geen follow-ups</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
                   Upload een meeting opname via het formulier rechts →
                 </p>
               </div>
@@ -322,49 +322,49 @@ export default function FollowupPage() {
                 {followups.map((followup) => (
                   <div
                     key={followup.id}
-                    className="bg-white rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group"
+                    className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 hover:shadow-md dark:hover:shadow-slate-800/50 transition-all cursor-pointer group"
                     onClick={() => router.push(`/dashboard/followup/${followup.id}`)}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-slate-900 truncate">
+                          <h4 className="font-semibold text-slate-900 dark:text-white truncate">
                             {followup.prospect_company_name || followup.meeting_subject || 'Meeting'}
                           </h4>
                           
                           {followup.status === 'completed' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 flex-shrink-0">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 dark:bg-green-900/50 text-green-700 dark:text-green-400 flex-shrink-0">
                               <Icons.check className="h-3 w-3" />
                               Klaar
                             </span>
                           )}
                           {followup.status === 'transcribing' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700 flex-shrink-0">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-50 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-400 flex-shrink-0">
                               <Icons.spinner className="h-3 w-3 animate-spin" />
                               Transcriberen
                             </span>
                           )}
                           {followup.status === 'summarizing' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 flex-shrink-0">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-50 dark:bg-purple-900/50 text-purple-700 dark:text-purple-400 flex-shrink-0">
                               <Icons.spinner className="h-3 w-3 animate-spin" />
                               Samenvatten
                             </span>
                           )}
                           {followup.status === 'uploading' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 flex-shrink-0">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 flex-shrink-0">
                               <Icons.spinner className="h-3 w-3 animate-spin" />
                               Uploaden
                             </span>
                           )}
                           {followup.status === 'failed' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 flex-shrink-0">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 dark:bg-red-900/50 text-red-700 dark:text-red-400 flex-shrink-0">
                               <Icons.alertCircle className="h-3 w-3" />
                               Mislukt
                             </span>
                           )}
                         </div>
                         
-                        <div className="flex items-center gap-3 text-xs text-slate-500">
+                        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                           {followup.meeting_date && (
                             <span>{new Date(followup.meeting_date).toLocaleDateString('nl-NL')}</span>
                           )}
@@ -378,7 +378,7 @@ export default function FollowupPage() {
                         </div>
 
                         {followup.executive_summary && (
-                          <p className="text-xs text-slate-500 mt-2 line-clamp-1">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-1">
                             {followup.executive_summary}
                           </p>
                         )}
@@ -402,7 +402,7 @@ export default function FollowupPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-600 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={(e) => handleDelete(followup.id, e)}
                         >
                           <Icons.trash className="h-4 w-4" />
@@ -420,27 +420,27 @@ export default function FollowupPage() {
             <div className="sticky top-4 space-y-4">
               
               {/* Stats Panel */}
-              <div className="rounded-xl border bg-white p-4 shadow-sm">
-                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                   <Icons.barChart className="h-4 w-4 text-slate-400" />
                   Overzicht
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-green-50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-green-600">{completedFollowups}</p>
-                    <p className="text-xs text-green-700">Voltooid</p>
+                  <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">{completedFollowups}</p>
+                    <p className="text-xs text-green-700 dark:text-green-300">Voltooid</p>
                   </div>
-                  <div className="bg-orange-50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-orange-600">{processingFollowups}</p>
-                    <p className="text-xs text-orange-700">Bezig</p>
+                  <div className="bg-orange-50 dark:bg-orange-900/30 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{processingFollowups}</p>
+                    <p className="text-xs text-orange-700 dark:text-orange-300">Bezig</p>
                   </div>
                 </div>
               </div>
 
               {/* Upload Form */}
-              <div className="rounded-xl border bg-white p-4 shadow-sm">
-                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                  <Icons.upload className="h-4 w-4 text-orange-600" />
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                  <Icons.upload className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                   Nieuwe Follow-up
                 </h3>
                 
@@ -472,7 +472,7 @@ export default function FollowupPage() {
                   {/* File Upload */}
                   <div 
                     className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors
-                      ${selectedFile ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-gray-400'}
+                      ${selectedFile ? 'border-green-500 dark:border-green-600 bg-green-50 dark:bg-green-900/30' : 'border-gray-300 dark:border-slate-600 hover:border-gray-400 dark:hover:border-slate-500'}
                       ${uploading ? 'pointer-events-none opacity-50' : ''}`}
                     onClick={() => document.getElementById('file-input')?.click()}
                   >
@@ -488,21 +488,21 @@ export default function FollowupPage() {
                     />
                     {selectedFile ? (
                       <div className="flex items-center justify-center gap-2">
-                        <Icons.fileText className="h-6 w-6 text-green-600" />
+                        <Icons.fileText className="h-6 w-6 text-green-600 dark:text-green-400" />
                         <div className="text-left">
-                          <p className="font-medium text-xs truncate max-w-[150px]">{selectedFile.name}</p>
-                          <p className="text-xs text-slate-500">
+                          <p className="font-medium text-xs truncate max-w-[150px] text-slate-900 dark:text-white">{selectedFile.name}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
                             {(selectedFile.size / 1024 / 1024).toFixed(1)} MB
                           </p>
                         </div>
                       </div>
                     ) : (
                       <>
-                        <Icons.upload className="h-8 w-8 mx-auto text-gray-400 mb-1" />
-                        <p className="text-xs text-gray-600">
+                        <Icons.upload className="h-8 w-8 mx-auto text-gray-400 dark:text-slate-500 mb-1" />
+                        <p className="text-xs text-gray-600 dark:text-slate-300">
                           Klik om {uploadType === 'audio' ? 'audio' : 'transcript'} te uploaden
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
                           {uploadType === 'audio' ? 'MP3, M4A, WAV (max 50MB)' : 'TXT, MD, DOCX (max 10MB)'}
                         </p>
                       </>
@@ -512,13 +512,13 @@ export default function FollowupPage() {
                   {/* Progress bar */}
                   {uploading && (
                     <div className="space-y-1">
-                      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-orange-600 transition-all duration-300"
                           style={{ width: `${uploadProgress}%` }}
                         />
                       </div>
-                      <p className="text-xs text-center text-slate-500">
+                      <p className="text-xs text-center text-slate-500 dark:text-slate-400">
                         {uploadProgress < 30 ? 'Uploaden...' : 
                          uploadProgress < 80 ? 'Verwerken...' : 'Bijna klaar...'}
                       </p>
@@ -527,7 +527,7 @@ export default function FollowupPage() {
 
                   {/* Prospect field */}
                   <div>
-                    <Label className="text-xs">Prospect</Label>
+                    <Label className="text-xs text-slate-700 dark:text-slate-300">Prospect</Label>
                     <ProspectAutocomplete
                       value={prospectCompany}
                       onChange={setProspectCompany}
@@ -540,16 +540,16 @@ export default function FollowupPage() {
                   <button
                     type="button"
                     onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
+                    className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center gap-1"
                   >
                     {showAdvanced ? <Icons.chevronDown className="h-3 w-3" /> : <Icons.chevronRight className="h-3 w-3" />}
                     Extra opties
                   </button>
 
                   {showAdvanced && (
-                    <div className="space-y-3 pt-2 border-t">
+                    <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-700">
                       <div>
-                        <Label className="text-xs">Onderwerp</Label>
+                        <Label className="text-xs text-slate-700 dark:text-slate-300">Onderwerp</Label>
                         <Input
                           placeholder="Bijv. Demo gesprek"
                           value={meetingSubject}
@@ -559,7 +559,7 @@ export default function FollowupPage() {
                         />
                       </div>
                       <div>
-                        <Label className="text-xs">Datum</Label>
+                        <Label className="text-xs text-slate-700 dark:text-slate-300">Datum</Label>
                         <Input
                           type="date"
                           value={meetingDate}
@@ -572,7 +572,7 @@ export default function FollowupPage() {
                   )}
 
                   {/* Coaching Toggle */}
-                  <div className="flex items-center space-x-2 pt-2 border-t">
+                  <div className="flex items-center space-x-2 pt-2 border-t border-slate-200 dark:border-slate-700">
                     <Checkbox
                       id="coaching"
                       checked={includeCoaching}
@@ -580,10 +580,10 @@ export default function FollowupPage() {
                       disabled={uploading}
                     />
                     <div className="grid gap-0.5 leading-none">
-                      <Label htmlFor="coaching" className="text-xs cursor-pointer">
+                      <Label htmlFor="coaching" className="text-xs cursor-pointer text-slate-700 dark:text-slate-300">
                         📈 Coaching feedback
                       </Label>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-slate-400 dark:text-slate-500">
                         Tips over wat goed ging
                       </p>
                     </div>
@@ -610,26 +610,26 @@ export default function FollowupPage() {
               </div>
 
               {/* How it works Panel */}
-              <div className="rounded-xl border bg-gradient-to-br from-orange-50 to-amber-50 p-4 shadow-sm">
-                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                  <Icons.sparkles className="h-4 w-4 text-orange-600" />
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950 dark:to-amber-950 p-4 shadow-sm">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                  <Icons.sparkles className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                   Wat krijg je?
                 </h3>
-                <ul className="space-y-2 text-xs text-slate-700">
+                <ul className="space-y-2 text-xs text-slate-700 dark:text-slate-300">
                   <li className="flex items-start gap-2">
-                    <Icons.check className="h-4 w-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <Icons.check className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
                     <span>Volledige transcriptie</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Icons.check className="h-4 w-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <Icons.check className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
                     <span>Executive summary</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Icons.check className="h-4 w-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <Icons.check className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
                     <span>Actiepunten & next steps</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Icons.check className="h-4 w-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <Icons.check className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
                     <span>Follow-up email concept</span>
                   </li>
                 </ul>
