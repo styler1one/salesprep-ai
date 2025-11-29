@@ -41,6 +41,11 @@ interface Contact {
   created_at: string
 }
 
+interface ProfileStatus {
+  hasSalesProfile: boolean
+  hasCompanyProfile: boolean
+}
+
 export default function ResearchBriefPage() {
   const router = useRouter()
   const params = useParams()
@@ -50,6 +55,7 @@ export default function ResearchBriefPage() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [brief, setBrief] = useState<ResearchBrief | null>(null)
+  const [profileStatus, setProfileStatus] = useState<ProfileStatus>({ hasSalesProfile: false, hasCompanyProfile: false })
   
   // Contact states
   const [contacts, setContacts] = useState<Contact[]>([])
@@ -68,12 +74,38 @@ export default function ResearchBriefPage() {
       setUser(user)
       if (user) {
         fetchBrief()
+        fetchProfileStatus()
       } else {
         router.push('/login')
       }
     }
     getUser()
   }, [supabase, params.id])
+
+  const fetchProfileStatus = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      
+      const [salesRes, companyRes] = await Promise.all([
+        fetch(`${apiUrl}/api/v1/profile/sales`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        }),
+        fetch(`${apiUrl}/api/v1/profile/company`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        })
+      ])
+
+      setProfileStatus({
+        hasSalesProfile: salesRes.ok && (await salesRes.json())?.full_name,
+        hasCompanyProfile: companyRes.ok && (await companyRes.json())?.company_name
+      })
+    } catch (error) {
+      console.error('Failed to fetch profile status:', error)
+    }
+  }
 
   const fetchBrief = async () => {
     try {
@@ -95,8 +127,8 @@ export default function ResearchBriefPage() {
       } else {
         toast({
           variant: "destructive",
-          title: "Failed to load brief",
-          description: "Could not load the research brief",
+          title: "Kon brief niet laden",
+          description: "Er is een fout opgetreden bij het laden van de research brief",
         })
         router.push('/dashboard/research')
       }
@@ -104,8 +136,8 @@ export default function ResearchBriefPage() {
       console.error('Failed to fetch brief:', error)
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "An error occurred while loading the brief",
+        title: "Fout",
+        description: "Er is een fout opgetreden",
       })
     } finally {
       setLoading(false)
@@ -184,7 +216,6 @@ export default function ResearchBriefPage() {
         setLookupResult({ found: data.found, confidence: data.confidence })
         
         if (data.found) {
-          // Auto-fill the found data
           setNewContact(prev => ({
             ...prev,
             role: data.role || prev.role,
@@ -256,22 +287,18 @@ export default function ResearchBriefPage() {
       if (response.ok) {
         const data = await response.json()
         setContacts(prev => [...prev, data])
-        // Track this contact as analyzing
         setAnalyzingContactIds(prev => new Set([...prev, data.id]))
         setNewContact({ name: '', role: '', linkedin_url: '' })
         setLookupResult(null)
         setShowAddContact(false)
         toast({
           title: "Contactpersoon toegevoegd",
-          description: "Analyse gestart - zie voortgang hieronder",
+          description: "AI-analyse gestart...",
         })
         
-        // Auto-expand the new contact to show analysis progress
-        setSelectedContact(data)
-        
-        // Smart polling: check frequently at first, then slower
+        // Smart polling for analysis completion
         const pollForAnalysis = async (contactId: string, attempts: number) => {
-          if (attempts > 12) { // Max 60 seconds (12 * 5s)
+          if (attempts > 12) {
             setAnalyzingContactIds(prev => {
               const next = new Set(prev)
               next.delete(contactId)
@@ -282,7 +309,6 @@ export default function ResearchBriefPage() {
           
           await fetchContacts()
           
-          // Check if analysis is done
           const contact = contacts.find(c => c.id === contactId)
           if (contact?.analyzed_at) {
             setAnalyzingContactIds(prev => {
@@ -297,11 +323,9 @@ export default function ResearchBriefPage() {
             return
           }
           
-          // Continue polling
           setTimeout(() => pollForAnalysis(contactId, attempts + 1), 5000)
         }
         
-        // Start polling for this contact
         setTimeout(() => pollForAnalysis(data.id, 0), 3000)
       } else {
         const error = await response.json()
@@ -324,7 +348,8 @@ export default function ResearchBriefPage() {
   }
 
   // Delete a contact
-  const handleDeleteContact = async (contactId: string) => {
+  const handleDeleteContact = async (contactId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
@@ -354,33 +379,24 @@ export default function ResearchBriefPage() {
     }
   }
 
-  // Get badge color for decision authority
+  // Navigate to preparation with this prospect pre-selected
+  const handleStartPreparation = () => {
+    // Store the company name in sessionStorage for the preparation page to pick up
+    if (brief) {
+      sessionStorage.setItem('prepareForCompany', brief.company_name)
+    }
+    router.push('/dashboard/preparation')
+  }
+
+  // Get badge for decision authority
   const getAuthorityBadge = (authority?: string) => {
     switch (authority) {
       case 'decision_maker':
-        return <Badge className="bg-green-500 hover:bg-green-600">Decision Maker</Badge>
+        return <Badge className="bg-green-500 hover:bg-green-600 text-xs">DM</Badge>
       case 'influencer':
-        return <Badge className="bg-blue-500 hover:bg-blue-600">Influencer</Badge>
+        return <Badge className="bg-blue-500 hover:bg-blue-600 text-xs">INF</Badge>
       case 'gatekeeper':
-        return <Badge className="bg-orange-500 hover:bg-orange-600">Gatekeeper</Badge>
-      case 'user':
-        return <Badge className="bg-gray-500 hover:bg-gray-600">Gebruiker</Badge>
-      default:
-        return null
-    }
-  }
-
-  // Get badge for communication style
-  const getStyleBadge = (style?: string) => {
-    switch (style) {
-      case 'formal':
-        return <Badge variant="outline">Formeel</Badge>
-      case 'informal':
-        return <Badge variant="outline">Informeel</Badge>
-      case 'technical':
-        return <Badge variant="outline">Technisch</Badge>
-      case 'strategic':
-        return <Badge variant="outline">Strategisch</Badge>
+        return <Badge className="bg-orange-500 hover:bg-orange-600 text-xs">GK</Badge>
       default:
         return null
     }
@@ -403,361 +419,399 @@ export default function ResearchBriefPage() {
     return null
   }
 
+  const analyzedContacts = contacts.filter(c => c.analyzed_at)
+
   return (
     <DashboardLayout user={user}>
       <>
-        <div className="p-6 lg:p-8 max-w-5xl mx-auto">
-        {/* Page Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push('/dashboard/research')}
-            >
-              <Icons.arrowLeft className="h-4 w-4 mr-2" />
-              Terug
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">{brief.company_name}</h1>
-              <p className="text-sm text-slate-500">Research Brief</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            {brief.pdf_url && (
-              <Button variant="outline" size="sm">
-                <Icons.download className="h-4 w-4 mr-2" />
-                Download PDF
-              </Button>
-            )}
-            <Button variant="outline" size="sm" onClick={() => {
-              navigator.clipboard.writeText(brief.brief_content)
-              toast({
-                title: "Gekopieerd!",
-                description: "Research brief is naar het klembord gekopieerd",
-              })
-            }}>
-              <Icons.copy className="h-4 w-4 mr-2" />
-              Kopieer
-            </Button>
-          </div>
-        </div>
-
-        {/* Generated timestamp */}
-        <div className="mb-6 text-sm text-slate-500">
-          Gegenereerd op {new Date(brief.completed_at).toLocaleString('nl-NL')}
-        </div>
-
-        {/* Brief Content */}
-        <div className="rounded-xl border bg-white p-8 shadow-sm">
-          <div className="prose prose-slate max-w-none">
-            <ReactMarkdown
-              components={{
-                h1: ({ node, ...props }) => <h1 className="text-3xl font-bold mb-4" {...props} />,
-                h2: ({ node, ...props }) => <h2 className="text-2xl font-bold mt-8 mb-4" {...props} />,
-                h3: ({ node, ...props }) => <h3 className="text-xl font-semibold mt-6 mb-3" {...props} />,
-                p: ({ node, ...props }) => <p className="mb-4 leading-relaxed" {...props} />,
-                ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
-                ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
-                li: ({ node, ...props }) => <li className="ml-4" {...props} />,
-                strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900" {...props} />,
-                code: ({ node, ...props }) => <code className="bg-slate-100 px-1 py-0.5 rounded text-sm" {...props} />,
-              }}
-            >
-              {brief.brief_content}
-            </ReactMarkdown>
-          </div>
-        </div>
-
-        {/* Contacts Section */}
-        <div className="mt-8 rounded-xl border bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <Icons.user className="h-5 w-5" />
-                Contactpersonen
-              </h2>
-              <Button 
-                size="sm" 
-                onClick={() => setShowAddContact(true)}
-                disabled={showAddContact}
+        <div className="p-4 lg:p-6">
+          {/* Page Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push('/dashboard/research')}
               >
-                <Icons.plus className="h-4 w-4 mr-2" />
-                Toevoegen
+                <Icons.arrowLeft className="h-4 w-4 mr-2" />
+                Terug
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900">{brief.company_name}</h1>
+                <p className="text-sm text-slate-500">
+                  Research Brief • {new Date(brief.completed_at).toLocaleDateString('nl-NL')}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => {
+                navigator.clipboard.writeText(brief.brief_content)
+                toast({
+                  title: "Gekopieerd!",
+                  description: "Research brief is naar het klembord gekopieerd",
+                })
+              }}>
+                <Icons.copy className="h-4 w-4 mr-2" />
+                Kopieer
               </Button>
             </div>
+          </div>
 
-          {/* Add Contact Form */}
-          {showAddContact && (
-            <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                <h3 className="font-semibold mb-3">Nieuwe contactpersoon</h3>
+          {/* Two Column Layout */}
+          <div className="flex gap-6">
+            {/* Left Column - Brief Content (scrollable) */}
+            <div className="flex-1 min-w-0">
+              <div className="rounded-xl border bg-white p-6 lg:p-8 shadow-sm">
+                <div className="prose prose-slate max-w-none prose-headings:scroll-mt-20">
+                  <ReactMarkdown
+                    components={{
+                      h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4" {...props} />,
+                      h2: ({ node, ...props }) => <h2 className="text-xl font-bold mt-8 mb-4 pb-2 border-b" {...props} />,
+                      h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mt-6 mb-3" {...props} />,
+                      p: ({ node, ...props }) => <p className="mb-4 leading-relaxed text-slate-700" {...props} />,
+                      ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
+                      ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
+                      li: ({ node, ...props }) => <li className="ml-4 text-slate-700" {...props} />,
+                      strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900" {...props} />,
+                      code: ({ node, ...props }) => <code className="bg-slate-100 px-1 py-0.5 rounded text-sm" {...props} />,
+                    }}
+                  >
+                    {brief.brief_content}
+                  </ReactMarkdown>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Sticky Sidebar */}
+            <div className="w-80 flex-shrink-0 hidden lg:block">
+              <div className="sticky top-4 space-y-4">
                 
-                {/* Step 1: Name + Lookup */}
-                <div className="mb-4">
-                  <Label htmlFor="contact-name">Naam *</Label>
-                  <div className="flex gap-2 mt-1">
-                    <Input
-                      id="contact-name"
-                      placeholder="Jan de Vries"
-                      value={newContact.name}
-                      onChange={(e) => {
-                        setNewContact(prev => ({ ...prev, name: e.target.value }))
-                        setLookupResult(null)
-                      }}
-                      className="flex-1"
-                    />
-                    <Button 
-                      variant="outline" 
-                      onClick={handleLookupContact}
-                      disabled={lookingUpContact || !newContact.name.trim()}
-                    >
-                      {lookingUpContact ? (
-                        <>
-                          <Icons.spinner className="h-4 w-4 mr-2 animate-spin" />
-                          Zoeken...
-                        </>
+                {/* AI Context Panel */}
+                <div className="rounded-xl border bg-gradient-to-br from-indigo-50 to-blue-50 p-4 shadow-sm">
+                  <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                    <Icons.sparkles className="h-4 w-4 text-indigo-600" />
+                    AI Context
+                  </h3>
+                  <p className="text-xs text-slate-600 mb-3">
+                    Deze data wordt gecombineerd voor je voorbereiding:
+                  </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      {profileStatus.hasSalesProfile ? (
+                        <Icons.check className="h-4 w-4 text-green-600" />
                       ) : (
-                        <>
-                          <Icons.search className="h-4 w-4 mr-2" />
-                          Zoek online
-                        </>
+                        <Icons.circle className="h-4 w-4 text-slate-300" />
                       )}
-                    </Button>
+                      <span className={profileStatus.hasSalesProfile ? 'text-slate-700' : 'text-slate-400'}>
+                        Jouw Sales Profiel
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      {profileStatus.hasCompanyProfile ? (
+                        <Icons.check className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Icons.circle className="h-4 w-4 text-slate-300" />
+                      )}
+                      <span className={profileStatus.hasCompanyProfile ? 'text-slate-700' : 'text-slate-400'}>
+                        Jouw Bedrijfsprofiel
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Icons.check className="h-4 w-4 text-green-600" />
+                      <span className="text-slate-700">Research Brief</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      {contacts.length > 0 ? (
+                        <Icons.check className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Icons.circle className="h-4 w-4 text-amber-400" />
+                      )}
+                      <span className={contacts.length > 0 ? 'text-slate-700' : 'text-amber-600'}>
+                        Contactpersonen ({contacts.length})
+                      </span>
+                    </div>
                   </div>
-                  {lookupResult && (
-                    <p className={`text-xs mt-1 ${lookupResult.found ? 'text-green-600' : 'text-amber-600'}`}>
-                      {lookupResult.found 
-                        ? `✓ Gevonden (${lookupResult.confidence} confidence)` 
-                        : '⚠ Niet gevonden - vul handmatig in'}
+                </div>
+
+                {/* Contacts Panel */}
+                <div className="rounded-xl border bg-white p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+                      <Icons.user className="h-4 w-4" />
+                      Contactpersonen
+                    </h3>
+                    {!showAddContact && (
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        className="h-7 text-xs"
+                        onClick={() => setShowAddContact(true)}
+                      >
+                        <Icons.plus className="h-3 w-3 mr-1" />
+                        Toevoegen
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Add Contact Form (Compact) */}
+                  {showAddContact && (
+                    <div className="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="space-y-3">
+                        <div>
+                          <Label htmlFor="contact-name" className="text-xs">Naam *</Label>
+                          <div className="flex gap-1 mt-1">
+                            <Input
+                              id="contact-name"
+                              placeholder="Jan de Vries"
+                              value={newContact.name}
+                              onChange={(e) => {
+                                setNewContact(prev => ({ ...prev, name: e.target.value }))
+                                setLookupResult(null)
+                              }}
+                              className="h-8 text-sm"
+                            />
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="h-8 px-2"
+                              onClick={handleLookupContact}
+                              disabled={lookingUpContact || !newContact.name.trim()}
+                            >
+                              {lookingUpContact ? (
+                                <Icons.spinner className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Icons.search className="h-3 w-3" />
+                              )}
+                            </Button>
+                          </div>
+                          {lookupResult && (
+                            <p className={`text-xs mt-1 ${lookupResult.found ? 'text-green-600' : 'text-amber-600'}`}>
+                              {lookupResult.found ? '✓ Gevonden' : '⚠ Niet gevonden'}
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <Label htmlFor="contact-role" className="text-xs">Functie</Label>
+                          <Input
+                            id="contact-role"
+                            placeholder="CTO"
+                            value={newContact.role}
+                            onChange={(e) => setNewContact(prev => ({ ...prev, role: e.target.value }))}
+                            className="h-8 text-sm mt-1"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            className="h-7 text-xs flex-1"
+                            onClick={handleAddContact} 
+                            disabled={addingContact || !newContact.name.trim()}
+                          >
+                            {addingContact ? (
+                              <Icons.spinner className="h-3 w-3 animate-spin mr-1" />
+                            ) : (
+                              <Icons.plus className="h-3 w-3 mr-1" />
+                            )}
+                            Toevoegen
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => {
+                              setShowAddContact(false)
+                              setNewContact({ name: '', role: '', linkedin_url: '' })
+                              setLookupResult(null)
+                            }}
+                          >
+                            Annuleer
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Contacts List (Compact) */}
+                  {contactsLoading ? (
+                    <div className="text-center py-4 text-slate-500">
+                      <Icons.spinner className="h-5 w-5 animate-spin mx-auto" />
+                    </div>
+                  ) : contacts.length === 0 ? (
+                    <div className="text-center py-4">
+                      <Icons.user className="h-8 w-8 mx-auto mb-2 text-slate-300" />
+                      <p className="text-xs text-slate-500">Nog geen contactpersonen</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Voeg toe voor een gepersonaliseerde voorbereiding
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {contacts.map((contact) => {
+                        const isAnalyzing = analyzingContactIds.has(contact.id) || (!contact.analyzed_at && contact.profile_brief === "Analyse wordt uitgevoerd...")
+                        
+                        return (
+                          <div 
+                            key={contact.id}
+                            className={`p-2 rounded-lg border cursor-pointer transition-all ${
+                              selectedContact?.id === contact.id 
+                                ? 'border-blue-500 bg-blue-50' 
+                                : isAnalyzing
+                                  ? 'border-amber-400 bg-amber-50'
+                                  : 'border-slate-200 hover:border-slate-300'
+                            }`}
+                            onClick={() => setSelectedContact(selectedContact?.id === contact.id ? null : contact)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className={`h-7 w-7 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                  isAnalyzing ? 'bg-amber-200' : 'bg-slate-200'
+                                }`}>
+                                  {isAnalyzing ? (
+                                    <Icons.spinner className="h-3 w-3 text-amber-600 animate-spin" />
+                                  ) : (
+                                    <Icons.user className="h-3 w-3 text-slate-500" />
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="font-medium text-sm truncate flex items-center gap-1">
+                                    {contact.name}
+                                    {getAuthorityBadge(contact.decision_authority)}
+                                  </div>
+                                  {contact.role && (
+                                    <div className="text-xs text-slate-500 truncate">{contact.role}</div>
+                                  )}
+                                </div>
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className="h-6 w-6 p-0 text-slate-400 hover:text-red-500"
+                                onClick={(e) => handleDeleteContact(contact.id, e)}
+                              >
+                                <Icons.x className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* CTA Panel */}
+                <div className="rounded-xl border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-4 shadow-sm">
+                  <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
+                    <Icons.arrowRight className="h-4 w-4 text-green-600" />
+                    Volgende Stap
+                  </h3>
+                  <p className="text-xs text-slate-600 mb-3">
+                    Genereer een gepersonaliseerde gespreksvoorbereiding met alle verzamelde context.
+                  </p>
+                  <Button 
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    onClick={handleStartPreparation}
+                  >
+                    <Icons.fileText className="h-4 w-4 mr-2" />
+                    Start Preparation
+                  </Button>
+                  {contacts.length > 0 && (
+                    <p className="text-xs text-green-700 mt-2 text-center">
+                      Met {contacts.length} contactperso{contacts.length === 1 ? 'on' : 'nen'}
                     </p>
                   )}
                 </div>
 
-                {/* Step 2: Auto-filled or manual fields */}
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="contact-role">
-                      Functie
-                      {newContact.role && lookupResult?.found && (
-                        <span className="text-green-600 text-xs ml-2">✓ auto-ingevuld</span>
-                      )}
-                    </Label>
-                    <Input
-                      id="contact-role"
-                      placeholder="IT Director"
-                      value={newContact.role}
-                      onChange={(e) => setNewContact(prev => ({ ...prev, role: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="contact-linkedin">
-                      LinkedIn URL
-                      {newContact.linkedin_url && lookupResult?.found && (
-                        <span className="text-green-600 text-xs ml-2">✓ auto-ingevuld</span>
-                      )}
-                    </Label>
-                    <Input
-                      id="contact-linkedin"
-                      placeholder="https://linkedin.com/in/..."
-                      value={newContact.linkedin_url}
-                      onChange={(e) => setNewContact(prev => ({ ...prev, linkedin_url: e.target.value }))}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-2 mt-4">
-                  <Button onClick={handleAddContact} disabled={addingContact || !newContact.name.trim()}>
-                    {addingContact ? (
-                      <>
-                        <Icons.spinner className="h-4 w-4 mr-2 animate-spin" />
-                        Toevoegen...
-                      </>
-                    ) : (
-                      <>
-                        <Icons.plus className="h-4 w-4 mr-2" />
-                        Analyseer & Voeg Toe
-                      </>
-                    )}
-                  </Button>
-                  <Button variant="outline" onClick={() => {
-                    setShowAddContact(false)
-                    setNewContact({ name: '', role: '', linkedin_url: '' })
-                    setLookupResult(null)
-                  }}>
-                    Annuleren
-                  </Button>
-                </div>
               </div>
-            )}
-
-            {/* Contacts List */}
-            {contactsLoading ? (
-              <div className="text-center py-8 text-slate-500">
-                <Icons.spinner className="h-6 w-6 animate-spin mx-auto mb-2" />
-                Contacten laden...
-              </div>
-            ) : contacts.length === 0 ? (
-              <div className="text-center py-8 text-slate-500">
-                <Icons.user className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>Nog geen contactpersonen toegevoegd</p>
-                <p className="text-sm mt-1">Voeg een contactpersoon toe voor gepersonaliseerde gespreksadvies</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {contacts.map((contact) => {
-                  const isAnalyzing = analyzingContactIds.has(contact.id) || (!contact.analyzed_at && contact.profile_brief === "Analyse wordt uitgevoerd...")
-                  
-                  return (
-                  <div 
-                    key={contact.id}
-                    className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                      selectedContact?.id === contact.id 
-                        ? 'border-blue-500 bg-blue-50' 
-                        : isAnalyzing
-                          ? 'border-amber-400 bg-amber-50 animate-pulse'
-                          : 'border-slate-200 hover:border-slate-300'
-                    }`}
-                    onClick={() => setSelectedContact(selectedContact?.id === contact.id ? null : contact)}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                          isAnalyzing 
-                            ? 'bg-amber-200' 
-                            : 'bg-slate-200'
-                        }`}>
-                          {isAnalyzing ? (
-                            <Icons.spinner className="h-5 w-5 text-amber-600 animate-spin" />
-                          ) : (
-                            <Icons.user className="h-5 w-5 text-slate-500" />
-                          )}
-                        </div>
-                        <div>
-                          <div className="font-semibold flex items-center gap-2">
-                            {contact.name}
-                            {contact.is_primary && (
-                              <Badge variant="secondary" className="text-xs">Primary</Badge>
-                            )}
-                            {isAnalyzing && (
-                              <Badge className="bg-amber-500 hover:bg-amber-600 text-xs animate-pulse">
-                                Analyseren...
-                              </Badge>
-                            )}
-                          </div>
-                          {contact.role && (
-                            <div className="text-sm text-slate-500">{contact.role}</div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {!isAnalyzing && getAuthorityBadge(contact.decision_authority)}
-                        {!isAnalyzing && getStyleBadge(contact.communication_style)}
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleDeleteContact(contact.id)
-                          }}
-                        >
-                          <Icons.trash className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Analysis Progress Indicator */}
-                    {isAnalyzing && selectedContact?.id === contact.id && (
-                      <div className="mt-4 pt-4 border-t border-amber-200">
-                        <div className="flex items-center gap-3 text-amber-700">
-                          <Icons.spinner className="h-5 w-5 animate-spin" />
-                          <div>
-                            <p className="font-medium">Analyse bezig...</p>
-                            <p className="text-sm opacity-80">
-                              {contact.linkedin_url 
-                                ? "LinkedIn profiel wordt geanalyseerd"
-                                : "Persoon wordt onderzocht op basis van naam en rol"
-                              }
-                            </p>
-                          </div>
-                        </div>
-                        <div className="mt-3 h-1.5 bg-amber-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-amber-500 rounded-full animate-pulse" style={{ width: '60%' }} />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Expanded Contact Analysis */}
-                    {selectedContact?.id === contact.id && contact.profile_brief && !isAnalyzing && (
-                      <div className="mt-4 pt-4 border-t border-slate-200">
-                        {contact.analyzed_at ? (
-                          <div className="prose prose-sm prose-slate max-w-none">
-                            <ReactMarkdown
-                              components={{
-                                h1: ({ node, ...props }) => <h1 className="text-xl font-bold mb-3" {...props} />,
-                                h2: ({ node, ...props }) => <h2 className="text-lg font-bold mt-4 mb-2" {...props} />,
-                                h3: ({ node, ...props }) => <h3 className="text-base font-semibold mt-3 mb-2" {...props} />,
-                                p: ({ node, ...props }) => <p className="mb-2 text-sm" {...props} />,
-                                ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-2 space-y-1 text-sm" {...props} />,
-                                ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-2 space-y-1 text-sm" {...props} />,
-                                li: ({ node, ...props }) => <li className="ml-2" {...props} />,
-                              }}
-                            >
-                              {contact.profile_brief}
-                            </ReactMarkdown>
-                            
-                            {/* Quick Actions */}
-                            {(contact.opening_suggestions?.length || contact.questions_to_ask?.length) && (
-                              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                                {contact.opening_suggestions && contact.opening_suggestions.length > 0 && (
-                                  <div className="p-3 bg-green-50 rounded-lg">
-                                    <h4 className="font-semibold text-green-700 mb-2 text-sm">
-                                      💬 Openingszinnen
-                                    </h4>
-                                    <ul className="space-y-1">
-                                      {contact.opening_suggestions.slice(0, 3).map((s, i) => (
-                                        <li key={i} className="text-xs text-green-800">
-                                          "{s}"
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-                                {contact.questions_to_ask && contact.questions_to_ask.length > 0 && (
-                                  <div className="p-3 bg-blue-50 rounded-lg">
-                                    <h4 className="font-semibold text-blue-700 mb-2 text-sm">
-                                      ❓ Discovery Vragen
-                                    </h4>
-                                    <ul className="space-y-1">
-                                      {contact.questions_to_ask.slice(0, 3).map((q, i) => (
-                                        <li key={i} className="text-xs text-blue-800">
-                                          {q}
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-center py-4 text-slate-500">
-                            <Icons.spinner className="h-5 w-5 animate-spin mx-auto mb-2" />
-                            Analyse wordt uitgevoerd...
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  )
-                })}
-              </div>
-            )}
+            </div>
           </div>
+
+          {/* Mobile: Floating Action Button for Contacts/Preparation */}
+          <div className="lg:hidden fixed bottom-6 right-6 flex flex-col gap-2">
+            <Button 
+              className="rounded-full h-14 w-14 shadow-lg bg-green-600 hover:bg-green-700"
+              onClick={handleStartPreparation}
+            >
+              <Icons.arrowRight className="h-6 w-6" />
+            </Button>
+          </div>
+
         </div>
+
+        {/* Contact Detail Modal (when contact is selected) */}
+        {selectedContact && selectedContact.analyzed_at && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            onClick={() => setSelectedContact(null)}
+          >
+            <div 
+              className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold">{selectedContact.name}</h2>
+                  {selectedContact.role && (
+                    <p className="text-sm text-slate-500">{selectedContact.role}</p>
+                  )}
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setSelectedContact(null)}>
+                  <Icons.x className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="p-6">
+                {selectedContact.profile_brief && (
+                  <div className="prose prose-sm prose-slate max-w-none">
+                    <ReactMarkdown
+                      components={{
+                        h1: ({ node, ...props }) => <h1 className="text-xl font-bold mb-3" {...props} />,
+                        h2: ({ node, ...props }) => <h2 className="text-lg font-bold mt-4 mb-2" {...props} />,
+                        h3: ({ node, ...props }) => <h3 className="text-base font-semibold mt-3 mb-2" {...props} />,
+                        p: ({ node, ...props }) => <p className="mb-2 text-sm" {...props} />,
+                        ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-2 space-y-1 text-sm" {...props} />,
+                        li: ({ node, ...props }) => <li className="ml-2" {...props} />,
+                      }}
+                    >
+                      {selectedContact.profile_brief}
+                    </ReactMarkdown>
+                  </div>
+                )}
+                
+                {/* Quick Tips */}
+                {(selectedContact.opening_suggestions?.length || selectedContact.questions_to_ask?.length) && (
+                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                    {selectedContact.opening_suggestions && selectedContact.opening_suggestions.length > 0 && (
+                      <div className="p-4 bg-green-50 rounded-lg">
+                        <h4 className="font-semibold text-green-700 mb-2 text-sm">
+                          💬 Openingszinnen
+                        </h4>
+                        <ul className="space-y-2">
+                          {selectedContact.opening_suggestions.map((s, i) => (
+                            <li key={i} className="text-sm text-green-800">"{s}"</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {selectedContact.questions_to_ask && selectedContact.questions_to_ask.length > 0 && (
+                      <div className="p-4 bg-blue-50 rounded-lg">
+                        <h4 className="font-semibold text-blue-700 mb-2 text-sm">
+                          ❓ Discovery Vragen
+                        </h4>
+                        <ul className="space-y-2">
+                          {selectedContact.questions_to_ask.map((q, i) => (
+                            <li key={i} className="text-sm text-blue-800">{q}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       
         <Toaster />
       </>
     </DashboardLayout>
   )
 }
-
