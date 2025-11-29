@@ -127,7 +127,7 @@ export default function CompanyProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
+      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-900">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     )
@@ -138,9 +138,9 @@ export default function CompanyProfilePage() {
       <DashboardLayout user={user}>
         <div className="p-6 lg:p-8 max-w-4xl mx-auto">
           <div className="text-center py-16">
-            <Building2 className="h-16 w-16 mx-auto text-slate-200 mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Geen bedrijfsprofiel gevonden</h2>
-            <p className="text-slate-500 mb-6">
+            <Building2 className="h-16 w-16 mx-auto text-slate-200 dark:text-slate-700 mb-4" />
+            <h2 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Geen bedrijfsprofiel gevonden</h2>
+            <p className="text-slate-500 dark:text-slate-400 mb-6">
               Maak een bedrijfsprofiel aan om gepersonaliseerde AI-output te krijgen
             </p>
             <Button onClick={() => router.push('/onboarding/company')}>
@@ -160,8 +160,8 @@ export default function CompanyProfilePage() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">{profile.company_name}</h1>
-              <p className="text-slate-500 mt-1">
+              <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">{profile.company_name}</h1>
+              <p className="text-slate-500 dark:text-slate-400 mt-1">
               {profile.industry || 'Bedrijfsprofiel'}
             </p>
           </div>
@@ -176,10 +176,10 @@ export default function CompanyProfilePage() {
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Profiel Compleetheid</span>
-            <span className="text-sm font-bold">{profile.profile_completeness}%</span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Profiel Compleetheid</span>
+            <span className="text-sm font-bold text-slate-900 dark:text-white">{profile.profile_completeness}%</span>
           </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-2 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
             <div 
               className={`h-full transition-all ${
                 profile.profile_completeness >= 80 ? 'bg-green-500' :
@@ -205,9 +205,9 @@ export default function CompanyProfilePage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="prose prose-sm max-w-none">
+            <div className="prose prose-sm max-w-none dark:prose-invert">
               {profile.company_narrative.split('\n\n').map((paragraph, idx) => (
-                <p key={idx} className="text-gray-700 leading-relaxed mb-4">
+                <p key={idx} className="text-gray-700 dark:text-slate-300 leading-relaxed mb-4">
                   {paragraph}
                 </p>
               ))}
@@ -226,7 +226,7 @@ export default function CompanyProfilePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-700">{profile.ai_summary}</p>
+            <p className="text-gray-700 dark:text-slate-300">{profile.ai_summary}</p>
           </CardContent>
         </Card>
       )}
@@ -243,10 +243,10 @@ export default function CompanyProfilePage() {
           <CardContent className="space-y-4">
             {profile.products && profile.products.length > 0 ? (
               profile.products.map((product, i) => (
-                <div key={i} className="p-3 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium">{product.name}</h4>
+                <div key={i} className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
+                  <h4 className="font-medium text-slate-900 dark:text-white">{product.name}</h4>
                   {product.description && (
-                    <p className="text-sm text-gray-600 mt-1">{product.description}</p>
+                    <p className="text-sm text-gray-600 dark:text-slate-400 mt-1">{product.description}</p>
                   )}
                   {product.value_proposition && (
                     <p className="text-sm text-primary mt-1">
@@ -275,7 +275,7 @@ export default function CompanyProfilePage() {
                 {profile.core_value_props.map((prop, i) => (
                   <span 
                     key={i} 
-                    className="px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full"
+                    className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm rounded-full"
                   >
                     {prop}
                   </span>
@@ -292,7 +292,7 @@ export default function CompanyProfilePage() {
                   {profile.differentiators.map((diff, i) => (
                     <span 
                       key={i} 
-                      className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full"
+                      className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-sm rounded-full"
                     >
                       {diff}
                     </span>
@@ -331,7 +331,7 @@ export default function CompanyProfilePage() {
                     <p className="text-sm font-medium text-muted-foreground mb-2">Bedrijfsgrootte</p>
                     <div className="flex flex-wrap gap-2">
                       {profile.ideal_customer_profile.company_sizes.map((size, i) => (
-                        <span key={i} className="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded">
+                        <span key={i} className="px-2 py-1 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 text-sm rounded">
                           {size}
                         </span>
                       ))}
@@ -341,7 +341,7 @@ export default function CompanyProfilePage() {
                 {profile.ideal_customer_profile.pain_points?.length > 0 && (
                   <div>
                     <p className="text-sm font-medium text-muted-foreground mb-2">Pain Points</p>
-                    <ul className="text-sm text-gray-700 space-y-1">
+                    <ul className="text-sm text-gray-700 dark:text-slate-300 space-y-1">
                       {profile.ideal_customer_profile.pain_points.map((point, i) => (
                         <li key={i}>• {point}</li>
                       ))}
@@ -366,13 +366,13 @@ export default function CompanyProfilePage() {
           <CardContent className="space-y-4">
             {profile.buyer_personas && profile.buyer_personas.length > 0 ? (
               profile.buyer_personas.map((persona, i) => (
-                <div key={i} className="p-3 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium">{persona.title}</h4>
+                <div key={i} className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
+                  <h4 className="font-medium text-slate-900 dark:text-white">{persona.title}</h4>
                   <p className="text-sm text-muted-foreground">{persona.seniority}</p>
                   {persona.pain_points?.length > 0 && (
                     <div className="mt-2">
                       <p className="text-xs font-medium text-muted-foreground">Pain points:</p>
-                      <p className="text-sm text-gray-700">{persona.pain_points.join(', ')}</p>
+                      <p className="text-sm text-gray-700 dark:text-slate-300">{persona.pain_points.join(', ')}</p>
                     </div>
                   )}
                 </div>
@@ -394,11 +394,11 @@ export default function CompanyProfilePage() {
           <CardContent className="space-y-4">
             {profile.case_studies && profile.case_studies.length > 0 ? (
               profile.case_studies.map((cs, i) => (
-                <div key={i} className="p-3 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium">{cs.customer}</h4>
+                <div key={i} className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
+                  <h4 className="font-medium text-slate-900 dark:text-white">{cs.customer}</h4>
                   <p className="text-sm text-muted-foreground">{cs.industry}</p>
                   {cs.results && (
-                    <p className="text-sm text-green-700 mt-1">
+                    <p className="text-sm text-green-700 dark:text-green-400 mt-1">
                       <strong>Resultaat:</strong> {cs.results}
                     </p>
                   )}
@@ -436,7 +436,7 @@ export default function CompanyProfilePage() {
                 <p className="text-sm font-medium text-muted-foreground mb-2">Concurrenten</p>
                 <div className="flex flex-wrap gap-2">
                   {profile.competitors.map((comp, i) => (
-                    <span key={i} className="px-2 py-1 bg-red-100 text-red-700 text-sm rounded">
+                    <span key={i} className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm rounded">
                       {comp}
                     </span>
                   ))}
@@ -446,7 +446,7 @@ export default function CompanyProfilePage() {
             {profile.competitive_advantages && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Competitief Voordeel</p>
-                <p className="text-base text-gray-700">{profile.competitive_advantages}</p>
+                <p className="text-base text-gray-700 dark:text-slate-300">{profile.competitive_advantages}</p>
               </div>
             )}
           </CardContent>

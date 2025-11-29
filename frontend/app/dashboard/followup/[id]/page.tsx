@@ -219,7 +219,7 @@ export default function FollowupDetailPage() {
         <div className="flex items-center justify-center h-full">
           <div className="text-center space-y-4">
             <Icons.spinner className="h-8 w-8 animate-spin text-orange-600 mx-auto" />
-            <p className="text-slate-500">Follow-up laden...</p>
+            <p className="text-slate-500 dark:text-slate-400">Follow-up laden...</p>
           </div>
         </div>
       </DashboardLayout>
@@ -261,10 +261,10 @@ export default function FollowupDetailPage() {
               Terug
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
                 {followup.prospect_company_name || followup.meeting_subject || 'Meeting Follow-up'}
               </h1>
-              <div className="flex items-center gap-3 text-sm text-slate-500">
+              <div className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
                 {followup.meeting_date && (
                   <span>{new Date(followup.meeting_date).toLocaleDateString('nl-NL')}</span>
                 )}
@@ -283,7 +283,7 @@ export default function FollowupDetailPage() {
               </div>
             </div>
             {isProcessing && (
-              <div className="ml-auto flex items-center gap-2 text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
+              <div className="ml-auto flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-3 py-2 rounded-lg">
                 <Icons.spinner className="h-4 w-4 animate-spin" />
                 <span className="text-sm font-medium">
                   {followup.status === 'transcribing' ? 'Transcriberen...' : 
@@ -295,25 +295,25 @@ export default function FollowupDetailPage() {
 
           {/* Error State */}
           {followup.status === 'failed' && (
-            <div className="mb-6 p-4 rounded-xl border-2 border-red-200 bg-red-50">
-              <div className="flex items-center gap-2 text-red-700">
+            <div className="mb-6 p-4 rounded-xl border-2 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30">
+              <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
                 <Icons.alertCircle className="h-5 w-5" />
                 <span className="font-medium">Verwerking mislukt</span>
               </div>
-              <p className="text-sm text-red-600 mt-1">{followup.error_message}</p>
+              <p className="text-sm text-red-600 dark:text-red-400 mt-1">{followup.error_message}</p>
             </div>
           )}
 
           {/* Processing State */}
           {isProcessing && (
-            <div className="rounded-xl border bg-white p-12 text-center shadow-sm">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-12 text-center shadow-sm">
               <Icons.spinner className="h-16 w-16 text-orange-600 mx-auto mb-4 animate-spin" />
-              <h3 className="font-bold text-lg mb-2">
+              <h3 className="font-bold text-lg mb-2 text-slate-900 dark:text-white">
                 {followup.status === 'transcribing' ? 'Audio wordt getranscribeerd...' :
                  followup.status === 'summarizing' ? 'Samenvatting wordt gegenereerd...' :
                  'Bestand wordt verwerkt...'}
               </h3>
-              <p className="text-slate-500">Dit kan enkele minuten duren</p>
+              <p className="text-slate-500 dark:text-slate-400">Dit kan enkele minuten duren</p>
             </div>
           )}
 
@@ -324,10 +324,10 @@ export default function FollowupDetailPage() {
               <div className="flex-1 min-w-0 space-y-6">
                 
                 {/* Executive Summary */}
-                <div className="rounded-xl border bg-white p-6 shadow-sm">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="font-bold text-lg flex items-center gap-2">
-                      <Icons.fileText className="h-5 w-5 text-orange-600" />
+                    <h2 className="font-bold text-lg flex items-center gap-2 text-slate-900 dark:text-white">
+                      <Icons.fileText className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                       Samenvatting
                     </h2>
                     <Button variant="outline" size="sm" onClick={() => handleCopy(
@@ -340,21 +340,21 @@ export default function FollowupDetailPage() {
                   </div>
                   
                   {followup.executive_summary && (
-                    <div className="bg-orange-50 p-4 rounded-lg mb-4">
-                      <p className="text-sm text-slate-700">{followup.executive_summary}</p>
+                    <div className="bg-orange-50 dark:bg-orange-900/30 p-4 rounded-lg mb-4">
+                      <p className="text-sm text-slate-700 dark:text-slate-300">{followup.executive_summary}</p>
                     </div>
                   )}
 
                   <div className="grid gap-4 md:grid-cols-2">
                     {/* Key Points */}
                     {followup.key_points?.length > 0 && (
-                      <div className="p-4 bg-blue-50 rounded-lg">
-                        <h4 className="font-semibold text-sm text-blue-800 mb-2 flex items-center gap-1">
+                      <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                        <h4 className="font-semibold text-sm text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-1">
                           💡 Belangrijkste Punten
                         </h4>
                         <ul className="space-y-1">
                           {followup.key_points.map((point, i) => (
-                            <li key={i} className="text-sm text-blue-700 flex items-start gap-2">
+                            <li key={i} className="text-sm text-blue-700 dark:text-blue-300 flex items-start gap-2">
                               <span>•</span>{point}
                             </li>
                           ))}
@@ -364,13 +364,13 @@ export default function FollowupDetailPage() {
 
                     {/* Concerns */}
                     {followup.concerns?.length > 0 && (
-                      <div className="p-4 bg-amber-50 rounded-lg">
-                        <h4 className="font-semibold text-sm text-amber-800 mb-2 flex items-center gap-1">
+                      <div className="p-4 bg-amber-50 dark:bg-amber-900/30 rounded-lg">
+                        <h4 className="font-semibold text-sm text-amber-800 dark:text-amber-200 mb-2 flex items-center gap-1">
                           ⚠️ Bezwaren & Zorgen
                         </h4>
                         <ul className="space-y-1">
                           {followup.concerns.map((concern, i) => (
-                            <li key={i} className="text-sm text-amber-700 flex items-start gap-2">
+                            <li key={i} className="text-sm text-amber-700 dark:text-amber-300 flex items-start gap-2">
                               <span>•</span>{concern}
                             </li>
                           ))}
@@ -380,13 +380,13 @@ export default function FollowupDetailPage() {
 
                     {/* Decisions */}
                     {followup.decisions?.length > 0 && (
-                      <div className="p-4 bg-green-50 rounded-lg">
-                        <h4 className="font-semibold text-sm text-green-800 mb-2 flex items-center gap-1">
+                      <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                        <h4 className="font-semibold text-sm text-green-800 dark:text-green-200 mb-2 flex items-center gap-1">
                           ✅ Beslissingen
                         </h4>
                         <ul className="space-y-1">
                           {followup.decisions.map((decision, i) => (
-                            <li key={i} className="text-sm text-green-700 flex items-start gap-2">
+                            <li key={i} className="text-sm text-green-700 dark:text-green-300 flex items-start gap-2">
                               <span>•</span>{decision}
                             </li>
                           ))}
@@ -396,13 +396,13 @@ export default function FollowupDetailPage() {
 
                     {/* Next Steps */}
                     {followup.next_steps?.length > 0 && (
-                      <div className="p-4 bg-purple-50 rounded-lg">
-                        <h4 className="font-semibold text-sm text-purple-800 mb-2 flex items-center gap-1">
+                      <div className="p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                        <h4 className="font-semibold text-sm text-purple-800 dark:text-purple-200 mb-2 flex items-center gap-1">
                           ➡️ Vervolgstappen
                         </h4>
                         <ul className="space-y-1">
                           {followup.next_steps.map((step, i) => (
-                            <li key={i} className="text-sm text-purple-700 flex items-start gap-2">
+                            <li key={i} className="text-sm text-purple-700 dark:text-purple-300 flex items-start gap-2">
                               <span>•</span>{step}
                             </li>
                           ))}
@@ -414,38 +414,38 @@ export default function FollowupDetailPage() {
 
                 {/* Commercial Signals */}
                 {hasCommercialSignals && (
-                  <div className="rounded-xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-6 shadow-sm">
-                    <h2 className="font-bold text-lg flex items-center gap-2 mb-4">
-                      <Icons.trendingUp className="h-5 w-5 text-amber-600" />
+                  <div className="rounded-xl border-2 border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950 dark:to-yellow-950 p-6 shadow-sm">
+                    <h2 className="font-bold text-lg flex items-center gap-2 mb-4 text-slate-900 dark:text-white">
+                      <Icons.trendingUp className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                       💰 Commerciële Signalen
                     </h2>
                     <div className="grid gap-4 md:grid-cols-3">
                       {followup.commercial_signals?.koopsignalen && followup.commercial_signals.koopsignalen.length > 0 && (
-                        <div className="bg-white/60 p-4 rounded-lg">
-                          <h4 className="font-semibold text-sm text-green-700 mb-2">✓ Koopsignalen</h4>
+                        <div className="bg-white/60 dark:bg-slate-800/60 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-green-700 dark:text-green-400 mb-2">✓ Koopsignalen</h4>
                           <ul className="space-y-1">
                             {followup.commercial_signals.koopsignalen.map((s, i) => (
-                              <li key={i} className="text-xs text-slate-700">{s}</li>
+                              <li key={i} className="text-xs text-slate-700 dark:text-slate-300">{s}</li>
                             ))}
                           </ul>
                         </div>
                       )}
                       {followup.commercial_signals?.cross_sell && followup.commercial_signals.cross_sell.length > 0 && (
-                        <div className="bg-white/60 p-4 rounded-lg">
-                          <h4 className="font-semibold text-sm text-blue-700 mb-2">💡 Cross/Upsell</h4>
+                        <div className="bg-white/60 dark:bg-slate-800/60 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-blue-700 dark:text-blue-400 mb-2">💡 Cross/Upsell</h4>
                           <ul className="space-y-1">
                             {followup.commercial_signals.cross_sell.map((s, i) => (
-                              <li key={i} className="text-xs text-slate-700">{s}</li>
+                              <li key={i} className="text-xs text-slate-700 dark:text-slate-300">{s}</li>
                             ))}
                           </ul>
                         </div>
                       )}
                       {followup.commercial_signals?.risks && followup.commercial_signals.risks.length > 0 && (
-                        <div className="bg-red-50 p-4 rounded-lg">
-                          <h4 className="font-semibold text-sm text-red-700 mb-2">⚠️ Risico's</h4>
+                        <div className="bg-red-50 dark:bg-red-900/30 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-red-700 dark:text-red-400 mb-2">⚠️ Risico's</h4>
                           <ul className="space-y-1">
                             {followup.commercial_signals.risks.map((s, i) => (
-                              <li key={i} className="text-xs text-red-700">{s}</li>
+                              <li key={i} className="text-xs text-red-700 dark:text-red-400">{s}</li>
                             ))}
                           </ul>
                         </div>
@@ -456,48 +456,48 @@ export default function FollowupDetailPage() {
 
                 {/* Observations */}
                 {hasObservations && (
-                  <div className="rounded-xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50 p-6 shadow-sm">
-                    <h2 className="font-bold text-lg flex items-center gap-2 mb-4">
-                      <Icons.search className="h-5 w-5 text-indigo-600" />
+                  <div className="rounded-xl border-2 border-indigo-200 dark:border-indigo-800 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 p-6 shadow-sm">
+                    <h2 className="font-bold text-lg flex items-center gap-2 mb-4 text-slate-900 dark:text-white">
+                      <Icons.search className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                       🔎 Observaties & Signalen
                     </h2>
                     <div className="grid gap-4 md:grid-cols-2">
                       {followup.observations?.doubts && followup.observations.doubts.length > 0 && (
-                        <div className="bg-amber-50 p-4 rounded-lg">
-                          <h4 className="font-semibold text-sm text-amber-700 mb-2">⚠️ Twijfel</h4>
+                        <div className="bg-amber-50 dark:bg-amber-900/30 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-amber-700 dark:text-amber-400 mb-2">⚠️ Twijfel</h4>
                           <ul className="space-y-1">
                             {followup.observations.doubts.map((d, i) => (
-                              <li key={i} className="text-xs text-slate-700">{d}</li>
+                              <li key={i} className="text-xs text-slate-700 dark:text-slate-300">{d}</li>
                             ))}
                           </ul>
                         </div>
                       )}
                       {followup.observations?.unspoken_needs && followup.observations.unspoken_needs.length > 0 && (
-                        <div className="bg-yellow-50 p-4 rounded-lg">
-                          <h4 className="font-semibold text-sm text-yellow-700 mb-2">💡 Onuitgesproken</h4>
+                        <div className="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-yellow-700 dark:text-yellow-400 mb-2">💡 Onuitgesproken</h4>
                           <ul className="space-y-1">
                             {followup.observations.unspoken_needs.map((n, i) => (
-                              <li key={i} className="text-xs text-slate-700">{n}</li>
+                              <li key={i} className="text-xs text-slate-700 dark:text-slate-300">{n}</li>
                             ))}
                           </ul>
                         </div>
                       )}
                       {followup.observations?.opportunities && followup.observations.opportunities.length > 0 && (
-                        <div className="bg-green-50 p-4 rounded-lg">
-                          <h4 className="font-semibold text-sm text-green-700 mb-2">🎯 Kansen</h4>
+                        <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-green-700 dark:text-green-400 mb-2">🎯 Kansen</h4>
                           <ul className="space-y-1">
                             {followup.observations.opportunities.map((o, i) => (
-                              <li key={i} className="text-xs text-slate-700">{o}</li>
+                              <li key={i} className="text-xs text-slate-700 dark:text-slate-300">{o}</li>
                             ))}
                           </ul>
                         </div>
                       )}
                       {followup.observations?.red_flags && followup.observations.red_flags.length > 0 && (
-                        <div className="bg-red-50 p-4 rounded-lg">
-                          <h4 className="font-semibold text-sm text-red-700 mb-2">🚩 Rode Vlaggen</h4>
+                        <div className="bg-red-50 dark:bg-red-900/30 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-red-700 dark:text-red-400 mb-2">🚩 Rode Vlaggen</h4>
                           <ul className="space-y-1">
                             {followup.observations.red_flags.map((f, i) => (
-                              <li key={i} className="text-xs text-red-700">{f}</li>
+                              <li key={i} className="text-xs text-red-700 dark:text-red-400">{f}</li>
                             ))}
                           </ul>
                         </div>
@@ -508,38 +508,38 @@ export default function FollowupDetailPage() {
 
                 {/* Coaching Feedback */}
                 {hasCoaching && (
-                  <div className="rounded-xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-6 shadow-sm">
-                    <h2 className="font-bold text-lg flex items-center gap-2 mb-4">
-                      <Icons.sparkles className="h-5 w-5 text-emerald-600" />
+                  <div className="rounded-xl border-2 border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950 dark:to-teal-950 p-6 shadow-sm">
+                    <h2 className="font-bold text-lg flex items-center gap-2 mb-4 text-slate-900 dark:text-white">
+                      <Icons.sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                       📈 Coaching Feedback
                     </h2>
                     <div className="grid gap-4 md:grid-cols-3">
                       {followup.coaching_feedback?.strengths && followup.coaching_feedback.strengths.length > 0 && (
-                        <div className="bg-green-50 p-4 rounded-lg">
-                          <h4 className="font-semibold text-sm text-green-700 mb-2">✅ Goed</h4>
+                        <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-green-700 dark:text-green-400 mb-2">✅ Goed</h4>
                           <ul className="space-y-1">
                             {followup.coaching_feedback.strengths.map((s, i) => (
-                              <li key={i} className="text-xs text-slate-700">{s}</li>
+                              <li key={i} className="text-xs text-slate-700 dark:text-slate-300">{s}</li>
                             ))}
                           </ul>
                         </div>
                       )}
                       {followup.coaching_feedback?.improvements && followup.coaching_feedback.improvements.length > 0 && (
-                        <div className="bg-orange-50 p-4 rounded-lg">
-                          <h4 className="font-semibold text-sm text-orange-700 mb-2">🔧 Verbeter</h4>
+                        <div className="bg-orange-50 dark:bg-orange-900/30 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-orange-700 dark:text-orange-400 mb-2">🔧 Verbeter</h4>
                           <ul className="space-y-1">
                             {followup.coaching_feedback.improvements.map((item, idx) => (
-                              <li key={idx} className="text-xs text-slate-700">{item}</li>
+                              <li key={idx} className="text-xs text-slate-700 dark:text-slate-300">{item}</li>
                             ))}
                           </ul>
                         </div>
                       )}
                       {followup.coaching_feedback?.tips && followup.coaching_feedback.tips.length > 0 && (
-                        <div className="bg-blue-50 p-4 rounded-lg">
-                          <h4 className="font-semibold text-sm text-blue-700 mb-2">💡 Tips</h4>
+                        <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-blue-700 dark:text-blue-400 mb-2">💡 Tips</h4>
                           <ul className="space-y-1">
                             {followup.coaching_feedback.tips.map((t, i) => (
-                              <li key={i} className="text-xs text-slate-700">{t}</li>
+                              <li key={i} className="text-xs text-slate-700 dark:text-slate-300">{t}</li>
                             ))}
                           </ul>
                         </div>
@@ -549,10 +549,10 @@ export default function FollowupDetailPage() {
                 )}
 
                 {/* Follow-up Email */}
-                <div className="rounded-xl border bg-white p-6 shadow-sm">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="font-bold text-lg flex items-center gap-2">
-                      <Icons.mail className="h-5 w-5 text-orange-600" />
+                    <h2 className="font-bold text-lg flex items-center gap-2 text-slate-900 dark:text-white">
+                      <Icons.mail className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                       Follow-up Email
                     </h2>
                     <Button variant="outline" size="sm" onClick={() => handleCopy(emailDraft, 'email')}>
@@ -565,11 +565,11 @@ export default function FollowupDetailPage() {
                     value={emailDraft}
                     onChange={(e) => setEmailDraft(e.target.value)}
                     rows={10}
-                    className="font-mono text-sm mb-4"
+                    className="font-mono text-sm mb-4 dark:bg-slate-800 dark:border-slate-700"
                   />
                   
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500">Toon:</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">Toon:</span>
                     <Button
                       variant="outline"
                       size="sm"
@@ -602,21 +602,21 @@ export default function FollowupDetailPage() {
 
                 {/* Transcription (collapsible) */}
                 {followup.transcription_text && (
-                  <div className="rounded-xl border bg-white shadow-sm">
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
                     <button
-                      className="w-full p-4 flex items-center justify-between hover:bg-slate-50"
+                      className="w-full p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800"
                       onClick={() => setShowTranscript(!showTranscript)}
                     >
-                      <h2 className="font-bold text-lg flex items-center gap-2">
-                        <Icons.fileText className="h-5 w-5 text-slate-600" />
+                      <h2 className="font-bold text-lg flex items-center gap-2 text-slate-900 dark:text-white">
+                        <Icons.fileText className="h-5 w-5 text-slate-600 dark:text-slate-400" />
                         Transcriptie
                       </h2>
-                      {showTranscript ? <Icons.chevronDown className="h-5 w-5" /> : <Icons.chevronRight className="h-5 w-5" />}
+                      {showTranscript ? <Icons.chevronDown className="h-5 w-5 text-slate-500" /> : <Icons.chevronRight className="h-5 w-5 text-slate-500" />}
                     </button>
                     {showTranscript && (
-                      <div className="p-4 pt-0 border-t">
-                        <div className="max-h-96 overflow-y-auto bg-slate-50 rounded-lg p-4">
-                          <pre className="whitespace-pre-wrap text-sm text-slate-700 font-sans">
+                      <div className="p-4 pt-0 border-t dark:border-slate-800">
+                        <div className="max-h-96 overflow-y-auto bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
+                          <pre className="whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-300 font-sans">
                             {followup.transcription_text}
                           </pre>
                         </div>
@@ -640,28 +640,28 @@ export default function FollowupDetailPage() {
                 <div className="sticky top-4 space-y-4">
                   
                   {/* Meeting Info */}
-                  <div className="rounded-xl border bg-white p-4 shadow-sm">
-                    <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                      <Icons.calendar className="h-4 w-4 text-orange-600" />
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                      <Icons.calendar className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                       Meeting Info
                     </h3>
                     <div className="space-y-2 text-sm">
                       {followup.meeting_date && (
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Datum</span>
-                          <span className="font-medium">{new Date(followup.meeting_date).toLocaleDateString('nl-NL')}</span>
+                          <span className="text-slate-500 dark:text-slate-400">Datum</span>
+                          <span className="font-medium text-slate-900 dark:text-white">{new Date(followup.meeting_date).toLocaleDateString('nl-NL')}</span>
                         </div>
                       )}
                       {followup.audio_duration_seconds && (
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Duur</span>
-                          <span className="font-medium">{formatDuration(followup.audio_duration_seconds)}</span>
+                          <span className="text-slate-500 dark:text-slate-400">Duur</span>
+                          <span className="font-medium text-slate-900 dark:text-white">{formatDuration(followup.audio_duration_seconds)}</span>
                         </div>
                       )}
                       {followup.speaker_count > 0 && (
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Sprekers</span>
-                          <span className="font-medium">{followup.speaker_count}</span>
+                          <span className="text-slate-500 dark:text-slate-400">Sprekers</span>
+                          <span className="font-medium text-slate-900 dark:text-white">{followup.speaker_count}</span>
                         </div>
                       )}
                     </div>
@@ -669,9 +669,9 @@ export default function FollowupDetailPage() {
 
                   {/* Action Items */}
                   {followup.action_items?.length > 0 && (
-                    <div className="rounded-xl border bg-white p-4 shadow-sm">
-                      <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                        <Icons.check className="h-4 w-4 text-green-600" />
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                      <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                        <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400" />
                         Actie Items ({followup.action_items.length})
                       </h3>
                       <div className="space-y-2">
@@ -682,8 +682,8 @@ export default function FollowupDetailPage() {
                               item.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
                             }`} />
                             <div className="min-w-0">
-                              <p className="truncate font-medium">{item.task}</p>
-                              <p className="text-xs text-slate-500">
+                              <p className="truncate font-medium text-slate-900 dark:text-white">{item.task}</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
                                 {item.assignee || 'TBD'} {item.due_date && `• ${item.due_date}`}
                               </p>
                             </div>
@@ -695,23 +695,23 @@ export default function FollowupDetailPage() {
 
                   {/* Related Research */}
                   {researchBrief && (
-                    <div className="rounded-xl border bg-white p-4 shadow-sm">
-                      <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
-                        <Icons.search className="h-4 w-4 text-blue-600" />
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                      <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                        <Icons.search className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         Gekoppelde Research
                       </h3>
                       <button
                         onClick={() => router.push(`/dashboard/research/${researchBrief.id}`)}
-                        className="w-full p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left group"
+                        className="w-full p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-left group"
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-medium text-sm text-blue-900">{researchBrief.company_name}</p>
-                            <p className="text-xs text-blue-600">
+                            <p className="font-medium text-sm text-blue-900 dark:text-blue-100">{researchBrief.company_name}</p>
+                            <p className="text-xs text-blue-600 dark:text-blue-400">
                               {new Date(researchBrief.completed_at).toLocaleDateString('nl-NL')}
                             </p>
                           </div>
-                          <Icons.chevronRight className="h-4 w-4 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                          <Icons.chevronRight className="h-4 w-4 text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform" />
                         </div>
                       </button>
                     </div>
@@ -719,23 +719,23 @@ export default function FollowupDetailPage() {
 
                   {/* Related Preparation */}
                   {meetingPrep && (
-                    <div className="rounded-xl border bg-white p-4 shadow-sm">
-                      <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
-                        <Icons.fileText className="h-4 w-4 text-green-600" />
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                      <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                        <Icons.fileText className="h-4 w-4 text-green-600 dark:text-green-400" />
                         Gekoppelde Voorbereiding
                       </h3>
                       <button
                         onClick={() => router.push(`/dashboard/preparation/${meetingPrep.id}`)}
-                        className="w-full p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors text-left group"
+                        className="w-full p-3 bg-green-50 dark:bg-green-900/30 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors text-left group"
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-medium text-sm text-green-900">{meetingPrep.prospect_company_name}</p>
-                            <p className="text-xs text-green-600">
+                            <p className="font-medium text-sm text-green-900 dark:text-green-100">{meetingPrep.prospect_company_name}</p>
+                            <p className="text-xs text-green-600 dark:text-green-400">
                               {meetingPrep.meeting_type} • {new Date(meetingPrep.completed_at).toLocaleDateString('nl-NL')}
                             </p>
                           </div>
-                          <Icons.chevronRight className="h-4 w-4 text-green-600 group-hover:translate-x-1 transition-transform" />
+                          <Icons.chevronRight className="h-4 w-4 text-green-600 dark:text-green-400 group-hover:translate-x-1 transition-transform" />
                         </div>
                       </button>
                     </div>
@@ -743,9 +743,9 @@ export default function FollowupDetailPage() {
 
                   {/* Audio Player */}
                   {followup.audio_url && (
-                    <div className="rounded-xl border bg-white p-4 shadow-sm">
-                      <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                        <Icons.mic className="h-4 w-4 text-orange-600" />
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                      <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                        <Icons.mic className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                         Audio
                       </h3>
                       <audio controls className="w-full h-10">
@@ -755,16 +755,16 @@ export default function FollowupDetailPage() {
                   )}
 
                   {/* CTA - New Research */}
-                  <div className="rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 shadow-sm">
-                    <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
-                      <Icons.arrowRight className="h-4 w-4 text-blue-600" />
+                  <div className="rounded-xl border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 p-4 shadow-sm">
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                      <Icons.arrowRight className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                       Volgende Prospect?
                     </h3>
-                    <p className="text-xs text-slate-600 mb-3">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
                       Start een nieuwe research voor je volgende prospect.
                     </p>
                     <Button 
-                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
                       onClick={() => router.push('/dashboard/research')}
                     >
                       <Icons.search className="h-4 w-4 mr-2" />

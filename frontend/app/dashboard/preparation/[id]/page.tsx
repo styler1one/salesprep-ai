@@ -149,7 +149,6 @@ export default function PreparationDetailPage() {
   }
 
   const handleStartFollowup = () => {
-    // Store prep context for follow-up page
     if (prep) {
       sessionStorage.setItem('followupForCompany', prep.prospect_company_name)
     }
@@ -184,7 +183,7 @@ export default function PreparationDetailPage() {
         <div className="flex items-center justify-center h-full">
           <div className="text-center space-y-4">
             <Icons.spinner className="h-8 w-8 animate-spin text-green-600 mx-auto" />
-            <p className="text-slate-500">Voorbereiding laden...</p>
+            <p className="text-slate-500 dark:text-slate-400">Voorbereiding laden...</p>
           </div>
         </div>
       </DashboardLayout>
@@ -210,8 +209,8 @@ export default function PreparationDetailPage() {
               Terug
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">{prep.prospect_company_name}</h1>
-              <p className="text-sm text-slate-500">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{prep.prospect_company_name}</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 {getMeetingTypeLabel(prep.meeting_type)} • {new Date(prep.completed_at || prep.created_at).toLocaleDateString('nl-NL')}
               </p>
             </div>
@@ -222,8 +221,7 @@ export default function PreparationDetailPage() {
             {/* Left Column - Brief Content (scrollable) */}
             <div className="flex-1 min-w-0">
               {prep.status === 'completed' && prep.brief_content ? (
-                <div className="rounded-xl border bg-white p-6 lg:p-8 shadow-sm">
-                  {/* Copy button - rechtsboven in de brief */}
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 lg:p-8 shadow-sm">
                   <div className="flex justify-end mb-4">
                     <Button variant="outline" size="sm" onClick={() => {
                       navigator.clipboard.writeText(prep.brief_content || '')
@@ -237,42 +235,41 @@ export default function PreparationDetailPage() {
                     </Button>
                   </div>
                   
-                  <div className="prose prose-slate max-w-none prose-headings:scroll-mt-20">
+                  <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:scroll-mt-20">
                     <ReactMarkdown
                       components={{
-                        h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4" {...props} />,
-                        h2: ({ node, ...props }) => <h2 className="text-xl font-bold mt-8 mb-4 pb-2 border-b" {...props} />,
-                        h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mt-6 mb-3" {...props} />,
-                        p: ({ node, ...props }) => <p className="mb-4 leading-relaxed text-slate-700" {...props} />,
+                        h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white" {...props} />,
+                        h2: ({ node, ...props }) => <h2 className="text-xl font-bold mt-8 mb-4 pb-2 border-b border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white" {...props} />,
+                        h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mt-6 mb-3 text-slate-900 dark:text-white" {...props} />,
+                        p: ({ node, ...props }) => <p className="mb-4 leading-relaxed text-slate-700 dark:text-slate-300" {...props} />,
                         ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
                         ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
-                        li: ({ node, ...props }) => <li className="ml-4 text-slate-700" {...props} />,
-                        strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900" {...props} />,
+                        li: ({ node, ...props }) => <li className="ml-4 text-slate-700 dark:text-slate-300" {...props} />,
+                        strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900 dark:text-white" {...props} />,
                         table: ({ node, ...props }) => (
                           <div className="overflow-x-auto my-4">
-                            <table className="min-w-full border-collapse border border-slate-200" {...props} />
+                            <table className="min-w-full border-collapse border border-slate-200 dark:border-slate-700" {...props} />
                           </div>
                         ),
-                        th: ({ node, ...props }) => <th className="border border-slate-200 px-3 py-2 bg-slate-50 text-left font-semibold" {...props} />,
-                        td: ({ node, ...props }) => <td className="border border-slate-200 px-3 py-2" {...props} />,
+                        th: ({ node, ...props }) => <th className="border border-slate-200 dark:border-slate-700 px-3 py-2 bg-slate-50 dark:bg-slate-800 text-left font-semibold text-slate-900 dark:text-white" {...props} />,
+                        td: ({ node, ...props }) => <td className="border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-700 dark:text-slate-300" {...props} />,
                       }}
                     >
                       {prep.brief_content}
                     </ReactMarkdown>
                   </div>
 
-                  {/* Questions Section */}
                   {prep.questions && prep.questions.length > 0 && (
-                    <div className="mt-8 pt-6 border-t">
-                      <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                        <Icons.message className="h-5 w-5 text-green-600" />
+                    <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
+                      <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
+                        <Icons.message className="h-5 w-5 text-green-600 dark:text-green-400" />
                         Discovery Vragen
                       </h3>
                       <div className="space-y-3">
                         {prep.questions.map((q, i) => (
-                          <div key={i} className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
-                            <span className="font-bold text-green-600 min-w-[24px]">{i + 1}.</span>
-                            <span className="text-slate-700">{q}</span>
+                          <div key={i} className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                            <span className="font-bold text-green-600 dark:text-green-400 min-w-[24px]">{i + 1}.</span>
+                            <span className="text-slate-700 dark:text-slate-300">{q}</span>
                           </div>
                         ))}
                       </div>
@@ -280,19 +277,19 @@ export default function PreparationDetailPage() {
                   )}
                 </div>
               ) : prep.status === 'failed' ? (
-                <div className="rounded-xl border bg-white p-8 shadow-sm text-center">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-sm text-center">
                   <Icons.alertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-                  <h3 className="font-bold text-lg mb-2">Generatie Mislukt</h3>
-                  <p className="text-slate-500 mb-4">{prep.error_message || 'Er is een fout opgetreden'}</p>
+                  <h3 className="font-bold text-lg mb-2 text-slate-900 dark:text-white">Generatie Mislukt</h3>
+                  <p className="text-slate-500 dark:text-slate-400 mb-4">{prep.error_message || 'Er is een fout opgetreden'}</p>
                   <Button onClick={() => router.push('/dashboard/preparation')}>
                     Probeer Opnieuw
                   </Button>
                 </div>
               ) : (
-                <div className="rounded-xl border bg-white p-8 shadow-sm text-center">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-sm text-center">
                   <Icons.spinner className="h-16 w-16 text-green-600 mx-auto mb-4 animate-spin" />
-                  <h3 className="font-bold text-lg mb-2">Voorbereiding wordt gegenereerd...</h3>
-                  <p className="text-slate-500">Dit duurt meestal 30-60 seconden</p>
+                  <h3 className="font-bold text-lg mb-2 text-slate-900 dark:text-white">Voorbereiding wordt gegenereerd...</h3>
+                  <p className="text-slate-500 dark:text-slate-400">Dit duurt meestal 30-60 seconden</p>
                 </div>
               )}
             </div>
@@ -302,12 +299,12 @@ export default function PreparationDetailPage() {
               <div className="sticky top-4 space-y-4">
                 
                 {/* Meeting Type Badge */}
-                <div className="rounded-xl border bg-white p-4 shadow-sm">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                   <div className="flex items-center gap-3">
                     <span className="text-3xl">{getMeetingTypeIcon(prep.meeting_type)}</span>
                     <div>
-                      <p className="font-semibold text-slate-900">{getMeetingTypeLabel(prep.meeting_type).replace(/^[^\s]+\s/, '')}</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="font-semibold text-slate-900 dark:text-white">{getMeetingTypeLabel(prep.meeting_type).replace(/^[^\s]+\s/, '')}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         {new Date(prep.completed_at || prep.created_at).toLocaleDateString('nl-NL', {
                           weekday: 'long',
                           day: 'numeric',
@@ -319,71 +316,71 @@ export default function PreparationDetailPage() {
                 </div>
 
                 {/* AI Context Panel */}
-                <div className="rounded-xl border bg-gradient-to-br from-green-50 to-emerald-50 p-4 shadow-sm">
-                  <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                    <Icons.sparkles className="h-4 w-4 text-green-600" />
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 p-4 shadow-sm">
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                    <Icons.sparkles className="h-4 w-4 text-green-600 dark:text-green-400" />
                     AI Context
                   </h3>
-                  <p className="text-xs text-slate-600 mb-3">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
                     Deze data is gecombineerd voor deze voorbereiding:
                   </p>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm">
                       {profileStatus.hasSalesProfile ? (
-                        <Icons.check className="h-4 w-4 text-green-600" />
+                        <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400" />
                       ) : (
-                        <Icons.circle className="h-4 w-4 text-slate-300" />
+                        <Icons.circle className="h-4 w-4 text-slate-300 dark:text-slate-600" />
                       )}
-                      <span className={profileStatus.hasSalesProfile ? 'text-slate-700' : 'text-slate-400'}>
+                      <span className={profileStatus.hasSalesProfile ? 'text-slate-700 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500'}>
                         Jouw Sales Profiel
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       {profileStatus.hasCompanyProfile ? (
-                        <Icons.check className="h-4 w-4 text-green-600" />
+                        <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400" />
                       ) : (
-                        <Icons.circle className="h-4 w-4 text-slate-300" />
+                        <Icons.circle className="h-4 w-4 text-slate-300 dark:text-slate-600" />
                       )}
-                      <span className={profileStatus.hasCompanyProfile ? 'text-slate-700' : 'text-slate-400'}>
+                      <span className={profileStatus.hasCompanyProfile ? 'text-slate-700 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500'}>
                         Jouw Bedrijfsprofiel
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       {researchBrief ? (
-                        <Icons.check className="h-4 w-4 text-green-600" />
+                        <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400" />
                       ) : (
-                        <Icons.circle className="h-4 w-4 text-slate-300" />
+                        <Icons.circle className="h-4 w-4 text-slate-300 dark:text-slate-600" />
                       )}
-                      <span className={researchBrief ? 'text-slate-700' : 'text-slate-400'}>
+                      <span className={researchBrief ? 'text-slate-700 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500'}>
                         Research Brief
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <Icons.check className="h-4 w-4 text-green-600" />
-                      <span className="text-slate-700">Meeting Context</span>
+                      <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      <span className="text-slate-700 dark:text-slate-200">Meeting Context</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Research Link */}
                 {researchBrief && (
-                  <div className="rounded-xl border bg-white p-4 shadow-sm">
-                    <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
-                      <Icons.search className="h-4 w-4 text-blue-600" />
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                      <Icons.search className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                       Gekoppelde Research
                     </h3>
                     <button
                       onClick={() => router.push(`/dashboard/research/${researchBrief.id}`)}
-                      className="w-full p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left group"
+                      className="w-full p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-left group"
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium text-sm text-blue-900">{researchBrief.company_name}</p>
-                          <p className="text-xs text-blue-600">
+                          <p className="font-medium text-sm text-blue-900 dark:text-blue-100">{researchBrief.company_name}</p>
+                          <p className="text-xs text-blue-600 dark:text-blue-400">
                             {new Date(researchBrief.completed_at).toLocaleDateString('nl-NL')}
                           </p>
                         </div>
-                        <Icons.chevronRight className="h-4 w-4 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                        <Icons.chevronRight className="h-4 w-4 text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </button>
                   </div>
@@ -391,24 +388,24 @@ export default function PreparationDetailPage() {
 
                 {/* Custom Notes */}
                 {prep.custom_notes && (
-                  <div className="rounded-xl border bg-white p-4 shadow-sm">
-                    <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
-                      <Icons.fileText className="h-4 w-4 text-slate-600" />
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                      <Icons.fileText className="h-4 w-4 text-slate-600 dark:text-slate-400" />
                       Jouw Notities
                     </h3>
-                    <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg">
+                    <p className="text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                       {prep.custom_notes}
                     </p>
                   </div>
                 )}
 
                 {/* CTA Panel - Follow-up */}
-                <div className="rounded-xl border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 p-4 shadow-sm">
-                  <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
-                    <Icons.arrowRight className="h-4 w-4 text-orange-600" />
+                <div className="rounded-xl border-2 border-orange-200 dark:border-orange-800 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950 dark:to-amber-950 p-4 shadow-sm">
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                    <Icons.arrowRight className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                     Na je Meeting
                   </h3>
-                  <p className="text-xs text-slate-600 mb-3">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
                     Upload je meeting opname voor transcriptie, samenvatting en follow-up acties.
                   </p>
                   <Button 
@@ -421,8 +418,8 @@ export default function PreparationDetailPage() {
                 </div>
 
                 {/* Quick Actions */}
-                <div className="rounded-xl border bg-white p-4 shadow-sm">
-                  <h3 className="font-semibold text-slate-900 mb-3 text-sm">Snelle Acties</h3>
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-3 text-sm">Snelle Acties</h3>
                   <div className="space-y-2">
                     {prep.pdf_url && (
                       <Button variant="outline" size="sm" className="w-full justify-start" asChild>
@@ -479,4 +476,3 @@ export default function PreparationDetailPage() {
     </DashboardLayout>
   )
 }
-

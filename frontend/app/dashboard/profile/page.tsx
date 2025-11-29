@@ -91,7 +91,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
+      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-900">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     )
@@ -102,9 +102,9 @@ export default function ProfilePage() {
       <DashboardLayout user={user}>
         <div className="p-6 lg:p-8 max-w-4xl mx-auto">
           <div className="text-center py-16">
-            <User className="h-16 w-16 mx-auto text-slate-200 mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Geen profiel gevonden</h2>
-            <p className="text-slate-500 mb-6">
+            <User className="h-16 w-16 mx-auto text-slate-200 dark:text-slate-700 mb-4" />
+            <h2 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Geen profiel gevonden</h2>
+            <p className="text-slate-500 dark:text-slate-400 mb-6">
               Start de onboarding om je profiel aan te maken
             </p>
             <Button onClick={() => router.push('/onboarding')}>
@@ -123,8 +123,8 @@ export default function ProfilePage() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">{profile.full_name}</h1>
-              <p className="text-slate-500 mt-1">
+              <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">{profile.full_name}</h1>
+              <p className="text-slate-500 dark:text-slate-400 mt-1">
                 {profile.role || 'Sales Professional'}
               </p>
             </div>
@@ -139,10 +139,10 @@ export default function ProfilePage() {
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Profile Completeness</span>
-            <span className="text-sm font-bold">{profile.profile_completeness}%</span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Profile Completeness</span>
+            <span className="text-sm font-bold text-slate-900 dark:text-white">{profile.profile_completeness}%</span>
           </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-2 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
             <div 
               className={`h-full transition-all ${
                 profile.profile_completeness >= 80 ? 'bg-green-500' :
@@ -168,9 +168,9 @@ export default function ProfilePage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="prose prose-sm max-w-none">
+            <div className="prose prose-sm max-w-none dark:prose-invert">
               {profile.sales_narrative.split('\n\n').map((paragraph, idx) => (
-                <p key={idx} className="text-gray-700 leading-relaxed mb-4">
+                <p key={idx} className="text-gray-700 dark:text-slate-300 leading-relaxed mb-4">
                   {paragraph}
                 </p>
               ))}
@@ -189,7 +189,7 @@ export default function ProfilePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-700">{profile.ai_summary}</p>
+            <p className="text-gray-700 dark:text-slate-300">{profile.ai_summary}</p>
           </CardContent>
         </Card>
       )}
@@ -217,7 +217,7 @@ export default function ProfilePage() {
             {profile.methodology_description && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Aanpak</p>
-                <p className="text-base text-gray-700">{profile.methodology_description}</p>
+                <p className="text-base text-gray-700 dark:text-slate-300">{profile.methodology_description}</p>
               </div>
             )}
             <div>
@@ -243,7 +243,7 @@ export default function ProfilePage() {
                   {profile.strengths.map((strength, i) => (
                     <span 
                       key={i} 
-                      className="px-2 py-1 bg-green-100 text-green-700 text-sm rounded"
+                      className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm rounded"
                     >
                       {strength}
                     </span>
@@ -258,7 +258,7 @@ export default function ProfilePage() {
                   {profile.areas_to_improve.map((area, i) => (
                     <span 
                       key={i} 
-                      className="px-2 py-1 bg-yellow-100 text-yellow-700 text-sm rounded"
+                      className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-sm rounded"
                     >
                       {area}
                     </span>
@@ -300,7 +300,7 @@ export default function ProfilePage() {
                   {profile.target_regions.map((region, i) => (
                     <span 
                       key={i} 
-                      className="px-2 py-1 bg-blue-100 text-blue-700 text-sm rounded"
+                      className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-sm rounded"
                     >
                       {region}
                     </span>
@@ -315,7 +315,7 @@ export default function ProfilePage() {
                   {profile.target_company_sizes.map((size, i) => (
                     <span 
                       key={i} 
-                      className="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded"
+                      className="px-2 py-1 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 text-sm rounded"
                     >
                       {size}
                     </span>
@@ -338,7 +338,7 @@ export default function ProfilePage() {
             {profile.quarterly_goals && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Kwartaaldoelen</p>
-                <p className="text-base text-gray-700">{profile.quarterly_goals}</p>
+                <p className="text-base text-gray-700 dark:text-slate-300">{profile.quarterly_goals}</p>
               </div>
             )}
             {profile.preferred_meeting_types && profile.preferred_meeting_types.length > 0 && (
@@ -348,7 +348,7 @@ export default function ProfilePage() {
                   {profile.preferred_meeting_types.map((type, i) => (
                     <span 
                       key={i} 
-                      className="px-2 py-1 bg-purple-100 text-purple-700 text-sm rounded"
+                      className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-sm rounded"
                     >
                       {type}
                     </span>

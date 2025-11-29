@@ -42,12 +42,12 @@ export function FileList({ files, onDelete, onRefresh }: FileListProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
-        return <Icons.checkCircle className="h-5 w-5 text-green-600" />
+        return <Icons.checkCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
       case 'processing':
       case 'uploading':
-        return <Icons.spinner className="h-5 w-5 text-blue-600 animate-spin" />
+        return <Icons.spinner className="h-5 w-5 text-blue-600 dark:text-blue-400 animate-spin" />
       case 'failed':
-        return <Icons.alertCircle className="h-5 w-5 text-red-600" />
+        return <Icons.alertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
       default:
         return null
     }
@@ -136,7 +136,7 @@ export function FileList({ files, onDelete, onRefresh }: FileListProps) {
                 </div>
                 
                 {file.status === 'failed' && file.error_message && (
-                  <p className="text-sm text-red-600 mt-1">
+                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">
                     Error: {file.error_message}
                   </p>
                 )}
@@ -146,9 +146,9 @@ export function FileList({ files, onDelete, onRefresh }: FileListProps) {
             <div className="flex items-center gap-2 flex-shrink-0">
               <div className="text-right mr-4">
                 <p className={`text-sm font-medium ${
-                  file.status === 'completed' ? 'text-green-600' :
-                  file.status === 'failed' ? 'text-red-600' :
-                  'text-blue-600'
+                  file.status === 'completed' ? 'text-green-600 dark:text-green-400' :
+                  file.status === 'failed' ? 'text-red-600 dark:text-red-400' :
+                  'text-blue-600 dark:text-blue-400'
                 }`}>
                   {getStatusText(file)}
                 </p>
@@ -160,7 +160,7 @@ export function FileList({ files, onDelete, onRefresh }: FileListProps) {
                 onClick={() => onDelete(file.id)}
                 disabled={file.status === 'uploading' || file.status === 'processing'}
               >
-                <Icons.trash className="h-4 w-4 text-red-600" />
+                <Icons.trash className="h-4 w-4 text-red-600 dark:text-red-400" />
               </Button>
             </div>
           </div>

@@ -199,10 +199,10 @@ export default function KnowledgeBasePage() {
       <div className="p-6 lg:p-8 max-w-6xl mx-auto animate-fade-in">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
+          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white mb-2">
             Knowledge Base
           </h1>
-          <p className="text-slate-500">
+          <p className="text-slate-500 dark:text-slate-400">
             Upload and manage your company documents for AI context
           </p>
         </div>

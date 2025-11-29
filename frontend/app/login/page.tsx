@@ -25,12 +25,12 @@ export default async function LoginPage({
     const errorMessage = params.error ? errorMessages[params.error] || 'An error occurred during sign in.' : null
 
     return (
-        <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-950">
             {/* Header */}
             <header className="p-4">
                 <Link href="/" className="flex items-center gap-2 w-fit">
                     <Icons.zap className="h-6 w-6 text-blue-600" />
-                    <span className="font-bold text-xl text-slate-900">SalesPrep AI</span>
+                    <span className="font-bold text-xl text-slate-900 dark:text-white">SalesPrep AI</span>
                 </Link>
             </header>
 
@@ -38,9 +38,9 @@ export default async function LoginPage({
             <main className="flex-1 flex items-center justify-center p-4">
                 <div className="w-full max-w-[400px] space-y-6">
                     {/* Card */}
-                    <div className="bg-white rounded-2xl shadow-xl border p-8">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border dark:border-slate-800 p-8">
                         <div className="flex flex-col space-y-2 text-center mb-6">
-                            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                                 Welcome back
                             </h1>
                             <p className="text-sm text-muted-foreground">
