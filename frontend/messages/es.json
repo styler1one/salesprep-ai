@@ -391,7 +391,9 @@
       "personal": "Datos Personales",
       "experience": "Experiencia y Especialización",
       "style": "Estilo de Ventas",
-      "goals": "Metas y Objetivos"
+      "goals": "Metas y Objetivos",
+      "targetMarket": "Mercado Objetivo",
+      "goalsPrefs": "Metas y Preferencias"
     },
     "fields": {
       "fullName": "Nombre Completo",
@@ -404,7 +406,20 @@
       "sellingStyle": "Estilo de Ventas",
       "communicationPreference": "Preferencia de Comunicación",
       "targetMarket": "Mercado Objetivo",
-      "quotaTarget": "Objetivo de Cuota"
+      "quotaTarget": "Objetivo de Cuota",
+      "regions": "Regiones",
+      "companySizes": "Tamaños de empresa",
+      "quarterlyGoals": "Objetivos trimestrales",
+      "meetingTypes": "Tipos de reunión"
+    },
+    "howUsed": {
+      "title": "¿Cómo se usa esto?",
+      "prep": "Prep de Reunión",
+      "prepDesc": "La IA genera briefs adaptados a tu estilo",
+      "followup": "Emails de Seguimiento",
+      "followupDesc": "Emails escritos en tu tono",
+      "research": "Investigación",
+      "researchDesc": "Enfoque en info relevante para tu mercado"
     },
     "toast": {
       "saved": "Perfil guardado",

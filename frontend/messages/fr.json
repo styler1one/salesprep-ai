@@ -391,7 +391,9 @@
       "personal": "Détails Personnels",
       "experience": "Expérience & Expertise",
       "style": "Style de Vente",
-      "goals": "Objectifs & Cibles"
+      "goals": "Objectifs & Cibles",
+      "targetMarket": "Marché Cible",
+      "goalsPrefs": "Objectifs & Préférences"
     },
     "fields": {
       "fullName": "Nom Complet",
@@ -404,7 +406,20 @@
       "sellingStyle": "Style de Vente",
       "communicationPreference": "Préférence de Communication",
       "targetMarket": "Marché Cible",
-      "quotaTarget": "Objectif de Quota"
+      "quotaTarget": "Objectif de Quota",
+      "regions": "Régions",
+      "companySizes": "Tailles d'entreprise",
+      "quarterlyGoals": "Objectifs trimestriels",
+      "meetingTypes": "Types de réunion"
+    },
+    "howUsed": {
+      "title": "Comment c'est utilisé ?",
+      "prep": "Préparation Meeting",
+      "prepDesc": "L'IA génère des briefs adaptés à votre style",
+      "followup": "Emails de Suivi",
+      "followupDesc": "Emails écrits dans votre ton",
+      "research": "Recherche",
+      "researchDesc": "Focus sur les infos pertinentes pour votre marché"
     },
     "toast": {
       "saved": "Profil enregistré",

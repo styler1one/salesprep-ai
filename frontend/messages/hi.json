@@ -391,7 +391,9 @@
       "personal": "व्यक्तिगत विवरण",
       "experience": "अनुभव और विशेषज्ञता",
       "style": "बिक्री शैली",
-      "goals": "लक्ष्य और टारगेट"
+      "goals": "लक्ष्य और टारगेट",
+      "targetMarket": "लक्ष्य बाजार",
+      "goalsPrefs": "लक्ष्य और वरीयताएं"
     },
     "fields": {
       "fullName": "पूरा नाम",
@@ -404,7 +406,20 @@
       "sellingStyle": "बिक्री शैली",
       "communicationPreference": "संचार वरीयता",
       "targetMarket": "लक्ष्य बाजार",
-      "quotaTarget": "कोटा लक्ष्य"
+      "quotaTarget": "कोटा लक्ष्य",
+      "regions": "क्षेत्र",
+      "companySizes": "कंपनी आकार",
+      "quarterlyGoals": "त्रैमासिक लक्ष्य",
+      "meetingTypes": "मीटिंग प्रकार"
+    },
+    "howUsed": {
+      "title": "इसका उपयोग कैसे होता है?",
+      "prep": "मीटिंग तैयारी",
+      "prepDesc": "AI आपकी शैली के अनुसार ब्रीफ बनाता है",
+      "followup": "फॉलो-अप ईमेल",
+      "followupDesc": "ईमेल आपके टोन में लिखे जाते हैं",
+      "research": "रिसर्च",
+      "researchDesc": "आपके बाजार के लिए प्रासंगिक जानकारी पर ध्यान"
     },
     "toast": {
       "saved": "प्रोफाइल सहेजा गया",

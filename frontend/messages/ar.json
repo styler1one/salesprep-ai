@@ -391,7 +391,9 @@
       "personal": "البيانات الشخصية",
       "experience": "الخبرة والتخصص",
       "style": "أسلوب البيع",
-      "goals": "الأهداف والغايات"
+      "goals": "الأهداف والغايات",
+      "targetMarket": "السوق المستهدف",
+      "goalsPrefs": "الأهداف والتفضيلات"
     },
     "fields": {
       "fullName": "الاسم الكامل",
@@ -404,7 +406,20 @@
       "sellingStyle": "أسلوب البيع",
       "communicationPreference": "تفضيل التواصل",
       "targetMarket": "السوق المستهدف",
-      "quotaTarget": "هدف الحصة"
+      "quotaTarget": "هدف الحصة",
+      "regions": "المناطق",
+      "companySizes": "أحجام الشركات",
+      "quarterlyGoals": "الأهداف الفصلية",
+      "meetingTypes": "أنواع الاجتماعات"
+    },
+    "howUsed": {
+      "title": "كيف يتم استخدام هذا؟",
+      "prep": "تحضير الاجتماع",
+      "prepDesc": "الذكاء الاصطناعي يولد ملخصات مناسبة لأسلوبك",
+      "followup": "رسائل المتابعة",
+      "followupDesc": "الرسائل تُكتب بنبرتك",
+      "research": "البحث",
+      "researchDesc": "التركيز على المعلومات المتعلقة بسوقك"
     },
     "toast": {
       "saved": "تم حفظ الملف",
