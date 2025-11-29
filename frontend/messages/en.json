@@ -307,7 +307,9 @@
       "copy": "Copy",
       "copied": "Copied!",
       "download": "Download PDF",
-      "generatedFor": "Preparation for"
+      "generatedFor": "Preparation for",
+      "copyAll": "Copy All",
+      "viewResearch": "View Research"
     },
     "toast": {
       "started": "Preparation started",
@@ -323,10 +325,6 @@
       "researchBrief": "Research Brief",
       "linkedResearch": "Linked Research",
       "yourNotes": "Your Notes"
-    },
-    "brief": {
-      "copyAll": "Copy All",
-      "viewResearch": "View Research"
     },
     "nextStep": {
       "title": "After your Meeting",

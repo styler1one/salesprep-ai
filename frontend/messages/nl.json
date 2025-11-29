@@ -307,7 +307,9 @@
       "copy": "Kopieer",
       "copied": "Gekopieerd!",
       "download": "Download PDF",
-      "generatedFor": "Voorbereiding voor"
+      "generatedFor": "Voorbereiding voor",
+      "copyAll": "Kopieer Alles",
+      "viewResearch": "Bekijk Research"
     },
     "toast": {
       "started": "Voorbereiding gestart",
@@ -323,10 +325,6 @@
       "researchBrief": "Research Brief",
       "linkedResearch": "Gekoppelde Research",
       "yourNotes": "Jouw Notities"
-    },
-    "brief": {
-      "copyAll": "Kopieer Alles",
-      "viewResearch": "Bekijk Research"
     },
     "nextStep": {
       "title": "Na je Meeting",
