@@ -126,12 +126,16 @@ export default function SettingsPage() {
     setBillingActionLoading(true)
     try {
       const checkoutUrl = await createCheckoutSession('solo_monthly')
-      window.location.href = checkoutUrl
-    } catch (error) {
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl
+      } else {
+        throw new Error('No checkout URL returned')
+      }
+    } catch (error: any) {
       console.error('Failed to start checkout:', error)
       toast({
         title: tErrors('generic'),
-        description: tBilling('checkoutError'),
+        description: error?.message || tBilling('checkoutError'),
         variant: 'destructive',
       })
     } finally {

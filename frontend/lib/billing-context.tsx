@@ -173,10 +173,16 @@ export function BillingProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to create checkout session')
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Checkout API error:', response.status, errorData)
+        throw new Error(errorData.detail || `Checkout failed: ${response.status}`)
       }
 
       const data = await response.json()
+      if (!data.checkout_url) {
+        console.error('No checkout_url in response:', data)
+        throw new Error('No checkout URL returned from server')
+      }
       return data.checkout_url
     } catch (err) {
       console.error('Error creating checkout:', err)
