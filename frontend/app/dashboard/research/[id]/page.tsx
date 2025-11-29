@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import ReactMarkdown from 'react-markdown'
+import { useTranslations } from 'next-intl'
 
 interface ResearchBrief {
   id: string
@@ -51,6 +52,8 @@ export default function ResearchBriefPage() {
   const params = useParams()
   const supabase = createClientComponentClient()
   const { toast } = useToast()
+  const t = useTranslations('research')
+  const tCommon = useTranslations('common')
   
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -127,8 +130,8 @@ export default function ResearchBriefPage() {
       } else {
         toast({
           variant: "destructive",
-          title: "Kon brief niet laden",
-          description: "Er is een fout opgetreden bij het laden van de research brief",
+          title: t('toast.loadFailed'),
+          description: t('toast.loadFailedDesc'),
         })
         router.push('/dashboard/research')
       }
@@ -136,8 +139,8 @@ export default function ResearchBriefPage() {
       console.error('Failed to fetch brief:', error)
       toast({
         variant: "destructive",
-        title: "Fout",
-        description: "Er is een fout opgetreden",
+        title: t('contacts.searchFailed'),
+        description: t('contacts.searchFailedDesc'),
       })
     } finally {
       setLoading(false)
@@ -183,8 +186,8 @@ export default function ResearchBriefPage() {
     if (!newContact.name.trim() || !brief?.company_name) {
       toast({
         variant: "destructive",
-        title: "Naam verplicht",
-        description: "Vul eerst de naam van de contactpersoon in",
+        title: t('contacts.name'),
+        description: t('contacts.namePlaceholder'),
       })
       return
     }
@@ -223,29 +226,29 @@ export default function ResearchBriefPage() {
           }))
           
           toast({
-            title: "Persoon gevonden",
-            description: data.role ? `${data.role} op LinkedIn` : "LinkedIn profiel gevonden",
+            title: t('contacts.found'),
+            description: data.role ? t('contacts.foundDesc', { role: data.role }) : t('contacts.foundProfile'),
           })
         } else {
           toast({
             variant: "destructive",
-            title: "Niet gevonden",
-            description: "Kon geen LinkedIn profiel vinden. Vul handmatig in.",
+            title: t('contacts.notFound'),
+            description: t('contacts.notFoundDesc'),
           })
         }
       } else {
         toast({
           variant: "destructive",
-          title: "Zoeken mislukt",
-          description: "Er is een fout opgetreden bij het zoeken",
+          title: t('contacts.searchFailed'),
+          description: t('contacts.searchFailedDesc'),
         })
       }
     } catch (error) {
       console.error('Lookup failed:', error)
       toast({
         variant: "destructive",
-        title: "Fout",
-        description: "Kon niet zoeken naar de persoon",
+        title: t('contacts.searchFailed'),
+        description: t('contacts.searchFailedDesc'),
       })
     } finally {
       setLookingUpContact(false)
@@ -257,8 +260,8 @@ export default function ResearchBriefPage() {
     if (!newContact.name.trim()) {
       toast({
         variant: "destructive",
-        title: "Naam verplicht",
-        description: "Vul de naam van de contactpersoon in",
+        title: t('contacts.name'),
+        description: t('contacts.namePlaceholder'),
       })
       return
     }
@@ -292,8 +295,8 @@ export default function ResearchBriefPage() {
         setLookupResult(null)
         setShowAddContact(false)
         toast({
-          title: "Contactpersoon toegevoegd",
-          description: "AI-analyse gestart...",
+          title: t('contacts.added'),
+          description: t('contacts.addedDesc'),
         })
         
         // Smart polling for analysis completion
@@ -317,8 +320,8 @@ export default function ResearchBriefPage() {
               return next
             })
             toast({
-              title: "Analyse voltooid",
-              description: `${contact.name} is geanalyseerd`,
+              title: t('contacts.analysisComplete'),
+              description: t('contacts.analysisCompleteDesc', { name: contact.name }),
             })
             return
           }
@@ -331,16 +334,16 @@ export default function ResearchBriefPage() {
         const error = await response.json()
         toast({
           variant: "destructive",
-          title: "Fout",
-          description: error.detail || "Kon contact niet toevoegen",
+          title: t('contacts.searchFailed'),
+          description: error.detail || t('contacts.addFailed'),
         })
       }
     } catch (error) {
       console.error('Failed to add contact:', error)
       toast({
         variant: "destructive",
-        title: "Fout",
-        description: "Er is een fout opgetreden",
+        title: t('contacts.searchFailed'),
+        description: t('contacts.searchFailedDesc'),
       })
     } finally {
       setAddingContact(false)
@@ -370,8 +373,8 @@ export default function ResearchBriefPage() {
           setSelectedContact(null)
         }
         toast({
-          title: "Verwijderd",
-          description: "Contactpersoon is verwijderd",
+          title: t('toast.deleted'),
+          description: t('toast.deletedDesc'),
         })
       }
     } catch (error) {
@@ -408,7 +411,7 @@ export default function ResearchBriefPage() {
         <div className="flex items-center justify-center h-full">
           <div className="text-center space-y-4">
             <Icons.spinner className="h-8 w-8 animate-spin text-blue-600 mx-auto" />
-            <p className="text-slate-500 dark:text-slate-400">Research brief laden...</p>
+            <p className="text-slate-500 dark:text-slate-400">{t('loading')}</p>
           </div>
         </div>
       </DashboardLayout>
@@ -431,7 +434,7 @@ export default function ResearchBriefPage() {
               onClick={() => router.push('/dashboard/research')}
             >
               <Icons.arrowLeft className="h-4 w-4 mr-2" />
-              Terug
+              {tCommon('back')}
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{brief.company_name}</h1>
@@ -451,12 +454,12 @@ export default function ResearchBriefPage() {
                   <Button variant="outline" size="sm" onClick={() => {
                     navigator.clipboard.writeText(brief.brief_content)
                     toast({
-                      title: "Gekopieerd!",
-                      description: "Research brief is naar het klembord gekopieerd",
+                      title: t('brief.copied'),
+                      description: t('brief.copied'),
                     })
                   }}>
                     <Icons.copy className="h-4 w-4 mr-2" />
-                    Kopieer Brief
+                    {t('brief.copy')}
                   </Button>
                 </div>
                 
@@ -488,11 +491,8 @@ export default function ResearchBriefPage() {
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950 dark:to-blue-950 p-4 shadow-sm">
                   <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                     <Icons.sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                    AI Context
+                    {t('context.title')}
                   </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
-                    Deze data wordt gecombineerd voor je voorbereiding:
-                  </p>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm">
                       {profileStatus.hasSalesProfile ? (
@@ -501,7 +501,7 @@ export default function ResearchBriefPage() {
                         <Icons.circle className="h-4 w-4 text-slate-300 dark:text-slate-600" />
                       )}
                       <span className={profileStatus.hasSalesProfile ? 'text-slate-700 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500'}>
-                        Jouw Sales Profiel
+                        {t('context.salesProfile')}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
@@ -511,12 +511,12 @@ export default function ResearchBriefPage() {
                         <Icons.circle className="h-4 w-4 text-slate-300 dark:text-slate-600" />
                       )}
                       <span className={profileStatus.hasCompanyProfile ? 'text-slate-700 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500'}>
-                        Jouw Bedrijfsprofiel
+                        {t('context.companyProfile')}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400" />
-                      <span className="text-slate-700 dark:text-slate-200">Research Brief</span>
+                      <span className="text-slate-700 dark:text-slate-200">{t('context.researchBrief')}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       {contacts.length > 0 ? (
@@ -525,7 +525,7 @@ export default function ResearchBriefPage() {
                         <Icons.circle className="h-4 w-4 text-amber-400" />
                       )}
                       <span className={contacts.length > 0 ? 'text-slate-700 dark:text-slate-200' : 'text-amber-600 dark:text-amber-400'}>
-                        Contactpersonen ({contacts.length})
+                        {t('context.contacts')} ({contacts.length})
                       </span>
                     </div>
                   </div>
@@ -536,7 +536,7 @@ export default function ResearchBriefPage() {
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                       <Icons.user className="h-4 w-4" />
-                      Contactpersonen
+                      {t('contacts.title')}
                     </h3>
                     {!showAddContact && (
                       <Button 

@@ -356,7 +356,7 @@ export default function ResearchPage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <Icons.fileText className="h-5 w-5 text-slate-400" />
-                Mijn Prospects
+                {t('history.title')}
                 <span className="text-sm font-normal text-slate-400">({briefs.length})</span>
               </h2>
               <Button variant="ghost" size="sm" onClick={fetchBriefs}>
@@ -367,9 +367,9 @@ export default function ResearchPage() {
             {briefs.length === 0 ? (
               <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center">
                 <Icons.search className="h-16 w-16 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
-                <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-2">Nog geen prospects onderzocht</h3>
+                <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-2">{t('history.empty')}</h3>
                 <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
-                  Start je eerste research via het formulier rechts →
+                  {t('history.emptyDesc')}
                 </p>
               </div>
             ) : (
@@ -390,25 +390,25 @@ export default function ResearchPage() {
                           {brief.status === 'completed' && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 dark:bg-green-900/50 text-green-700 dark:text-green-400 flex-shrink-0">
                               <Icons.check className="h-3 w-3" />
-                              Klaar
+                              {t('stats.completed')}
                             </span>
                           )}
                           {brief.status === 'researching' && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 flex-shrink-0">
                               <Icons.spinner className="h-3 w-3 animate-spin" />
-                              Bezig...
+                              {t('stats.researching')}
                             </span>
                           )}
                           {brief.status === 'pending' && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-50 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-400 flex-shrink-0">
                               <Icons.clock className="h-3 w-3" />
-                              Wachtrij
+                              {t('stats.researching')}
                             </span>
                           )}
                           {brief.status === 'failed' && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 dark:bg-red-900/50 text-red-700 dark:text-red-400 flex-shrink-0">
                               <Icons.alertCircle className="h-3 w-3" />
-                              Mislukt
+                              {t('stats.failed')}
                             </span>
                           )}
                         </div>
@@ -440,7 +440,7 @@ export default function ResearchPage() {
                               }}
                             >
                               <Icons.arrowRight className="h-3 w-3 mr-1" />
-                              Volgende Stap
+                              {t('brief.view')}
                             </Button>
                           </>
                         )}
@@ -468,16 +468,16 @@ export default function ResearchPage() {
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                   <Icons.barChart className="h-4 w-4 text-slate-400" />
-                  Overzicht
+                  {t('stats.title')}
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-3 text-center">
                     <p className="text-2xl font-bold text-green-600 dark:text-green-400">{completedBriefs}</p>
-                    <p className="text-xs text-green-700 dark:text-green-300">Voltooid</p>
+                    <p className="text-xs text-green-700 dark:text-green-300">{t('stats.completed')}</p>
                   </div>
                   <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3 text-center">
                     <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{processingBriefs}</p>
-                    <p className="text-xs text-blue-700 dark:text-blue-300">Bezig</p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300">{t('stats.researching')}</p>
                   </div>
                 </div>
               </div>
@@ -486,29 +486,29 @@ export default function ResearchPage() {
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                   <Icons.search className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  Nieuw Onderzoek
+                  {t('form.title')}
                 </h3>
                 
                 <form onSubmit={handleStartResearch} className="space-y-3">
                   <div>
-                    <Label htmlFor="companyName" className="text-xs text-slate-700 dark:text-slate-300">Bedrijfsnaam *</Label>
+                    <Label htmlFor="companyName" className="text-xs text-slate-700 dark:text-slate-300">{t('form.companyName')} *</Label>
                     <Input
                       id="companyName"
                       value={companyName}
                       onChange={(e) => handleCompanyNameChange(e.target.value)}
-                      placeholder="bijv. Acme Corp"
+                      placeholder={t('form.companyNamePlaceholder')}
                       className={`mt-1 h-9 text-sm ${selectedCompany ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/30' : ''}`}
                       required
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="country" className="text-xs text-slate-700 dark:text-slate-300">Land *</Label>
+                    <Label htmlFor="country" className="text-xs text-slate-700 dark:text-slate-300">{t('form.country')} *</Label>
                     <Input
                       id="country"
                       value={country}
                       onChange={(e) => { setCountry(e.target.value); setSelectedCompany(null) }}
-                      placeholder="bijv. Nederland"
+                      placeholder={t('form.countryPlaceholder')}
                       className="mt-1 h-9 text-sm"
                       required
                     />
@@ -527,12 +527,12 @@ export default function ResearchPage() {
                       {isSearching ? (
                         <>
                           <Icons.spinner className="mr-2 h-3 w-3 animate-spin" />
-                          Zoeken...
+                          {t('form.searching')}
                         </>
                       ) : (
                         <>
                           <Icons.search className="mr-2 h-3 w-3" />
-                          Zoek bedrijf online
+                          {t('form.searchCompany')}
                         </>
                       )}
                     </Button>
@@ -581,38 +581,38 @@ export default function ResearchPage() {
                     className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center gap-1"
                   >
                     {showAdvanced ? <Icons.chevronDown className="h-3 w-3" /> : <Icons.chevronRight className="h-3 w-3" />}
-                    Extra opties
+                    {t('form.extraOptions')}
                   </button>
 
                   {showAdvanced && (
                     <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-700">
                       <div>
-                        <Label htmlFor="websiteUrl" className="text-xs text-slate-700 dark:text-slate-300">Website</Label>
+                        <Label htmlFor="websiteUrl" className="text-xs text-slate-700 dark:text-slate-300">{t('form.website')}</Label>
                         <Input
                           id="websiteUrl"
                           value={websiteUrl}
                           onChange={(e) => setWebsiteUrl(e.target.value)}
-                          placeholder="https://..."
+                          placeholder={t('form.websitePlaceholder')}
                           className="mt-1 h-9 text-sm"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="linkedinUrl" className="text-xs text-slate-700 dark:text-slate-300">LinkedIn URL</Label>
+                        <Label htmlFor="linkedinUrl" className="text-xs text-slate-700 dark:text-slate-300">{t('form.linkedin')}</Label>
                         <Input
                           id="linkedinUrl"
                           value={linkedinUrl}
                           onChange={(e) => setLinkedinUrl(e.target.value)}
-                          placeholder="https://linkedin.com/..."
+                          placeholder={t('form.linkedinPlaceholder')}
                           className="mt-1 h-9 text-sm"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="city" className="text-xs text-slate-700 dark:text-slate-300">Stad</Label>
+                        <Label htmlFor="city" className="text-xs text-slate-700 dark:text-slate-300">{t('form.city')}</Label>
                         <Input
                           id="city"
                           value={city}
                           onChange={(e) => setCity(e.target.value)}
-                          placeholder="bijv. Amsterdam"
+                          placeholder={t('form.cityPlaceholder')}
                           className="mt-1 h-9 text-sm"
                         />
                       </div>
@@ -627,12 +627,12 @@ export default function ResearchPage() {
                     {researching ? (
                       <>
                         <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                        Starten...
+                        {t('form.researching')}
                       </>
                     ) : (
                       <>
                         <Icons.zap className="mr-2 h-4 w-4" />
-                        Start Research
+                        {t('form.startResearch')}
                       </>
                     )}
                   </Button>
@@ -643,28 +643,28 @@ export default function ResearchPage() {
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950 dark:to-blue-950 p-4 shadow-sm">
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                   <Icons.sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                  Hoe werkt het?
+                  {t('howItWorks.title')}
                 </h3>
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
                     <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center flex-shrink-0 font-bold">1</div>
                     <div>
-                      <p className="text-sm font-medium text-slate-800 dark:text-slate-100">Research</p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">AI onderzoekt het bedrijf</p>
+                      <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{t('howItWorks.step1')}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">{t('howItWorks.step1Desc')}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center flex-shrink-0 font-bold">2</div>
                     <div>
-                      <p className="text-sm font-medium text-slate-800 dark:text-slate-100">Contactpersonen</p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">Voeg je gesprekspartners toe</p>
+                      <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{t('howItWorks.step2')}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">{t('howItWorks.step2Desc')}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="w-6 h-6 rounded-full bg-green-600 text-white text-xs flex items-center justify-center flex-shrink-0 font-bold">3</div>
                     <div>
-                      <p className="text-sm font-medium text-slate-800 dark:text-slate-100">Preparation</p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">Krijg een gepersonaliseerde brief</p>
+                      <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{t('howItWorks.step3')}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">{t('howItWorks.step3Desc')}</p>
                     </div>
                   </div>
                 </div>
