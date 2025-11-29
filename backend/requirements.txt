@@ -27,3 +27,6 @@ reportlab==4.0.7
 # Website Scraper dependencies
 aiohttp>=3.9.0
 beautifulsoup4>=4.12.0
+
+# Billing dependencies
+stripe>=7.0.0
