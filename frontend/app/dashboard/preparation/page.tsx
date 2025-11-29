@@ -207,7 +207,7 @@ export default function PreparationPage() {
         toast({ title: 'Gestart', description: 'Voorbereiding wordt gegenereerd...' })
         setCompanyName('')
         setCustomNotes('')
-        setOutputLanguage('nl')
+        setOutputLanguage(settings.output_language) // Reset to settings default
         setSelectedContactIds([])
         setAvailableContacts([])
         setShowAdvanced(false)

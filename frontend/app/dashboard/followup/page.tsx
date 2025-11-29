@@ -227,7 +227,7 @@ export default function FollowupPage() {
       setMeetingSubject('')
       setMeetingDate('')
       setIncludeCoaching(false)
-      setEmailLanguage('nl')
+      setEmailLanguage(settings.email_language) // Reset to settings default
       setShowAdvanced(false)
       
       fetchFollowups()

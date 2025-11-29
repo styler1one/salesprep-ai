@@ -48,15 +48,15 @@ export default function ResearchPage() {
   const [country, setCountry] = useState('')
   const [city, setCity] = useState('')
   const [outputLanguage, setOutputLanguage] = useState('nl') // Will be updated from settings
-  const [languageSetFromSettings, setLanguageSetFromSettings] = useState(false)
+  const [languageFromSettings, setLanguageFromSettings] = useState(false) // Track if set from settings
   
-  // Set language from settings on load
+  // Set language from settings on load (only once)
   useEffect(() => {
-    if (settingsLoaded && !languageSetFromSettings) {
+    if (settingsLoaded && !languageFromSettings) {
       setOutputLanguage(settings.output_language)
-      setLanguageSetFromSettings(true)
+      setLanguageFromSettings(true)
     }
-  }, [settingsLoaded, settings.output_language, languageSetFromSettings])
+  }, [settingsLoaded, settings.output_language, languageFromSettings])
   
   // Company search state
   const [isSearching, setIsSearching] = useState(false)
@@ -77,13 +77,15 @@ export default function ResearchPage() {
     getUser()
   }, [supabase])
 
-  // Auto-suggest language when country changes
+  // Auto-suggest language when country changes (only if settings not loaded yet)
+  // If user has settings, we respect those. Country suggestion is just a fallback.
   useEffect(() => {
-    if (country && country.length >= 2) {
+    // Only auto-suggest if settings haven't been loaded yet
+    if (country && country.length >= 2 && !languageFromSettings) {
       const suggested = suggestLanguageFromCountry(country)
       setOutputLanguage(suggested)
     }
-  }, [country])
+  }, [country, languageFromSettings])
   
   // Manual search function
   const searchCompanies = async () => {
@@ -265,7 +267,7 @@ export default function ResearchPage() {
       setWebsiteUrl('')
       setCountry('')
       setCity('')
-      setOutputLanguage('nl')
+      setOutputLanguage(settings.output_language) // Reset to settings default, not hardcoded 'nl'
       setSelectedCompany(null)
       setShowAdvanced(false)
       
