@@ -391,7 +391,9 @@
       "personal": "Persönliche Daten",
       "experience": "Erfahrung & Expertise",
       "style": "Verkaufsstil",
-      "goals": "Ziele & Targets"
+      "goals": "Ziele & Targets",
+      "targetMarket": "Zielmarkt",
+      "goalsPrefs": "Ziele & Präferenzen"
     },
     "fields": {
       "fullName": "Vollständiger Name",
@@ -404,7 +406,20 @@
       "sellingStyle": "Verkaufsstil",
       "communicationPreference": "Kommunikationspräferenz",
       "targetMarket": "Zielmarkt",
-      "quotaTarget": "Quota-Ziel"
+      "quotaTarget": "Quota-Ziel",
+      "regions": "Regionen",
+      "companySizes": "Unternehmensgrößen",
+      "quarterlyGoals": "Quartalsziele",
+      "meetingTypes": "Meeting-Typen"
+    },
+    "howUsed": {
+      "title": "Wie wird das verwendet?",
+      "prep": "Meeting Prep",
+      "prepDesc": "KI generiert Briefs abgestimmt auf deinen Stil",
+      "followup": "Follow-up Emails",
+      "followupDesc": "Emails werden in deinem Ton geschrieben",
+      "research": "Research",
+      "researchDesc": "Fokus auf relevante Infos für deinen Zielmarkt"
     },
     "toast": {
       "saved": "Profil gespeichert",
@@ -427,11 +442,21 @@
     "ourStory": "Unsere Geschichte",
     "ourStoryDesc": "Diese Geschichte wird von der KI verwendet um personalisierte Sales-Inhalte zu generieren",
     "summary": "Zusammenfassung",
+    "notSet": "Nicht eingestellt",
+    "noProducts": "Noch keine Produkte hinzugefügt",
+    "noPersonas": "Noch keine Personas hinzugefügt",
+    "noCaseStudies": "Noch keine Fallstudien hinzugefügt",
     "sections": {
       "basic": "Grundinformationen",
       "products": "Produkte & Dienstleistungen",
       "market": "Markt & Wettbewerb",
-      "values": "Werte & USPs"
+      "values": "Werte & USPs",
+      "valueProps": "Wertversprechen",
+      "differentiators": "Differenzierer",
+      "icp": "Ideales Kundenprofil",
+      "personas": "Buyer Personas",
+      "caseStudies": "Fallstudien",
+      "salesInfo": "Vertriebsinformationen"
     },
     "fields": {
       "companyName": "Firmenname",
@@ -442,7 +467,22 @@
       "targetAudience": "Zielgruppe",
       "competitors": "Wettbewerber",
       "uniqueSellingPoints": "Alleinstellungsmerkmale",
-      "companyValues": "Unternehmenswerte"
+      "companyValues": "Unternehmenswerte",
+      "industries": "Branchen",
+      "companySizes": "Unternehmensgrößen",
+      "painPoints": "Pain Points",
+      "salesCycle": "Verkaufszyklus",
+      "avgDeal": "Durchschnittlicher Deal",
+      "competitiveAdvantage": "Wettbewerbsvorteil"
+    },
+    "howUsed": {
+      "title": "Wie wird das verwendet?",
+      "prep": "Meeting Prep",
+      "prepDesc": "KI nutzt Value Props und Fallstudien",
+      "followup": "Follow-up Emails",
+      "followupDesc": "Produktinfos werden automatisch hinzugefügt",
+      "research": "Research",
+      "researchDesc": "ICP filtert relevante Prospect-Infos"
     },
     "toast": {
       "saved": "Profil gespeichert",
