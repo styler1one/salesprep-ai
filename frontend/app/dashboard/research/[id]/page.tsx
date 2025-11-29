@@ -546,7 +546,7 @@ export default function ResearchBriefPage() {
                         onClick={() => setShowAddContact(true)}
                       >
                         <Icons.plus className="h-3 w-3 mr-1" />
-                        Toevoegen
+                        {tCommon('add')}
                       </Button>
                     )}
                   </div>
@@ -556,7 +556,7 @@ export default function ResearchBriefPage() {
                     <div className="mb-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
                       <div className="space-y-3">
                         <div>
-                          <Label htmlFor="contact-name" className="text-xs text-slate-700 dark:text-slate-300">Naam *</Label>
+                          <Label htmlFor="contact-name" className="text-xs text-slate-700 dark:text-slate-300">{t('contacts.name')} *</Label>
                           <div className="flex gap-1 mt-1">
                             <Input
                               id="contact-name"
@@ -584,7 +584,7 @@ export default function ResearchBriefPage() {
                           </div>
                           {lookupResult && (
                             <p className={`text-xs mt-1 ${lookupResult.found ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
-                              {lookupResult.found ? '✓ Gevonden' : '⚠ Niet gevonden'}
+                              {lookupResult.found ? `✓ ${t('contacts.found')}` : `⚠ ${t('contacts.notFound')}`}
                             </p>
                           )}
                         </div>

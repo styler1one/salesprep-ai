@@ -205,6 +205,9 @@
     },
     "contacts": {
       "title": "Contact Persons",
+      "name": "Name",
+      "found": "Found",
+      "notFound": "Not found",
       "add": "Add Contact",
       "addShort": "Add",
       "name": "Name",
@@ -301,7 +304,14 @@
     },
     "detail": {
       "meetingContext": "Meeting Context",
-      "quickActions": "Quick Actions"
+      "quickActions": "Quick Actions",
+      "researchBrief": "Research Brief",
+      "linkedResearch": "Linked Research",
+      "yourNotes": "Your Notes"
+    },
+    "brief": {
+      "copyAll": "Copy All",
+      "viewResearch": "View Research"
     },
     "nextStep": {
       "title": "After your Meeting",
@@ -355,9 +365,16 @@
       "actionItems": "Action Items",
       "emailDraft": "Email Draft",
       "transcription": "Transcription",
+      "copyTranscription": "Copy Transcription",
       "meetingInfo": "Meeting Info",
       "date": "Date",
       "duration": "Duration",
+      "linkedResearch": "Linked Research",
+      "linkedPreparation": "Linked Preparation",
+      "audioPlayer": "Audio",
+      "nextProspect": "Next Prospect?",
+      "nextProspectDesc": "Start new research for your next prospect.",
+      "startNewResearch": "New Research",
       "speakers": "Speakers",
       "linkedResearch": "Linked Research",
       "linkedPreparation": "Linked Preparation",

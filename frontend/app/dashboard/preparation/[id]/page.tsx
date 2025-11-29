@@ -355,7 +355,7 @@ export default function PreparationDetailPage() {
                         <Icons.circle className="h-4 w-4 text-slate-300 dark:text-slate-600" />
                       )}
                       <span className={researchBrief ? 'text-slate-700 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500'}>
-                        Research Brief
+                        {t('detail.researchBrief')}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
@@ -370,7 +370,7 @@ export default function PreparationDetailPage() {
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                     <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
                       <Icons.search className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                      Gekoppelde Research
+                      {t('detail.linkedResearch')}
                     </h3>
                     <button
                       onClick={() => router.push(`/dashboard/research/${researchBrief.id}`)}
@@ -394,7 +394,7 @@ export default function PreparationDetailPage() {
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                     <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
                       <Icons.fileText className="h-4 w-4 text-slate-600 dark:text-slate-400" />
-                      Jouw Notities
+                      {t('detail.yourNotes')}
                     </h3>
                     <p className="text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                       {prep.custom_notes}
@@ -406,17 +406,17 @@ export default function PreparationDetailPage() {
                 <div className="rounded-xl border-2 border-orange-200 dark:border-orange-800 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950 dark:to-amber-950 p-4 shadow-sm">
                   <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
                     <Icons.arrowRight className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                    Na je Meeting
+                    {t('nextStep.title')}
                   </h3>
                   <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
-                    Upload je meeting opname voor transcriptie, samenvatting en follow-up acties.
+                    {t('nextStep.description')}
                   </p>
                   <Button 
                     className="w-full bg-orange-600 hover:bg-orange-700"
                     onClick={handleStartFollowup}
                   >
                     <Icons.mic className="h-4 w-4 mr-2" />
-                    Start Follow-up
+                    {t('nextStep.button')}
                   </Button>
                 </div>
 
@@ -428,7 +428,7 @@ export default function PreparationDetailPage() {
                       <Button variant="outline" size="sm" className="w-full justify-start" asChild>
                         <a href={prep.pdf_url} target="_blank" rel="noopener noreferrer">
                           <Icons.download className="h-4 w-4 mr-2" />
-                          Download PDF
+                          {tCommon('download')}
                         </a>
                       </Button>
                     )}
@@ -438,11 +438,11 @@ export default function PreparationDetailPage() {
                       className="w-full justify-start"
                       onClick={() => {
                         navigator.clipboard.writeText(prep.brief_content || '')
-                        toast({ title: "Gekopieerd!" })
+                        toast({ title: tCommon('copied') })
                       }}
                     >
                       <Icons.copy className="h-4 w-4 mr-2" />
-                      Kopieer Alles
+                      {t('brief.copyAll')}
                     </Button>
                     {researchBrief && (
                       <Button 
@@ -452,7 +452,7 @@ export default function PreparationDetailPage() {
                         onClick={() => router.push(`/dashboard/research/${researchBrief.id}`)}
                       >
                         <Icons.search className="h-4 w-4 mr-2" />
-                        Bekijk Research
+                        {t('brief.viewResearch')}
                       </Button>
                     )}
                   </div>

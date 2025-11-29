@@ -205,6 +205,9 @@
     },
     "contacts": {
       "title": "Contactpersonen",
+      "name": "Naam",
+      "found": "Gevonden",
+      "notFound": "Niet gevonden",
       "add": "Contact Toevoegen",
       "addShort": "Toevoegen",
       "name": "Naam",
@@ -301,7 +304,14 @@
     },
     "detail": {
       "meetingContext": "Meeting Context",
-      "quickActions": "Snelle Acties"
+      "quickActions": "Snelle Acties",
+      "researchBrief": "Research Brief",
+      "linkedResearch": "Gekoppelde Research",
+      "yourNotes": "Jouw Notities"
+    },
+    "brief": {
+      "copyAll": "Kopieer Alles",
+      "viewResearch": "Bekijk Research"
     },
     "nextStep": {
       "title": "Na je Meeting",
@@ -355,9 +365,16 @@
       "actionItems": "Actiepunten",
       "emailDraft": "Email Concept",
       "transcription": "Transcriptie",
+      "copyTranscription": "Kopieer Transcriptie",
       "meetingInfo": "Meeting Info",
       "date": "Datum",
       "duration": "Duur",
+      "linkedResearch": "Gekoppelde Research",
+      "linkedPreparation": "Gekoppelde Voorbereiding",
+      "audioPlayer": "Audio",
+      "nextProspect": "Volgende Prospect?",
+      "nextProspectDesc": "Start een nieuwe research voor je volgende prospect.",
+      "startNewResearch": "Nieuwe Research",
       "speakers": "Sprekers",
       "linkedResearch": "Gekoppelde Research",
       "linkedPreparation": "Gekoppelde Voorbereiding",

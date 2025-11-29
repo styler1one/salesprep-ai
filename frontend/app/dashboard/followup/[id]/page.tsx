@@ -609,7 +609,7 @@ export default function FollowupDetailPage() {
                     >
                       <h2 className="font-bold text-lg flex items-center gap-2 text-slate-900 dark:text-white">
                         <Icons.fileText className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-                        Transcriptie
+                        {t('detail.transcription')}
                       </h2>
                       {showTranscript ? <Icons.chevronDown className="h-5 w-5 text-slate-500" /> : <Icons.chevronRight className="h-5 w-5 text-slate-500" />}
                     </button>
@@ -627,7 +627,7 @@ export default function FollowupDetailPage() {
                           onClick={() => handleCopy(followup.transcription_text || '', 'transcript')}
                         >
                           <Icons.copy className="h-4 w-4 mr-1" />
-                          {copied === 'transcript' ? 'Gekopieerd!' : 'Kopieer Transcriptie'}
+                          {copied === 'transcript' ? tCommon('copied') : t('detail.copyTranscription')}
                         </Button>
                       </div>
                     )}
@@ -643,7 +643,7 @@ export default function FollowupDetailPage() {
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                     <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                       <Icons.calendar className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                      Meeting Info
+                      {t('detail.meetingInfo')}
                     </h3>
                     <div className="space-y-2 text-sm">
                       {followup.meeting_date && (
@@ -672,7 +672,7 @@ export default function FollowupDetailPage() {
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                       <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                         <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400" />
-                        Actie Items ({followup.action_items.length})
+                        {t('detail.actionItems')} ({followup.action_items.length})
                       </h3>
                       <div className="space-y-2">
                         {followup.action_items.slice(0, 5).map((item, i) => (
@@ -698,7 +698,7 @@ export default function FollowupDetailPage() {
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                       <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
                         <Icons.search className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                        Gekoppelde Research
+                        {t('detail.linkedResearch')}
                       </h3>
                       <button
                         onClick={() => router.push(`/dashboard/research/${researchBrief.id}`)}
@@ -722,7 +722,7 @@ export default function FollowupDetailPage() {
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                       <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
                         <Icons.fileText className="h-4 w-4 text-green-600 dark:text-green-400" />
-                        Gekoppelde Voorbereiding
+                        {t('detail.linkedPreparation')}
                       </h3>
                       <button
                         onClick={() => router.push(`/dashboard/preparation/${meetingPrep.id}`)}
@@ -746,7 +746,7 @@ export default function FollowupDetailPage() {
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                       <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                         <Icons.mic className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                        Audio
+                        {t('detail.audioPlayer')}
                       </h3>
                       <audio controls className="w-full h-10">
                         <source src={followup.audio_url} />
@@ -758,17 +758,17 @@ export default function FollowupDetailPage() {
                   <div className="rounded-xl border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 p-4 shadow-sm">
                     <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
                       <Icons.arrowRight className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                      Volgende Prospect?
+                      {t('detail.nextProspect')}
                     </h3>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
-                      Start een nieuwe research voor je volgende prospect.
+                      {t('detail.nextProspectDesc')}
                     </p>
                     <Button 
                       className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
                       onClick={() => router.push('/dashboard/research')}
                     >
                       <Icons.search className="h-4 w-4 mr-2" />
-                      Nieuwe Research
+                      {t('detail.startNewResearch')}
                     </Button>
                   </div>
 
