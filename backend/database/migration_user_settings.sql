@@ -11,9 +11,9 @@ CREATE TABLE IF NOT EXISTS user_settings (
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     
     -- Language preferences
-    app_language VARCHAR(5) DEFAULT 'nl',      -- UI language
-    output_language VARCHAR(5) DEFAULT 'nl',   -- AI output language
-    email_language VARCHAR(5) DEFAULT 'nl',    -- Email generation language
+    app_language VARCHAR(5) DEFAULT 'en',      -- UI language (default: English)
+    output_language VARCHAR(5) DEFAULT 'en',   -- AI output language (default: English)
+    email_language VARCHAR(5) DEFAULT 'en',    -- Email generation language (default: English)
     
     -- Timestamps
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

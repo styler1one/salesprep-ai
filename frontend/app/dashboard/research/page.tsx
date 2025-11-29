@@ -47,7 +47,7 @@ export default function ResearchPage() {
   const [websiteUrl, setWebsiteUrl] = useState('')
   const [country, setCountry] = useState('')
   const [city, setCity] = useState('')
-  const [outputLanguage, setOutputLanguage] = useState('nl') // Will be updated from settings
+  const [outputLanguage, setOutputLanguage] = useState('en') // Will be updated from settings
   const [languageFromSettings, setLanguageFromSettings] = useState(false) // Track if set from settings
   
   // Set language from settings on load (only once)

@@ -25,9 +25,9 @@ interface SettingsContextType {
 // ==========================================
 
 const defaultSettings: UserSettings = {
-  app_language: 'nl',
-  output_language: 'nl',
-  email_language: 'nl',
+  app_language: 'en',
+  output_language: 'en',
+  email_language: 'en',
 }
 
 // ==========================================

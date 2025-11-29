@@ -38,9 +38,9 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   
   // Local state for form
-  const [appLanguage, setAppLanguage] = useState('nl')
-  const [outputLanguage, setOutputLanguage] = useState('nl')
-  const [emailLanguage, setEmailLanguage] = useState('nl')
+  const [appLanguage, setAppLanguage] = useState('en')
+  const [outputLanguage, setOutputLanguage] = useState('en')
+  const [emailLanguage, setEmailLanguage] = useState('en')
 
   // Sync local state with settings when loaded
   useEffect(() => {

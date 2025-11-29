@@ -17,7 +17,7 @@ interface LanguageSelectorProps {
   variant?: 'icon' | 'full'
 }
 
-export function LanguageSelector({ currentLocale = 'nl', variant = 'icon' }: LanguageSelectorProps) {
+export function LanguageSelector({ currentLocale = 'en', variant = 'icon' }: LanguageSelectorProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 

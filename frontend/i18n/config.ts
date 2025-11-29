@@ -2,8 +2,8 @@
 export const locales = ['nl', 'en', 'de', 'fr', 'es', 'hi', 'ar'] as const;
 export type Locale = (typeof locales)[number];
 
-// Default locale
-export const defaultLocale: Locale = 'nl';
+// Default locale (English for international app)
+export const defaultLocale: Locale = 'en';
 
 // RTL locales
 export const rtlLocales: Locale[] = ['ar'];

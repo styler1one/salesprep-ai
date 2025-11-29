@@ -59,7 +59,7 @@ export default function PreparationPage() {
   const [companyName, setCompanyName] = useState('')
   const [meetingType, setMeetingType] = useState('discovery')
   const [customNotes, setCustomNotes] = useState('')
-  const [outputLanguage, setOutputLanguage] = useState('nl')
+  const [outputLanguage, setOutputLanguage] = useState('en')
   const [showAdvanced, setShowAdvanced] = useState(false)
   
   // Set language from settings on load

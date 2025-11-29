@@ -42,7 +42,7 @@ class ResearchRequest(BaseModel):
     company_website_url: Optional[str] = None  # NEW: Direct website scraping
     country: Optional[str] = None
     city: Optional[str] = None
-    language: Optional[str] = "nl"  # i18n: output language (default: Dutch)
+    language: Optional[str] = "en"  # i18n: output language (default: English)
 
 
 class ResearchResponse(BaseModel):
@@ -102,7 +102,7 @@ def process_research_background(
     website_url: Optional[str] = None,
     organization_id: Optional[str] = None,  # NEW: For seller context
     user_id: Optional[str] = None,  # NEW: For sales profile
-    language: str = "nl"  # i18n: output language
+    language: str = "en"  # i18n: output language (default: English)
 ):
     """
     Background task to process research request.

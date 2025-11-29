@@ -7,8 +7,8 @@ from typing import List, Optional
 # Supported language codes (ISO 639-1)
 SUPPORTED_LANGUAGES: List[str] = ["nl", "en", "de", "fr", "es", "hi", "ar"]
 
-# Default language
-DEFAULT_LANGUAGE: str = "nl"
+# Default language (English for international app)
+DEFAULT_LANGUAGE: str = "en"
 
 # Right-to-left languages
 RTL_LANGUAGES: List[str] = ["ar"]

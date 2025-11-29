@@ -50,7 +50,7 @@ export default function FollowupPage() {
   const [meetingSubject, setMeetingSubject] = useState('')
   const [meetingDate, setMeetingDate] = useState('')
   const [includeCoaching, setIncludeCoaching] = useState(false)
-  const [emailLanguage, setEmailLanguage] = useState('nl')
+  const [emailLanguage, setEmailLanguage] = useState('en')
   const [showAdvanced, setShowAdvanced] = useState(false)
   
   // Set language from settings on load

@@ -26,7 +26,7 @@ class PrepStartRequest(BaseModel):
     meeting_type: str = Field(..., pattern="^(discovery|demo|closing|follow_up|other)$")
     custom_notes: Optional[str] = None
     contact_ids: Optional[List[str]] = None  # Selected contact persons for this meeting
-    language: Optional[str] = "nl"  # i18n: output language (default: Dutch)
+    language: Optional[str] = "en"  # i18n: output language (default: English)
 
 
 class PrepResponse(BaseModel):
@@ -64,7 +64,7 @@ async def generate_prep_background(
     user_id: str,
     custom_notes: Optional[str],
     contact_ids: Optional[List[str]] = None,
-    language: str = "nl"  # i18n: output language
+    language: str = "en"  # i18n: output language (default: English)
 ):
     """Background task to generate meeting prep"""
     try:

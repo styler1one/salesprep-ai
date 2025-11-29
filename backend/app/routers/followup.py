@@ -91,7 +91,7 @@ async def process_followup_background(
     meeting_prep_id: Optional[str] = None,
     prospect_company: Optional[str] = None,
     include_coaching: bool = False,  # opt-in coaching
-    language: str = "nl"  # i18n: output language
+    language: str = "en"  # i18n: output language (default: English)
 ):
     """Background task to process audio and generate follow-up content"""
     
@@ -370,7 +370,7 @@ async def process_transcript_background(
     prospect_company: Optional[str] = None,
     estimated_duration: Optional[float] = None,
     include_coaching: bool = False,  # opt-in coaching
-    language: str = "nl"  # i18n: output language
+    language: str = "en"  # i18n: output language (default: English)
 ):
     """Background task to process transcript and generate follow-up content"""
     

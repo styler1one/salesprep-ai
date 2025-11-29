@@ -72,7 +72,7 @@ ALTER TABLE followups
 ADD COLUMN IF NOT EXISTS language TEXT DEFAULT 'nl';
 
 ALTER TABLE followups
-ADD COLUMN IF NOT EXISTS email_language TEXT DEFAULT 'nl';
+ADD COLUMN IF NOT EXISTS email_language TEXT DEFAULT 'en';
 
 -- 5. Create index for prospect language filtering
 CREATE INDEX IF NOT EXISTS idx_prospects_language 

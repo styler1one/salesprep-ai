@@ -46,7 +46,7 @@ class TranscriptionService:
     async def transcribe_audio(
         self,
         audio_url: str,
-        language: str = "nl"
+        language: str = "en"
     ) -> TranscriptionResult:
         """
         Transcribe audio from URL
@@ -69,7 +69,7 @@ class TranscriptionService:
         self,
         audio_data: bytes,
         filename: str,
-        language: str = "nl"
+        language: str = "en"
     ) -> TranscriptionResult:
         """
         Transcribe audio from bytes
