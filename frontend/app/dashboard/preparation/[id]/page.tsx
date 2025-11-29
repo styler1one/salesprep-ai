@@ -44,6 +44,8 @@ export default function PreparationDetailPage() {
   const params = useParams()
   const supabase = createClientComponentClient()
   const { toast } = useToast()
+  const t = useTranslations('preparation')
+  const tCommon = useTranslations('common')
   
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)

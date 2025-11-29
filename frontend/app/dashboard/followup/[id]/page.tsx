@@ -77,6 +77,8 @@ export default function FollowupDetailPage() {
   const followupId = params.id as string
   const supabase = createClientComponentClient()
   const { toast } = useToast()
+  const t = useTranslations('followup')
+  const tCommon = useTranslations('common')
   
   const [user, setUser] = useState<any>(null)
   const [followup, setFollowup] = useState<Followup | null>(null)
@@ -198,10 +200,10 @@ export default function FollowupDetailPage() {
       if (response.ok) {
         const data = await response.json()
         setEmailDraft(data.email_draft)
-        toast({ title: 'Email opnieuw gegenereerd' })
+        toast({ title: t('toast.copied') })
       }
     } catch (error) {
-      toast({ title: 'Regenereren mislukt', variant: 'destructive' })
+      toast({ title: t('toast.failed'), variant: 'destructive' })
     } finally {
       setRegeneratingEmail(false)
     }
@@ -220,7 +222,7 @@ export default function FollowupDetailPage() {
         <div className="flex items-center justify-center h-full">
           <div className="text-center space-y-4">
             <Icons.spinner className="h-8 w-8 animate-spin text-orange-600 mx-auto" />
-            <p className="text-slate-500 dark:text-slate-400">Follow-up laden...</p>
+            <p className="text-slate-500 dark:text-slate-400">{t('loading')}</p>
           </div>
         </div>
       </DashboardLayout>
@@ -259,7 +261,7 @@ export default function FollowupDetailPage() {
               onClick={() => router.push('/dashboard/followup')}
             >
               <Icons.arrowLeft className="h-4 w-4 mr-2" />
-              Terug
+              {tCommon('back')}
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -278,7 +280,7 @@ export default function FollowupDetailPage() {
                 {followup.speaker_count > 0 && (
                   <span className="flex items-center gap-1">
                     <Icons.users className="h-3 w-3" />
-                    {followup.speaker_count} sprekers
+                    {followup.speaker_count} {t('detail.speakers')}
                   </span>
                 )}
               </div>
@@ -287,8 +289,7 @@ export default function FollowupDetailPage() {
               <div className="ml-auto flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-3 py-2 rounded-lg">
                 <Icons.spinner className="h-4 w-4 animate-spin" />
                 <span className="text-sm font-medium">
-                  {followup.status === 'transcribing' ? 'Transcriberen...' : 
-                   followup.status === 'summarizing' ? 'Samenvatten...' : 'Verwerken...'}
+                  {t('form.processing')}
                 </span>
               </div>
             )}
@@ -299,7 +300,7 @@ export default function FollowupDetailPage() {
             <div className="mb-6 p-4 rounded-xl border-2 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30">
               <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
                 <Icons.alertCircle className="h-5 w-5" />
-                <span className="font-medium">Verwerking mislukt</span>
+                <span className="font-medium">{t('toast.failed')}</span>
               </div>
               <p className="text-sm text-red-600 dark:text-red-400 mt-1">{followup.error_message}</p>
             </div>
@@ -310,11 +311,9 @@ export default function FollowupDetailPage() {
             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-12 text-center shadow-sm">
               <Icons.spinner className="h-16 w-16 text-orange-600 mx-auto mb-4 animate-spin" />
               <h3 className="font-bold text-lg mb-2 text-slate-900 dark:text-white">
-                {followup.status === 'transcribing' ? 'Audio wordt getranscribeerd...' :
-                 followup.status === 'summarizing' ? 'Samenvatting wordt gegenereerd...' :
-                 'Bestand wordt verwerkt...'}
+                {t('form.processing')}
               </h3>
-              <p className="text-slate-500 dark:text-slate-400">Dit kan enkele minuten duren</p>
+              <p className="text-slate-500 dark:text-slate-400">{t('toast.startedDesc')}</p>
             </div>
           )}
 
@@ -329,14 +328,14 @@ export default function FollowupDetailPage() {
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="font-bold text-lg flex items-center gap-2 text-slate-900 dark:text-white">
                       <Icons.fileText className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                      Samenvatting
+                      {t('detail.summary')}
                     </h2>
                     <Button variant="outline" size="sm" onClick={() => handleCopy(
                       `${followup.executive_summary}\n\nBelangrijkste punten:\n${followup.key_points?.map(p => `• ${p}`).join('\n')}\n\nVervolgstappen:\n${followup.next_steps?.map(s => `• ${s}`).join('\n')}`,
                       'summary'
                     )}>
                       <Icons.copy className="h-4 w-4 mr-1" />
-                      {copied === 'summary' ? 'Gekopieerd!' : 'Kopieer'}
+                      {copied === 'summary' ? t('toast.copied') : tCommon('copy')}
                     </Button>
                   </div>
                   
@@ -418,7 +417,7 @@ export default function FollowupDetailPage() {
                   <div className="rounded-xl border-2 border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950 dark:to-yellow-950 p-6 shadow-sm">
                     <h2 className="font-bold text-lg flex items-center gap-2 mb-4 text-slate-900 dark:text-white">
                       <Icons.trendingUp className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                      💰 Commerciële Signalen
+                      💰 {t('detail.commercialSignals')}
                     </h2>
                     <div className="grid gap-4 md:grid-cols-3">
                       {followup.commercial_signals?.koopsignalen && followup.commercial_signals.koopsignalen.length > 0 && (
@@ -460,7 +459,7 @@ export default function FollowupDetailPage() {
                   <div className="rounded-xl border-2 border-indigo-200 dark:border-indigo-800 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 p-6 shadow-sm">
                     <h2 className="font-bold text-lg flex items-center gap-2 mb-4 text-slate-900 dark:text-white">
                       <Icons.search className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                      🔎 Observaties & Signalen
+                      🔎 {t('detail.observations')}
                     </h2>
                     <div className="grid gap-4 md:grid-cols-2">
                       {followup.observations?.doubts && followup.observations.doubts.length > 0 && (
