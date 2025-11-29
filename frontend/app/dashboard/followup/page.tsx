@@ -4,25 +4,14 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Icons } from '@/components/icons'
 import { useToast } from '@/components/ui/use-toast'
+import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout'
 import { ProspectAutocomplete } from '@/components/prospect-autocomplete'
-import { 
-  ArrowLeft, 
-  Upload, 
-  FileAudio, 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
-  Loader2,
-  Trash2,
-  RefreshCw,
-  Mic
-} from 'lucide-react'
 
 interface Followup {
   id: string
@@ -53,7 +42,8 @@ export default function FollowupPage() {
   const [prospectCompany, setProspectCompany] = useState('')
   const [meetingSubject, setMeetingSubject] = useState('')
   const [meetingDate, setMeetingDate] = useState('')
-  const [includeCoaching, setIncludeCoaching] = useState(false)  // NEW: opt-in coaching
+  const [includeCoaching, setIncludeCoaching] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   
   const fetchFollowups = useCallback(async () => {
     try {
@@ -80,7 +70,6 @@ export default function FollowupPage() {
     }
   }, [supabase])
 
-  // Use a ref to track followups for polling without causing re-renders
   const followupsRef = useRef<Followup[]>([])
   followupsRef.current = followups
 
@@ -93,9 +82,7 @@ export default function FollowupPage() {
     fetchFollowups()
   }, [fetchFollowups, supabase])
 
-  // Separate effect for polling to avoid dependency loop
   useEffect(() => {
-    // Poll for updates every 5 seconds if there are processing items
     const interval = setInterval(() => {
       const hasProcessing = followupsRef.current.some(f => 
         ['uploading', 'transcribing', 'summarizing'].includes(f.status)
@@ -114,7 +101,6 @@ export default function FollowupPage() {
       const ext = file.name.toLowerCase().split('.').pop() || ''
       
       if (uploadType === 'audio') {
-        // Validate audio file type
         const allowedTypes = ['audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/webm', 'audio/x-m4a']
         if (!allowedTypes.includes(file.type)) {
           toast({
@@ -125,7 +111,6 @@ export default function FollowupPage() {
           return
         }
         
-        // Validate file size (50MB for audio)
         if (file.size > 50 * 1024 * 1024) {
           toast({
             title: 'Bestand te groot',
@@ -135,7 +120,6 @@ export default function FollowupPage() {
           return
         }
       } else {
-        // Validate transcript file type
         const allowedExts = ['txt', 'md', 'docx', 'srt']
         if (!allowedExts.includes(ext)) {
           toast({
@@ -146,7 +130,6 @@ export default function FollowupPage() {
           return
         }
         
-        // Validate file size (10MB for transcripts)
         if (file.size > 10 * 1024 * 1024) {
           toast({
             title: 'Bestand te groot',
@@ -165,7 +148,7 @@ export default function FollowupPage() {
     if (!selectedFile) {
       toast({
         title: 'Geen bestand geselecteerd',
-        description: 'Selecteer eerst een audio bestand',
+        description: 'Selecteer eerst een bestand',
         variant: 'destructive'
       })
       return
@@ -185,11 +168,10 @@ export default function FollowupPage() {
       if (prospectCompany) formData.append('prospect_company_name', prospectCompany)
       if (meetingSubject) formData.append('meeting_subject', meetingSubject)
       if (meetingDate) formData.append('meeting_date', meetingDate)
-      formData.append('include_coaching', includeCoaching.toString())  // NEW: coaching flag
+      formData.append('include_coaching', includeCoaching.toString())
 
       setUploadProgress(30)
 
-      // Use different endpoint based on upload type
       const endpoint = uploadType === 'audio' 
         ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1/followup/upload`
         : `${process.env.NEXT_PUBLIC_API_URL}/api/v1/followup/upload-transcript`
@@ -209,12 +191,11 @@ export default function FollowupPage() {
         throw new Error(error.detail || 'Upload failed')
       }
 
-      const result = await response.json()
       setUploadProgress(100)
 
       toast({
         title: 'Upload gestart',
-        description: 'Audio wordt getranscribeerd en verwerkt...'
+        description: 'Wordt getranscribeerd en verwerkt...'
       })
 
       // Reset form
@@ -223,8 +204,8 @@ export default function FollowupPage() {
       setMeetingSubject('')
       setMeetingDate('')
       setIncludeCoaching(false)
+      setShowAdvanced(false)
       
-      // Refresh list
       fetchFollowups()
 
     } catch (error: any) {
@@ -239,7 +220,8 @@ export default function FollowupPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
     if (!confirm('Weet je zeker dat je deze follow-up wilt verwijderen?')) return
 
     try {
@@ -268,28 +250,6 @@ export default function FollowupPage() {
     }
   }
 
-  const getStatusBadge = (status: string) => {
-    const badges: Record<string, { icon: any, label: string, className: string }> = {
-      pending: { icon: Clock, label: 'Wachten', className: 'bg-gray-100 text-gray-700' },
-      uploading: { icon: Upload, label: 'Uploaden', className: 'bg-blue-100 text-blue-700' },
-      transcribing: { icon: Loader2, label: 'Transcriberen', className: 'bg-yellow-100 text-yellow-700' },
-      summarizing: { icon: Loader2, label: 'Samenvatten', className: 'bg-purple-100 text-purple-700' },
-      completed: { icon: CheckCircle2, label: 'Voltooid', className: 'bg-green-100 text-green-700' },
-      failed: { icon: XCircle, label: 'Mislukt', className: 'bg-red-100 text-red-700' }
-    }
-    
-    const badge = badges[status] || badges.pending
-    const Icon = badge.icon
-    const isAnimated = ['uploading', 'transcribing', 'summarizing'].includes(status)
-    
-    return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${badge.className}`}>
-        <Icon className={`h-3 w-3 ${isAnimated ? 'animate-spin' : ''}`} />
-        {badge.label}
-      </span>
-    )
-  }
-
   const formatDuration = (seconds: number | null) => {
     if (!seconds) return '-'
     const mins = Math.floor(seconds / 60)
@@ -297,272 +257,383 @@ export default function FollowupPage() {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
+  const completedFollowups = followups.filter(f => f.status === 'completed').length
+  const processingFollowups = followups.filter(f => ['uploading', 'transcribing', 'summarizing'].includes(f.status)).length
+
+  if (loading) {
+    return (
+      <DashboardLayout user={user}>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center space-y-4">
+            <Icons.spinner className="h-8 w-8 animate-spin text-orange-600 mx-auto" />
+            <p className="text-slate-500">Laden...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
   return (
     <DashboardLayout user={user}>
-      <div className="p-6 lg:p-8 max-w-6xl mx-auto animate-fade-in">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">Meeting Follow-up</h1>
-          <p className="text-slate-500">
-            Upload meeting recordings voor transcriptie, samenvatting en follow-up emails
+      <div className="p-4 lg:p-6">
+        {/* Page Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">
+            Follow-up Agent
+          </h1>
+          <p className="text-slate-500 text-sm">
+            Upload meeting opnames voor transcriptie, samenvatting en follow-up acties
           </p>
         </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Upload Form */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mic className="h-5 w-5" />
-              Nieuwe Follow-up
-            </CardTitle>
-            <CardDescription>
-              Upload een meeting opname
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Upload Type Selector */}
-            <div className="flex gap-2">
-              <Button
-                variant={uploadType === 'audio' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => { setUploadType('audio'); setSelectedFile(null); }}
-                disabled={uploading}
-                className="flex-1"
-              >
-                <Mic className="h-4 w-4 mr-1" />
-                Audio
-              </Button>
-              <Button
-                variant={uploadType === 'transcript' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => { setUploadType('transcript'); setSelectedFile(null); }}
-                disabled={uploading}
-                className="flex-1"
-              >
-                <FileAudio className="h-4 w-4 mr-1" />
-                Transcript
+        {/* Two Column Layout */}
+        <div className="flex gap-6">
+          
+          {/* Left Column - Follow-ups History */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Icons.mail className="h-5 w-5 text-slate-400" />
+                Mijn Follow-ups
+                <span className="text-sm font-normal text-slate-400">({followups.length})</span>
+              </h2>
+              <Button variant="ghost" size="sm" onClick={fetchFollowups}>
+                <Icons.refresh className="h-4 w-4" />
               </Button>
             </div>
 
-            {/* File Upload */}
-            <div className="space-y-2">
-              <Label>{uploadType === 'audio' ? 'Audio Bestand' : 'Transcript Bestand'} *</Label>
-              <div 
-                className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-                  ${selectedFile ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-gray-400'}
-                  ${uploading ? 'pointer-events-none opacity-50' : ''}`}
-                onClick={() => document.getElementById('file-input')?.click()}
-              >
-                <input
-                  id="file-input"
-                  type="file"
-                  accept={uploadType === 'audio' 
-                    ? "audio/mpeg,audio/mp4,audio/wav,audio/webm,audio/x-m4a"
-                    : ".txt,.md,.docx,.srt"}
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  disabled={uploading}
-                />
-                {selectedFile ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <FileAudio className="h-8 w-8 text-green-600" />
-                    <div className="text-left">
-                      <p className="font-medium text-sm">{selectedFile.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {(selectedFile.size / 1024 / 1024).toFixed(1)} MB
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <Upload className="h-10 w-10 mx-auto text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-600">
-                      Klik of sleep een {uploadType === 'audio' ? 'audio' : 'transcript'} bestand
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {uploadType === 'audio' 
-                        ? 'MP3, M4A, WAV, WebM (max 50MB)'
-                        : 'TXT, MD, DOCX, SRT (max 10MB)'}
-                    </p>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Progress bar */}
-            {uploading && (
-              <div className="space-y-1">
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-blue-600 transition-all duration-300"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
-                </div>
-                <p className="text-xs text-center text-muted-foreground">
-                  {uploadProgress < 30 ? 'Uploading...' : 
-                   uploadProgress < 80 ? 'Processing...' : 'Almost done...'}
+            {followups.length === 0 ? (
+              <div className="bg-white rounded-xl border p-12 text-center">
+                <Icons.mic className="h-16 w-16 text-slate-200 mx-auto mb-4" />
+                <h3 className="font-semibold text-slate-700 mb-2">Nog geen follow-ups</h3>
+                <p className="text-slate-500 text-sm mb-4">
+                  Upload een meeting opname via het formulier rechts →
                 </p>
-              </div>
-            )}
-
-            {/* Optional fields */}
-            <div className="space-y-2">
-              <Label htmlFor="prospect">Prospect Bedrijf</Label>
-              <ProspectAutocomplete
-                value={prospectCompany}
-                onChange={setProspectCompany}
-                placeholder="Zoek of voer bedrijfsnaam in..."
-                disabled={uploading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="subject">Meeting Onderwerp</Label>
-              <Input
-                id="subject"
-                placeholder="Bijv. Demo gesprek"
-                value={meetingSubject}
-                onChange={(e) => setMeetingSubject(e.target.value)}
-                disabled={uploading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="date">Meeting Datum</Label>
-              <Input
-                id="date"
-                type="date"
-                value={meetingDate}
-                onChange={(e) => setMeetingDate(e.target.value)}
-                disabled={uploading}
-              />
-            </div>
-
-            {/* Coaching Feedback Toggle */}
-            <div className="flex items-center space-x-2 pt-2 pb-1 border-t">
-              <Checkbox
-                id="coaching"
-                checked={includeCoaching}
-                onCheckedChange={(checked) => setIncludeCoaching(checked === true)}
-                disabled={uploading}
-              />
-              <div className="grid gap-1.5 leading-none">
-                <Label
-                  htmlFor="coaching"
-                  className="text-sm font-medium cursor-pointer"
-                >
-                  📈 Ontvang coaching feedback
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Krijg tips over wat goed ging en wat beter kan
-                </p>
-              </div>
-            </div>
-
-            <Button 
-              className="w-full" 
-              onClick={handleUpload}
-              disabled={!selectedFile || uploading}
-            >
-              {uploading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Verwerken...
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload & Verwerk
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Follow-ups List */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Recente Follow-ups</CardTitle>
-              <CardDescription>
-                {followups.length} follow-up{followups.length !== 1 ? 's' : ''}
-              </CardDescription>
-            </div>
-            <Button variant="outline" size="sm" onClick={fetchFollowups}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : followups.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <FileAudio className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Nog geen follow-ups</p>
-                <p className="text-sm">Upload een meeting opname om te beginnen</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {followups.map((followup) => (
                   <div
                     key={followup.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                    className="bg-white rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group"
                     onClick={() => router.push(`/dashboard/followup/${followup.id}`)}
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-medium truncate">
-                          {followup.prospect_company_name || followup.meeting_subject || 'Untitled Meeting'}
-                        </h3>
-                        {getStatusBadge(followup.status)}
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        {followup.meeting_date && (
-                          <span>{new Date(followup.meeting_date).toLocaleDateString('nl-NL')}</span>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-semibold text-slate-900 truncate">
+                            {followup.prospect_company_name || followup.meeting_subject || 'Meeting'}
+                          </h4>
+                          
+                          {followup.status === 'completed' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 flex-shrink-0">
+                              <Icons.check className="h-3 w-3" />
+                              Klaar
+                            </span>
+                          )}
+                          {followup.status === 'transcribing' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700 flex-shrink-0">
+                              <Icons.spinner className="h-3 w-3 animate-spin" />
+                              Transcriberen
+                            </span>
+                          )}
+                          {followup.status === 'summarizing' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 flex-shrink-0">
+                              <Icons.spinner className="h-3 w-3 animate-spin" />
+                              Samenvatten
+                            </span>
+                          )}
+                          {followup.status === 'uploading' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 flex-shrink-0">
+                              <Icons.spinner className="h-3 w-3 animate-spin" />
+                              Uploaden
+                            </span>
+                          )}
+                          {followup.status === 'failed' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 flex-shrink-0">
+                              <Icons.alertCircle className="h-3 w-3" />
+                              Mislukt
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-3 text-xs text-slate-500">
+                          {followup.meeting_date && (
+                            <span>{new Date(followup.meeting_date).toLocaleDateString('nl-NL')}</span>
+                          )}
+                          {followup.audio_duration_seconds && (
+                            <span className="flex items-center gap-1">
+                              <Icons.clock className="h-3 w-3" />
+                              {formatDuration(followup.audio_duration_seconds)}
+                            </span>
+                          )}
+                          <span>{new Date(followup.created_at).toLocaleDateString('nl-NL')}</span>
+                        </div>
+
+                        {followup.executive_summary && (
+                          <p className="text-xs text-slate-500 mt-2 line-clamp-1">
+                            {followup.executive_summary}
+                          </p>
                         )}
-                        {followup.audio_duration_seconds && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {formatDuration(followup.audio_duration_seconds)}
-                          </span>
-                        )}
-                        <span>
-                          {new Date(followup.created_at).toLocaleDateString('nl-NL', {
-                            day: 'numeric',
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </span>
                       </div>
-                      {followup.executive_summary && (
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
-                          {followup.executive_summary}
-                        </p>
-                      )}
+                      
+                      <div className="flex items-center gap-1 ml-4">
+                        {followup.status === 'completed' && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="h-8 text-xs bg-orange-600 hover:bg-orange-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              router.push(`/dashboard/followup/${followup.id}`)
+                            }}
+                          >
+                            <Icons.eye className="h-3 w-3 mr-1" />
+                            Bekijk
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => handleDelete(followup.id, e)}
+                        >
+                          <Icons.trash className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDelete(followup.id)
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
                   </div>
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Right Column - Sticky Sidebar */}
+          <div className="w-80 flex-shrink-0 hidden lg:block">
+            <div className="sticky top-4 space-y-4">
+              
+              {/* Stats Panel */}
+              <div className="rounded-xl border bg-white p-4 shadow-sm">
+                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                  <Icons.barChart className="h-4 w-4 text-slate-400" />
+                  Overzicht
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-green-50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-green-600">{completedFollowups}</p>
+                    <p className="text-xs text-green-700">Voltooid</p>
+                  </div>
+                  <div className="bg-orange-50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-orange-600">{processingFollowups}</p>
+                    <p className="text-xs text-orange-700">Bezig</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Upload Form */}
+              <div className="rounded-xl border bg-white p-4 shadow-sm">
+                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                  <Icons.upload className="h-4 w-4 text-orange-600" />
+                  Nieuwe Follow-up
+                </h3>
+                
+                <div className="space-y-3">
+                  {/* Upload Type Selector */}
+                  <div className="flex gap-2">
+                    <Button
+                      variant={uploadType === 'audio' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => { setUploadType('audio'); setSelectedFile(null); }}
+                      disabled={uploading}
+                      className="flex-1 h-8 text-xs"
+                    >
+                      <Icons.mic className="h-3 w-3 mr-1" />
+                      Audio
+                    </Button>
+                    <Button
+                      variant={uploadType === 'transcript' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => { setUploadType('transcript'); setSelectedFile(null); }}
+                      disabled={uploading}
+                      className="flex-1 h-8 text-xs"
+                    >
+                      <Icons.fileText className="h-3 w-3 mr-1" />
+                      Transcript
+                    </Button>
+                  </div>
+
+                  {/* File Upload */}
+                  <div 
+                    className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors
+                      ${selectedFile ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-gray-400'}
+                      ${uploading ? 'pointer-events-none opacity-50' : ''}`}
+                    onClick={() => document.getElementById('file-input')?.click()}
+                  >
+                    <input
+                      id="file-input"
+                      type="file"
+                      accept={uploadType === 'audio' 
+                        ? "audio/mpeg,audio/mp4,audio/wav,audio/webm,audio/x-m4a"
+                        : ".txt,.md,.docx,.srt"}
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      disabled={uploading}
+                    />
+                    {selectedFile ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <Icons.fileText className="h-6 w-6 text-green-600" />
+                        <div className="text-left">
+                          <p className="font-medium text-xs truncate max-w-[150px]">{selectedFile.name}</p>
+                          <p className="text-xs text-slate-500">
+                            {(selectedFile.size / 1024 / 1024).toFixed(1)} MB
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <Icons.upload className="h-8 w-8 mx-auto text-gray-400 mb-1" />
+                        <p className="text-xs text-gray-600">
+                          Klik om {uploadType === 'audio' ? 'audio' : 'transcript'} te uploaden
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {uploadType === 'audio' ? 'MP3, M4A, WAV (max 50MB)' : 'TXT, MD, DOCX (max 10MB)'}
+                        </p>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Progress bar */}
+                  {uploading && (
+                    <div className="space-y-1">
+                      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-orange-600 transition-all duration-300"
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-center text-slate-500">
+                        {uploadProgress < 30 ? 'Uploaden...' : 
+                         uploadProgress < 80 ? 'Verwerken...' : 'Bijna klaar...'}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Prospect field */}
+                  <div>
+                    <Label className="text-xs">Prospect</Label>
+                    <ProspectAutocomplete
+                      value={prospectCompany}
+                      onChange={setProspectCompany}
+                      placeholder="Zoek bedrijf..."
+                      disabled={uploading}
+                    />
+                  </div>
+
+                  {/* Advanced toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
+                  >
+                    {showAdvanced ? <Icons.chevronDown className="h-3 w-3" /> : <Icons.chevronRight className="h-3 w-3" />}
+                    Extra opties
+                  </button>
+
+                  {showAdvanced && (
+                    <div className="space-y-3 pt-2 border-t">
+                      <div>
+                        <Label className="text-xs">Onderwerp</Label>
+                        <Input
+                          placeholder="Bijv. Demo gesprek"
+                          value={meetingSubject}
+                          onChange={(e) => setMeetingSubject(e.target.value)}
+                          disabled={uploading}
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Datum</Label>
+                        <Input
+                          type="date"
+                          value={meetingDate}
+                          onChange={(e) => setMeetingDate(e.target.value)}
+                          disabled={uploading}
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Coaching Toggle */}
+                  <div className="flex items-center space-x-2 pt-2 border-t">
+                    <Checkbox
+                      id="coaching"
+                      checked={includeCoaching}
+                      onCheckedChange={(checked) => setIncludeCoaching(checked === true)}
+                      disabled={uploading}
+                    />
+                    <div className="grid gap-0.5 leading-none">
+                      <Label htmlFor="coaching" className="text-xs cursor-pointer">
+                        📈 Coaching feedback
+                      </Label>
+                      <p className="text-xs text-slate-400">
+                        Tips over wat goed ging
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button 
+                    className="w-full bg-orange-600 hover:bg-orange-700" 
+                    onClick={handleUpload}
+                    disabled={!selectedFile || uploading}
+                  >
+                    {uploading ? (
+                      <>
+                        <Icons.spinner className="h-4 w-4 mr-2 animate-spin" />
+                        Verwerken...
+                      </>
+                    ) : (
+                      <>
+                        <Icons.zap className="h-4 w-4 mr-2" />
+                        Upload & Verwerk
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* How it works Panel */}
+              <div className="rounded-xl border bg-gradient-to-br from-orange-50 to-amber-50 p-4 shadow-sm">
+                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                  <Icons.sparkles className="h-4 w-4 text-orange-600" />
+                  Wat krijg je?
+                </h3>
+                <ul className="space-y-2 text-xs text-slate-700">
+                  <li className="flex items-start gap-2">
+                    <Icons.check className="h-4 w-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <span>Volledige transcriptie</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icons.check className="h-4 w-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <span>Executive summary</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icons.check className="h-4 w-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <span>Actiepunten & next steps</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icons.check className="h-4 w-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <span>Follow-up email concept</span>
+                  </li>
+                </ul>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <Toaster />
       </div>
-    </div>
     </DashboardLayout>
   )
 }
-

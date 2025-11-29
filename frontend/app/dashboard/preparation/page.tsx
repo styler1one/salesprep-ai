@@ -4,685 +4,606 @@ import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, FileText, Download, Trash2, RefreshCw, ArrowLeft, Copy, CheckCircle, Clock, AlertCircle, Building2 } from 'lucide-react'
+import { Icons } from '@/components/icons'
 import { useToast } from '@/components/ui/use-toast'
+import { Toaster } from '@/components/ui/toaster'
 import ReactMarkdown from 'react-markdown'
 import { DashboardLayout } from '@/components/layout'
 import { ProspectAutocomplete } from '@/components/prospect-autocomplete'
 
 interface MeetingPrep {
-    id: string
-    prospect_company_name: string
-    meeting_type: string
-    status: string
-    custom_notes?: string
-    brief_content?: string
-    talking_points?: any[]
-    questions?: string[]
-    strategy?: string
-    pdf_url?: string
-    created_at: string
-    completed_at?: string
-    error_message?: string
-}
-
-interface ResearchBrief {
-    id: string
-    company_name: string
-    status: string
-    created_at: string
+  id: string
+  prospect_company_name: string
+  meeting_type: string
+  status: string
+  custom_notes?: string
+  brief_content?: string
+  talking_points?: any[]
+  questions?: string[]
+  strategy?: string
+  pdf_url?: string
+  created_at: string
+  completed_at?: string
+  error_message?: string
 }
 
 interface Contact {
-    id: string
-    name: string
-    role?: string
-    decision_authority?: string
-    communication_style?: string
-    analyzed_at?: string
+  id: string
+  name: string
+  role?: string
+  decision_authority?: string
+  communication_style?: string
+  analyzed_at?: string
 }
 
 export default function PreparationPage() {
-    const router = useRouter()
-    const supabase = createClientComponentClient()
-    const { toast } = useToast()
+  const router = useRouter()
+  const supabase = createClientComponentClient()
+  const { toast } = useToast()
 
-    const [user, setUser] = useState<any>(null)
-    const [loading, setLoading] = useState(false)
-    const [preps, setPreps] = useState<MeetingPrep[]>([])
-    const [selectedPrep, setSelectedPrep] = useState<MeetingPrep | null>(null)
-    const [researchBriefs, setResearchBriefs] = useState<ResearchBrief[]>([])
-    const [copiedSection, setCopiedSection] = useState<string | null>(null)
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+  const [preps, setPreps] = useState<MeetingPrep[]>([])
+  const [selectedPrep, setSelectedPrep] = useState<MeetingPrep | null>(null)
 
-    // Form state
-    const [companyName, setCompanyName] = useState('')
-    const [meetingType, setMeetingType] = useState('discovery')
-    const [customNotes, setCustomNotes] = useState('')
-    const [showSuggestions, setShowSuggestions] = useState(false)
-    
-    // Contact persons state
-    const [availableContacts, setAvailableContacts] = useState<Contact[]>([])
-    const [selectedContactIds, setSelectedContactIds] = useState<string[]>([])
-    const [contactsLoading, setContactsLoading] = useState(false)
+  // Form state
+  const [companyName, setCompanyName] = useState('')
+  const [meetingType, setMeetingType] = useState('discovery')
+  const [customNotes, setCustomNotes] = useState('')
+  const [showAdvanced, setShowAdvanced] = useState(false)
+  
+  // Contact persons state
+  const [availableContacts, setAvailableContacts] = useState<Contact[]>([])
+  const [selectedContactIds, setSelectedContactIds] = useState<string[]>([])
+  const [contactsLoading, setContactsLoading] = useState(false)
 
-    // Company suggestions based on research briefs
-    const companySuggestions = useMemo(() => {
-        if (!companyName) return []
-        const searchTerm = companyName.toLowerCase()
-        return researchBriefs
-            .filter(b => b.company_name.toLowerCase().includes(searchTerm))
-            .slice(0, 5)
-    }, [companyName, researchBriefs])
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+    }
+    getUser()
+    loadPreps()
 
-    useEffect(() => {
-        const getUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            setUser(user)
-        }
-        getUser()
+    // Check for pre-selected company from Research page
+    const prepareFor = sessionStorage.getItem('prepareForCompany')
+    if (prepareFor) {
+      setCompanyName(prepareFor)
+      sessionStorage.removeItem('prepareForCompany')
+    }
+
+    // Poll for status updates
+    const interval = setInterval(() => {
+      if (preps.some(p => p.status === 'pending' || p.status === 'generating')) {
         loadPreps()
-        loadResearchBriefs()
+      }
+    }, 5000)
 
-        // Poll for status updates every 5 seconds
-        const interval = setInterval(() => {
-            if (preps.some(p => p.status === 'pending' || p.status === 'generating')) {
-                loadPreps()
-            }
-        }, 5000)
+    return () => clearInterval(interval)
+  }, [supabase])
 
-        return () => clearInterval(interval)
-    }, [supabase])
+  const loadPreps = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
 
-    const loadResearchBriefs = async () => {
-        try {
-            const { data: { session } } = await supabase.auth.getSession()
-            if (!session) return
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/api/v1/prep/briefs`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      })
 
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-            const response = await fetch(`${apiUrl}/api/v1/research/briefs`, {
-                headers: { 'Authorization': `Bearer ${session.access_token}` }
-            })
+      if (response.ok) {
+        const data = await response.json()
+        setPreps(data.preps || [])
+      }
+    } catch (error) {
+      console.error('Failed to load preps:', error)
+    }
+  }
 
-            if (response.ok) {
-                const data = await response.json()
-                setResearchBriefs(data.briefs || [])
-            }
-        } catch (error) {
-            console.error('Failed to load research briefs:', error)
-        }
+  // Load contacts when company name changes
+  const loadContactsForProspect = async (prospectName: string) => {
+    if (!prospectName || prospectName.length < 2) {
+      setAvailableContacts([])
+      setSelectedContactIds([])
+      return
     }
 
-    const loadPreps = async () => {
-        try {
-            const { data: { session } } = await supabase.auth.getSession()
-            if (!session) return
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
 
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-            const response = await fetch(`${apiUrl}/api/v1/prep/briefs`, {
-                headers: { 'Authorization': `Bearer ${session.access_token}` }
-            })
+      setContactsLoading(true)
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      
+      const prospectResponse = await fetch(
+        `${apiUrl}/api/v1/prospects/search?q=${encodeURIComponent(prospectName)}`,
+        { headers: { 'Authorization': `Bearer ${session.access_token}` } }
+      )
 
-            if (response.ok) {
-                const data = await response.json()
-                setPreps(data.preps || [])
-            }
-        } catch (error) {
-            console.error('Failed to load preps:', error)
-        }
-    }
-
-    // Load contacts when company name changes
-    const loadContactsForProspect = async (prospectName: string) => {
-        if (!prospectName || prospectName.length < 2) {
-            setAvailableContacts([])
-            setSelectedContactIds([])
-            return
-        }
-
-        try {
-            const { data: { session } } = await supabase.auth.getSession()
-            if (!session) return
-
-            setContactsLoading(true)
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-            
-            // First find the prospect to get their ID
-            const prospectResponse = await fetch(
-                `${apiUrl}/api/v1/prospects/search?q=${encodeURIComponent(prospectName)}`,
-                { headers: { 'Authorization': `Bearer ${session.access_token}` } }
-            )
-
-            if (prospectResponse.ok) {
-                const prospects = await prospectResponse.json()
-                // Find exact match
-                const exactMatch = prospects.find(
-                    (p: any) => p.company_name.toLowerCase() === prospectName.toLowerCase()
-                )
-
-                if (exactMatch) {
-                    // Fetch contacts for this prospect
-                    const contactsResponse = await fetch(
-                        `${apiUrl}/api/v1/prospects/${exactMatch.id}/contacts`,
-                        { headers: { 'Authorization': `Bearer ${session.access_token}` } }
-                    )
-
-                    if (contactsResponse.ok) {
-                        const data = await contactsResponse.json()
-                        setAvailableContacts(data.contacts || [])
-                    }
-                } else {
-                    setAvailableContacts([])
-                }
-            }
-        } catch (error) {
-            console.error('Failed to load contacts:', error)
-            setAvailableContacts([])
-        } finally {
-            setContactsLoading(false)
-        }
-    }
-
-    // Effect to load contacts when company changes
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            loadContactsForProspect(companyName)
-        }, 500) // Debounce
-
-        return () => clearTimeout(timeoutId)
-    }, [companyName])
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setLoading(true)
-
-        try {
-            const { data: { session } } = await supabase.auth.getSession()
-            if (!session) {
-                toast({ title: 'Error', description: 'Not authenticated', variant: 'destructive' })
-                return
-            }
-
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-            const response = await fetch(`${apiUrl}/api/v1/prep/start`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${session.access_token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    prospect_company_name: companyName,
-                    meeting_type: meetingType,
-                    custom_notes: customNotes || null,
-                    contact_ids: selectedContactIds.length > 0 ? selectedContactIds : null
-                })
-            })
-
-            if (response.ok) {
-                toast({ title: 'Success', description: 'Meeting prep started! Generation in progress...' })
-                setCompanyName('')
-                setCustomNotes('')
-                setSelectedContactIds([])
-                setAvailableContacts([])
-                loadPreps()
-            } else {
-                const error = await response.json()
-                toast({ title: 'Error', description: error.detail || 'Failed to start prep', variant: 'destructive' })
-            }
-        } catch (error) {
-            toast({ title: 'Error', description: 'Failed to start prep', variant: 'destructive' })
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const viewPrep = async (prepId: string) => {
-        try {
-            const { data: { session } } = await supabase.auth.getSession()
-            if (!session) return
-
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-            const response = await fetch(`${apiUrl}/api/v1/prep/${prepId}`, {
-                headers: { 'Authorization': `Bearer ${session.access_token}` }
-            })
-
-            if (response.ok) {
-                const data = await response.json()
-                setSelectedPrep(data)
-            }
-        } catch (error) {
-            console.error('Failed to load prep:', error)
-        }
-    }
-
-    const deletePrep = async (prepId: string) => {
-        if (!confirm('Are you sure you want to delete this prep?')) return
-
-        try {
-            const { data: { session } } = await supabase.auth.getSession()
-            if (!session) return
-
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-            const response = await fetch(`${apiUrl}/api/v1/prep/${prepId}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${session.access_token}` }
-            })
-
-            if (response.ok) {
-                toast({ title: 'Success', description: 'Prep deleted' })
-                setSelectedPrep(null)
-                loadPreps()
-            }
-        } catch (error) {
-            toast({ title: 'Error', description: 'Failed to delete prep', variant: 'destructive' })
-        }
-    }
-
-    const copyToClipboard = async (text: string, section: string) => {
-        try {
-            await navigator.clipboard.writeText(text)
-            setCopiedSection(section)
-            toast({ title: 'Copied!', description: `${section} copied to clipboard` })
-            setTimeout(() => setCopiedSection(null), 2000)
-        } catch (error) {
-            toast({ title: 'Error', description: 'Failed to copy', variant: 'destructive' })
-        }
-    }
-
-    const getStatusBadge = (status: string) => {
-        const configs = {
-            pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock, label: 'Pending' },
-            generating: { color: 'bg-blue-100 text-blue-800', icon: Loader2, label: 'Generating' },
-            completed: { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Ready' },
-            failed: { color: 'bg-red-100 text-red-800', icon: AlertCircle, label: 'Failed' }
-        }
-        const config = configs[status as keyof typeof configs] || configs.pending
-        const Icon = config.icon
-
-        return (
-            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${config.color}`}>
-                <Icon className={`h-3 w-3 ${status === 'generating' ? 'animate-spin' : ''}`} />
-                {config.label}
-            </span>
+      if (prospectResponse.ok) {
+        const prospects = await prospectResponse.json()
+        const exactMatch = prospects.find(
+          (p: any) => p.company_name.toLowerCase() === prospectName.toLowerCase()
         )
-    }
 
-    const getMeetingTypeLabel = (type: string) => {
-        const labels: Record<string, string> = {
-            discovery: 'Discovery Call',
-            demo: 'Product Demo',
-            closing: 'Closing Call',
-            follow_up: 'Follow-up Meeting',
-            other: 'Other'
+        if (exactMatch) {
+          const contactsResponse = await fetch(
+            `${apiUrl}/api/v1/prospects/${exactMatch.id}/contacts`,
+            { headers: { 'Authorization': `Bearer ${session.access_token}` } }
+          )
+
+          if (contactsResponse.ok) {
+            const data = await contactsResponse.json()
+            setAvailableContacts(data.contacts || [])
+          }
+        } else {
+          setAvailableContacts([])
         }
-        return labels[type] || type
+      }
+    } catch (error) {
+      console.error('Failed to load contacts:', error)
+      setAvailableContacts([])
+    } finally {
+      setContactsLoading(false)
     }
+  }
 
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString)
-        const now = new Date()
-        const diffMs = now.getTime() - date.getTime()
-        const diffMins = Math.floor(diffMs / 60000)
-        const diffHours = Math.floor(diffMs / 3600000)
-        const diffDays = Math.floor(diffMs / 86400000)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadContactsForProspect(companyName)
+    }, 500)
 
-        if (diffMins < 1) return 'Just now'
-        if (diffMins < 60) return `${diffMins}m ago`
-        if (diffHours < 24) return `${diffHours}h ago`
-        if (diffDays < 7) return `${diffDays}d ago`
-        return date.toLocaleDateString()
+    return () => clearTimeout(timeoutId)
+  }, [companyName])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        toast({ title: 'Fout', description: 'Niet ingelogd', variant: 'destructive' })
+        return
+      }
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/api/v1/prep/start`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prospect_company_name: companyName,
+          meeting_type: meetingType,
+          custom_notes: customNotes || null,
+          contact_ids: selectedContactIds.length > 0 ? selectedContactIds : null
+        })
+      })
+
+      if (response.ok) {
+        toast({ title: 'Gestart', description: 'Voorbereiding wordt gegenereerd...' })
+        setCompanyName('')
+        setCustomNotes('')
+        setSelectedContactIds([])
+        setAvailableContacts([])
+        setShowAdvanced(false)
+        loadPreps()
+      } else {
+        const error = await response.json()
+        toast({ title: 'Fout', description: error.detail || 'Kon niet starten', variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Fout', description: 'Kon niet starten', variant: 'destructive' })
+    } finally {
+      setLoading(false)
     }
+  }
 
-    return (
-        <DashboardLayout user={user}>
-            <div className="p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
-                {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">Meeting Preparation</h1>
-                    <p className="text-slate-500">
-                        AI-powered meeting briefs using your knowledge base, research, and profile context
-                    </p>
-                </div>
+  const viewPrep = async (prepId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
 
-            <div className="grid gap-6 lg:grid-cols-2">
-                {/* Left Column - Form & History */}
-                <div className="space-y-6">
-                    {/* Create New Prep */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <FileText className="h-5 w-5" />
-                                Prepare for a Meeting
-                            </CardTitle>
-                            <CardDescription>Generate an AI-powered meeting brief personalized to your style</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                {/* Company Name with Autocomplete */}
-                                <div>
-                                    <Label htmlFor="company">Prospect Company *</Label>
-                                    <ProspectAutocomplete
-                                        value={companyName}
-                                        onChange={setCompanyName}
-                                        placeholder="Zoek of voer bedrijfsnaam in..."
-                                    />
-                                </div>
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/api/v1/prep/${prepId}`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      })
 
-                                {/* Meeting Type */}
-                                <div>
-                                    <Label htmlFor="type">Meeting Type *</Label>
-                                    <Select value={meetingType} onValueChange={setMeetingType}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="discovery">🔍 Discovery Call</SelectItem>
-                                            <SelectItem value="demo">🖥️ Product Demo</SelectItem>
-                                            <SelectItem value="closing">🤝 Closing Call</SelectItem>
-                                            <SelectItem value="follow_up">📞 Follow-up Meeting</SelectItem>
-                                            <SelectItem value="other">📋 Other</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+      if (response.ok) {
+        const data = await response.json()
+        setSelectedPrep(data)
+      }
+    } catch (error) {
+      console.error('Failed to load prep:', error)
+    }
+  }
 
-                                {/* Contact Persons Selection */}
-                                {availableContacts.length > 0 && (
-                                    <div>
-                                        <Label className="flex items-center gap-2">
-                                            👥 Contactpersonen voor deze meeting
-                                            <span className="text-xs text-muted-foreground font-normal">
-                                                (optioneel - voor gepersonaliseerde voorbereiding)
-                                            </span>
-                                        </Label>
-                                        <div className="mt-2 space-y-2 max-h-40 overflow-y-auto p-2 border rounded-md bg-muted/30">
-                                            {availableContacts.map((contact) => {
-                                                const isSelected = selectedContactIds.includes(contact.id)
-                                                return (
-                                                    <label
-                                                        key={contact.id}
-                                                        className={`flex items-center gap-3 p-2 rounded cursor-pointer transition-colors ${
-                                                            isSelected 
-                                                                ? 'bg-primary/10 border border-primary/30' 
-                                                                : 'hover:bg-muted'
-                                                        }`}
-                                                    >
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={isSelected}
-                                                            onChange={(e) => {
-                                                                if (e.target.checked) {
-                                                                    setSelectedContactIds(prev => [...prev, contact.id])
-                                                                } else {
-                                                                    setSelectedContactIds(prev => prev.filter(id => id !== contact.id))
-                                                                }
-                                                            }}
-                                                            className="rounded border-gray-300"
-                                                        />
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="font-medium text-sm truncate">{contact.name}</div>
-                                                            {contact.role && (
-                                                                <div className="text-xs text-muted-foreground truncate">{contact.role}</div>
-                                                            )}
-                                                        </div>
-                                                        <div className="flex gap-1">
-                                                            {contact.decision_authority === 'decision_maker' && (
-                                                                <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">DM</span>
-                                                            )}
-                                                            {contact.decision_authority === 'influencer' && (
-                                                                <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">INF</span>
-                                                            )}
-                                                            {contact.analyzed_at && (
-                                                                <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">✓</span>
-                                                            )}
-                                                        </div>
-                                                    </label>
-                                                )
-                                            })}
-                                        </div>
-                                        {selectedContactIds.length > 0 && (
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                {selectedContactIds.length} contactperso{selectedContactIds.length === 1 ? 'on' : 'nen'} geselecteerd
-                                            </p>
-                                        )}
-                                    </div>
-                                )}
+  const deletePrep = async (prepId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!confirm('Weet je zeker dat je deze voorbereiding wilt verwijderen?')) return
 
-                                {contactsLoading && (
-                                    <div className="text-sm text-muted-foreground flex items-center gap-2">
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        Contactpersonen laden...
-                                    </div>
-                                )}
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
 
-                                {/* Custom Notes */}
-                                <div>
-                                    <Label htmlFor="notes">Custom Notes (optional)</Label>
-                                    <Textarea
-                                        id="notes"
-                                        value={customNotes}
-                                        onChange={(e) => setCustomNotes(e.target.value)}
-                                        placeholder="Any specific context, focus areas, or things to avoid..."
-                                        rows={3}
-                                    />
-                                </div>
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/api/v1/prep/${prepId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      })
 
-                                <Button type="submit" disabled={loading || !companyName} className="w-full">
-                                    {loading ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Generating Brief...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <FileText className="mr-2 h-4 w-4" />
-                                            Generate Meeting Brief
-                                        </>
-                                    )}
-                                </Button>
-                            </form>
-                        </CardContent>
-                    </Card>
+      if (response.ok) {
+        toast({ title: 'Verwijderd' })
+        if (selectedPrep?.id === prepId) setSelectedPrep(null)
+        loadPreps()
+      }
+    } catch (error) {
+      toast({ title: 'Fout', description: 'Kon niet verwijderen', variant: 'destructive' })
+    }
+  }
 
-                    {/* Recent Preps */}
-                    <Card>
-                        <CardHeader>
-                            <div className="flex items-center justify-between">
-                                <CardTitle className="text-lg">Recent Preparations</CardTitle>
-                                <Button variant="ghost" size="sm" onClick={loadPreps}>
-                                    <RefreshCw className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-2">
-                                {preps.length === 0 ? (
-                                    <div className="text-center py-8 text-muted-foreground">
-                                        <FileText className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                                        <p>No preparations yet</p>
-                                        <p className="text-sm">Generate your first meeting brief above</p>
-                                    </div>
-                                ) : (
-                                    preps.map((prep) => (
-                                        <div
-                                            key={prep.id}
-                                            className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${selectedPrep?.id === prep.id
-                                                ? 'bg-primary/5 border-primary'
-                                                : 'hover:bg-muted/50'
-                                                }`}
-                                            onClick={() => viewPrep(prep.id)}
-                                        >
-                                            <div className="flex-1 min-w-0">
-                                                <div className="font-medium truncate">{prep.prospect_company_name}</div>
-                                                <div className="text-sm text-muted-foreground flex items-center gap-2">
-                                                    <span>{getMeetingTypeLabel(prep.meeting_type)}</span>
-                                                    <span>•</span>
-                                                    <span>{formatDate(prep.created_at)}</span>
-                                                </div>
-                                            </div>
-                                            <div className="ml-2">
-                                                {getStatusBadge(prep.status)}
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast({ title: 'Gekopieerd!' })
+    } catch (error) {
+      toast({ title: 'Fout', description: 'Kon niet kopiëren', variant: 'destructive' })
+    }
+  }
 
-                {/* Right Column - Brief Display */}
-                <div>
-                    {selectedPrep ? (
-                        <Card className="sticky top-6">
-                            <CardHeader>
-                                <div className="flex items-start justify-between">
-                                    <div>
-                                        <CardTitle className="flex items-center gap-2">
-                                            <Building2 className="h-5 w-5" />
-                                            {selectedPrep.prospect_company_name}
-                                        </CardTitle>
-                                        <CardDescription className="flex items-center gap-2 mt-1">
-                                            {getMeetingTypeLabel(selectedPrep.meeting_type)}
-                                            <span>•</span>
-                                            {getStatusBadge(selectedPrep.status)}
-                                        </CardDescription>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        {selectedPrep.brief_content && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => copyToClipboard(selectedPrep.brief_content!, 'Brief')}
-                                            >
-                                                {copiedSection === 'Brief' ? (
-                                                    <CheckCircle className="h-4 w-4" />
-                                                ) : (
-                                                    <Copy className="h-4 w-4" />
-                                                )}
-                                            </Button>
-                                        )}
-                                        {selectedPrep.pdf_url && (
-                                            <Button variant="outline" size="sm" asChild>
-                                                <a href={selectedPrep.pdf_url} target="_blank" rel="noopener noreferrer">
-                                                    <Download className="h-4 w-4 mr-2" />
-                                                    PDF
-                                                </a>
-                                            </Button>
-                                        )}
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => deletePrep(selectedPrep.id)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                {selectedPrep.status === 'completed' ? (
-                                    <div className="space-y-6">
-                                        {/* Brief Content with Markdown */}
-                                        {selectedPrep.brief_content && (
-                                            <div className="prose prose-sm max-w-none dark:prose-invert">
-                                                <ReactMarkdown
-                                                    components={{
-                                                        h1: ({ children }) => <h1 className="text-xl font-bold mt-6 mb-3 text-foreground">{children}</h1>,
-                                                        h2: ({ children }) => <h2 className="text-lg font-semibold mt-5 mb-2 text-foreground">{children}</h2>,
-                                                        h3: ({ children }) => <h3 className="text-base font-semibold mt-4 mb-2 text-foreground">{children}</h3>,
-                                                        p: ({ children }) => <p className="mb-2 text-muted-foreground">{children}</p>,
-                                                        ul: ({ children }) => <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>,
-                                                        ol: ({ children }) => <ol className="list-decimal list-inside mb-3 space-y-1">{children}</ol>,
-                                                        li: ({ children }) => <li className="text-muted-foreground">{children}</li>,
-                                                        strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
-                                                        hr: () => <hr className="my-4 border-border" />,
-                                                    }}
-                                                >
-                                                    {selectedPrep.brief_content}
-                                                </ReactMarkdown>
-                                            </div>
-                                        )}
+  const getMeetingTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      discovery: '🔍 Discovery Call',
+      demo: '🖥️ Product Demo',
+      closing: '🤝 Closing Call',
+      follow_up: '📞 Follow-up',
+      other: '📋 Anders'
+    }
+    return labels[type] || type
+  }
 
-                                        {/* Questions Section */}
-                                        {selectedPrep.questions && selectedPrep.questions.length > 0 && (
-                                            <div className="border-t pt-4">
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <h3 className="font-semibold">Key Questions</h3>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => copyToClipboard(selectedPrep.questions!.join('\n'), 'Questions')}
-                                                    >
-                                                        {copiedSection === 'Questions' ? (
-                                                            <CheckCircle className="h-4 w-4" />
-                                                        ) : (
-                                                            <Copy className="h-4 w-4" />
-                                                        )}
-                                                    </Button>
-                                                </div>
-                                                <ul className="space-y-2">
-                                                    {selectedPrep.questions.map((q, i) => (
-                                                        <li key={i} className="flex items-start gap-2 text-sm">
-                                                            <span className="font-medium text-primary min-w-[20px]">{i + 1}.</span>
-                                                            <span className="text-muted-foreground">{q}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
-                                    </div>
-                                ) : selectedPrep.status === 'failed' ? (
-                                    <div className="text-center py-12">
-                                        <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-500" />
-                                        <p className="text-red-600 font-medium mb-2">Generation Failed</p>
-                                        <p className="text-sm text-muted-foreground mb-4">
-                                            {selectedPrep.error_message || 'An error occurred while generating the brief.'}
-                                        </p>
-                                        <Button
-                                            variant="outline"
-                                            onClick={() => {
-                                                setCompanyName(selectedPrep.prospect_company_name)
-                                                setMeetingType(selectedPrep.meeting_type)
-                                                setCustomNotes(selectedPrep.custom_notes || '')
-                                            }}
-                                        >
-                                            Try Again
-                                        </Button>
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-12">
-                                        <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
-                                        <p className="font-medium mb-1">Generating your meeting brief...</p>
-                                        <p className="text-sm text-muted-foreground">
-                                            This usually takes 30-60 seconds
-                                        </p>
-                                        <div className="mt-6 max-w-xs mx-auto">
-                                            <div className="h-2 bg-muted rounded-full overflow-hidden">
-                                                <div className="h-full bg-primary rounded-full animate-pulse" style={{ width: '60%' }} />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    ) : (
-                        <Card className="sticky top-6">
-                            <CardContent className="flex flex-col items-center justify-center h-96">
-                                <FileText className="h-16 w-16 mb-4 text-muted-foreground/30" />
-                                <p className="text-lg font-medium text-muted-foreground">No prep selected</p>
-                                <p className="text-sm text-muted-foreground">
-                                    Select a preparation from the list or create a new one
-                                </p>
-                            </CardContent>
-                        </Card>
-                    )}
-                </div>
-            </div>
+  const completedPreps = preps.filter(p => p.status === 'completed').length
+  const processingPreps = preps.filter(p => p.status === 'pending' || p.status === 'generating').length
+
+  return (
+    <DashboardLayout user={user}>
+      <div className="p-4 lg:p-6">
+        {/* Page Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">
+            Preparation Agent
+          </h1>
+          <p className="text-slate-500 text-sm">
+            AI-gegenereerde meeting briefs met context van je profiel en research
+          </p>
         </div>
-        </DashboardLayout>
-    )
+
+        {/* Two Column Layout */}
+        <div className="flex gap-6">
+          
+          {/* Left Column - Preparations History */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Icons.fileText className="h-5 w-5 text-slate-400" />
+                Mijn Voorbereidingen
+                <span className="text-sm font-normal text-slate-400">({preps.length})</span>
+              </h2>
+              <Button variant="ghost" size="sm" onClick={loadPreps}>
+                <Icons.refresh className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {preps.length === 0 ? (
+              <div className="bg-white rounded-xl border p-12 text-center">
+                <Icons.fileText className="h-16 w-16 text-slate-200 mx-auto mb-4" />
+                <h3 className="font-semibold text-slate-700 mb-2">Nog geen voorbereidingen</h3>
+                <p className="text-slate-500 text-sm mb-4">
+                  Genereer je eerste meeting brief via het formulier rechts →
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {preps.map((prep) => (
+                  <div
+                    key={prep.id}
+                    className={`bg-white rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group ${
+                      selectedPrep?.id === prep.id ? 'border-green-500 ring-1 ring-green-500' : ''
+                    }`}
+                    onClick={() => viewPrep(prep.id)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-semibold text-slate-900 truncate">{prep.prospect_company_name}</h4>
+                          
+                          {prep.status === 'completed' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 flex-shrink-0">
+                              <Icons.check className="h-3 w-3" />
+                              Klaar
+                            </span>
+                          )}
+                          {(prep.status === 'generating' || prep.status === 'pending') && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 flex-shrink-0">
+                              <Icons.spinner className="h-3 w-3 animate-spin" />
+                              Bezig...
+                            </span>
+                          )}
+                          {prep.status === 'failed' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 flex-shrink-0">
+                              <Icons.alertCircle className="h-3 w-3" />
+                              Mislukt
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-3 text-xs text-slate-500">
+                          <span>{getMeetingTypeLabel(prep.meeting_type)}</span>
+                          <span>•</span>
+                          <span>{new Date(prep.created_at).toLocaleDateString('nl-NL')}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-1 ml-4">
+                        {prep.status === 'completed' && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="h-8 text-xs bg-green-600 hover:bg-green-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              viewPrep(prep.id)
+                            }}
+                          >
+                            <Icons.eye className="h-3 w-3 mr-1" />
+                            Bekijk
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => deletePrep(prep.id, e)}
+                        >
+                          <Icons.trash className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Selected Prep Content */}
+            {selectedPrep && selectedPrep.status === 'completed' && selectedPrep.brief_content && (
+              <div className="mt-6 bg-white rounded-xl border p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="font-bold text-lg">{selectedPrep.prospect_company_name}</h3>
+                    <p className="text-sm text-slate-500">{getMeetingTypeLabel(selectedPrep.meeting_type)}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(selectedPrep.brief_content!)}
+                    >
+                      <Icons.copy className="h-4 w-4 mr-1" />
+                      Kopieer
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedPrep(null)}
+                    >
+                      <Icons.x className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="prose prose-sm prose-slate max-w-none">
+                  <ReactMarkdown
+                    components={{
+                      h1: ({ children }) => <h1 className="text-xl font-bold mt-6 mb-3">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-lg font-semibold mt-5 mb-2 pb-1 border-b">{children}</h2>,
+                      h3: ({ children }) => <h3 className="text-base font-semibold mt-4 mb-2">{children}</h3>,
+                      p: ({ children }) => <p className="mb-2 text-slate-700">{children}</p>,
+                      ul: ({ children }) => <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>,
+                      li: ({ children }) => <li className="text-slate-700">{children}</li>,
+                      strong: ({ children }) => <strong className="font-semibold text-slate-900">{children}</strong>,
+                    }}
+                  >
+                    {selectedPrep.brief_content}
+                  </ReactMarkdown>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Sticky Sidebar */}
+          <div className="w-80 flex-shrink-0 hidden lg:block">
+            <div className="sticky top-4 space-y-4">
+              
+              {/* Stats Panel */}
+              <div className="rounded-xl border bg-white p-4 shadow-sm">
+                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                  <Icons.barChart className="h-4 w-4 text-slate-400" />
+                  Overzicht
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-green-50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-green-600">{completedPreps}</p>
+                    <p className="text-xs text-green-700">Voltooid</p>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-blue-600">{processingPreps}</p>
+                    <p className="text-xs text-blue-700">Bezig</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* New Preparation Form */}
+              <div className="rounded-xl border bg-white p-4 shadow-sm">
+                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                  <Icons.fileText className="h-4 w-4 text-green-600" />
+                  Nieuwe Voorbereiding
+                </h3>
+                
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  <div>
+                    <Label htmlFor="company" className="text-xs">Prospect *</Label>
+                    <ProspectAutocomplete
+                      value={companyName}
+                      onChange={setCompanyName}
+                      placeholder="Zoek bedrijf..."
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs">Meeting Type *</Label>
+                    <Select value={meetingType} onValueChange={setMeetingType}>
+                      <SelectTrigger className="h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="discovery">🔍 Discovery</SelectItem>
+                        <SelectItem value="demo">🖥️ Demo</SelectItem>
+                        <SelectItem value="closing">🤝 Closing</SelectItem>
+                        <SelectItem value="follow_up">📞 Follow-up</SelectItem>
+                        <SelectItem value="other">📋 Anders</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Contact Persons */}
+                  {availableContacts.length > 0 && (
+                    <div>
+                      <Label className="text-xs flex items-center gap-1">
+                        👥 Contactpersonen
+                        <span className="text-slate-400 font-normal">(optioneel)</span>
+                      </Label>
+                      <div className="mt-1 space-y-1 max-h-32 overflow-y-auto p-2 border rounded-md bg-slate-50">
+                        {availableContacts.map((contact) => {
+                          const isSelected = selectedContactIds.includes(contact.id)
+                          return (
+                            <label
+                              key={contact.id}
+                              className={`flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs ${
+                                isSelected ? 'bg-green-100' : 'hover:bg-slate-100'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedContactIds(prev => [...prev, contact.id])
+                                  } else {
+                                    setSelectedContactIds(prev => prev.filter(id => id !== contact.id))
+                                  }
+                                }}
+                                className="rounded border-gray-300"
+                              />
+                              <span className="truncate">{contact.name}</span>
+                              {contact.decision_authority === 'decision_maker' && (
+                                <span className="text-xs bg-green-200 text-green-700 px-1 rounded">DM</span>
+                              )}
+                            </label>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {contactsLoading && (
+                    <div className="text-xs text-slate-500 flex items-center gap-1">
+                      <Icons.spinner className="h-3 w-3 animate-spin" />
+                      Contacten laden...
+                    </div>
+                  )}
+
+                  {/* Advanced toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
+                  >
+                    {showAdvanced ? <Icons.chevronDown className="h-3 w-3" /> : <Icons.chevronRight className="h-3 w-3" />}
+                    Extra context
+                  </button>
+
+                  {showAdvanced && (
+                    <div>
+                      <Label htmlFor="notes" className="text-xs">Notities</Label>
+                      <Textarea
+                        id="notes"
+                        value={customNotes}
+                        onChange={(e) => setCustomNotes(e.target.value)}
+                        placeholder="Specifieke aandachtspunten..."
+                        rows={2}
+                        className="text-sm"
+                      />
+                    </div>
+                  )}
+
+                  <Button 
+                    type="submit" 
+                    disabled={loading || !companyName}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                  >
+                    {loading ? (
+                      <>
+                        <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                        Genereren...
+                      </>
+                    ) : (
+                      <>
+                        <Icons.zap className="mr-2 h-4 w-4" />
+                        Genereer Brief
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </div>
+
+              {/* How it works Panel */}
+              <div className="rounded-xl border bg-gradient-to-br from-green-50 to-emerald-50 p-4 shadow-sm">
+                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                  <Icons.sparkles className="h-4 w-4 text-green-600" />
+                  Wat krijg je?
+                </h3>
+                <ul className="space-y-2 text-xs text-slate-700">
+                  <li className="flex items-start gap-2">
+                    <Icons.check className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span>Gepersonaliseerde gespreksopeners</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icons.check className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span>Relevante discovery vragen</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icons.check className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span>Bezwaren & responses</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icons.check className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span>Klantgerichte value props</span>
+                  </li>
+                </ul>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <Toaster />
+      </div>
+    </DashboardLayout>
+  )
 }
