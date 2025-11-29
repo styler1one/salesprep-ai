@@ -519,6 +519,18 @@
   "onboarding": {
     "title": "Welkom bij SalesPrep AI",
     "subtitle": "Laten we je account instellen",
+    "welcome": "Welkom bij SalesPrep AI",
+    "welcomeDesc": "Laten we je beter leren kennen om je ervaring te personaliseren",
+    "starting": "Je onboarding interview starten...",
+    "question": "Vraag {current} van {total}",
+    "takeYourTime": "Neem je tijd voor een doordacht antwoord",
+    "answerPlaceholder": "Typ hier je antwoord...",
+    "goToDashboard": "Ga naar Dashboard",
+    "updateProfile": "Update Profiel",
+    "existingProfile": {
+      "title": "Profiel bestaat al",
+      "description": "Je hebt al een sales profiel. Wil je het updaten met een nieuw interview?"
+    },
     "steps": {
       "profile": "Sales Profiel",
       "company": "Bedrijfsprofiel",
@@ -533,8 +545,9 @@
       "description": "Dit helpt de AI om je producten en diensten te begrijpen"
     },
     "complete": {
-      "title": "Je bent klaar!",
+      "title": "Interview Voltooid!",
       "description": "Je kunt nu beginnen met je eerste prospect research",
+      "creating": "Je gepersonaliseerde profiel wordt aangemaakt...",
       "button": "Ga naar Dashboard"
     },
     "skip": "Overslaan",

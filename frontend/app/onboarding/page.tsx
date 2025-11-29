@@ -241,10 +241,10 @@ export default function OnboardingPage() {
           <CardHeader>
             <div className="flex items-center gap-3 mb-2">
               <CheckCircle2 className="h-8 w-8 text-green-600" />
-              <CardTitle className="text-2xl">Profile Already Exists</CardTitle>
+              <CardTitle className="text-2xl">{t('existingProfile.title')}</CardTitle>
             </div>
             <CardDescription>
-              You already have a sales profile. Would you like to update it with a fresh interview?
+              {t('existingProfile.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -272,7 +272,7 @@ export default function OnboardingPage() {
               onClick={() => router.push("/dashboard")}
               className="flex-1"
             >
-              Go to Dashboard
+              {t('goToDashboard')}
             </Button>
             <Button
               onClick={() => {
@@ -282,7 +282,7 @@ export default function OnboardingPage() {
               className="flex-1"
             >
               <Sparkles className="mr-2 h-4 w-4" />
-              Update Profile
+              {t('updateProfile')}
             </Button>
           </CardFooter>
         </Card>
@@ -297,7 +297,7 @@ export default function OnboardingPage() {
           <CardContent className="pt-6">
             <div className="flex flex-col items-center space-y-4">
               <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-              <p className="text-sm text-muted-foreground">Starting your onboarding interview...</p>
+              <p className="text-sm text-muted-foreground">{t('starting')}</p>
             </div>
           </CardContent>
         </Card>
@@ -313,9 +313,9 @@ export default function OnboardingPage() {
             <div className="flex flex-col items-center space-y-4">
               <CheckCircle2 className="h-12 w-12 text-green-600" />
               <div className="text-center">
-                <h3 className="text-lg font-semibold">Interview Complete!</h3>
+                <h3 className="text-lg font-semibold">{t('complete.title')}</h3>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Creating your personalized profile...
+                  {t('complete.creating')}
                 </p>
               </div>
               <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
@@ -333,18 +333,18 @@ export default function OnboardingPage() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <Sparkles className="h-8 w-8 text-blue-600 mr-2" />
-            <h1 className="text-3xl font-bold">Welcome to SalesPrep AI</h1>
+            <h1 className="text-3xl font-bold">{t('welcome')}</h1>
           </div>
           <p className="text-muted-foreground">
-            Let's get to know you better to personalize your experience
+            {t('welcomeDesc')}
           </p>
         </div>
 
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex justify-between text-sm text-muted-foreground mb-2">
-            <span>Question {currentProgress} of {totalQuestions}</span>
-            <span>{Math.round(progressPercentage)}% Complete</span>
+            <span>{t('question', { current: currentProgress, total: totalQuestions })}</span>
+            <span>{Math.round(progressPercentage)}% {tCommon('complete')}</span>
           </div>
           <Progress value={progressPercentage} className="h-2" />
         </div>
@@ -356,14 +356,14 @@ export default function OnboardingPage() {
               {currentQuestionText}
             </CardTitle>
             <CardDescription>
-              Take your time to provide a thoughtful answer
+              {t('takeYourTime')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Textarea
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Type your answer here..."
+              placeholder={t('answerPlaceholder')}
               className="min-h-[150px] resize-none"
               disabled={loading}
             />

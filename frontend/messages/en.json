@@ -519,6 +519,18 @@
   "onboarding": {
     "title": "Welcome to SalesPrep AI",
     "subtitle": "Let's set up your account",
+    "welcome": "Welcome to SalesPrep AI",
+    "welcomeDesc": "Let's get to know you better to personalize your experience",
+    "starting": "Starting your onboarding interview...",
+    "question": "Question {current} of {total}",
+    "takeYourTime": "Take your time to provide a thoughtful answer",
+    "answerPlaceholder": "Type your answer here...",
+    "goToDashboard": "Go to Dashboard",
+    "updateProfile": "Update Profile",
+    "existingProfile": {
+      "title": "Profile Already Exists",
+      "description": "You already have a sales profile. Would you like to update it with a fresh interview?"
+    },
     "steps": {
       "profile": "Sales Profile",
       "company": "Company Profile",
@@ -533,8 +545,9 @@
       "description": "This helps the AI understand your products and services"
     },
     "complete": {
-      "title": "You're all set!",
+      "title": "Interview Complete!",
       "description": "You can now start your first prospect research",
+      "creating": "Creating your personalized profile...",
       "button": "Go to Dashboard"
     },
     "skip": "Skip",
