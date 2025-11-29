@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Icons } from '@/components/icons'
 import { locales, localeNames, localeFlags, type Locale } from '@/i18n/config'
+import { useSettings } from '@/lib/settings-context'
 
 interface LanguageSelectorProps {
   currentLocale?: Locale
@@ -20,10 +21,21 @@ interface LanguageSelectorProps {
 export function LanguageSelector({ currentLocale = 'en', variant = 'icon' }: LanguageSelectorProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const { updateSettings, loaded } = useSettings()
 
-  const handleLocaleChange = (newLocale: Locale) => {
+  const handleLocaleChange = async (newLocale: Locale) => {
     // Set cookie for locale preference
     document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=31536000` // 1 year
+    
+    // Also update settings in database if user is logged in
+    if (loaded) {
+      try {
+        await updateSettings({ app_language: newLocale })
+      } catch (error) {
+        // Settings update failed, but cookie is set so UI will still change
+        console.error('Failed to update settings:', error)
+      }
+    }
     
     // Refresh the page to apply new locale
     startTransition(() => {
@@ -73,4 +85,3 @@ export function LanguageSelector({ currentLocale = 'en', variant = 'icon' }: Lan
     </DropdownMenu>
   )
 }
-

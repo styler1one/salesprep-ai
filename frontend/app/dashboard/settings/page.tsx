@@ -21,7 +21,7 @@ import {
   Sparkles,
   Crown
 } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { useToast } from '@/components/ui/use-toast'
 import { useSettings } from '@/lib/settings-context'
 import { LanguageSelect } from '@/components/language-select'
@@ -37,8 +37,9 @@ export default function SettingsPage() {
   const tErrors = useTranslations('errors')
   const tBilling = useTranslations('billing')
   const { toast } = useToast()
+  const currentLocale = useLocale()
   
-  const { settings, updateSettings, loading: settingsLoading } = useSettings()
+  const { settings, updateSettings, loading: settingsLoading, loaded: settingsLoaded } = useSettings()
   const { subscription, usage, loading: billingLoading, createCheckoutSession, openBillingPortal } = useBilling()
   
   const [user, setUser] = useState<any>(null)
@@ -52,13 +53,21 @@ export default function SettingsPage() {
   const [emailLanguage, setEmailLanguage] = useState('en')
 
   // Sync local state with settings when loaded
+  // Also sync cookie with database if they differ
   useEffect(() => {
-    if (!settingsLoading && settings) {
+    if (!settingsLoading && settings && settingsLoaded) {
       setAppLanguage(settings.app_language)
       setOutputLanguage(settings.output_language)
       setEmailLanguage(settings.email_language)
+      
+      // If database app_language differs from current locale (cookie), update the cookie
+      if (settings.app_language && settings.app_language !== currentLocale) {
+        document.cookie = `NEXT_LOCALE=${settings.app_language}; path=/; max-age=31536000`
+        // Reload to apply the correct language
+        window.location.reload()
+      }
     }
-  }, [settings, settingsLoading])
+  }, [settings, settingsLoading, settingsLoaded, currentLocale])
 
   useEffect(() => {
     const getUser = async () => {
