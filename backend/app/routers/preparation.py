@@ -26,6 +26,7 @@ class PrepStartRequest(BaseModel):
     meeting_type: str = Field(..., pattern="^(discovery|demo|closing|follow_up|other)$")
     custom_notes: Optional[str] = None
     contact_ids: Optional[List[str]] = None  # Selected contact persons for this meeting
+    language: Optional[str] = "nl"  # i18n: output language (default: Dutch)
 
 
 class PrepResponse(BaseModel):
@@ -62,7 +63,8 @@ async def generate_prep_background(
     organization_id: str,
     user_id: str,
     custom_notes: Optional[str],
-    contact_ids: Optional[List[str]] = None
+    contact_ids: Optional[List[str]] = None,
+    language: str = "nl"  # i18n: output language
 ):
     """Background task to generate meeting prep"""
     try:
@@ -101,7 +103,7 @@ async def generate_prep_background(
         context["has_contacts"] = len(contacts_data) > 0
         
         # Generate brief with AI
-        result = await prep_generator.generate_meeting_brief(context)
+        result = await prep_generator.generate_meeting_brief(context, language=language)
         
         # Update database with results
         supabase.table("meeting_preps").update({
@@ -207,7 +209,8 @@ async def start_prep(
             organization_id,
             user_id,  # Pass user_id for personalized briefs
             request.custom_notes,
-            request.contact_ids  # Pass selected contacts
+            request.contact_ids,  # Pass selected contacts
+            request.language or "nl"  # i18n: output language
         )
         
         contact_count = len(request.contact_ids) if request.contact_ids else 0

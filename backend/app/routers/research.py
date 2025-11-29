@@ -42,6 +42,7 @@ class ResearchRequest(BaseModel):
     company_website_url: Optional[str] = None  # NEW: Direct website scraping
     country: Optional[str] = None
     city: Optional[str] = None
+    language: Optional[str] = "nl"  # i18n: output language (default: Dutch)
 
 
 class ResearchResponse(BaseModel):
@@ -100,7 +101,8 @@ def process_research_background(
     linkedin_url: Optional[str],
     website_url: Optional[str] = None,
     organization_id: Optional[str] = None,  # NEW: For seller context
-    user_id: Optional[str] = None  # NEW: For sales profile
+    user_id: Optional[str] = None,  # NEW: For sales profile
+    language: str = "nl"  # i18n: output language
 ):
     """
     Background task to process research request.
@@ -134,7 +136,8 @@ def process_research_background(
             linkedin_url=linkedin_url,
             website_url=website_url,
             organization_id=organization_id,  # NEW: Pass for seller context
-            user_id=user_id  # NEW: Pass for sales profile
+            user_id=user_id,  # NEW: Pass for sales profile
+            language=language  # i18n: output language
         ))
         
         print(f"DEBUG: Research completed, got {len(research_data.get('sources', {}))} sources")
@@ -269,8 +272,9 @@ async def start_research(
             request.city,
             request.company_linkedin_url,
             request.company_website_url,
-            organization_id,  # NEW: For seller context (what you sell)
-            user_id  # NEW: For sales profile context
+            organization_id,  # For seller context (what you sell)
+            user_id,  # For sales profile context
+            request.language or "nl"  # i18n: output language
         )
         
         return ResearchResponse(

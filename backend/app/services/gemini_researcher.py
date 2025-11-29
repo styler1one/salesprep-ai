@@ -6,6 +6,8 @@ import os
 from typing import Dict, Any, Optional
 from google import genai
 from google.genai import types
+from app.i18n.utils import get_language_instruction
+from app.i18n.config import DEFAULT_LANGUAGE
 
 
 class GeminiResearcher:
@@ -36,7 +38,8 @@ class GeminiResearcher:
         country: Optional[str] = None,
         city: Optional[str] = None,
         linkedin_url: Optional[str] = None,
-        seller_context: Optional[Dict[str, Any]] = None
+        seller_context: Optional[Dict[str, Any]] = None,
+        language: str = DEFAULT_LANGUAGE
     ) -> Dict[str, Any]:
         """
         Search for company information using Gemini with Google Search.
@@ -49,10 +52,12 @@ class GeminiResearcher:
             city: Optional city for better search accuracy
             linkedin_url: Optional LinkedIn URL
             seller_context: Context about what the user sells
+            language: Output language code
             
         Returns:
             Dictionary with research data
         """
+        lang_instruction = get_language_instruction(language)
         # Build search query with location context
         search_query = self._build_search_query(
             company_name, country, city, linkedin_url
@@ -61,61 +66,60 @@ class GeminiResearcher:
         # Build seller context section if available
         seller_section = ""
         if seller_context and seller_context.get("has_context"):
-            products = ", ".join(seller_context.get("products_services", [])[:5]) or "niet gespecificeerd"
+            products = ", ".join(seller_context.get("products_services", [])[:5]) or "not specified"
             seller_section = f"""
 
-BELANGRIJK - CONTEXT VAN DE VERKOPER:
-Verkopend bedrijf: {seller_context.get('company_name', 'Onbekend')}
-Producten/diensten die ze verkopen: {products}
-Doelmarkt: {seller_context.get('target_market', 'niet gespecificeerd')}
+IMPORTANT - SELLER CONTEXT:
+Selling company: {seller_context.get('company_name', 'Unknown')}
+Products/services they sell: {products}
+Target market: {seller_context.get('target_market', 'not specified')}
 
-Zoek specifiek naar informatie die relevant is voor het verkopen van bovenstaande producten aan {company_name}.
+Specifically search for information relevant to selling the above products to {company_name}.
 """
         
-        # Build prompt for Gemini - NOW IN DUTCH
+        # Build prompt for Gemini
         prompt = f"""
-Je bent een business research assistent met toegang tot Google Search. Schrijf je output in het NEDERLANDS.
+You are a business research assistant with access to Google Search. {lang_instruction}
 
-Onderzoek het volgende bedrijf en geef uitgebreide informatie:
+Research the following company and provide comprehensive information:
 
 {search_query}
 {seller_section}
 
-Zoek naar en geef:
+Search for and provide:
 
-1. BEDRIJFSOVERZICHT
-   - Industrie en sector
-   - Bedrijfsgrootte (medewerkers, omzet indien bekend)
-   - Hoofdkantoor locatie
-   - Oprichtingsdatum
+1. COMPANY OVERVIEW
+   - Industry and sector
+   - Company size (employees, revenue if known)
+   - Headquarters location
+   - Founding date
    - Website
 
 2. BUSINESS MODEL
-   - Belangrijkste producten of diensten
-   - Doelmarkt (B2B, B2C, etc.)
-   - Belangrijkste value propositions
+   - Main products or services
+   - Target market (B2B, B2C, etc.)
+   - Key value propositions
 
-3. RECENT NIEUWS (Laatste 30 dagen)
-   - Laatste aankondigingen
+3. RECENT NEWS (Last 30 days)
+   - Latest announcements
    - Product launches
-   - Financiering of financieel nieuws
-   - Leiderschapswijzigingen
+   - Funding or financial news
+   - Leadership changes
    - Partnerships
 
-4. KEY MENSEN
-   - CEO en directie team
+4. KEY PEOPLE
+   - CEO and leadership team
    - Notable team members
-   - LinkedIn profielen
+   - LinkedIn profiles
 
-5. MARKTPOSITIE
-   - Belangrijkste concurrenten
-   - Marktaandeel (indien beschikbaar)
-   - Unieke onderscheidende factoren
+5. MARKET POSITION
+   - Main competitors
+   - Market share (if available)
+   - Unique differentiating factors
 
-{"6. SALES KANSEN" + chr(10) + "   - Specifieke problemen die " + company_name + " heeft die relevant zijn voor " + ", ".join(seller_context.get('products_services', [])[:3]) + chr(10) + "   - Afdelingen of rollen die het meest relevant zijn" + chr(10) + "   - Timing factoren of trigger events" if seller_context and seller_context.get("has_context") else ""}
+{"6. SALES OPPORTUNITIES" + chr(10) + "   - Specific problems that " + company_name + " has that are relevant for " + ", ".join(seller_context.get('products_services', [])[:3]) + chr(10) + "   - Departments or roles most relevant" + chr(10) + "   - Timing factors or trigger events" if seller_context and seller_context.get("has_context") else ""}
 
-Geef feitelijke, geverifieerde informatie uit betrouwbare bronnen. Als informatie niet beschikbaar is, vermeld dat duidelijk.
-Schrijf alles in het Nederlands.
+Provide factual, verified information from reliable sources. If information is not available, state that clearly.
 """
         
         try:

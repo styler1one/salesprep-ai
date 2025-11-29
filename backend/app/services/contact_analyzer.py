@@ -17,6 +17,8 @@ import logging
 from typing import Dict, Any, Optional, List
 from anthropic import Anthropic
 from supabase import create_client, Client
+from app.i18n.utils import get_language_instruction
+from app.i18n.config import DEFAULT_LANGUAGE
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +44,8 @@ class ContactAnalyzer:
         contact_role: Optional[str],
         linkedin_url: Optional[str],
         company_context: Dict[str, Any],
-        seller_context: Dict[str, Any]
+        seller_context: Dict[str, Any],
+        language: str = DEFAULT_LANGUAGE
     ) -> Dict[str, Any]:
         """
         Analyze a contact person with full context.
@@ -53,6 +56,7 @@ class ContactAnalyzer:
             linkedin_url: LinkedIn profile URL (optional)
             company_context: Research data about the company
             seller_context: What the seller offers
+            language: Output language code
             
         Returns:
             Analysis dict with all insights
@@ -63,7 +67,8 @@ class ContactAnalyzer:
             contact_role,
             linkedin_url,
             company_context,
-            seller_context
+            seller_context,
+            language
         )
         
         try:
@@ -99,39 +104,41 @@ class ContactAnalyzer:
         contact_role: Optional[str],
         linkedin_url: Optional[str],
         company_context: Dict[str, Any],
-        seller_context: Dict[str, Any]
+        seller_context: Dict[str, Any],
+        language: str = DEFAULT_LANGUAGE
     ) -> str:
         """Build the prompt for contact analysis."""
+        lang_instruction = get_language_instruction(language)
         
         # Company context section
         company_section = ""
         if company_context:
-            company_name = company_context.get("company_name", "Onbekend")
+            company_name = company_context.get("company_name", "Unknown")
             industry = company_context.get("industry", "")
             brief = company_context.get("brief_content", "")[:2000] if company_context.get("brief_content") else ""
             
             company_section = f"""
-## BEDRIJFSCONTEXT
-**Bedrijf**: {company_name}
-**Industrie**: {industry}
+## COMPANY CONTEXT
+**Company**: {company_name}
+**Industry**: {industry}
 
-**Research samenvatting**:
+**Research summary**:
 {brief}
 """
         
         # Seller context section
         seller_section = ""
         if seller_context and seller_context.get("has_context"):
-            products = ", ".join(seller_context.get("products_services", [])[:5]) or "Niet gespecificeerd"
-            values = ", ".join(seller_context.get("value_propositions", [])[:3]) or "Niet gespecificeerd"
-            target = seller_context.get("target_market", "Niet gespecificeerd")
+            products = ", ".join(seller_context.get("products_services", [])[:5]) or "Not specified"
+            values = ", ".join(seller_context.get("value_propositions", [])[:3]) or "Not specified"
+            target = seller_context.get("target_market", "Not specified")
             
             seller_section = f"""
-## WAT DE VERKOPER AANBIEDT
-**Bedrijf**: {seller_context.get('company_name', 'Onbekend')}
-**Producten/Diensten**: {products}
+## WHAT THE SELLER OFFERS
+**Company**: {seller_context.get('company_name', 'Unknown')}
+**Products/Services**: {products}
 **Value Propositions**: {values}
-**Doelmarkt**: {target}
+**Target Market**: {target}
 """
         
         # LinkedIn instruction
@@ -140,97 +147,97 @@ class ContactAnalyzer:
             linkedin_instruction = f"""
 **LinkedIn URL**: {linkedin_url}
 
-Gebruik je web search capabilities om dit LinkedIn profiel te analyseren.
-Zoek naar: "{contact_name} {contact_role or ''} linkedin" en analyseer:
-- Hun carrière achtergrond
-- Recente posts en activiteit
-- Connecties en endorsements
-- Toon en communicatiestijl in posts
+Use your web search capabilities to analyze this LinkedIn profile.
+Search for: "{contact_name} {contact_role or ''} linkedin" and analyze:
+- Their career background
+- Recent posts and activity
+- Connections and endorsements
+- Tone and communication style in posts
 """
         else:
             linkedin_instruction = """
-**Geen LinkedIn URL beschikbaar**
+**No LinkedIn URL available**
 
-Baseer je analyse op:
-- De functie/rol
-- Typische verantwoordelijkheden voor deze rol
-- Algemene patronen voor deze functie in deze industrie
+Base your analysis on:
+- The job title/role
+- Typical responsibilities for this role
+- General patterns for this function in this industry
 """
         
-        prompt = f"""Je bent een sales research assistent die contactpersonen analyseert voor gepersonaliseerde verkoopgesprekken. Schrijf in het NEDERLANDS.
+        prompt = f"""You are a sales research assistant analyzing contact persons for personalized sales conversations. {lang_instruction}
 
 {company_section}
 
 {seller_section}
 
-## CONTACTPERSOON OM TE ANALYSEREN
-**Naam**: {contact_name}
-**Functie**: {contact_role or 'Niet gespecificeerd'}
+## CONTACT PERSON TO ANALYZE
+**Name**: {contact_name}
+**Role**: {contact_role or 'Not specified'}
 {linkedin_instruction}
 
 ---
 
-Geef een uitgebreide analyse met EXACT deze secties:
+Provide a comprehensive analysis with EXACTLY these sections:
 
-## 1. PROFIEL SAMENVATTING
-- Carrière achtergrond (als beschikbaar)
-- Huidige verantwoordelijkheden gebaseerd op de rol
-- Expertise gebieden
-- Opleiding/certificeringen (als beschikbaar)
+## 1. PROFILE SUMMARY
+- Career background (if available)
+- Current responsibilities based on role
+- Areas of expertise
+- Education/certifications (if available)
 
-## 2. COMMUNICATIESTIJL
-Kies EN onderbouw één van:
-- **Formeel**: Zakelijke toon, titels belangrijk, gestructureerde communicatie
-- **Informeel**: Casual, first-name basis, directe aanpak
-- **Technisch**: Detail-georiënteerd, data-driven, wil specs en bewijs
-- **Strategisch**: Big-picture denker, ROI-focused, wil business impact
+## 2. COMMUNICATION STYLE
+Choose AND justify one of:
+- **Formal**: Business tone, titles important, structured communication
+- **Informal**: Casual, first-name basis, direct approach
+- **Technical**: Detail-oriented, data-driven, wants specs and proof
+- **Strategic**: Big-picture thinker, ROI-focused, wants business impact
 
-## 3. BESLISSINGSPOSITIE
-Classificeer EN onderbouw:
-- **Decision Maker**: Heeft budget en finale beslissingsbevoegdheid
-- **Influencer**: Beïnvloedt beslissing, geen finale zeggenschap
-- **Gatekeeper**: Controleert toegang tot decision makers
-- **Gebruiker**: Eindgebruiker, geen beslissingsbevoegdheid
+## 3. DECISION AUTHORITY
+Classify AND justify:
+- **Decision Maker**: Has budget and final decision authority
+- **Influencer**: Influences decision, no final say
+- **Gatekeeper**: Controls access to decision makers
+- **User**: End user, no decision authority
 
-## 4. MOGELIJKE DRIJFVEREN
-Wat motiveert deze persoon waarschijnlijk? Kies 1-2:
-- **Vooruitgang boeken**: Wil innoveren, moderniseren, vooroplopen
-- **Problemen oplossen**: Wil iets repareren dat niet werkt
-- **Zich onderscheiden**: Wil presteren, erkenning, carrière maken
-- **Risico vermijden**: Wil stabiliteit, geen gedoe, veilige keuzes
+## 4. PROBABLE DRIVERS
+What likely motivates this person? Choose 1-2:
+- **Making progress**: Wants to innovate, modernize, stay ahead
+- **Solving problems**: Wants to fix something that's not working
+- **Standing out**: Wants to perform, gain recognition, advance career
+- **Avoiding risk**: Wants stability, no hassle, safe choices
 
-Onderbouw met concrete signalen (als beschikbaar).
+Support with concrete signals (if available).
 
-## 5. ROL-SPECIFIEKE PIJNPUNTEN
-Welke problemen heeft iemand in deze rol typisch?
-- Lijst 3-5 specifieke pijnpunten
-- Koppel aan wat de verkoper aanbiedt: {", ".join(seller_context.get("products_services", [])[:3]) if seller_context else "niet gespecificeerd"}
+## 5. ROLE-SPECIFIC PAIN POINTS
+What problems does someone in this role typically have?
+- List 3-5 specific pain points
+- Connect to what the seller offers: {", ".join(seller_context.get("products_services", [])[:3]) if seller_context else "not specified"}
 
-## 6. GESPREKSADVIES
+## 6. CONVERSATION ADVICE
 
-### Benadering
-Hoe deze persoon het beste te benaderen (1-2 zinnen)
+### Approach
+How to best approach this person (1-2 sentences)
 
-### Openingszinnen
-Geef EXACT 3 concrete openingszinnen die je kunt gebruiken:
-1. [Zin gebaseerd op hun rol/verantwoordelijkheden]
-2. [Zin gebaseerd op bedrijfssituatie of nieuws]
-3. [Zin gebaseerd op wat de verkoper kan bieden]
+### Opening Lines
+Provide EXACTLY 3 concrete opening lines you can use:
+1. [Line based on their role/responsibilities]
+2. [Line based on company situation or news]
+3. [Line based on what the seller can offer]
 
-### Discovery Vragen
-Geef EXACT 5 slimme vragen om behoeften te ontdekken:
-1. [Vraag over huidige situatie]
-2. [Vraag over pijnpunten]
-3. [Vraag over beslissingsproces]
-4. [Vraag over timing/urgentie]
-5. [Vraag over succes criteria]
+### Discovery Questions
+Provide EXACTLY 5 smart questions to uncover needs:
+1. [Question about current situation]
+2. [Question about pain points]
+3. [Question about decision process]
+4. [Question about timing/urgency]
+5. [Question about success criteria]
 
-### Te Vermijden
-Wat moet je NIET doen bij deze persoon? (2-3 punten)
+### Things to Avoid
+What should you NOT do with this person? (2-3 points)
 
 ---
 
-Wees concreet en actionable. Geen vage algemeenheden."""
+Be concrete and actionable. No vague generalities."""
 
         return prompt
     

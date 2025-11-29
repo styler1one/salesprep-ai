@@ -15,6 +15,8 @@ from .claude_researcher import ClaudeResearcher
 from .gemini_researcher import GeminiResearcher
 from .kvk_api import KVKApi
 from .website_scraper import get_website_scraper
+from app.i18n.utils import get_language_instruction
+from app.i18n.config import DEFAULT_LANGUAGE
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +45,8 @@ class ResearchOrchestrator:
         linkedin_url: Optional[str] = None,
         website_url: Optional[str] = None,
         organization_id: Optional[str] = None,  # NEW: For context
-        user_id: Optional[str] = None  # NEW: For sales profile
+        user_id: Optional[str] = None,  # NEW: For sales profile
+        language: str = DEFAULT_LANGUAGE  # i18n: output language
     ) -> Dict[str, Any]:
         """
         Research company using multiple sources in parallel.
@@ -61,6 +64,7 @@ class ResearchOrchestrator:
             website_url: Optional website URL for direct scraping
             organization_id: Organization ID for context retrieval
             user_id: User ID for sales profile context
+            language: Output language code (default: nl)
             
         Returns:
             Dictionary with combined research data
@@ -72,16 +76,18 @@ class ResearchOrchestrator:
         tasks = []
         source_names = []
         
-        # Always use Claude and Gemini - now with seller context!
+        # Always use Claude and Gemini - now with seller context and language!
         tasks.append(self.claude.search_company(
             company_name, country, city, linkedin_url,
-            seller_context=seller_context
+            seller_context=seller_context,
+            language=language
         ))
         source_names.append("claude")
         
         tasks.append(self.gemini.search_company(
             company_name, country, city, linkedin_url,
-            seller_context=seller_context
+            seller_context=seller_context,
+            language=language
         ))
         source_names.append("gemini")
         
@@ -136,7 +142,8 @@ class ResearchOrchestrator:
             country,
             city,
             seller_context=seller_context,
-            kb_chunks=kb_chunks
+            kb_chunks=kb_chunks,
+            language=language
         )
         
         return combined_data
@@ -261,13 +268,15 @@ class ResearchOrchestrator:
         country: Optional[str],
         city: Optional[str],
         seller_context: Optional[Dict[str, Any]] = None,
-        kb_chunks: Optional[List[Dict[str, str]]] = None
+        kb_chunks: Optional[List[Dict[str, str]]] = None,
+        language: str = DEFAULT_LANGUAGE
     ) -> str:
         """
         Generate unified research brief from all sources.
         
         Enhanced with seller context for personalized talking points.
         """
+        lang_instruction = get_language_instruction(language)
         # Collect successful source data
         source_data = []
         
@@ -302,22 +311,22 @@ class ResearchOrchestrator:
             source_data.append(website_text)
         
         if not source_data:
-            return "# Research Mislukt\n\nGeen data gevonden van bronnen."
+            return "# Research Failed\n\nNo data found from sources."
         
         # Build seller context section for the prompt
         seller_section = ""
         if seller_context and seller_context.get("has_context"):
-            products = ", ".join(seller_context.get("products_services", [])[:5]) or "Niet gespecificeerd"
-            values = ", ".join(seller_context.get("value_propositions", [])[:3]) or "Niet gespecificeerd"
-            diffs = ", ".join(seller_context.get("differentiators", [])[:3]) or "Niet gespecificeerd"
+            products = ", ".join(seller_context.get("products_services", [])[:5]) or "Not specified"
+            values = ", ".join(seller_context.get("value_propositions", [])[:3]) or "Not specified"
+            diffs = ", ".join(seller_context.get("differentiators", [])[:3]) or "Not specified"
             
             seller_section = f"""
-## CONTEXT: WAT JIJ VERKOOPT
-**Jouw bedrijf**: {seller_context.get('company_name', 'Onbekend')}
-**Producten/Diensten**: {products}
+## CONTEXT: WHAT YOU SELL
+**Your company**: {seller_context.get('company_name', 'Unknown')}
+**Products/Services**: {products}
 **Value Propositions**: {values}
-**Onderscheidende factoren**: {diffs}
-**Doelmarkt**: {seller_context.get('target_market', 'Niet gespecificeerd')}
+**Differentiators**: {diffs}
+**Target Market**: {seller_context.get('target_market', 'Not specified')}
 """
         
         # Build KB context section
@@ -328,75 +337,75 @@ class ResearchOrchestrator:
                 for chunk in kb_chunks
             ])
             kb_section = f"""
-## RELEVANTE CASE STUDIES/DOCUMENTEN UIT JOUW KNOWLEDGE BASE:
+## RELEVANT CASE STUDIES/DOCUMENTS FROM YOUR KNOWLEDGE BASE:
 {kb_texts}
 """
         
-        # Use Claude to merge the data - NOW IN DUTCH with seller context!
-        merge_prompt = f"""Je bent een sales research assistent die een prospect brief maakt in het NEDERLANDS.
+        # Use Claude to merge the data - with seller context and language instruction
+        merge_prompt = f"""You are a sales research assistant creating a prospect brief. {lang_instruction}
 
 {seller_section}
 {kb_section}
 
-Ik heb informatie verzameld over {company_name} uit meerdere bronnen:
+I have collected information about {company_name} from multiple sources:
 
 {chr(10).join(source_data)}
 
-Maak een gestructureerde research brief in het NEDERLANDS met deze secties:
+Create a structured research brief with these sections:
 
 # Research Brief: {company_name}
-{f"Locatie: {city}, {country}" if city and country else ""}
+{f"Location: {city}, {country}" if city and country else ""}
 
-## 1. BEDRIJFSOVERZICHT
-- Industrie en sector
-- Bedrijfsgrootte (medewerkers, omzet indien bekend)
-- Hoofdkantoor
-- Opgericht
-- Officiële registratie (KVK indien beschikbaar)
+## 1. COMPANY OVERVIEW
+- Industry and sector
+- Company size (employees, revenue if known)
+- Headquarters
+- Founded
+- Official registration (Chamber of Commerce if available)
 
 ## 2. BUSINESS MODEL
-- Producten en diensten
-- Doelmarkt
-- Klanttypen
+- Products and services
+- Target market
+- Customer types
 
-## 3. RECENTE ONTWIKKELINGEN
-- Laatste nieuws (afgelopen 30 dagen)
-- Groei of financiering
+## 3. RECENT DEVELOPMENTS
+- Latest news (past 30 days)
+- Growth or funding
 - Product launches
-- Belangrijke veranderingen
+- Important changes
 
-## 4. KEY MENSEN
-- Directie en management
-- Beslissers (CEO, CFO, CTO, etc.)
-- LinkedIn profielen indien gevonden
+## 4. KEY PEOPLE
+- Leadership and management
+- Decision makers (CEO, CFO, CTO, etc.)
+- LinkedIn profiles if found
 
-## 5. MARKTPOSITIE
-- Concurrenten
-- Marktaandeel
-- Onderscheidende factoren
+## 5. MARKET POSITION
+- Competitors
+- Market share
+- Differentiating factors
 
-## 6. SALES STRATEGIE
-{"Dit is cruciaal - baseer dit op wat JIJ verkoopt:" if seller_context and seller_context.get("has_context") else ""}
+## 6. SALES STRATEGY
+{"This is crucial - base this on what YOU sell:" if seller_context and seller_context.get("has_context") else ""}
 
-### Potentiële Pijnpunten
-- Welke problemen heeft dit bedrijf die relevant zijn voor jouw oplossing?
-{"- Focus op problemen die " + ", ".join(seller_context.get("products_services", [])[:3]) + " kan oplossen" if seller_context and seller_context.get("products_services") else ""}
+### Potential Pain Points
+- What problems does this company have that are relevant to your solution?
+{"- Focus on problems that " + ", ".join(seller_context.get("products_services", [])[:3]) + " can solve" if seller_context and seller_context.get("products_services") else ""}
 
-### Relevante Use Cases
-- Concrete toepassingen van jouw oplossing bij dit bedrijf
-{"- Denk aan: " + ", ".join(seller_context.get("value_propositions", [])[:2]) if seller_context and seller_context.get("value_propositions") else ""}
+### Relevant Use Cases
+- Concrete applications of your solution at this company
+{"- Think of: " + ", ".join(seller_context.get("value_propositions", [])[:2]) if seller_context and seller_context.get("value_propositions") else ""}
 
-### Gespreksopeners
-- 3-5 specifieke openingszinnen voor dit prospect
-- Refereer aan hun recente nieuws of specifieke situatie
+### Conversation Openers
+- 3-5 specific opening lines for this prospect
+- Reference their recent news or specific situation
 
-### Discovery Vragen
-- 5-7 slimme vragen om behoeften te ontdekken
-- Vragen die jouw oplossing relevant maken
+### Discovery Questions
+- 5-7 smart questions to uncover needs
+- Questions that make your solution relevant
 
-{"### Relevante Referenties" + chr(10) + "Op basis van je knowledge base, welke case studies of succesverhalen zijn relevant voor dit prospect?" if kb_chunks else ""}
+{"### Relevant References" + chr(10) + "Based on your knowledge base, which case studies or success stories are relevant for this prospect?" if kb_chunks else ""}
 
-Wees feitelijk en bondig. Prioriteer officiële data (KVK) boven webresultaten. Schrijf alles in het Nederlands."""
+Be factual and concise. Prioritize official data (Chamber of Commerce) over web results."""
 
         try:
             response = self.claude.client.messages.create(

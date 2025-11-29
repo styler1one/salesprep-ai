@@ -90,7 +90,8 @@ async def process_followup_background(
     user_id: str,
     meeting_prep_id: Optional[str] = None,
     prospect_company: Optional[str] = None,
-    include_coaching: bool = False  # NEW: opt-in coaching
+    include_coaching: bool = False,  # opt-in coaching
+    language: str = "nl"  # i18n: output language
 ):
     """Background task to process audio and generate follow-up content"""
     
@@ -179,14 +180,16 @@ async def process_followup_background(
         summary = await followup_generator.generate_summary(
             transcription=transcription_result.full_text,
             prospect_context=prospect_context,
-            include_coaching=include_coaching,  # NEW: pass coaching flag
+            include_coaching=include_coaching,  # pass coaching flag
+            language=language,  # i18n: output language
             prospect_company=prospect_company
         )
         
         # Step 5: Extract action items
         action_items = await followup_generator.extract_action_items(
             transcription=transcription_result.full_text,
-            summary=summary.get("executive_summary")
+            summary=summary.get("executive_summary"),
+            language=language  # i18n: output language
         )
         
         # Step 6: Generate email draft with full context
@@ -194,6 +197,7 @@ async def process_followup_background(
             summary=summary,
             action_items=action_items,
             prospect_context=prospect_context,
+            language=language,  # i18n: output language
             prospect_company=prospect_company,
             tone="professional"
         )
@@ -254,7 +258,8 @@ async def upload_audio(
     prospect_company_name: Optional[str] = Form(None),
     meeting_date: Optional[str] = Form(None),
     meeting_subject: Optional[str] = Form(None),
-    include_coaching: bool = Form(False),  # NEW: opt-in coaching feedback
+    include_coaching: bool = Form(False),  # opt-in coaching feedback
+    language: str = Form("nl"),  # i18n: output language (default: Dutch)
     current_user: dict = Depends(get_current_user)
 ):
     """
@@ -334,7 +339,8 @@ async def upload_audio(
             user_id,
             meeting_prep_id,
             prospect_company_name,
-            include_coaching  # NEW: pass coaching flag
+            include_coaching,  # pass coaching flag
+            language  # i18n: output language
         )
         
         logger.info(f"Created followup {followup_id} for prospect {prospect_id}, coaching={include_coaching}, starting background processing")
@@ -363,7 +369,8 @@ async def process_transcript_background(
     meeting_prep_id: Optional[str] = None,
     prospect_company: Optional[str] = None,
     estimated_duration: Optional[float] = None,
-    include_coaching: bool = False  # NEW: opt-in coaching
+    include_coaching: bool = False,  # opt-in coaching
+    language: str = "nl"  # i18n: output language
 ):
     """Background task to process transcript and generate follow-up content"""
     
@@ -403,14 +410,16 @@ async def process_transcript_background(
         summary = await followup_generator.generate_summary(
             transcription=transcription_text,
             prospect_context=prospect_context,
-            include_coaching=include_coaching,  # NEW: pass coaching flag
+            include_coaching=include_coaching,  # pass coaching flag
+            language=language,  # i18n: output language
             prospect_company=prospect_company
         )
         
         # Extract action items
         action_items = await followup_generator.extract_action_items(
             transcription=transcription_text,
-            summary=summary.get("executive_summary")
+            summary=summary.get("executive_summary"),
+            language=language  # i18n: output language
         )
         
         # Generate email draft with full context
@@ -418,6 +427,7 @@ async def process_transcript_background(
             summary=summary,
             action_items=action_items,
             prospect_context=prospect_context,
+            language=language,  # i18n: output language
             prospect_company=prospect_company,
             tone="professional"
         )

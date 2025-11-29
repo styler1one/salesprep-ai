@@ -9,6 +9,8 @@ import logging
 import os
 import json
 from anthropic import Anthropic
+from app.i18n.utils import get_language_instruction
+from app.i18n.config import DEFAULT_LANGUAGE
 
 logger = logging.getLogger(__name__)
 
@@ -22,20 +24,22 @@ class PrepGeneratorService:
     
     async def generate_meeting_brief(
         self,
-        context: Dict[str, Any]
+        context: Dict[str, Any],
+        language: str = DEFAULT_LANGUAGE
     ) -> Dict[str, Any]:
         """
         Generate comprehensive meeting brief using AI
         
         Args:
             context: RAG context with KB and Research data
+            language: Output language code (default: nl)
             
         Returns:
             Structured brief with talking points, questions, strategy
         """
         try:
             # Build prompt based on meeting type
-            prompt = self._build_prompt(context)
+            prompt = self._build_prompt(context, language)
             
             # Call Claude API
             logger.info(f"Generating brief for {context['prospect_company']} ({context['meeting_type']})")
@@ -70,12 +74,13 @@ class PrepGeneratorService:
             logger.error(f"Error generating brief: {e}")
             raise
     
-    def _build_prompt(self, context: Dict[str, Any]) -> str:
+    def _build_prompt(self, context: Dict[str, Any], language: str = DEFAULT_LANGUAGE) -> str:
         """Build AI prompt based on context and meeting type"""
         
         meeting_type = context["meeting_type"]
         prospect = context["prospect_company"]
         custom_notes = context.get("custom_notes", "")
+        lang_instruction = get_language_instruction(language)
         
         # Base prompt
         meeting_type_labels = {
@@ -87,19 +92,19 @@ class PrepGeneratorService:
         }
         meeting_label = meeting_type_labels.get(meeting_type, meeting_type)
         
-        prompt = f"""Je bent een slimme, ervaren salesvoorbereider. Jij levert commerciële intelligentie – geen verkooppraatjes.
+        prompt = f"""You are a smart, experienced sales preparation expert. You deliver commercial intelligence – not sales pitches.
 
-Je doel: een scherpe, strategisch relevante en to-the-point briefing voor een aankomend klantgesprek.
+Your goal: a sharp, strategically relevant and to-the-point briefing for an upcoming client meeting.
 
-**Prospect Bedrijf**: {prospect}
-**Type Meeting**: {meeting_label}
+**Prospect Company**: {prospect}
+**Meeting Type**: {meeting_label}
 
-BELANGRIJK:
-- Vertaal technologie naar klantwaarde: sneller werken, betere inzichten, minder handwerk, hogere kwaliteit, meer grip
-- Focus op wat er speelt bij de prospect EN hoe dat relevant is voor wat wij aanbieden
-- Maak het persoonlijk: wat speelt er voor de specifieke contactpersonen?
-- Wees zakelijk, bondig en strategisch
-- Schrijf alles in het Nederlands
+IMPORTANT:
+- Translate technology into customer value: faster work, better insights, less manual work, higher quality, more control
+- Focus on what's happening at the prospect AND how it's relevant to what we offer
+- Make it personal: what's at stake for the specific contact persons?
+- Be businesslike, concise and strategic
+- {lang_instruction}
 """
         
         if custom_notes:
@@ -137,7 +142,7 @@ BELANGRIJK:
             prompt += self._format_contacts_context(context["contacts"])
         
         # Add meeting type-specific instructions
-        prompt += self._get_meeting_type_instructions(meeting_type)
+        prompt += self._get_meeting_type_instructions(meeting_type, language)
         
         return prompt
     
@@ -207,12 +212,14 @@ When generating the meeting brief:
 """
         return context
     
-    def _get_meeting_type_instructions(self, meeting_type: str) -> str:
+    def _get_meeting_type_instructions(self, meeting_type: str, language: str = DEFAULT_LANGUAGE) -> str:
         """Get specific instructions based on meeting type"""
         
+        lang_instruction = get_language_instruction(language)
+        
         instructions = {
-            "discovery": """
-Genereer een uitgebreide discovery call briefing met de volgende structuur:
+            "discovery": f"""
+Generate a comprehensive discovery call briefing with the following structure:
 
 # Meeting Brief: Discovery Call
 
@@ -355,7 +362,7 @@ Onthoud:
 - Verzin geen feiten die niet in de context staan
 - Maak alles relevant voor deze specifieke prospect
 - Focus op HUN behoeften, niet onze features
-- Schrijf in het Nederlands
+- {lang_instruction}
 """,
             "demo": """
 Genereer een product demo briefing met de volgende structuur:
@@ -428,7 +435,7 @@ Genereer een product demo briefing met de volgende structuur:
 - [Concrete next step na de demo]
 - [Wie betrekken?]
 
-Schrijf in het Nederlands.
+{lang_instruction}
 """,
             "closing": """
 Genereer een closing call briefing met de volgende structuur:
@@ -500,7 +507,7 @@ Genereer een closing call briefing met de volgende structuur:
 - [Contract review proces]
 - [Implementatie timeline]
 
-Schrijf in het Nederlands.
+{lang_instruction}
 """,
             "follow_up": """
 Genereer een follow-up meeting briefing met de volgende structuur:
@@ -556,7 +563,7 @@ Genereer een follow-up meeting briefing met de volgende structuur:
 - [Concrete next step]
 - [Wie moet erbij betrokken worden?]
 
-Schrijf in het Nederlands.
+{lang_instruction}
 """,
             "other": """
 Genereer een meeting briefing met de volgende structuur:
@@ -596,11 +603,13 @@ Genereer een meeting briefing met de volgende structuur:
 - Succescriteria
 - Aanbevolen vervolgactie
 
-Schrijf in het Nederlands.
+{lang_instruction}
 """
         }
         
-        return instructions.get(meeting_type, instructions["other"])
+        template = instructions.get(meeting_type, instructions["other"])
+        # Replace placeholder with actual language instruction
+        return template.replace("{lang_instruction}", lang_instruction)
     
     def _parse_brief(self, brief_text: str, meeting_type: str) -> Dict[str, Any]:
         """Parse structured data from brief text"""

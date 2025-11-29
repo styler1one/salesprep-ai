@@ -6,6 +6,8 @@ Enhanced with seller context for personalized research output.
 import os
 from typing import Dict, Any, Optional, List
 from anthropic import Anthropic
+from app.i18n.utils import get_language_instruction
+from app.i18n.config import DEFAULT_LANGUAGE
 
 
 class ClaudeResearcher:
@@ -25,7 +27,8 @@ class ClaudeResearcher:
         country: Optional[str] = None,
         city: Optional[str] = None,
         linkedin_url: Optional[str] = None,
-        seller_context: Optional[Dict[str, Any]] = None
+        seller_context: Optional[Dict[str, Any]] = None,
+        language: str = DEFAULT_LANGUAGE
     ) -> Dict[str, Any]:
         """
         Search for company information using Claude with web search.
@@ -38,10 +41,12 @@ class ClaudeResearcher:
             city: Optional city for better search accuracy
             linkedin_url: Optional LinkedIn URL
             seller_context: Context about what the user sells
+            language: Output language code
             
         Returns:
             Dictionary with research data
         """
+        lang_instruction = get_language_instruction(language)
         # Build search context
         search_context = self._build_search_context(
             company_name, country, city, linkedin_url
@@ -50,70 +55,70 @@ class ClaudeResearcher:
         # Build seller context section if available
         seller_section = ""
         if seller_context and seller_context.get("has_context"):
-            products = ", ".join(seller_context.get("products_services", [])[:5]) or "niet gespecificeerd"
+            products = ", ".join(seller_context.get("products_services", [])[:5]) or "not specified"
             seller_section = f"""
 
-## BELANGRIJK - WAT IK VERKOOP:
-Mijn bedrijf: {seller_context.get('company_name', 'Onbekend')}
-Onze producten/diensten: {products}
-Onze doelmarkt: {seller_context.get('target_market', 'niet gespecificeerd')}
+## IMPORTANT - WHAT I SELL:
+My company: {seller_context.get('company_name', 'Unknown')}
+Our products/services: {products}
+Our target market: {seller_context.get('target_market', 'not specified')}
 
-Focus je research op informatie die relevant is voor het verkopen van deze producten/diensten aan {company_name}.
+Focus your research on information relevant to selling these products/services to {company_name}.
 """
         
-        # Build prompt for Claude - NOW IN DUTCH
-        prompt = f"""Je bent een sales research assistent met toegang tot web search. Schrijf je output in het NEDERLANDS.
+        # Build prompt for Claude
+        prompt = f"""You are a sales research assistant with access to web search. {lang_instruction}
 
-Onderzoek het volgende bedrijf:
+Research the following company:
 
 {search_context}
 {seller_section}
 
-Gebruik web search om actuele informatie te verzamelen. Zoek naar:
-1. Bedrijfswebsite en officiële bronnen
-2. LinkedIn bedrijfsprofiel
-3. Recent nieuws en persberichten
-4. Zakelijke databases
-5. Industrie rapporten
+Use web search to gather current information. Search for:
+1. Company website and official sources
+2. LinkedIn company profile
+3. Recent news and press releases
+4. Business databases
+5. Industry reports
 
-Geef een gestructureerd research rapport met deze secties:
+Provide a structured research report with these sections:
 
-## BEDRIJFSOVERZICHT
-- Industrie en sector
-- Bedrijfsgrootte (medewerkers, omzet indien bekend)
-- Hoofdkantoor locatie
-- Oprichtingsdatum
+## COMPANY OVERVIEW
+- Industry and sector
+- Company size (employees, revenue if known)
+- Headquarters location
+- Founding date
 - Website URL
 
 ## BUSINESS MODEL
-- Belangrijkste producten of diensten
-- Doelmarkt en klanten
+- Main products or services
+- Target market and customers
 - Business model (B2B, B2C, SaaS, etc.)
-- Belangrijkste value propositions
+- Key value propositions
 
-## RECENTE ONTWIKKELINGEN (Laatste 30 dagen)
-- Laatste nieuws en aankondigingen
-- Product launches of updates
-- Financiering of financieel nieuws
-- Leiderschapswijzigingen
-- Strategische partnerships of overnames
+## RECENT DEVELOPMENTS (Last 30 days)
+- Latest news and announcements
+- Product launches or updates
+- Funding or financial news
+- Leadership changes
+- Strategic partnerships or acquisitions
 
-## KEY MENSEN
-- CEO en oprichter(s)
-- Directie team
-- Notable advisors of board members
-- LinkedIn profielen (indien beschikbaar)
+## KEY PEOPLE
+- CEO and founder(s)
+- Leadership team
+- Notable advisors or board members
+- LinkedIn profiles (if available)
 
-## MARKTPOSITIE
-- Belangrijkste concurrenten
-- Marktaandeel of positie
-- Groeitraject
-- Unieke onderscheidende factoren
-- Awards of erkenning
+## MARKET POSITION
+- Main competitors
+- Market share or position
+- Growth trajectory
+- Unique differentiating factors
+- Awards or recognition
 
-{"## SALES RELEVANTIE" + chr(10) + "- Wat zijn specifieke pijnpunten van " + company_name + " die onze oplossing (" + ", ".join(seller_context.get('products_services', [])[:3]) + ") kan aanpakken?" + chr(10) + "- Welke afdelingen of rollen bij " + company_name + " zijn het meest relevant?" + chr(10) + "- Welke trigger events of timing factoren zijn er?" if seller_context and seller_context.get("has_context") else "## SALES TALKING POINTS" + chr(10) + "- Potentiële pijnpunten" + chr(10) + "- Relevante use cases" + chr(10) + "- Gespreksopeners"}
+{"## SALES RELEVANCE" + chr(10) + "- What are specific pain points of " + company_name + " that our solution (" + ", ".join(seller_context.get('products_services', [])[:3]) + ") can address?" + chr(10) + "- Which departments or roles at " + company_name + " are most relevant?" + chr(10) + "- What trigger events or timing factors are there?" if seller_context and seller_context.get("has_context") else "## SALES TALKING POINTS" + chr(10) + "- Potential pain points" + chr(10) + "- Relevant use cases" + chr(10) + "- Conversation openers"}
 
-Wees grondig maar bondig. Focus op feitelijke, verifieerbare informatie. Als informatie niet beschikbaar is, vermeld dat duidelijk. Schrijf alles in het Nederlands."""
+Be thorough but concise. Focus on factual, verifiable information. If information is not available, state that clearly."""
 
         try:
             # Call Claude with web search enabled
