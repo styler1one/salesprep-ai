@@ -243,10 +243,18 @@
       "contacts": "Contacts"
     },
     "nextStep": {
-      "addContact": "Ajouter un Contact",
-      "addContactDesc": "Ajoutez d'abord un contact avant de passer à la préparation",
-      "startPrep": "Démarrer Préparation",
-      "startPrepDesc": "Aller au Brief de Réunion avec {count} contact(s)"
+      "addContact": {
+        "title": "Ajouter un Contact",
+        "description": "Ajoutez au moins un contact pour une préparation personnalisée.",
+        "button": "Ajouter un Contact",
+        "hint": "Ensuite, vous pouvez commencer la préparation"
+      },
+      "ready": {
+        "title": "Étape Suivante",
+        "description": "Créez une préparation de conversation personnalisée avec tout le contexte collecté.",
+        "button": "Démarrer Préparation",
+        "withContacts": "Avec {count} contact(s)"
+      }
     }
   },
   "preparation": {
@@ -291,12 +299,21 @@
       "item3": "Aperçu DMU",
       "item3Desc": "Décideurs cartographiés"
     },
+    "detail": {
+      "meetingContext": "Contexte de Réunion",
+      "quickActions": "Actions Rapides",
+      "researchBrief": "Brief de Recherche",
+      "linkedResearch": "Recherche Liée",
+      "yourNotes": "Vos Notes"
+    },
     "brief": {
       "view": "Voir",
       "copy": "Copier",
       "copied": "Copié !",
       "download": "Télécharger PDF",
-      "generatedFor": "Préparation pour"
+      "generatedFor": "Préparation pour",
+      "copyAll": "Tout Copier",
+      "viewResearch": "Voir Recherche"
     },
     "toast": {
       "started": "Préparation démarrée",
@@ -326,7 +343,10 @@
       "supportedFormats": "Formats supportés: MP3, WAV, M4A, WebM",
       "includeCoaching": "Inclure feedback coaching",
       "startFollowup": "Démarrer Suivi",
-      "processing": "Traitement..."
+      "processing": "Traitement...",
+      "subject": "Sujet",
+      "subjectPlaceholder": "Ex. Appel démo",
+      "date": "Date"
     },
     "history": {
       "title": "Suivis Récents",
@@ -355,13 +375,16 @@
       "actionItems": "Actions à faire",
       "emailDraft": "Brouillon Email",
       "transcription": "Transcription",
+      "copyTranscription": "Copier Transcription",
       "meetingInfo": "Info Réunion",
+      "date": "Date",
       "duration": "Durée",
       "speakers": "Intervenants",
       "linkedResearch": "Recherche Liée",
       "linkedPreparation": "Préparation Liée",
       "audioPlayer": "Lecteur Audio",
       "nextProspect": "Prochain Prospect ?",
+      "nextProspectDesc": "Lancez une nouvelle recherche pour votre prochain prospect.",
       "startNewResearch": "Démarrer nouvelle recherche"
     },
     "toast": {
@@ -449,11 +472,30 @@
     "ourStory": "Notre Histoire",
     "ourStoryDesc": "Cette histoire est utilisée par l'IA pour générer du contenu de vente personnalisé",
     "summary": "Résumé",
+    "notSet": "Non défini",
+    "noProducts": "Aucun produit ajouté",
+    "noPersonas": "Aucun persona ajouté",
+    "noCaseStudies": "Aucune étude de cas ajoutée",
     "sections": {
       "basic": "Informations de Base",
       "products": "Produits & Services",
       "market": "Marché & Concurrence",
-      "values": "Valeurs & USPs"
+      "values": "Valeurs & USPs",
+      "valueProps": "Propositions de Valeur",
+      "differentiators": "Différenciateurs",
+      "icp": "Profil Client Idéal",
+      "personas": "Personas Acheteurs",
+      "caseStudies": "Études de Cas",
+      "salesInfo": "Informations Commerciales"
+    },
+    "howUsed": {
+      "title": "Comment c'est utilisé ?",
+      "prep": "Préparation Meeting",
+      "prepDesc": "L'IA utilise vos propositions de valeur et études de cas",
+      "followup": "Emails de Suivi",
+      "followupDesc": "Les infos produits sont automatiquement ajoutées",
+      "research": "Recherche",
+      "researchDesc": "L'ICP filtre les infos prospects pertinentes"
     },
     "fields": {
       "companyName": "Nom de l'Entreprise",
@@ -493,13 +535,20 @@
       "failed": "Échoué",
       "delete": "Supprimer"
     },
+    "stats": {
+      "completed": "Traité",
+      "processing": "En cours",
+      "failed": "Échoué"
+    },
     "toast": {
       "uploaded": "Document téléchargé",
       "uploadedDesc": "Le document est en cours de traitement",
       "deleted": "Document supprimé",
       "deletedDesc": "Le document a été supprimé de la base de connaissances",
       "failed": "Téléchargement échoué",
-      "failedDesc": "Impossible de télécharger le document"
+      "failedDesc": "Impossible de télécharger le document",
+      "deleteFailed": "Échec de la suppression",
+      "deleteFailedDesc": "Impossible de supprimer le document"
     }
   },
   "auth": {
@@ -534,6 +583,18 @@
   "onboarding": {
     "title": "Bienvenue sur SalesPrep AI",
     "subtitle": "Configurons votre compte",
+    "welcome": "Bienvenue sur SalesPrep AI",
+    "welcomeDesc": "Apprenons à mieux vous connaître pour personnaliser votre expérience",
+    "starting": "Démarrage de votre interview d'intégration...",
+    "question": "Question {current} sur {total}",
+    "takeYourTime": "Prenez votre temps pour une réponse réfléchie",
+    "answerPlaceholder": "Tapez votre réponse ici...",
+    "goToDashboard": "Aller au Tableau de bord",
+    "updateProfile": "Mettre à jour le Profil",
+    "existingProfile": {
+      "title": "Le profil existe déjà",
+      "description": "Vous avez déjà un profil commercial. Voulez-vous le mettre à jour avec un nouvel interview ?"
+    },
     "steps": {
       "profile": "Profil Commercial",
       "company": "Profil d'Entreprise",
@@ -550,7 +611,8 @@
     "complete": {
       "title": "Vous êtes prêt !",
       "description": "Vous pouvez maintenant commencer votre première recherche de prospect",
-      "button": "Aller au Tableau de bord"
+      "button": "Aller au Tableau de bord",
+      "creating": "Création de votre profil..."
     },
     "skip": "Passer",
     "next": "Suivant",

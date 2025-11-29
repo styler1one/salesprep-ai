@@ -243,10 +243,18 @@
       "contacts": "Contactos"
     },
     "nextStep": {
-      "addContact": "Agregar Contacto",
-      "addContactDesc": "Agregue un contacto antes de ir a la preparación",
-      "startPrep": "Iniciar Preparación",
-      "startPrepDesc": "Ir al Brief de Reunión con {count} contacto(s)"
+      "addContact": {
+        "title": "Agregar Contacto",
+        "description": "Agrega al menos un contacto para una preparación personalizada.",
+        "button": "Agregar Contacto",
+        "hint": "Después puedes iniciar la preparación"
+      },
+      "ready": {
+        "title": "Siguiente Paso",
+        "description": "Crea una preparación de conversación personalizada con todo el contexto recopilado.",
+        "button": "Iniciar Preparación",
+        "withContacts": "Con {count} contacto(s)"
+      }
     }
   },
   "preparation": {
@@ -291,12 +299,21 @@
       "item3": "Resumen DMU",
       "item3Desc": "Tomadores de decisiones mapeados"
     },
+    "detail": {
+      "meetingContext": "Contexto de Reunión",
+      "quickActions": "Acciones Rápidas",
+      "researchBrief": "Brief de Investigación",
+      "linkedResearch": "Investigación Vinculada",
+      "yourNotes": "Tus Notas"
+    },
     "brief": {
       "view": "Ver",
       "copy": "Copiar",
       "copied": "¡Copiado!",
       "download": "Descargar PDF",
-      "generatedFor": "Preparación para"
+      "generatedFor": "Preparación para",
+      "copyAll": "Copiar Todo",
+      "viewResearch": "Ver Investigación"
     },
     "toast": {
       "started": "Preparación iniciada",
@@ -326,7 +343,10 @@
       "supportedFormats": "Formatos soportados: MP3, WAV, M4A, WebM",
       "includeCoaching": "Incluir feedback de coaching",
       "startFollowup": "Iniciar Seguimiento",
-      "processing": "Procesando..."
+      "processing": "Procesando...",
+      "subject": "Asunto",
+      "subjectPlaceholder": "Ej. Llamada demo",
+      "date": "Fecha"
     },
     "history": {
       "title": "Seguimientos Recientes",
@@ -355,13 +375,16 @@
       "actionItems": "Puntos de Acción",
       "emailDraft": "Borrador de Email",
       "transcription": "Transcripción",
+      "copyTranscription": "Copiar Transcripción",
       "meetingInfo": "Info de Reunión",
+      "date": "Fecha",
       "duration": "Duración",
       "speakers": "Participantes",
       "linkedResearch": "Investigación Vinculada",
       "linkedPreparation": "Preparación Vinculada",
       "audioPlayer": "Reproductor de Audio",
       "nextProspect": "¿Siguiente Prospecto?",
+      "nextProspectDesc": "Inicia una nueva investigación para tu próximo prospecto.",
       "startNewResearch": "Iniciar nueva investigación"
     },
     "toast": {
@@ -449,11 +472,30 @@
     "ourStory": "Nuestra Historia",
     "ourStoryDesc": "Esta historia es usada por la IA para generar contenido de ventas personalizado",
     "summary": "Resumen",
+    "notSet": "No configurado",
+    "noProducts": "Sin productos añadidos",
+    "noPersonas": "Sin personas añadidas",
+    "noCaseStudies": "Sin casos de estudio añadidos",
     "sections": {
       "basic": "Información Básica",
       "products": "Productos y Servicios",
       "market": "Mercado y Competencia",
-      "values": "Valores y USPs"
+      "values": "Valores y USPs",
+      "valueProps": "Propuestas de Valor",
+      "differentiators": "Diferenciadores",
+      "icp": "Perfil de Cliente Ideal",
+      "personas": "Buyer Personas",
+      "caseStudies": "Casos de Estudio",
+      "salesInfo": "Información de Ventas"
+    },
+    "howUsed": {
+      "title": "¿Cómo se usa?",
+      "prep": "Preparación Meeting",
+      "prepDesc": "La IA usa tus propuestas de valor y casos de estudio",
+      "followup": "Emails de Seguimiento",
+      "followupDesc": "La info de producto se añade automáticamente",
+      "research": "Investigación",
+      "researchDesc": "El ICP filtra info de prospectos relevante"
     },
     "fields": {
       "companyName": "Nombre de Empresa",
@@ -493,13 +535,20 @@
       "failed": "Fallido",
       "delete": "Eliminar"
     },
+    "stats": {
+      "completed": "Procesado",
+      "processing": "En proceso",
+      "failed": "Fallido"
+    },
     "toast": {
       "uploaded": "Documento subido",
       "uploadedDesc": "El documento está siendo procesado",
       "deleted": "Documento eliminado",
       "deletedDesc": "El documento ha sido eliminado de la base de conocimiento",
       "failed": "Subida fallida",
-      "failedDesc": "No se pudo subir el documento"
+      "failedDesc": "No se pudo subir el documento",
+      "deleteFailed": "Fallo al eliminar",
+      "deleteFailedDesc": "No se pudo eliminar el documento"
     }
   },
   "auth": {
@@ -534,6 +583,18 @@
   "onboarding": {
     "title": "Bienvenido a SalesPrep AI",
     "subtitle": "Configuremos tu cuenta",
+    "welcome": "Bienvenido a SalesPrep AI",
+    "welcomeDesc": "Conozcámonos mejor para personalizar tu experiencia",
+    "starting": "Iniciando tu entrevista de incorporación...",
+    "question": "Pregunta {current} de {total}",
+    "takeYourTime": "Tómate tu tiempo para una respuesta reflexiva",
+    "answerPlaceholder": "Escribe tu respuesta aquí...",
+    "goToDashboard": "Ir al Panel",
+    "updateProfile": "Actualizar Perfil",
+    "existingProfile": {
+      "title": "El perfil ya existe",
+      "description": "Ya tienes un perfil de ventas. ¿Quieres actualizarlo con una nueva entrevista?"
+    },
     "steps": {
       "profile": "Perfil de Ventas",
       "company": "Perfil de Empresa",
@@ -550,7 +611,8 @@
     "complete": {
       "title": "¡Todo listo!",
       "description": "Ahora puedes comenzar tu primera investigación de prospectos",
-      "button": "Ir al Panel"
+      "button": "Ir al Panel",
+      "creating": "Creando tu perfil..."
     },
     "skip": "Saltar",
     "next": "Siguiente",

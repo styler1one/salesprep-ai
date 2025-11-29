@@ -243,10 +243,18 @@
       "contacts": "संपर्क"
     },
     "nextStep": {
-      "addContact": "संपर्क जोड़ें",
-      "addContactDesc": "तैयारी में जाने से पहले पहले एक संपर्क जोड़ें",
-      "startPrep": "तैयारी शुरू करें",
-      "startPrepDesc": "{count} संपर्क(ों) के साथ मीटिंग ब्रीफ पर जाएं"
+      "addContact": {
+        "title": "संपर्क जोड़ें",
+        "description": "व्यक्तिगत तैयारी के लिए कम से कम एक संपर्क जोड़ें।",
+        "button": "संपर्क जोड़ें",
+        "hint": "उसके बाद आप तैयारी शुरू कर सकते हैं"
+      },
+      "ready": {
+        "title": "अगला कदम",
+        "description": "सभी एकत्रित संदर्भ के साथ व्यक्तिगत बातचीत तैयारी बनाएं।",
+        "button": "तैयारी शुरू करें",
+        "withContacts": "{count} संपर्क(ों) के साथ"
+      }
     }
   },
   "preparation": {
@@ -291,12 +299,21 @@
       "item3": "DMU अवलोकन",
       "item3Desc": "निर्णयकर्ता मैप किए गए"
     },
+    "detail": {
+      "meetingContext": "मीटिंग संदर्भ",
+      "quickActions": "त्वरित क्रियाएं",
+      "researchBrief": "रिसर्च ब्रीफ",
+      "linkedResearch": "लिंक्ड रिसर्च",
+      "yourNotes": "आपके नोट्स"
+    },
     "brief": {
       "view": "देखें",
       "copy": "कॉपी",
       "copied": "कॉपी हो गया!",
       "download": "PDF डाउनलोड करें",
-      "generatedFor": "तैयारी के लिए"
+      "generatedFor": "तैयारी के लिए",
+      "copyAll": "सब कॉपी करें",
+      "viewResearch": "रिसर्च देखें"
     },
     "toast": {
       "started": "तैयारी शुरू",
@@ -326,7 +343,10 @@
       "supportedFormats": "समर्थित फॉर्मेट: MP3, WAV, M4A, WebM",
       "includeCoaching": "कोचिंग फीडबैक शामिल करें",
       "startFollowup": "फॉलो-अप शुरू करें",
-      "processing": "प्रोसेस हो रहा है..."
+      "processing": "प्रोसेस हो रहा है...",
+      "subject": "विषय",
+      "subjectPlaceholder": "जैसे डेमो कॉल",
+      "date": "तारीख"
     },
     "history": {
       "title": "हाल के फॉलो-अप्स",
@@ -355,13 +375,16 @@
       "actionItems": "कार्य आइटम",
       "emailDraft": "ईमेल ड्राफ्ट",
       "transcription": "ट्रांसक्रिप्शन",
+      "copyTranscription": "ट्रांसक्रिप्शन कॉपी करें",
       "meetingInfo": "मीटिंग जानकारी",
+      "date": "तारीख",
       "duration": "अवधि",
       "speakers": "वक्ता",
       "linkedResearch": "लिंक्ड रिसर्च",
       "linkedPreparation": "लिंक्ड तैयारी",
       "audioPlayer": "ऑडियो प्लेयर",
       "nextProspect": "अगला प्रॉस्पेक्ट?",
+      "nextProspectDesc": "अपने अगले प्रॉस्पेक्ट के लिए नई रिसर्च शुरू करें।",
       "startNewResearch": "नई रिसर्च शुरू करें"
     },
     "toast": {
@@ -449,11 +472,30 @@
     "ourStory": "हमारी कहानी",
     "ourStoryDesc": "इस कहानी का उपयोग AI द्वारा व्यक्तिगत बिक्री सामग्री उत्पन्न करने के लिए किया जाता है",
     "summary": "सारांश",
+    "notSet": "सेट नहीं है",
+    "noProducts": "कोई उत्पाद नहीं जोड़ा गया",
+    "noPersonas": "कोई पर्सोना नहीं जोड़ा गया",
+    "noCaseStudies": "कोई केस स्टडी नहीं जोड़ी गई",
     "sections": {
       "basic": "मूल जानकारी",
       "products": "उत्पाद और सेवाएं",
       "market": "बाजार और प्रतिस्पर्धा",
-      "values": "मूल्य और USPs"
+      "values": "मूल्य और USPs",
+      "valueProps": "वैल्यू प्रोपोजिशन",
+      "differentiators": "डिफरेंशिएटर्स",
+      "icp": "आदर्श ग्राहक प्रोफाइल",
+      "personas": "बायर पर्सोनास",
+      "caseStudies": "केस स्टडीज",
+      "salesInfo": "सेल्स जानकारी"
+    },
+    "howUsed": {
+      "title": "इसका उपयोग कैसे होता है?",
+      "prep": "मीटिंग प्रेप",
+      "prepDesc": "AI आपके वैल्यू प्रॉप्स और केस स्टडीज का उपयोग करता है",
+      "followup": "फॉलो-अप ईमेल",
+      "followupDesc": "प्रोडक्ट जानकारी स्वचालित रूप से जोड़ी जाती है",
+      "research": "रिसर्च",
+      "researchDesc": "ICP प्रासंगिक प्रॉस्पेक्ट जानकारी फ़िल्टर करता है"
     },
     "fields": {
       "companyName": "कंपनी का नाम",
@@ -493,13 +535,20 @@
       "failed": "विफल",
       "delete": "हटाएं"
     },
+    "stats": {
+      "completed": "प्रोसेस हो गया",
+      "processing": "प्रोसेस हो रहा है",
+      "failed": "विफल"
+    },
     "toast": {
       "uploaded": "दस्तावेज़ अपलोड हो गया",
       "uploadedDesc": "दस्तावेज़ प्रोसेस हो रहा है",
       "deleted": "दस्तावेज़ हटाया गया",
       "deletedDesc": "दस्तावेज़ ज्ञान आधार से हटा दिया गया है",
       "failed": "अपलोड विफल",
-      "failedDesc": "दस्तावेज़ अपलोड नहीं हो सका"
+      "failedDesc": "दस्तावेज़ अपलोड नहीं हो सका",
+      "deleteFailed": "हटाना विफल",
+      "deleteFailedDesc": "दस्तावेज़ हटाया नहीं जा सका"
     }
   },
   "auth": {
@@ -534,6 +583,18 @@
   "onboarding": {
     "title": "SalesPrep AI में स्वागत है",
     "subtitle": "चलिए आपका अकाउंट सेट करते हैं",
+    "welcome": "SalesPrep AI में स्वागत है",
+    "welcomeDesc": "आपके अनुभव को व्यक्तिगत बनाने के लिए आपको बेहतर जानते हैं",
+    "starting": "आपका ऑनबोर्डिंग इंटरव्यू शुरू हो रहा है...",
+    "question": "प्रश्न {current} का {total}",
+    "takeYourTime": "सोच-समझकर जवाब देने के लिए अपना समय लें",
+    "answerPlaceholder": "यहां अपना जवाब टाइप करें...",
+    "goToDashboard": "डैशबोर्ड पर जाएं",
+    "updateProfile": "प्रोफाइल अपडेट करें",
+    "existingProfile": {
+      "title": "प्रोफाइल पहले से मौजूद है",
+      "description": "आपके पास पहले से एक सेल्स प्रोफाइल है। क्या आप इसे नए इंटरव्यू से अपडेट करना चाहते हैं?"
+    },
     "steps": {
       "profile": "सेल्स प्रोफाइल",
       "company": "कंपनी प्रोफाइल",
@@ -550,7 +611,8 @@
     "complete": {
       "title": "आप तैयार हैं!",
       "description": "अब आप अपनी पहली प्रॉस्पेक्ट रिसर्च शुरू कर सकते हैं",
-      "button": "डैशबोर्ड पर जाएं"
+      "button": "डैशबोर्ड पर जाएं",
+      "creating": "आपका प्रोफाइल बनाया जा रहा है..."
     },
     "skip": "छोड़ें",
     "next": "अगला",

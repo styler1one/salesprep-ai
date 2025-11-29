@@ -243,10 +243,18 @@
       "contacts": "جهات الاتصال"
     },
     "nextStep": {
-      "addContact": "إضافة جهة اتصال",
-      "addContactDesc": "أضف جهة اتصال أولاً قبل الانتقال للتحضير",
-      "startPrep": "بدء التحضير",
-      "startPrepDesc": "الانتقال لملخص الاجتماع مع {count} جهة اتصال"
+      "addContact": {
+        "title": "إضافة جهة اتصال",
+        "description": "أضف جهة اتصال واحدة على الأقل للحصول على تحضير مخصص.",
+        "button": "إضافة جهة اتصال",
+        "hint": "بعد ذلك يمكنك بدء التحضير"
+      },
+      "ready": {
+        "title": "الخطوة التالية",
+        "description": "أنشئ تحضيراً مخصصاً للمحادثة مع كل السياق المجمع.",
+        "button": "بدء التحضير",
+        "withContacts": "مع {count} جهة اتصال"
+      }
     }
   },
   "preparation": {
@@ -291,12 +299,21 @@
       "item3": "نظرة عامة على DMU",
       "item3Desc": "صناع القرار محددين"
     },
+    "detail": {
+      "meetingContext": "سياق الاجتماع",
+      "quickActions": "إجراءات سريعة",
+      "researchBrief": "ملخص البحث",
+      "linkedResearch": "البحث المرتبط",
+      "yourNotes": "ملاحظاتك"
+    },
     "brief": {
       "view": "عرض",
       "copy": "نسخ",
       "copied": "تم النسخ!",
       "download": "تحميل PDF",
-      "generatedFor": "تحضير لـ"
+      "generatedFor": "تحضير لـ",
+      "copyAll": "نسخ الكل",
+      "viewResearch": "عرض البحث"
     },
     "toast": {
       "started": "بدأ التحضير",
@@ -326,7 +343,10 @@
       "supportedFormats": "الصيغ المدعومة: MP3, WAV, M4A, WebM",
       "includeCoaching": "تضمين ملاحظات التدريب",
       "startFollowup": "بدء المتابعة",
-      "processing": "جاري المعالجة..."
+      "processing": "جاري المعالجة...",
+      "subject": "الموضوع",
+      "subjectPlaceholder": "مثال: مكالمة عرض",
+      "date": "التاريخ"
     },
     "history": {
       "title": "المتابعات الأخيرة",
@@ -355,13 +375,16 @@
       "actionItems": "عناصر العمل",
       "emailDraft": "مسودة البريد",
       "transcription": "النسخ",
+      "copyTranscription": "نسخ النص",
       "meetingInfo": "معلومات الاجتماع",
+      "date": "التاريخ",
       "duration": "المدة",
       "speakers": "المتحدثون",
       "linkedResearch": "البحث المرتبط",
       "linkedPreparation": "التحضير المرتبط",
       "audioPlayer": "مشغل الصوت",
       "nextProspect": "العميل المحتمل التالي؟",
+      "nextProspectDesc": "ابدأ بحثاً جديداً لعميلك المحتمل التالي.",
       "startNewResearch": "بدء بحث جديد"
     },
     "toast": {
@@ -449,11 +472,30 @@
     "ourStory": "قصتنا",
     "ourStoryDesc": "تُستخدم هذه القصة من قبل الذكاء الاصطناعي لإنشاء محتوى مبيعات مخصص",
     "summary": "الملخص",
+    "notSet": "غير محدد",
+    "noProducts": "لم تتم إضافة منتجات",
+    "noPersonas": "لم تتم إضافة شخصيات",
+    "noCaseStudies": "لم تتم إضافة دراسات حالة",
     "sections": {
       "basic": "المعلومات الأساسية",
       "products": "المنتجات والخدمات",
       "market": "السوق والمنافسة",
-      "values": "القيم والمميزات"
+      "values": "القيم والمميزات",
+      "valueProps": "عروض القيمة",
+      "differentiators": "المميزات الفريدة",
+      "icp": "ملف العميل المثالي",
+      "personas": "شخصيات المشترين",
+      "caseStudies": "دراسات الحالة",
+      "salesInfo": "معلومات المبيعات"
+    },
+    "howUsed": {
+      "title": "كيف يُستخدم هذا؟",
+      "prep": "تحضير الاجتماع",
+      "prepDesc": "يستخدم الذكاء الاصطناعي عروض القيمة ودراسات الحالة",
+      "followup": "رسائل المتابعة",
+      "followupDesc": "تُضاف معلومات المنتج تلقائياً",
+      "research": "البحث",
+      "researchDesc": "يُفلتر الملف المثالي معلومات العملاء المحتملين"
     },
     "fields": {
       "companyName": "اسم الشركة",
@@ -493,13 +535,20 @@
       "failed": "فشل",
       "delete": "حذف"
     },
+    "stats": {
+      "completed": "تمت المعالجة",
+      "processing": "قيد المعالجة",
+      "failed": "فشل"
+    },
     "toast": {
       "uploaded": "تم رفع المستند",
       "uploadedDesc": "جاري معالجة المستند",
       "deleted": "تم حذف المستند",
       "deletedDesc": "تم حذف المستند من قاعدة المعرفة",
       "failed": "فشل الرفع",
-      "failedDesc": "تعذر رفع المستند"
+      "failedDesc": "تعذر رفع المستند",
+      "deleteFailed": "فشل الحذف",
+      "deleteFailedDesc": "تعذر حذف المستند"
     }
   },
   "auth": {
@@ -534,6 +583,18 @@
   "onboarding": {
     "title": "مرحباً بك في SalesPrep AI",
     "subtitle": "لنقم بإعداد حسابك",
+    "welcome": "مرحباً بك في SalesPrep AI",
+    "welcomeDesc": "دعنا نتعرف عليك بشكل أفضل لتخصيص تجربتك",
+    "starting": "جاري بدء مقابلة الإعداد الخاصة بك...",
+    "question": "السؤال {current} من {total}",
+    "takeYourTime": "خذ وقتك للإجابة المدروسة",
+    "answerPlaceholder": "اكتب إجابتك هنا...",
+    "goToDashboard": "انتقل للوحة التحكم",
+    "updateProfile": "تحديث الملف الشخصي",
+    "existingProfile": {
+      "title": "الملف الشخصي موجود بالفعل",
+      "description": "لديك بالفعل ملف مبيعات. هل تريد تحديثه بمقابلة جديدة؟"
+    },
     "steps": {
       "profile": "ملف المبيعات",
       "company": "ملف الشركة",
@@ -550,7 +611,8 @@
     "complete": {
       "title": "أنت جاهز!",
       "description": "يمكنك الآن البدء في أول بحث عن عميل محتمل",
-      "button": "انتقل للوحة التحكم"
+      "button": "انتقل للوحة التحكم",
+      "creating": "جاري إنشاء ملفك الشخصي..."
     },
     "skip": "تخطي",
     "next": "التالي",

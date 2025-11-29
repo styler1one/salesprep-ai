@@ -243,10 +243,18 @@
       "contacts": "Kontaktpersonen"
     },
     "nextStep": {
-      "addContact": "Kontaktperson hinzufügen",
-      "addContactDesc": "Erst eine Kontaktperson hinzufügen bevor du zur Vorbereitung gehst",
-      "startPrep": "Vorbereitung starten",
-      "startPrepDesc": "Zum Meeting-Brief mit {count} Kontakt(en)"
+      "addContact": {
+        "title": "Kontaktperson hinzufügen",
+        "description": "Füge mindestens eine Kontaktperson für eine personalisierte Vorbereitung hinzu.",
+        "button": "Kontaktperson hinzufügen",
+        "hint": "Danach kannst du die Vorbereitung starten"
+      },
+      "ready": {
+        "title": "Nächster Schritt",
+        "description": "Erstelle eine personalisierte Gesprächsvorbereitung mit allen gesammelten Informationen.",
+        "button": "Vorbereitung starten",
+        "withContacts": "Mit {count} Kontaktperson(en)"
+      }
     }
   },
   "preparation": {
@@ -291,12 +299,21 @@
       "item3": "DMU-Übersicht",
       "item3Desc": "Entscheidungsträger kartiert"
     },
+    "detail": {
+      "meetingContext": "Meeting-Kontext",
+      "quickActions": "Schnellaktionen",
+      "researchBrief": "Research Brief",
+      "linkedResearch": "Verknüpfte Recherche",
+      "yourNotes": "Deine Notizen"
+    },
     "brief": {
       "view": "Ansehen",
       "copy": "Kopieren",
       "copied": "Kopiert!",
       "download": "PDF herunterladen",
-      "generatedFor": "Vorbereitung für"
+      "generatedFor": "Vorbereitung für",
+      "copyAll": "Alles kopieren",
+      "viewResearch": "Recherche ansehen"
     },
     "toast": {
       "started": "Vorbereitung gestartet",
@@ -326,7 +343,10 @@
       "supportedFormats": "Unterstützte Formate: MP3, WAV, M4A, WebM",
       "includeCoaching": "Coaching-Feedback einbeziehen",
       "startFollowup": "Follow-up starten",
-      "processing": "Verarbeiten..."
+      "processing": "Verarbeiten...",
+      "subject": "Betreff",
+      "subjectPlaceholder": "z.B. Demo-Gespräch",
+      "date": "Datum"
     },
     "history": {
       "title": "Aktuelle Follow-ups",
@@ -355,13 +375,16 @@
       "actionItems": "Aktionspunkte",
       "emailDraft": "E-Mail-Entwurf",
       "transcription": "Transkription",
+      "copyTranscription": "Transkription kopieren",
       "meetingInfo": "Meeting-Info",
+      "date": "Datum",
       "duration": "Dauer",
       "speakers": "Sprecher",
       "linkedResearch": "Verknüpfte Recherche",
       "linkedPreparation": "Verknüpfte Vorbereitung",
       "audioPlayer": "Audio-Player",
       "nextProspect": "Nächster Interessent?",
+      "nextProspectDesc": "Starte eine neue Recherche für deinen nächsten Interessenten.",
       "startNewResearch": "Neue Recherche starten"
     },
     "toast": {
@@ -518,13 +541,20 @@
       "failed": "Fehlgeschlagen",
       "delete": "Löschen"
     },
+    "stats": {
+      "completed": "Verarbeitet",
+      "processing": "In Bearbeitung",
+      "failed": "Fehlgeschlagen"
+    },
     "toast": {
       "uploaded": "Dokument hochgeladen",
       "uploadedDesc": "Das Dokument wird verarbeitet",
       "deleted": "Dokument gelöscht",
       "deletedDesc": "Das Dokument wurde aus der Wissensdatenbank entfernt",
       "failed": "Upload fehlgeschlagen",
-      "failedDesc": "Konnte Dokument nicht hochladen"
+      "failedDesc": "Konnte Dokument nicht hochladen",
+      "deleteFailed": "Löschen fehlgeschlagen",
+      "deleteFailedDesc": "Konnte das Dokument nicht löschen"
     }
   },
   "auth": {
@@ -559,6 +589,18 @@
   "onboarding": {
     "title": "Willkommen bei SalesPrep AI",
     "subtitle": "Lass uns dein Konto einrichten",
+    "welcome": "Willkommen bei SalesPrep AI",
+    "welcomeDesc": "Lass uns dich besser kennenlernen, um deine Erfahrung zu personalisieren",
+    "starting": "Dein Onboarding-Interview startet...",
+    "question": "Frage {current} von {total}",
+    "takeYourTime": "Nimm dir Zeit für eine durchdachte Antwort",
+    "answerPlaceholder": "Gib hier deine Antwort ein...",
+    "goToDashboard": "Zum Dashboard",
+    "updateProfile": "Profil aktualisieren",
+    "existingProfile": {
+      "title": "Profil existiert bereits",
+      "description": "Du hast bereits ein Verkaufsprofil. Möchtest du es mit einem neuen Interview aktualisieren?"
+    },
     "steps": {
       "profile": "Verkaufsprofil",
       "company": "Unternehmensprofil",
@@ -575,7 +617,8 @@
     "complete": {
       "title": "Du bist startklar!",
       "description": "Du kannst jetzt mit deiner ersten Interessenten-Recherche beginnen",
-      "button": "Zum Dashboard"
+      "button": "Zum Dashboard",
+      "creating": "Dein Profil wird erstellt..."
     },
     "skip": "Überspringen",
     "next": "Weiter",
