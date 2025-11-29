@@ -4,40 +4,18 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
+import { Icons } from '@/components/icons'
 import { useToast } from '@/components/ui/use-toast'
-import { 
-  ArrowLeft, 
-  Copy, 
-  CheckCircle2, 
-  Clock, 
-  Users,
-  Loader2,
-  Mail,
-  ListTodo,
-  FileText,
-  AlertCircle,
-  Lightbulb,
-  RefreshCw,
-  Play,
-  ChevronDown,
-  ChevronUp,
-  TrendingUp,
-  Search,
-  Target,
-  Flag,
-  MessageCircle,
-  Award,
-  Zap,
-  AlertTriangle
-} from 'lucide-react'
+import { Toaster } from '@/components/ui/toaster'
+import { DashboardLayout } from '@/components/layout/dashboard-layout'
 
 interface Followup {
   id: string
   organization_id: string
   user_id: string
   meeting_prep_id: string | null
+  prospect_id: string | null
   audio_url: string | null
   audio_filename: string | null
   audio_duration_seconds: number | null
@@ -59,7 +37,6 @@ interface Followup {
   error_message: string | null
   created_at: string
   completed_at: string | null
-  // NEW: Enhanced follow-up fields
   include_coaching: boolean
   commercial_signals: {
     koopsignalen: string[]
@@ -80,6 +57,19 @@ interface Followup {
   full_summary_content: string | null
 }
 
+interface ResearchBrief {
+  id: string
+  company_name: string
+  completed_at: string
+}
+
+interface MeetingPrep {
+  id: string
+  prospect_company_name: string
+  meeting_type: string
+  completed_at: string
+}
+
 export default function FollowupDetailPage() {
   const router = useRouter()
   const params = useParams()
@@ -87,20 +77,23 @@ export default function FollowupDetailPage() {
   const supabase = createClientComponentClient()
   const { toast } = useToast()
   
+  const [user, setUser] = useState<any>(null)
   const [followup, setFollowup] = useState<Followup | null>(null)
   const [loading, setLoading] = useState(true)
   const [emailDraft, setEmailDraft] = useState('')
   const [regeneratingEmail, setRegeneratingEmail] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    summary: true,
-    commercialSignals: true,  // NEW
-    observations: true,       // NEW
-    coaching: true,           // NEW
-    transcription: false,
-    actionItems: true,
-    email: true
-  })
+  const [showTranscript, setShowTranscript] = useState(false)
+  const [researchBrief, setResearchBrief] = useState<ResearchBrief | null>(null)
+  const [meetingPrep, setMeetingPrep] = useState<MeetingPrep | null>(null)
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+    }
+    getUser()
+  }, [supabase])
 
   const fetchFollowup = useCallback(async () => {
     try {
@@ -109,22 +102,20 @@ export default function FollowupDetailPage() {
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/followup/${followupId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        }
+        { headers: { 'Authorization': `Bearer ${session.access_token}` } }
       )
 
       if (response.ok) {
         const data = await response.json()
         setFollowup(data)
         setEmailDraft(data.email_draft || '')
+        
+        // Fetch related research and prep
+        if (data.prospect_company_name) {
+          fetchRelatedData(data.prospect_company_name, session.access_token)
+        }
       } else {
-        toast({
-          title: 'Follow-up niet gevonden',
-          variant: 'destructive'
-        })
+        toast({ title: 'Follow-up niet gevonden', variant: 'destructive' })
         router.push('/dashboard/followup')
       }
     } catch (error) {
@@ -134,10 +125,41 @@ export default function FollowupDetailPage() {
     }
   }, [followupId, supabase, router, toast])
 
+  const fetchRelatedData = async (companyName: string, token: string) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      
+      // Fetch research briefs
+      const researchRes = await fetch(`${apiUrl}/api/v1/research/briefs`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (researchRes.ok) {
+        const data = await researchRes.json()
+        const brief = data.briefs?.find((b: any) => 
+          b.company_name.toLowerCase() === companyName.toLowerCase() && b.status === 'completed'
+        )
+        if (brief) setResearchBrief(brief)
+      }
+
+      // Fetch meeting preps
+      const prepRes = await fetch(`${apiUrl}/api/v1/prep/briefs`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (prepRes.ok) {
+        const data = await prepRes.json()
+        const prep = data.preps?.find((p: any) => 
+          p.prospect_company_name.toLowerCase() === companyName.toLowerCase() && p.status === 'completed'
+        )
+        if (prep) setMeetingPrep(prep)
+      }
+    } catch (error) {
+      console.error('Error fetching related data:', error)
+    }
+  }
+
   useEffect(() => {
     fetchFollowup()
     
-    // Poll while processing
     const interval = setInterval(() => {
       if (followup && ['uploading', 'transcribing', 'summarizing'].includes(followup.status)) {
         fetchFollowup()
@@ -178,48 +200,10 @@ export default function FollowupDetailPage() {
         toast({ title: 'Email opnieuw gegenereerd' })
       }
     } catch (error) {
-      toast({
-        title: 'Regenereren mislukt',
-        variant: 'destructive'
-      })
+      toast({ title: 'Regenereren mislukt', variant: 'destructive' })
     } finally {
       setRegeneratingEmail(false)
     }
-  }
-
-  const handleSaveEmail = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/followup/${followupId}`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ email_draft: emailDraft })
-        }
-      )
-
-      if (response.ok) {
-        toast({ title: 'Email opgeslagen' })
-      }
-    } catch (error) {
-      toast({
-        title: 'Opslaan mislukt',
-        variant: 'destructive'
-      })
-    }
-  }
-
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }))
   }
 
   const formatDuration = (seconds: number | null) => {
@@ -229,541 +213,378 @@ export default function FollowupDetailPage() {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  const formatTimestamp = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+      <DashboardLayout user={user}>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center space-y-4">
+            <Icons.spinner className="h-8 w-8 animate-spin text-orange-600 mx-auto" />
+            <p className="text-slate-500">Follow-up laden...</p>
+          </div>
+        </div>
+      </DashboardLayout>
     )
   }
 
-  if (!followup) {
-    return null
-  }
+  if (!followup) return null
 
   const isProcessing = ['uploading', 'transcribing', 'summarizing'].includes(followup.status)
+  const hasCommercialSignals = followup.commercial_signals && (
+    followup.commercial_signals.koopsignalen?.length > 0 ||
+    followup.commercial_signals.cross_sell?.length > 0 ||
+    followup.commercial_signals.risks?.length > 0
+  )
+  const hasObservations = followup.observations && (
+    followup.observations.doubts?.length > 0 ||
+    followup.observations.unspoken_needs?.length > 0 ||
+    followup.observations.opportunities?.length > 0 ||
+    followup.observations.red_flags?.length > 0
+  )
+  const hasCoaching = followup.include_coaching && followup.coaching_feedback && (
+    followup.coaching_feedback.strengths?.length > 0 ||
+    followup.coaching_feedback.improvements?.length > 0 ||
+    followup.coaching_feedback.tips?.length > 0
+  )
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-5xl">
-      {/* Header */}
-      <div className="mb-6">
-        <Button 
-          variant="ghost" 
-          onClick={() => router.push('/dashboard/followup')}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Terug naar Follow-ups
-        </Button>
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">
-              {followup.prospect_company_name || followup.meeting_subject || 'Meeting Follow-up'}
-            </h1>
-            <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-              {followup.meeting_date && (
-                <span>{new Date(followup.meeting_date).toLocaleDateString('nl-NL')}</span>
-              )}
-              {followup.audio_duration_seconds && (
-                <span className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  {formatDuration(followup.audio_duration_seconds)}
-                </span>
-              )}
-              {followup.speaker_count > 0 && (
-                <span className="flex items-center gap-1">
-                  <Users className="h-4 w-4" />
-                  {followup.speaker_count} sprekers
-                </span>
-              )}
-            </div>
-          </div>
-          {isProcessing && (
-            <div className="flex items-center gap-2 text-yellow-600 bg-yellow-50 px-3 py-2 rounded-lg">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm font-medium">
-                {followup.status === 'transcribing' ? 'Transcriberen...' : 
-                 followup.status === 'summarizing' ? 'Samenvatten...' : 'Verwerken...'}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Error State */}
-      {followup.status === 'failed' && (
-        <Card className="mb-6 border-red-200 bg-red-50">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-red-700">
-              <AlertCircle className="h-5 w-5" />
-              <span className="font-medium">Verwerking mislukt</span>
-            </div>
-            <p className="text-sm text-red-600 mt-1">{followup.error_message}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {followup.status === 'completed' && (
-        <div className="space-y-6">
-          {/* Executive Summary */}
-          <Card>
-            <CardHeader 
-              className="cursor-pointer" 
-              onClick={() => toggleSection('summary')}
+    <DashboardLayout user={user}>
+      <>
+        <div className="p-4 lg:p-6">
+          {/* Page Header */}
+          <div className="flex items-center gap-4 mb-6">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/dashboard/followup')}
             >
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Samenvatting
-                </CardTitle>
-                {expandedSections.summary ? <ChevronUp /> : <ChevronDown />}
+              <Icons.arrowLeft className="h-4 w-4 mr-2" />
+              Terug
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">
+                {followup.prospect_company_name || followup.meeting_subject || 'Meeting Follow-up'}
+              </h1>
+              <div className="flex items-center gap-3 text-sm text-slate-500">
+                {followup.meeting_date && (
+                  <span>{new Date(followup.meeting_date).toLocaleDateString('nl-NL')}</span>
+                )}
+                {followup.audio_duration_seconds && (
+                  <span className="flex items-center gap-1">
+                    <Icons.clock className="h-3 w-3" />
+                    {formatDuration(followup.audio_duration_seconds)}
+                  </span>
+                )}
+                {followup.speaker_count > 0 && (
+                  <span className="flex items-center gap-1">
+                    <Icons.users className="h-3 w-3" />
+                    {followup.speaker_count} sprekers
+                  </span>
+                )}
               </div>
-            </CardHeader>
-            {expandedSections.summary && (
-              <CardContent className="space-y-4">
-                {/* Executive Summary */}
-                {followup.executive_summary && (
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <p className="text-sm">{followup.executive_summary}</p>
-                  </div>
-                )}
-
-                {/* Key Points */}
-                {followup.key_points?.length > 0 && (
-                  <div>
-                    <h4 className="font-medium mb-2 flex items-center gap-2">
-                      <Lightbulb className="h-4 w-4 text-yellow-500" />
-                      Belangrijkste Punten
-                    </h4>
-                    <ul className="space-y-1">
-                      {followup.key_points.map((point, i) => (
-                        <li key={i} className="text-sm flex items-start gap-2">
-                          <span className="text-blue-500">•</span>
-                          {point}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Concerns */}
-                {followup.concerns?.length > 0 && (
-                  <div>
-                    <h4 className="font-medium mb-2 flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4 text-orange-500" />
-                      Bezwaren & Zorgen
-                    </h4>
-                    <ul className="space-y-1">
-                      {followup.concerns.map((concern, i) => (
-                        <li key={i} className="text-sm flex items-start gap-2">
-                          <span className="text-orange-500">•</span>
-                          {concern}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Decisions */}
-                {followup.decisions?.length > 0 && (
-                  <div>
-                    <h4 className="font-medium mb-2 flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Beslissingen
-                    </h4>
-                    <ul className="space-y-1">
-                      {followup.decisions.map((decision, i) => (
-                        <li key={i} className="text-sm flex items-start gap-2">
-                          <span className="text-green-500">•</span>
-                          {decision}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Next Steps */}
-                {followup.next_steps?.length > 0 && (
-                  <div>
-                    <h4 className="font-medium mb-2 flex items-center gap-2">
-                      <ArrowLeft className="h-4 w-4 rotate-180 text-purple-500" />
-                      Vervolgstappen
-                    </h4>
-                    <ul className="space-y-1">
-                      {followup.next_steps.map((step, i) => (
-                        <li key={i} className="text-sm flex items-start gap-2">
-                          <span className="text-purple-500">•</span>
-                          {step}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleCopy(
-                    `Samenvatting: ${followup.executive_summary}\n\nBelangrijkste punten:\n${followup.key_points?.join('\n')}\n\nVervolgstappen:\n${followup.next_steps?.join('\n')}`,
-                    'summary'
-                  )}
-                >
-                  <Copy className="h-4 w-4 mr-2" />
-                  {copied === 'summary' ? 'Gekopieerd!' : 'Kopieer Samenvatting'}
-                </Button>
-              </CardContent>
+            </div>
+            {isProcessing && (
+              <div className="ml-auto flex items-center gap-2 text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
+                <Icons.spinner className="h-4 w-4 animate-spin" />
+                <span className="text-sm font-medium">
+                  {followup.status === 'transcribing' ? 'Transcriberen...' : 
+                   followup.status === 'summarizing' ? 'Samenvatten...' : 'Verwerken...'}
+                </span>
+              </div>
             )}
-          </Card>
+          </div>
 
-          {/* 💰 Commercial Signals - NEW */}
-          {followup.commercial_signals && (
-            followup.commercial_signals.koopsignalen?.length > 0 || 
-            followup.commercial_signals.cross_sell?.length > 0 || 
-            followup.commercial_signals.risks?.length > 0
-          ) && (
-            <Card className="border-amber-200 bg-amber-50/30">
-              <CardHeader 
-                className="cursor-pointer" 
-                onClick={() => toggleSection('commercialSignals')}
-              >
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-amber-600" />
-                    💰 Commerciële Signalen
-                  </CardTitle>
-                  {expandedSections.commercialSignals ? <ChevronUp /> : <ChevronDown />}
-                </div>
-              </CardHeader>
-              {expandedSections.commercialSignals && (
-                <CardContent className="space-y-4">
-                  {/* Koopsignalen (BANT) */}
-                  {followup.commercial_signals?.koopsignalen?.length > 0 && (
-                    <div>
-                      <h4 className="font-medium mb-2 flex items-center gap-2">
-                        <Target className="h-4 w-4 text-green-600" />
-                        Koopsignalen (BANT)
-                      </h4>
-                      <ul className="space-y-1 bg-white/50 p-3 rounded-lg">
-                        {followup.commercial_signals.koopsignalen.map((signal, i) => (
-                          <li key={i} className="text-sm flex items-start gap-2">
-                            <span className="text-green-600">✓</span>
-                            {signal}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Cross-sell & Upsell */}
-                  {followup.commercial_signals?.cross_sell?.length > 0 && (
-                    <div>
-                      <h4 className="font-medium mb-2 flex items-center gap-2">
-                        <Zap className="h-4 w-4 text-blue-600" />
-                        Cross-sell & Upsell Kansen
-                      </h4>
-                      <ul className="space-y-1 bg-white/50 p-3 rounded-lg">
-                        {followup.commercial_signals.cross_sell.map((opportunity, i) => (
-                          <li key={i} className="text-sm flex items-start gap-2">
-                            <span className="text-blue-600">💡</span>
-                            {opportunity}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Deal Risks */}
-                  {followup.commercial_signals?.risks?.length > 0 && (
-                    <div>
-                      <h4 className="font-medium mb-2 flex items-center gap-2">
-                        <AlertTriangle className="h-4 w-4 text-red-600" />
-                        Deal Risico's
-                      </h4>
-                      <ul className="space-y-1 bg-red-50 p-3 rounded-lg">
-                        {followup.commercial_signals.risks.map((risk, i) => (
-                          <li key={i} className="text-sm flex items-start gap-2">
-                            <span className="text-red-600">⚠️</span>
-                            {risk}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </CardContent>
-              )}
-            </Card>
-          )}
-
-          {/* 🔎 Observations & Signals - NEW */}
-          {followup.observations && (
-            followup.observations.doubts?.length > 0 || 
-            followup.observations.unspoken_needs?.length > 0 || 
-            followup.observations.opportunities?.length > 0 ||
-            followup.observations.red_flags?.length > 0
-          ) && (
-            <Card className="border-indigo-200 bg-indigo-50/30">
-              <CardHeader 
-                className="cursor-pointer" 
-                onClick={() => toggleSection('observations')}
-              >
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Search className="h-5 w-5 text-indigo-600" />
-                    🔎 Observaties & Signalen
-                  </CardTitle>
-                  {expandedSections.observations ? <ChevronUp /> : <ChevronDown />}
-                </div>
-              </CardHeader>
-              {expandedSections.observations && (
-                <CardContent className="space-y-4">
-                  {/* Doubts */}
-                  {followup.observations?.doubts?.length > 0 && (
-                    <div>
-                      <h4 className="font-medium mb-2 flex items-center gap-2">
-                        <AlertCircle className="h-4 w-4 text-amber-600" />
-                        ⚠️ Twijfel Gedetecteerd
-                      </h4>
-                      <ul className="space-y-1 bg-amber-50 p-3 rounded-lg">
-                        {followup.observations.doubts.map((doubt, i) => (
-                          <li key={i} className="text-sm flex items-start gap-2">
-                            <span className="text-amber-600">•</span>
-                            {doubt}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Unspoken Needs */}
-                  {followup.observations?.unspoken_needs?.length > 0 && (
-                    <div>
-                      <h4 className="font-medium mb-2 flex items-center gap-2">
-                        <Lightbulb className="h-4 w-4 text-yellow-600" />
-                        💡 Onuitgesproken Behoeften
-                      </h4>
-                      <ul className="space-y-1 bg-yellow-50 p-3 rounded-lg">
-                        {followup.observations.unspoken_needs.map((need, i) => (
-                          <li key={i} className="text-sm flex items-start gap-2">
-                            <span className="text-yellow-600">•</span>
-                            {need}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Opportunities */}
-                  {followup.observations?.opportunities?.length > 0 && (
-                    <div>
-                      <h4 className="font-medium mb-2 flex items-center gap-2">
-                        <Target className="h-4 w-4 text-green-600" />
-                        🎯 Vervolgkansen
-                      </h4>
-                      <ul className="space-y-1 bg-green-50 p-3 rounded-lg">
-                        {followup.observations.opportunities.map((opp, i) => (
-                          <li key={i} className="text-sm flex items-start gap-2">
-                            <span className="text-green-600">•</span>
-                            {opp}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Red Flags */}
-                  {followup.observations?.red_flags?.length > 0 && (
-                    <div>
-                      <h4 className="font-medium mb-2 flex items-center gap-2">
-                        <Flag className="h-4 w-4 text-red-600" />
-                        🚩 Rode Vlaggen
-                      </h4>
-                      <ul className="space-y-1 bg-red-50 p-3 rounded-lg">
-                        {followup.observations.red_flags.map((flag, i) => (
-                          <li key={i} className="text-sm flex items-start gap-2">
-                            <span className="text-red-600">•</span>
-                            {flag}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </CardContent>
-              )}
-            </Card>
-          )}
-
-          {/* 📈 Coaching Feedback - NEW (only if opted in) */}
-          {followup.include_coaching && followup.coaching_feedback && (
-            followup.coaching_feedback.strengths?.length > 0 || 
-            followup.coaching_feedback.improvements?.length > 0 || 
-            followup.coaching_feedback.tips?.length > 0
-          ) && (
-            <Card className="border-emerald-200 bg-emerald-50/30">
-              <CardHeader 
-                className="cursor-pointer" 
-                onClick={() => toggleSection('coaching')}
-              >
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Award className="h-5 w-5 text-emerald-600" />
-                    📈 Coaching Feedback
-                  </CardTitle>
-                  {expandedSections.coaching ? <ChevronUp /> : <ChevronDown />}
-                </div>
-              </CardHeader>
-              {expandedSections.coaching && (
-                <CardContent className="space-y-4">
-                  {/* Strengths */}
-                  {followup.coaching_feedback?.strengths?.length > 0 && (
-                    <div>
-                      <h4 className="font-medium mb-2 flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        ✅ Wat Ging Goed
-                      </h4>
-                      <ul className="space-y-1 bg-green-50 p-3 rounded-lg">
-                        {followup.coaching_feedback.strengths.map((strength, i) => (
-                          <li key={i} className="text-sm flex items-start gap-2">
-                            <span className="text-green-600">✓</span>
-                            {strength}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Improvements */}
-                  {followup.coaching_feedback?.improvements?.length > 0 && (
-                    <div>
-                      <h4 className="font-medium mb-2 flex items-center gap-2">
-                        <MessageCircle className="h-4 w-4 text-orange-600" />
-                        🔧 Verbeterpunten
-                      </h4>
-                      <ul className="space-y-1 bg-orange-50 p-3 rounded-lg">
-                        {followup.coaching_feedback.improvements.map((improvement, i) => (
-                          <li key={i} className="text-sm flex items-start gap-2">
-                            <span className="text-orange-600">•</span>
-                            {improvement}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Tips */}
-                  {followup.coaching_feedback?.tips?.length > 0 && (
-                    <div>
-                      <h4 className="font-medium mb-2 flex items-center gap-2">
-                        <Lightbulb className="h-4 w-4 text-blue-600" />
-                        💡 Tips voor Volgende Keer
-                      </h4>
-                      <ul className="space-y-1 bg-blue-50 p-3 rounded-lg">
-                        {followup.coaching_feedback.tips.map((tip, i) => (
-                          <li key={i} className="text-sm flex items-start gap-2">
-                            <span className="text-blue-600">→</span>
-                            {tip}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </CardContent>
-              )}
-            </Card>
-          )}
-
-          {/* Action Items */}
-          {followup.action_items?.length > 0 && (
-            <Card>
-              <CardHeader 
-                className="cursor-pointer" 
-                onClick={() => toggleSection('actionItems')}
-              >
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <ListTodo className="h-5 w-5" />
-                    Actie Items ({followup.action_items.length})
-                  </CardTitle>
-                  {expandedSections.actionItems ? <ChevronUp /> : <ChevronDown />}
-                </div>
-              </CardHeader>
-              {expandedSections.actionItems && (
-                <CardContent>
-                  <div className="space-y-3">
-                    {followup.action_items.map((item, i) => (
-                      <div 
-                        key={i} 
-                        className="flex items-start gap-3 p-3 border rounded-lg"
-                      >
-                        <div className={`w-2 h-2 rounded-full mt-2 ${
-                          item.priority === 'high' ? 'bg-red-500' :
-                          item.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
-                        }`} />
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{item.task}</p>
-                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                            <span>👤 {item.assignee || 'TBD'}</span>
-                            {item.due_date && <span>📅 {item.due_date}</span>}
-                            <span className={`px-2 py-0.5 rounded ${
-                              item.priority === 'high' ? 'bg-red-100 text-red-700' :
-                              item.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : 
-                              'bg-green-100 text-green-700'
-                            }`}>
-                              {item.priority}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              )}
-            </Card>
-          )}
-
-          {/* Email Draft */}
-          <Card>
-            <CardHeader 
-              className="cursor-pointer" 
-              onClick={() => toggleSection('email')}
-            >
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Mail className="h-5 w-5" />
-                  Follow-up Email
-                </CardTitle>
-                {expandedSections.email ? <ChevronUp /> : <ChevronDown />}
+          {/* Error State */}
+          {followup.status === 'failed' && (
+            <div className="mb-6 p-4 rounded-xl border-2 border-red-200 bg-red-50">
+              <div className="flex items-center gap-2 text-red-700">
+                <Icons.alertCircle className="h-5 w-5" />
+                <span className="font-medium">Verwerking mislukt</span>
               </div>
-            </CardHeader>
-            {expandedSections.email && (
-              <CardContent className="space-y-4">
-                <Textarea
-                  value={emailDraft}
-                  onChange={(e) => setEmailDraft(e.target.value)}
-                  rows={12}
-                  className="font-mono text-sm"
-                />
-                <div className="flex items-center justify-between">
-                  <div className="flex gap-2">
+              <p className="text-sm text-red-600 mt-1">{followup.error_message}</p>
+            </div>
+          )}
+
+          {/* Processing State */}
+          {isProcessing && (
+            <div className="rounded-xl border bg-white p-12 text-center shadow-sm">
+              <Icons.spinner className="h-16 w-16 text-orange-600 mx-auto mb-4 animate-spin" />
+              <h3 className="font-bold text-lg mb-2">
+                {followup.status === 'transcribing' ? 'Audio wordt getranscribeerd...' :
+                 followup.status === 'summarizing' ? 'Samenvatting wordt gegenereerd...' :
+                 'Bestand wordt verwerkt...'}
+              </h3>
+              <p className="text-slate-500">Dit kan enkele minuten duren</p>
+            </div>
+          )}
+
+          {/* Main Content - Two Column Layout */}
+          {followup.status === 'completed' && (
+            <div className="flex gap-6">
+              {/* Left Column - Main Content */}
+              <div className="flex-1 min-w-0 space-y-6">
+                
+                {/* Executive Summary */}
+                <div className="rounded-xl border bg-white p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="font-bold text-lg flex items-center gap-2">
+                      <Icons.fileText className="h-5 w-5 text-orange-600" />
+                      Samenvatting
+                    </h2>
+                    <Button variant="outline" size="sm" onClick={() => handleCopy(
+                      `${followup.executive_summary}\n\nBelangrijkste punten:\n${followup.key_points?.map(p => `• ${p}`).join('\n')}\n\nVervolgstappen:\n${followup.next_steps?.map(s => `• ${s}`).join('\n')}`,
+                      'summary'
+                    )}>
+                      <Icons.copy className="h-4 w-4 mr-1" />
+                      {copied === 'summary' ? 'Gekopieerd!' : 'Kopieer'}
+                    </Button>
+                  </div>
+                  
+                  {followup.executive_summary && (
+                    <div className="bg-orange-50 p-4 rounded-lg mb-4">
+                      <p className="text-sm text-slate-700">{followup.executive_summary}</p>
+                    </div>
+                  )}
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {/* Key Points */}
+                    {followup.key_points?.length > 0 && (
+                      <div className="p-4 bg-blue-50 rounded-lg">
+                        <h4 className="font-semibold text-sm text-blue-800 mb-2 flex items-center gap-1">
+                          💡 Belangrijkste Punten
+                        </h4>
+                        <ul className="space-y-1">
+                          {followup.key_points.map((point, i) => (
+                            <li key={i} className="text-sm text-blue-700 flex items-start gap-2">
+                              <span>•</span>{point}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Concerns */}
+                    {followup.concerns?.length > 0 && (
+                      <div className="p-4 bg-amber-50 rounded-lg">
+                        <h4 className="font-semibold text-sm text-amber-800 mb-2 flex items-center gap-1">
+                          ⚠️ Bezwaren & Zorgen
+                        </h4>
+                        <ul className="space-y-1">
+                          {followup.concerns.map((concern, i) => (
+                            <li key={i} className="text-sm text-amber-700 flex items-start gap-2">
+                              <span>•</span>{concern}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Decisions */}
+                    {followup.decisions?.length > 0 && (
+                      <div className="p-4 bg-green-50 rounded-lg">
+                        <h4 className="font-semibold text-sm text-green-800 mb-2 flex items-center gap-1">
+                          ✅ Beslissingen
+                        </h4>
+                        <ul className="space-y-1">
+                          {followup.decisions.map((decision, i) => (
+                            <li key={i} className="text-sm text-green-700 flex items-start gap-2">
+                              <span>•</span>{decision}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Next Steps */}
+                    {followup.next_steps?.length > 0 && (
+                      <div className="p-4 bg-purple-50 rounded-lg">
+                        <h4 className="font-semibold text-sm text-purple-800 mb-2 flex items-center gap-1">
+                          ➡️ Vervolgstappen
+                        </h4>
+                        <ul className="space-y-1">
+                          {followup.next_steps.map((step, i) => (
+                            <li key={i} className="text-sm text-purple-700 flex items-start gap-2">
+                              <span>•</span>{step}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Commercial Signals */}
+                {hasCommercialSignals && (
+                  <div className="rounded-xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-6 shadow-sm">
+                    <h2 className="font-bold text-lg flex items-center gap-2 mb-4">
+                      <Icons.trendingUp className="h-5 w-5 text-amber-600" />
+                      💰 Commerciële Signalen
+                    </h2>
+                    <div className="grid gap-4 md:grid-cols-3">
+                      {followup.commercial_signals?.koopsignalen?.length > 0 && (
+                        <div className="bg-white/60 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-green-700 mb-2">✓ Koopsignalen</h4>
+                          <ul className="space-y-1">
+                            {followup.commercial_signals.koopsignalen.map((s, i) => (
+                              <li key={i} className="text-xs text-slate-700">{s}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {followup.commercial_signals?.cross_sell?.length > 0 && (
+                        <div className="bg-white/60 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-blue-700 mb-2">💡 Cross/Upsell</h4>
+                          <ul className="space-y-1">
+                            {followup.commercial_signals.cross_sell.map((s, i) => (
+                              <li key={i} className="text-xs text-slate-700">{s}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {followup.commercial_signals?.risks?.length > 0 && (
+                        <div className="bg-red-50 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-red-700 mb-2">⚠️ Risico's</h4>
+                          <ul className="space-y-1">
+                            {followup.commercial_signals.risks.map((s, i) => (
+                              <li key={i} className="text-xs text-red-700">{s}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Observations */}
+                {hasObservations && (
+                  <div className="rounded-xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50 p-6 shadow-sm">
+                    <h2 className="font-bold text-lg flex items-center gap-2 mb-4">
+                      <Icons.search className="h-5 w-5 text-indigo-600" />
+                      🔎 Observaties & Signalen
+                    </h2>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {followup.observations?.doubts?.length > 0 && (
+                        <div className="bg-amber-50 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-amber-700 mb-2">⚠️ Twijfel</h4>
+                          <ul className="space-y-1">
+                            {followup.observations.doubts.map((d, i) => (
+                              <li key={i} className="text-xs text-slate-700">{d}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {followup.observations?.unspoken_needs?.length > 0 && (
+                        <div className="bg-yellow-50 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-yellow-700 mb-2">💡 Onuitgesproken</h4>
+                          <ul className="space-y-1">
+                            {followup.observations.unspoken_needs.map((n, i) => (
+                              <li key={i} className="text-xs text-slate-700">{n}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {followup.observations?.opportunities?.length > 0 && (
+                        <div className="bg-green-50 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-green-700 mb-2">🎯 Kansen</h4>
+                          <ul className="space-y-1">
+                            {followup.observations.opportunities.map((o, i) => (
+                              <li key={i} className="text-xs text-slate-700">{o}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {followup.observations?.red_flags?.length > 0 && (
+                        <div className="bg-red-50 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-red-700 mb-2">🚩 Rode Vlaggen</h4>
+                          <ul className="space-y-1">
+                            {followup.observations.red_flags.map((f, i) => (
+                              <li key={i} className="text-xs text-red-700">{f}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Coaching Feedback */}
+                {hasCoaching && (
+                  <div className="rounded-xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-6 shadow-sm">
+                    <h2 className="font-bold text-lg flex items-center gap-2 mb-4">
+                      <Icons.sparkles className="h-5 w-5 text-emerald-600" />
+                      📈 Coaching Feedback
+                    </h2>
+                    <div className="grid gap-4 md:grid-cols-3">
+                      {followup.coaching_feedback?.strengths?.length > 0 && (
+                        <div className="bg-green-50 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-green-700 mb-2">✅ Goed</h4>
+                          <ul className="space-y-1">
+                            {followup.coaching_feedback.strengths.map((s, i) => (
+                              <li key={i} className="text-xs text-slate-700">{s}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {followup.coaching_feedback?.improvements?.length > 0 && (
+                        <div className="bg-orange-50 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-orange-700 mb-2">🔧 Verbeter</h4>
+                          <ul className="space-y-1">
+                            {followup.coaching_feedback.improvements.map((i, idx) => (
+                              <li key={idx} className="text-xs text-slate-700">{i}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {followup.coaching_feedback?.tips?.length > 0 && (
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <h4 className="font-semibold text-sm text-blue-700 mb-2">💡 Tips</h4>
+                          <ul className="space-y-1">
+                            {followup.coaching_feedback.tips.map((t, i) => (
+                              <li key={i} className="text-xs text-slate-700">{t}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Follow-up Email */}
+                <div className="rounded-xl border bg-white p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="font-bold text-lg flex items-center gap-2">
+                      <Icons.mail className="h-5 w-5 text-orange-600" />
+                      Follow-up Email
+                    </h2>
+                    <Button variant="outline" size="sm" onClick={() => handleCopy(emailDraft, 'email')}>
+                      <Icons.copy className="h-4 w-4 mr-1" />
+                      {copied === 'email' ? 'Gekopieerd!' : 'Kopieer'}
+                    </Button>
+                  </div>
+                  
+                  <Textarea
+                    value={emailDraft}
+                    onChange={(e) => setEmailDraft(e.target.value)}
+                    rows={10}
+                    className="font-mono text-sm mb-4"
+                  />
+                  
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-500">Toon:</span>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleRegenerateEmail('professional')}
                       disabled={regeneratingEmail}
+                      className="h-7 text-xs"
                     >
-                      {regeneratingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
-                      Professioneel
+                      {regeneratingEmail ? <Icons.spinner className="h-3 w-3 animate-spin" /> : 'Professioneel'}
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleRegenerateEmail('casual')}
                       disabled={regeneratingEmail}
+                      className="h-7 text-xs"
                     >
                       Informeel
                     </Button>
@@ -772,118 +593,193 @@ export default function FollowupDetailPage() {
                       size="sm"
                       onClick={() => handleRegenerateEmail('formal')}
                       disabled={regeneratingEmail}
+                      className="h-7 text-xs"
                     >
                       Formeel
                     </Button>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={handleSaveEmail}>
-                      Opslaan
-                    </Button>
-                    <Button onClick={() => handleCopy(emailDraft, 'email')}>
-                      <Copy className="h-4 w-4 mr-2" />
-                      {copied === 'email' ? 'Gekopieerd!' : 'Kopieer'}
-                    </Button>
-                  </div>
                 </div>
-              </CardContent>
-            )}
-          </Card>
 
-          {/* Transcription */}
-          {followup.transcription_text && (
-            <Card>
-              <CardHeader 
-                className="cursor-pointer" 
-                onClick={() => toggleSection('transcription')}
-              >
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Transcriptie
-                  </CardTitle>
-                  {expandedSections.transcription ? <ChevronUp /> : <ChevronDown />}
-                </div>
-                <CardDescription>
-                  Volledige meeting transcriptie
-                </CardDescription>
-              </CardHeader>
-              {expandedSections.transcription && (
-                <CardContent>
-                  {followup.transcription_segments?.length > 0 ? (
-                    <div className="space-y-3 max-h-96 overflow-y-auto">
-                      {followup.transcription_segments.map((segment, i) => (
-                        <div key={i} className="flex gap-3">
-                          <div className="flex-shrink-0 w-24">
-                            <span className="text-xs font-medium text-blue-600">
-                              {segment.speaker}
-                            </span>
-                            <span className="text-xs text-muted-foreground ml-2">
-                              {formatTimestamp(segment.start)}
-                            </span>
-                          </div>
-                          <p className="text-sm flex-1">{segment.text}</p>
+                {/* Transcription (collapsible) */}
+                {followup.transcription_text && (
+                  <div className="rounded-xl border bg-white shadow-sm">
+                    <button
+                      className="w-full p-4 flex items-center justify-between hover:bg-slate-50"
+                      onClick={() => setShowTranscript(!showTranscript)}
+                    >
+                      <h2 className="font-bold text-lg flex items-center gap-2">
+                        <Icons.fileText className="h-5 w-5 text-slate-600" />
+                        Transcriptie
+                      </h2>
+                      {showTranscript ? <Icons.chevronDown className="h-5 w-5" /> : <Icons.chevronRight className="h-5 w-5" />}
+                    </button>
+                    {showTranscript && (
+                      <div className="p-4 pt-0 border-t">
+                        <div className="max-h-96 overflow-y-auto bg-slate-50 rounded-lg p-4">
+                          <pre className="whitespace-pre-wrap text-sm text-slate-700 font-sans">
+                            {followup.transcription_text}
+                          </pre>
                         </div>
-                      ))}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-3"
+                          onClick={() => handleCopy(followup.transcription_text || '', 'transcript')}
+                        >
+                          <Icons.copy className="h-4 w-4 mr-1" />
+                          {copied === 'transcript' ? 'Gekopieerd!' : 'Kopieer Transcriptie'}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column - Sticky Sidebar */}
+              <div className="w-80 flex-shrink-0 hidden lg:block">
+                <div className="sticky top-4 space-y-4">
+                  
+                  {/* Meeting Info */}
+                  <div className="rounded-xl border bg-white p-4 shadow-sm">
+                    <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                      <Icons.calendar className="h-4 w-4 text-orange-600" />
+                      Meeting Info
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      {followup.meeting_date && (
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Datum</span>
+                          <span className="font-medium">{new Date(followup.meeting_date).toLocaleDateString('nl-NL')}</span>
+                        </div>
+                      )}
+                      {followup.audio_duration_seconds && (
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Duur</span>
+                          <span className="font-medium">{formatDuration(followup.audio_duration_seconds)}</span>
+                        </div>
+                      )}
+                      {followup.speaker_count > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Sprekers</span>
+                          <span className="font-medium">{followup.speaker_count}</span>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="whitespace-pre-wrap text-sm max-h-96 overflow-y-auto">
-                      {followup.transcription_text}
+                  </div>
+
+                  {/* Action Items */}
+                  {followup.action_items?.length > 0 && (
+                    <div className="rounded-xl border bg-white p-4 shadow-sm">
+                      <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                        <Icons.check className="h-4 w-4 text-green-600" />
+                        Actie Items ({followup.action_items.length})
+                      </h3>
+                      <div className="space-y-2">
+                        {followup.action_items.slice(0, 5).map((item, i) => (
+                          <div key={i} className="flex items-start gap-2 text-sm">
+                            <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                              item.priority === 'high' ? 'bg-red-500' :
+                              item.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                            }`} />
+                            <div className="min-w-0">
+                              <p className="truncate font-medium">{item.task}</p>
+                              <p className="text-xs text-slate-500">
+                                {item.assignee || 'TBD'} {item.due_date && `• ${item.due_date}`}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-4"
-                    onClick={() => handleCopy(followup.transcription_text || '', 'transcription')}
-                  >
-                    <Copy className="h-4 w-4 mr-2" />
-                    {copied === 'transcription' ? 'Gekopieerd!' : 'Kopieer Transcriptie'}
-                  </Button>
-                </CardContent>
-              )}
-            </Card>
-          )}
 
-          {/* Audio Player */}
-          {followup.audio_url && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Play className="h-5 w-5" />
-                  Audio
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <audio controls className="w-full">
-                  <source src={followup.audio_url} />
-                  Je browser ondersteunt geen audio playback.
-                </audio>
-              </CardContent>
-            </Card>
+                  {/* Related Research */}
+                  {researchBrief && (
+                    <div className="rounded-xl border bg-white p-4 shadow-sm">
+                      <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
+                        <Icons.search className="h-4 w-4 text-blue-600" />
+                        Gekoppelde Research
+                      </h3>
+                      <button
+                        onClick={() => router.push(`/dashboard/research/${researchBrief.id}`)}
+                        className="w-full p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left group"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-sm text-blue-900">{researchBrief.company_name}</p>
+                            <p className="text-xs text-blue-600">
+                              {new Date(researchBrief.completed_at).toLocaleDateString('nl-NL')}
+                            </p>
+                          </div>
+                          <Icons.chevronRight className="h-4 w-4 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Related Preparation */}
+                  {meetingPrep && (
+                    <div className="rounded-xl border bg-white p-4 shadow-sm">
+                      <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
+                        <Icons.fileText className="h-4 w-4 text-green-600" />
+                        Gekoppelde Voorbereiding
+                      </h3>
+                      <button
+                        onClick={() => router.push(`/dashboard/preparation/${meetingPrep.id}`)}
+                        className="w-full p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors text-left group"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-sm text-green-900">{meetingPrep.prospect_company_name}</p>
+                            <p className="text-xs text-green-600">
+                              {meetingPrep.meeting_type} • {new Date(meetingPrep.completed_at).toLocaleDateString('nl-NL')}
+                            </p>
+                          </div>
+                          <Icons.chevronRight className="h-4 w-4 text-green-600 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Audio Player */}
+                  {followup.audio_url && (
+                    <div className="rounded-xl border bg-white p-4 shadow-sm">
+                      <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                        <Icons.mic className="h-4 w-4 text-orange-600" />
+                        Audio
+                      </h3>
+                      <audio controls className="w-full h-10">
+                        <source src={followup.audio_url} />
+                      </audio>
+                    </div>
+                  )}
+
+                  {/* CTA - New Research */}
+                  <div className="rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 shadow-sm">
+                    <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
+                      <Icons.arrowRight className="h-4 w-4 text-blue-600" />
+                      Volgende Prospect?
+                    </h3>
+                    <p className="text-xs text-slate-600 mb-3">
+                      Start een nieuwe research voor je volgende prospect.
+                    </p>
+                    <Button 
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      onClick={() => router.push('/dashboard/research')}
+                    >
+                      <Icons.search className="h-4 w-4 mr-2" />
+                      Nieuwe Research
+                    </Button>
+                  </div>
+
+                </div>
+              </div>
+            </div>
           )}
         </div>
-      )}
-
-      {/* Processing State */}
-      {isProcessing && (
-        <Card>
-          <CardContent className="py-12">
-            <div className="text-center">
-              <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-500 mb-4" />
-              <h3 className="font-medium text-lg mb-2">
-                {followup.status === 'transcribing' ? 'Audio wordt getranscribeerd...' :
-                 followup.status === 'summarizing' ? 'Samenvatting wordt gegenereerd...' :
-                 'Bestand wordt verwerkt...'}
-              </h3>
-              <p className="text-muted-foreground text-sm">
-                Dit kan enkele minuten duren afhankelijk van de lengte van de opname.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+      
+        <Toaster />
+      </>
+    </DashboardLayout>
   )
 }
-
