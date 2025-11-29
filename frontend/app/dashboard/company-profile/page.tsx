@@ -374,7 +374,7 @@ export default function CompanyProfilePage() {
                   <p className="text-sm text-muted-foreground">{persona.seniority}</p>
                   {persona.pain_points?.length > 0 && (
                     <div className="mt-2">
-                      <p className="text-xs font-medium text-muted-foreground">Pain points:</p>
+                      <p className="text-xs font-medium text-muted-foreground">{t('fields.painPoints')}:</p>
                       <p className="text-sm text-gray-700 dark:text-slate-300">{persona.pain_points.join(', ')}</p>
                     </div>
                   )}

@@ -186,7 +186,7 @@ export default function PreparationDetailPage() {
         <div className="flex items-center justify-center h-full">
           <div className="text-center space-y-4">
             <Icons.spinner className="h-8 w-8 animate-spin text-green-600 mx-auto" />
-            <p className="text-slate-500 dark:text-slate-400">Voorbereiding laden...</p>
+            <p className="text-slate-500 dark:text-slate-400">{t('loading')}</p>
           </div>
         </div>
       </DashboardLayout>
@@ -291,8 +291,8 @@ export default function PreparationDetailPage() {
               ) : (
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-sm text-center">
                   <Icons.spinner className="h-16 w-16 text-green-600 mx-auto mb-4 animate-spin" />
-                  <h3 className="font-bold text-lg mb-2 text-slate-900 dark:text-white">Voorbereiding wordt gegenereerd...</h3>
-                  <p className="text-slate-500 dark:text-slate-400">Dit duurt meestal 30-60 seconden</p>
+                  <h3 className="font-bold text-lg mb-2 text-slate-900 dark:text-white">{t('form.generating')}</h3>
+                  <p className="text-slate-500 dark:text-slate-400">{t('toast.startedDesc')}</p>
                 </div>
               )}
             </div>

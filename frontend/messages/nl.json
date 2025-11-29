@@ -325,6 +325,7 @@
       "startFollowup": "Start Follow-up",
       "processing": "Verwerken...",
       "subject": "Onderwerp",
+      "subjectPlaceholder": "Bijv. Demo gesprek",
       "date": "Datum"
     },
     "history": {

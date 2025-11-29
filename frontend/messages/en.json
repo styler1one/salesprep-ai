@@ -325,6 +325,7 @@
       "startFollowup": "Start Follow-up",
       "processing": "Processing...",
       "subject": "Subject",
+      "subjectPlaceholder": "E.g. Demo call",
       "date": "Date"
     },
     "history": {

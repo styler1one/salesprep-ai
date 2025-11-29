@@ -470,7 +470,7 @@ export default function DashboardPage() {
                                                                 : prospect.hasResearch 
                                                                     ? 'bg-blue-50 dark:bg-blue-950' 
                                                                     : 'bg-slate-100 dark:bg-slate-800'
-                                                        }`} title="Research">
+                                                        }`} title={tNavigation('research')}>
                                                             {prospect.hasResearch && prospect.researchStatus === 'completed' ? (
                                                                 <Icons.check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                                                             ) : prospect.hasResearch ? (
@@ -487,7 +487,7 @@ export default function DashboardPage() {
                                                                 : prospect.hasPrep 
                                                                     ? 'bg-green-50 dark:bg-green-950' 
                                                                     : 'bg-slate-100 dark:bg-slate-800'
-                                                        }`} title="Voorbereiding">
+                                                        }`} title={tNavigation('preparation')}>
                                                             {prospect.hasPrep && prospect.prepStatus === 'completed' ? (
                                                                 <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400" />
                                                             ) : prospect.hasPrep ? (
@@ -504,7 +504,7 @@ export default function DashboardPage() {
                                                                 : prospect.hasFollowup 
                                                                     ? 'bg-orange-50 dark:bg-orange-950' 
                                                                     : 'bg-slate-100 dark:bg-slate-800'
-                                                        }`} title="Follow-up">
+                                                        }`} title={tNavigation('followup')}>
                                                             {prospect.hasFollowup && prospect.followupStatus === 'completed' ? (
                                                                 <Icons.check className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                                                             ) : prospect.hasFollowup ? (
@@ -626,7 +626,7 @@ export default function DashboardPage() {
                                         className="p-3 rounded-lg bg-orange-50 dark:bg-orange-900/50 hover:bg-orange-100 dark:hover:bg-orange-900 transition-colors text-center"
                                     >
                                         <Icons.mic className="h-5 w-5 text-orange-600 dark:text-orange-400 mx-auto mb-1" />
-                                        <span className="text-xs font-medium text-orange-700 dark:text-orange-300">Follow-up</span>
+                                        <span className="text-xs font-medium text-orange-700 dark:text-orange-300">{tNavigation('followup')}</span>
                                     </button>
                                     <button
                                         onClick={() => router.push('/dashboard/knowledge-base')}

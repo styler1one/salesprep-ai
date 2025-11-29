@@ -554,7 +554,7 @@ export default function FollowupPage() {
                       <div>
                         <Label className="text-xs text-slate-700 dark:text-slate-300">{t('form.subject')}</Label>
                         <Input
-                          placeholder="Bijv. Demo gesprek"
+                          placeholder={t('form.subjectPlaceholder')}
                           value={meetingSubject}
                           onChange={(e) => setMeetingSubject(e.target.value)}
                           disabled={uploading}
