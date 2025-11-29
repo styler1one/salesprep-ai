@@ -223,6 +223,7 @@ export default function DashboardPage() {
 
     const t = useTranslations('dashboard')
     const tCommon = useTranslations('common')
+    const tNavigation = useTranslations('navigation')
     const locale = useLocale()
 
     if (loading) {
