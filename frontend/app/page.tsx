@@ -5,13 +5,16 @@ import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
+import { LanguageSelector } from '@/components/language-selector'
+import { type Locale } from '@/i18n/config'
 
 export default function Home() {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const [loading, setLoading] = useState(true)
   const t = useTranslations('homepage')
+  const locale = useLocale() as Locale
 
   useEffect(() => {
     const checkUser = async () => {
@@ -44,7 +47,8 @@ export default function Home() {
               </div>
               <span className="font-bold text-xl text-slate-900 dark:text-white">SalesPrep AI</span>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <LanguageSelector currentLocale={locale} />
               <Button variant="ghost" onClick={() => router.push('/login')}>
                 {t('nav.login')}
               </Button>
