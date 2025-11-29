@@ -16,7 +16,6 @@ import { ProspectAutocomplete } from '@/components/prospect-autocomplete'
 import { LanguageSelect } from '@/components/language-select'
 import { useTranslations } from 'next-intl'
 import { useSettings } from '@/lib/settings-context'
-import { Locale } from '@/i18n/config'
 
 interface MeetingPrep {
   id: string
@@ -60,13 +59,13 @@ export default function PreparationPage() {
   const [companyName, setCompanyName] = useState('')
   const [meetingType, setMeetingType] = useState('discovery')
   const [customNotes, setCustomNotes] = useState('')
-  const [outputLanguage, setOutputLanguage] = useState<Locale>('nl')
+  const [outputLanguage, setOutputLanguage] = useState('nl')
   const [showAdvanced, setShowAdvanced] = useState(false)
   
   // Set language from settings on load
   useEffect(() => {
     if (settingsLoaded) {
-      setOutputLanguage(settings.output_language as Locale)
+      setOutputLanguage(settings.output_language)
     }
   }, [settingsLoaded, settings.output_language])
   

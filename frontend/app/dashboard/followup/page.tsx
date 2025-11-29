@@ -15,7 +15,6 @@ import { ProspectAutocomplete } from '@/components/prospect-autocomplete'
 import { LanguageSelect } from '@/components/language-select'
 import { useTranslations } from 'next-intl'
 import { useSettings } from '@/lib/settings-context'
-import { Locale } from '@/i18n/config'
 
 interface Followup {
   id: string
@@ -51,13 +50,13 @@ export default function FollowupPage() {
   const [meetingSubject, setMeetingSubject] = useState('')
   const [meetingDate, setMeetingDate] = useState('')
   const [includeCoaching, setIncludeCoaching] = useState(false)
-  const [emailLanguage, setEmailLanguage] = useState<Locale>('nl')
+  const [emailLanguage, setEmailLanguage] = useState('nl')
   const [showAdvanced, setShowAdvanced] = useState(false)
   
   // Set language from settings on load
   useEffect(() => {
     if (settingsLoaded) {
-      setEmailLanguage(settings.email_language as Locale)
+      setEmailLanguage(settings.email_language)
     }
   }, [settingsLoaded, settings.email_language])
   

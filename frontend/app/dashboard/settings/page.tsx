@@ -22,7 +22,6 @@ import { useTranslations } from 'next-intl'
 import { useToast } from '@/components/ui/use-toast'
 import { useSettings } from '@/lib/settings-context'
 import { LanguageSelect } from '@/components/language-select'
-import { Locale, locales } from '@/i18n/config'
 import { Badge } from '@/components/ui/badge'
 
 export default function SettingsPage() {
@@ -39,16 +38,16 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   
   // Local state for form
-  const [appLanguage, setAppLanguage] = useState<Locale>('nl')
-  const [outputLanguage, setOutputLanguage] = useState<Locale>('nl')
-  const [emailLanguage, setEmailLanguage] = useState<Locale>('nl')
+  const [appLanguage, setAppLanguage] = useState('nl')
+  const [outputLanguage, setOutputLanguage] = useState('nl')
+  const [emailLanguage, setEmailLanguage] = useState('nl')
 
   // Sync local state with settings when loaded
   useEffect(() => {
     if (!settingsLoading && settings) {
-      setAppLanguage(settings.app_language as Locale)
-      setOutputLanguage(settings.output_language as Locale)
-      setEmailLanguage(settings.email_language as Locale)
+      setAppLanguage(settings.app_language)
+      setOutputLanguage(settings.output_language)
+      setEmailLanguage(settings.email_language)
     }
   }, [settings, settingsLoading])
 
