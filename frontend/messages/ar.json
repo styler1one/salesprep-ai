@@ -122,6 +122,131 @@
     "unauthorized": "غير مصرح",
     "notFound": "غير موجود",
     "validation": "يرجى التحقق من البيانات المدخلة"
+  },
+  "research": {
+    "title": "وكيل البحث",
+    "subtitle": "بحث العملاء المحتملين بالذكاء الاصطناعي لمحادثات المبيعات",
+    "loading": "جاري التحميل...",
+    "form": {
+      "title": "بحث جديد",
+      "companyName": "اسم الشركة",
+      "companyNamePlaceholder": "مثل أرامكو، سابك...",
+      "country": "الدولة",
+      "countryPlaceholder": "مثل السعودية",
+      "searchCompany": "بحث الشركة",
+      "searching": "جاري البحث...",
+      "extraOptions": "خيارات إضافية",
+      "website": "الموقع (اختياري)",
+      "websitePlaceholder": "https://...",
+      "linkedin": "LinkedIn (اختياري)",
+      "linkedinPlaceholder": "https://linkedin.com/company/...",
+      "city": "المدينة",
+      "cityPlaceholder": "مثل الرياض",
+      "startResearch": "بدء البحث",
+      "researching": "جاري التحليل..."
+    },
+    "validation": {
+      "companyNameTooShort": "الاسم قصير جداً",
+      "companyNameTooShortDesc": "أدخل 3 أحرف على الأقل",
+      "countryRequired": "الدولة مطلوبة",
+      "countryRequiredDesc": "أدخل دولة للعثور على الشركة الصحيحة",
+      "companyNameRequired": "الاسم مطلوب",
+      "companyNameRequiredDesc": "أدخل اسم الشركة"
+    },
+    "search": {
+      "noResults": "لم يتم العثور على شركات",
+      "noResultsDesc": "لا توجد نتائج لـ \"{company}\" في {country}. أدخل الموقع يدوياً.",
+      "failed": "فشل البحث",
+      "failedDesc": "حدث خطأ. يرجى المحاولة مرة أخرى.",
+      "selected": "تم اختيار الشركة",
+      "selectedDesc": "{company} - تم ملء البيانات تلقائياً"
+    },
+    "toast": {
+      "started": "بدأ البحث",
+      "startedDesc": "جاري إنشاء البحث. يستغرق 2-3 دقائق.",
+      "failed": "فشل البحث",
+      "failedDesc": "تعذر بدء البحث",
+      "deleted": "تم الحذف",
+      "deletedDesc": "تم حذف ملخص البحث",
+      "deleteFailed": "فشل الحذف",
+      "deleteFailedDesc": "تعذر الحذف. يرجى المحاولة مرة أخرى.",
+      "loadFailed": "تعذر التحميل",
+      "loadFailedDesc": "حدث خطأ أثناء تحميل الملخص"
+    },
+    "history": {
+      "title": "عملائي المحتملين",
+      "empty": "لا يوجد بحث بعد",
+      "emptyDesc": "ابدأ بحثك الأول على اليمين ←",
+      "viewAll": "عرض جميع الملخصات ({count})"
+    },
+    "stats": {
+      "title": "نظرة عامة",
+      "completed": "مكتمل",
+      "researching": "قيد التنفيذ",
+      "failed": "فشل"
+    },
+    "howItWorks": {
+      "title": "كيف يعمل؟",
+      "step1": "البحث",
+      "step1Desc": "الذكاء الاصطناعي يجمع المعلومات",
+      "step2": "جهات الاتصال",
+      "step2Desc": "أضف جهات اتصال",
+      "step3": "التحضير",
+      "step3Desc": "إنشاء ملخص الاجتماع"
+    },
+    "brief": {
+      "generatedAt": "تم الإنشاء في",
+      "view": "عرض",
+      "copy": "نسخ",
+      "copied": "تم النسخ!",
+      "download": "تحميل PDF",
+      "delete": "حذف"
+    },
+    "contacts": {
+      "title": "جهات الاتصال",
+      "add": "إضافة جهة اتصال",
+      "addShort": "إضافة",
+      "name": "الاسم",
+      "namePlaceholder": "مثل أحمد محمد",
+      "role": "الدور/المنصب",
+      "rolePlaceholder": "مثل مدير المبيعات",
+      "linkedinUrl": "رابط LinkedIn",
+      "linkedinPlaceholder": "https://linkedin.com/in/...",
+      "searchOnline": "بحث أونلاين",
+      "searching": "جاري البحث...",
+      "cancel": "إلغاء",
+      "empty": "لا توجد جهات اتصال بعد",
+      "emptyDesc": "أضف جهات اتصال للتحضير المخصص",
+      "analyzing": "جاري التحليل...",
+      "analyzed": "تم التحليل",
+      "primary": "رئيسي",
+      "viewAnalysis": "عرض التحليل",
+      "found": "تم العثور على الشخص",
+      "foundDesc": "{role} على LinkedIn",
+      "foundProfile": "تم العثور على ملف LinkedIn",
+      "notFound": "لم يتم العثور",
+      "notFoundDesc": "تعذر العثور على ملف. أدخل يدوياً.",
+      "searchFailed": "فشل البحث",
+      "searchFailedDesc": "حدث خطأ أثناء البحث",
+      "added": "تمت إضافة جهة الاتصال",
+      "addedDesc": "بدأ تحليل الذكاء الاصطناعي...",
+      "analysisComplete": "اكتمل التحليل",
+      "analysisCompleteDesc": "تم تحليل {name}",
+      "addFailed": "تعذرت الإضافة"
+    },
+    "context": {
+      "title": "سياق الذكاء الاصطناعي",
+      "salesProfile": "ملف المبيعات الخاص بك",
+      "companyProfile": "ملف الشركة",
+      "researchBrief": "ملخص البحث",
+      "contacts": "جهات الاتصال"
+    },
+    "nextStep": {
+      "addContact": "إضافة جهة اتصال",
+      "addContactDesc": "أضف جهة اتصال أولاً قبل الانتقال للتحضير",
+      "startPrep": "بدء التحضير",
+      "startPrepDesc": "الانتقال لملخص الاجتماع مع {count} جهة اتصال"
+    }
   }
 }
 

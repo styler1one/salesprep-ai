@@ -122,6 +122,131 @@
     "unauthorized": "अनधिकृत",
     "notFound": "नहीं मिला",
     "validation": "कृपया अपना इनपुट जांचें"
+  },
+  "research": {
+    "title": "रिसर्च एजेंट",
+    "subtitle": "आपकी बिक्री वार्ताओं के लिए AI-संचालित प्रॉस्पेक्ट रिसर्च",
+    "loading": "लोड हो रहा है...",
+    "form": {
+      "title": "नई रिसर्च",
+      "companyName": "कंपनी का नाम",
+      "companyNamePlaceholder": "जैसे Tata, Infosys...",
+      "country": "देश",
+      "countryPlaceholder": "जैसे भारत",
+      "searchCompany": "कंपनी खोजें",
+      "searching": "खोज रहे हैं...",
+      "extraOptions": "अतिरिक्त विकल्प",
+      "website": "वेबसाइट (वैकल्पिक)",
+      "websitePlaceholder": "https://...",
+      "linkedin": "LinkedIn (वैकल्पिक)",
+      "linkedinPlaceholder": "https://linkedin.com/company/...",
+      "city": "शहर",
+      "cityPlaceholder": "जैसे मुंबई",
+      "startResearch": "रिसर्च शुरू करें",
+      "researching": "विश्लेषण हो रहा है..."
+    },
+    "validation": {
+      "companyNameTooShort": "नाम बहुत छोटा",
+      "companyNameTooShortDesc": "कम से कम 3 अक्षर दर्ज करें",
+      "countryRequired": "देश आवश्यक",
+      "countryRequiredDesc": "सही कंपनी खोजने के लिए देश दर्ज करें",
+      "companyNameRequired": "नाम आवश्यक",
+      "companyNameRequiredDesc": "कंपनी का नाम दर्ज करें"
+    },
+    "search": {
+      "noResults": "कोई कंपनी नहीं मिली",
+      "noResultsDesc": "\"{company}\" के लिए {country} में कोई मैच नहीं। वेबसाइट मैन्युअली दर्ज करें।",
+      "failed": "खोज विफल",
+      "failedDesc": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।",
+      "selected": "कंपनी चयनित",
+      "selectedDesc": "{company} - डेटा स्वचालित रूप से भरा गया"
+    },
+    "toast": {
+      "started": "रिसर्च शुरू",
+      "startedDesc": "आपकी रिसर्च जनरेट हो रही है। इसमें 2-3 मिनट लगेंगे।",
+      "failed": "रिसर्च विफल",
+      "failedDesc": "रिसर्च शुरू नहीं हो सकी",
+      "deleted": "हटाया गया",
+      "deletedDesc": "रिसर्च ब्रीफ हटा दी गई है",
+      "deleteFailed": "हटाना विफल",
+      "deleteFailedDesc": "हटा नहीं सके। कृपया पुनः प्रयास करें।",
+      "loadFailed": "लोड नहीं हो सका",
+      "loadFailedDesc": "ब्रीफ लोड करते समय त्रुटि हुई"
+    },
+    "history": {
+      "title": "मेरे प्रॉस्पेक्ट्स",
+      "empty": "अभी तक कोई रिसर्च नहीं",
+      "emptyDesc": "दाईं ओर अपनी पहली रिसर्च शुरू करें →",
+      "viewAll": "सभी {count} ब्रीफ्स देखें"
+    },
+    "stats": {
+      "title": "अवलोकन",
+      "completed": "पूर्ण",
+      "researching": "प्रगति में",
+      "failed": "विफल"
+    },
+    "howItWorks": {
+      "title": "यह कैसे काम करता है?",
+      "step1": "रिसर्च",
+      "step1Desc": "AI जानकारी एकत्र करता है",
+      "step2": "संपर्क",
+      "step2Desc": "संपर्क जोड़ें",
+      "step3": "तैयारी",
+      "step3Desc": "मीटिंग ब्रीफ बनाएं"
+    },
+    "brief": {
+      "generatedAt": "बनाया गया",
+      "view": "देखें",
+      "copy": "कॉपी",
+      "copied": "कॉपी हो गया!",
+      "download": "PDF डाउनलोड करें",
+      "delete": "हटाएं"
+    },
+    "contacts": {
+      "title": "संपर्क व्यक्ति",
+      "add": "संपर्क जोड़ें",
+      "addShort": "जोड़ें",
+      "name": "नाम",
+      "namePlaceholder": "जैसे राहुल शर्मा",
+      "role": "भूमिका/पद",
+      "rolePlaceholder": "जैसे सेल्स डायरेक्टर",
+      "linkedinUrl": "LinkedIn URL",
+      "linkedinPlaceholder": "https://linkedin.com/in/...",
+      "searchOnline": "ऑनलाइन खोजें",
+      "searching": "खोज रहे हैं...",
+      "cancel": "रद्द करें",
+      "empty": "अभी तक कोई संपर्क नहीं",
+      "emptyDesc": "व्यक्तिगत तैयारी के लिए संपर्क जोड़ें",
+      "analyzing": "विश्लेषण हो रहा है...",
+      "analyzed": "विश्लेषित",
+      "primary": "प्राथमिक",
+      "viewAnalysis": "विश्लेषण देखें",
+      "found": "व्यक्ति मिला",
+      "foundDesc": "LinkedIn पर {role}",
+      "foundProfile": "LinkedIn प्रोफाइल मिला",
+      "notFound": "नहीं मिला",
+      "notFoundDesc": "प्रोफाइल नहीं मिला। मैन्युअली दर्ज करें।",
+      "searchFailed": "खोज विफल",
+      "searchFailedDesc": "खोजने में त्रुटि हुई",
+      "added": "संपर्क जोड़ा गया",
+      "addedDesc": "AI विश्लेषण शुरू...",
+      "analysisComplete": "विश्लेषण पूर्ण",
+      "analysisCompleteDesc": "{name} का विश्लेषण हो गया",
+      "addFailed": "जोड़ नहीं सके"
+    },
+    "context": {
+      "title": "AI संदर्भ",
+      "salesProfile": "आपका सेल्स प्रोफाइल",
+      "companyProfile": "कंपनी प्रोफाइल",
+      "researchBrief": "रिसर्च ब्रीफ",
+      "contacts": "संपर्क"
+    },
+    "nextStep": {
+      "addContact": "संपर्क जोड़ें",
+      "addContactDesc": "तैयारी में जाने से पहले पहले एक संपर्क जोड़ें",
+      "startPrep": "तैयारी शुरू करें",
+      "startPrepDesc": "{count} संपर्क(ों) के साथ मीटिंग ब्रीफ पर जाएं"
+    }
   }
 }
 

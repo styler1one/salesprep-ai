@@ -122,6 +122,131 @@
     "unauthorized": "No autorizado",
     "notFound": "No encontrado",
     "validation": "Por favor verifica tus datos"
+  },
+  "research": {
+    "title": "Agente de Investigación",
+    "subtitle": "Investigación de prospectos impulsada por IA para tus conversaciones de ventas",
+    "loading": "Cargando...",
+    "form": {
+      "title": "Nueva Investigación",
+      "companyName": "Nombre de Empresa",
+      "companyNamePlaceholder": "ej. Telefónica, BBVA...",
+      "country": "País",
+      "countryPlaceholder": "ej. España",
+      "searchCompany": "Buscar Empresa",
+      "searching": "Buscando...",
+      "extraOptions": "Opciones adicionales",
+      "website": "Sitio web (opcional)",
+      "websitePlaceholder": "https://...",
+      "linkedin": "LinkedIn (opcional)",
+      "linkedinPlaceholder": "https://linkedin.com/company/...",
+      "city": "Ciudad",
+      "cityPlaceholder": "ej. Madrid",
+      "startResearch": "Iniciar Investigación",
+      "researching": "Analizando..."
+    },
+    "validation": {
+      "companyNameTooShort": "Nombre muy corto",
+      "companyNameTooShortDesc": "Ingrese al menos 3 caracteres",
+      "countryRequired": "País requerido",
+      "countryRequiredDesc": "Ingrese un país para encontrar la empresa correcta",
+      "companyNameRequired": "Nombre requerido",
+      "companyNameRequiredDesc": "Ingrese un nombre de empresa"
+    },
+    "search": {
+      "noResults": "No se encontraron empresas",
+      "noResultsDesc": "Sin resultados para \"{company}\" en {country}. Ingrese el sitio web manualmente.",
+      "failed": "Búsqueda fallida",
+      "failedDesc": "Algo salió mal. Por favor intente de nuevo.",
+      "selected": "Empresa seleccionada",
+      "selectedDesc": "{company} - datos completados automáticamente"
+    },
+    "toast": {
+      "started": "Investigación iniciada",
+      "startedDesc": "Su investigación se está generando. Esto toma 2-3 minutos.",
+      "failed": "Investigación fallida",
+      "failedDesc": "No se pudo iniciar la investigación",
+      "deleted": "Eliminado",
+      "deletedDesc": "El brief de investigación ha sido eliminado",
+      "deleteFailed": "Error al eliminar",
+      "deleteFailedDesc": "No se pudo eliminar. Por favor intente de nuevo.",
+      "loadFailed": "No se pudo cargar",
+      "loadFailedDesc": "Ocurrió un error al cargar el brief"
+    },
+    "history": {
+      "title": "Mis Prospectos",
+      "empty": "Aún no hay investigación",
+      "emptyDesc": "Inicie su primera investigación de prospecto a la derecha →",
+      "viewAll": "Ver los {count} briefs"
+    },
+    "stats": {
+      "title": "Resumen",
+      "completed": "Completado",
+      "researching": "En Progreso",
+      "failed": "Fallido"
+    },
+    "howItWorks": {
+      "title": "¿Cómo funciona?",
+      "step1": "Investigación",
+      "step1Desc": "La IA recopila info",
+      "step2": "Contactos",
+      "step2Desc": "Agregue contactos",
+      "step3": "Preparación",
+      "step3Desc": "Genere el brief"
+    },
+    "brief": {
+      "generatedAt": "Generado el",
+      "view": "Ver",
+      "copy": "Copiar",
+      "copied": "¡Copiado!",
+      "download": "Descargar PDF",
+      "delete": "Eliminar"
+    },
+    "contacts": {
+      "title": "Contactos",
+      "add": "Agregar Contacto",
+      "addShort": "Agregar",
+      "name": "Nombre",
+      "namePlaceholder": "ej. Juan García",
+      "role": "Rol/Cargo",
+      "rolePlaceholder": "ej. Director de Ventas",
+      "linkedinUrl": "URL de LinkedIn",
+      "linkedinPlaceholder": "https://linkedin.com/in/...",
+      "searchOnline": "Buscar en línea",
+      "searching": "Buscando...",
+      "cancel": "Cancelar",
+      "empty": "Sin contactos aún",
+      "emptyDesc": "Agregue contactos para preparación personalizada",
+      "analyzing": "Analizando...",
+      "analyzed": "Analizado",
+      "primary": "Principal",
+      "viewAnalysis": "Ver análisis",
+      "found": "Persona encontrada",
+      "foundDesc": "{role} en LinkedIn",
+      "foundProfile": "Perfil de LinkedIn encontrado",
+      "notFound": "No encontrado",
+      "notFoundDesc": "No se pudo encontrar perfil. Ingrese manualmente.",
+      "searchFailed": "Búsqueda fallida",
+      "searchFailedDesc": "Ocurrió un error al buscar",
+      "added": "Contacto agregado",
+      "addedDesc": "Análisis IA iniciado...",
+      "analysisComplete": "Análisis completo",
+      "analysisCompleteDesc": "{name} ha sido analizado",
+      "addFailed": "No se pudo agregar"
+    },
+    "context": {
+      "title": "Contexto IA",
+      "salesProfile": "Tu Perfil de Ventas",
+      "companyProfile": "Perfil de Empresa",
+      "researchBrief": "Brief de Investigación",
+      "contacts": "Contactos"
+    },
+    "nextStep": {
+      "addContact": "Agregar Contacto",
+      "addContactDesc": "Agregue un contacto antes de ir a la preparación",
+      "startPrep": "Iniciar Preparación",
+      "startPrepDesc": "Ir al Brief de Reunión con {count} contacto(s)"
+    }
   }
 }
 

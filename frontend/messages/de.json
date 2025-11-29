@@ -122,6 +122,131 @@
     "unauthorized": "Nicht autorisiert",
     "notFound": "Nicht gefunden",
     "validation": "Bitte überprüfen Sie Ihre Eingaben"
+  },
+  "research": {
+    "title": "Research Agent",
+    "subtitle": "KI-gestützte Interessenten-Recherche für deine Verkaufsgespräche",
+    "loading": "Laden...",
+    "form": {
+      "title": "Neue Recherche",
+      "companyName": "Firmenname",
+      "companyNamePlaceholder": "z.B. Siemens, BMW...",
+      "country": "Land",
+      "countryPlaceholder": "z.B. Deutschland",
+      "searchCompany": "Firma suchen",
+      "searching": "Suchen...",
+      "extraOptions": "Weitere Optionen",
+      "website": "Website (optional)",
+      "websitePlaceholder": "https://...",
+      "linkedin": "LinkedIn (optional)",
+      "linkedinPlaceholder": "https://linkedin.com/company/...",
+      "city": "Stadt",
+      "cityPlaceholder": "z.B. München",
+      "startResearch": "Recherche starten",
+      "researching": "Analysieren..."
+    },
+    "validation": {
+      "companyNameTooShort": "Firmenname zu kurz",
+      "companyNameTooShortDesc": "Mindestens 3 Zeichen eingeben",
+      "countryRequired": "Land erforderlich",
+      "countryRequiredDesc": "Land eingeben um das richtige Unternehmen zu finden",
+      "companyNameRequired": "Firmenname erforderlich",
+      "companyNameRequiredDesc": "Firmennamen eingeben"
+    },
+    "search": {
+      "noResults": "Keine Unternehmen gefunden",
+      "noResultsDesc": "Kein Treffer für \"{company}\" in {country}. Website manuell eingeben.",
+      "failed": "Suche fehlgeschlagen",
+      "failedDesc": "Etwas ist schief gelaufen. Bitte erneut versuchen.",
+      "selected": "Unternehmen ausgewählt",
+      "selectedDesc": "{company} - Daten automatisch ausgefüllt"
+    },
+    "toast": {
+      "started": "Recherche gestartet",
+      "startedDesc": "Deine Recherche wird generiert. Dies dauert 2-3 Minuten.",
+      "failed": "Recherche fehlgeschlagen",
+      "failedDesc": "Konnte Recherche nicht starten",
+      "deleted": "Gelöscht",
+      "deletedDesc": "Recherche-Brief wurde gelöscht",
+      "deleteFailed": "Löschen fehlgeschlagen",
+      "deleteFailedDesc": "Konnte die Recherche nicht löschen. Bitte erneut versuchen.",
+      "loadFailed": "Konnte Brief nicht laden",
+      "loadFailedDesc": "Beim Laden des Recherche-Briefs ist ein Fehler aufgetreten"
+    },
+    "history": {
+      "title": "Meine Interessenten",
+      "empty": "Noch keine Recherche",
+      "emptyDesc": "Starte deine erste Interessenten-Recherche rechts →",
+      "viewAll": "Alle {count} Briefs anzeigen"
+    },
+    "stats": {
+      "title": "Übersicht",
+      "completed": "Abgeschlossen",
+      "researching": "In Bearbeitung",
+      "failed": "Fehlgeschlagen"
+    },
+    "howItWorks": {
+      "title": "Wie funktioniert es?",
+      "step1": "Recherche",
+      "step1Desc": "KI sammelt Firmendaten",
+      "step2": "Kontakte",
+      "step2Desc": "Kontaktpersonen hinzufügen",
+      "step3": "Vorbereitung",
+      "step3Desc": "Meeting-Brief generieren"
+    },
+    "brief": {
+      "generatedAt": "Generiert am",
+      "view": "Ansehen",
+      "copy": "Kopieren",
+      "copied": "Kopiert!",
+      "download": "PDF herunterladen",
+      "delete": "Löschen"
+    },
+    "contacts": {
+      "title": "Kontaktpersonen",
+      "add": "Kontakt hinzufügen",
+      "addShort": "Hinzufügen",
+      "name": "Name",
+      "namePlaceholder": "z.B. Max Mustermann",
+      "role": "Rolle/Position",
+      "rolePlaceholder": "z.B. Vertriebsleiter",
+      "linkedinUrl": "LinkedIn URL",
+      "linkedinPlaceholder": "https://linkedin.com/in/...",
+      "searchOnline": "Online suchen",
+      "searching": "Suchen...",
+      "cancel": "Abbrechen",
+      "empty": "Noch keine Kontaktpersonen",
+      "emptyDesc": "Kontaktpersonen für personalisierte Vorbereitung hinzufügen",
+      "analyzing": "Analysieren...",
+      "analyzed": "Analysiert",
+      "primary": "Primär",
+      "viewAnalysis": "Analyse ansehen",
+      "found": "Person gefunden",
+      "foundDesc": "{role} auf LinkedIn",
+      "foundProfile": "LinkedIn-Profil gefunden",
+      "notFound": "Nicht gefunden",
+      "notFoundDesc": "Konnte kein LinkedIn-Profil finden. Manuell eingeben.",
+      "searchFailed": "Suche fehlgeschlagen",
+      "searchFailedDesc": "Beim Suchen ist ein Fehler aufgetreten",
+      "added": "Kontakt hinzugefügt",
+      "addedDesc": "KI-Analyse gestartet...",
+      "analysisComplete": "Analyse abgeschlossen",
+      "analysisCompleteDesc": "{name} wurde analysiert",
+      "addFailed": "Konnte Kontakt nicht hinzufügen"
+    },
+    "context": {
+      "title": "KI-Kontext",
+      "salesProfile": "Dein Vertriebsprofil",
+      "companyProfile": "Unternehmensprofil",
+      "researchBrief": "Recherche-Brief",
+      "contacts": "Kontaktpersonen"
+    },
+    "nextStep": {
+      "addContact": "Kontaktperson hinzufügen",
+      "addContactDesc": "Erst eine Kontaktperson hinzufügen bevor du zur Vorbereitung gehst",
+      "startPrep": "Vorbereitung starten",
+      "startPrepDesc": "Zum Meeting-Brief mit {count} Kontakt(en)"
+    }
   }
 }
 

@@ -122,6 +122,131 @@
     "unauthorized": "Niet geautoriseerd",
     "notFound": "Niet gevonden",
     "validation": "Controleer de ingevoerde gegevens"
+  },
+  "research": {
+    "title": "Research Agent",
+    "subtitle": "AI-powered prospect research voor je verkoopgesprekken",
+    "loading": "Laden...",
+    "form": {
+      "title": "Nieuwe Research",
+      "companyName": "Bedrijfsnaam",
+      "companyNamePlaceholder": "bijv. Shell, Philips...",
+      "country": "Land",
+      "countryPlaceholder": "bijv. Nederland",
+      "searchCompany": "Zoek Bedrijf",
+      "searching": "Zoeken...",
+      "extraOptions": "Extra opties",
+      "website": "Website (optioneel)",
+      "websitePlaceholder": "https://...",
+      "linkedin": "LinkedIn (optioneel)",
+      "linkedinPlaceholder": "https://linkedin.com/company/...",
+      "city": "Stad",
+      "cityPlaceholder": "bijv. Amsterdam",
+      "startResearch": "Start Research",
+      "researching": "Analyseren..."
+    },
+    "validation": {
+      "companyNameTooShort": "Bedrijfsnaam te kort",
+      "companyNameTooShortDesc": "Vul minimaal 3 tekens in",
+      "countryRequired": "Land verplicht",
+      "countryRequiredDesc": "Vul een land in om het juiste bedrijf te vinden",
+      "companyNameRequired": "Bedrijfsnaam verplicht",
+      "companyNameRequiredDesc": "Vul een bedrijfsnaam in"
+    },
+    "search": {
+      "noResults": "Geen bedrijven gevonden",
+      "noResultsDesc": "Geen match voor \"{company}\" in {country}. Vul handmatig de website in.",
+      "failed": "Zoeken mislukt",
+      "failedDesc": "Er ging iets mis. Probeer het opnieuw.",
+      "selected": "Bedrijf geselecteerd",
+      "selectedDesc": "{company} - gegevens automatisch ingevuld"
+    },
+    "toast": {
+      "started": "Research gestart",
+      "startedDesc": "Je research wordt gegenereerd. Dit duurt 2-3 minuten.",
+      "failed": "Research mislukt",
+      "failedDesc": "Kon research niet starten",
+      "deleted": "Verwijderd",
+      "deletedDesc": "Research brief is verwijderd",
+      "deleteFailed": "Verwijderen mislukt",
+      "deleteFailedDesc": "Kon de research niet verwijderen. Probeer opnieuw.",
+      "loadFailed": "Kon brief niet laden",
+      "loadFailedDesc": "Er is een fout opgetreden bij het laden van de research brief"
+    },
+    "history": {
+      "title": "Mijn Prospects",
+      "empty": "Nog geen research",
+      "emptyDesc": "Start je eerste prospect research hiernaast →",
+      "viewAll": "Bekijk alle {count} briefs"
+    },
+    "stats": {
+      "title": "Overzicht",
+      "completed": "Voltooid",
+      "researching": "Bezig",
+      "failed": "Mislukt"
+    },
+    "howItWorks": {
+      "title": "Hoe werkt het?",
+      "step1": "Research",
+      "step1Desc": "AI verzamelt bedrijfsinfo",
+      "step2": "Contacten",
+      "step2Desc": "Voeg contactpersonen toe",
+      "step3": "Preparation",
+      "step3Desc": "Genereer meeting brief"
+    },
+    "brief": {
+      "generatedAt": "Gegenereerd op",
+      "view": "Bekijk",
+      "copy": "Kopieer",
+      "copied": "Gekopieerd!",
+      "download": "Download PDF",
+      "delete": "Verwijderen"
+    },
+    "contacts": {
+      "title": "Contactpersonen",
+      "add": "Contact Toevoegen",
+      "addShort": "Toevoegen",
+      "name": "Naam",
+      "namePlaceholder": "bijv. Jan de Vries",
+      "role": "Rol/Functie",
+      "rolePlaceholder": "bijv. Sales Director",
+      "linkedinUrl": "LinkedIn URL",
+      "linkedinPlaceholder": "https://linkedin.com/in/...",
+      "searchOnline": "Zoek online",
+      "searching": "Zoeken...",
+      "cancel": "Annuleren",
+      "empty": "Nog geen contactpersonen",
+      "emptyDesc": "Voeg contactpersonen toe voor gepersonaliseerde voorbereiding",
+      "analyzing": "Analyseren...",
+      "analyzed": "Geanalyseerd",
+      "primary": "Primair",
+      "viewAnalysis": "Bekijk analyse",
+      "found": "Persoon gevonden",
+      "foundDesc": "{role} op LinkedIn",
+      "foundProfile": "LinkedIn profiel gevonden",
+      "notFound": "Niet gevonden",
+      "notFoundDesc": "Kon geen LinkedIn profiel vinden. Vul handmatig in.",
+      "searchFailed": "Zoeken mislukt",
+      "searchFailedDesc": "Er is een fout opgetreden bij het zoeken",
+      "added": "Contactpersoon toegevoegd",
+      "addedDesc": "AI-analyse gestart...",
+      "analysisComplete": "Analyse voltooid",
+      "analysisCompleteDesc": "{name} is geanalyseerd",
+      "addFailed": "Kon contact niet toevoegen"
+    },
+    "context": {
+      "title": "AI Context",
+      "salesProfile": "Jouw Sales Profiel",
+      "companyProfile": "Bedrijfsprofiel",
+      "researchBrief": "Research Brief",
+      "contacts": "Contactpersonen"
+    },
+    "nextStep": {
+      "addContact": "Voeg Contactpersoon Toe",
+      "addContactDesc": "Voeg eerst een contactpersoon toe voordat je naar de voorbereiding gaat",
+      "startPrep": "Start Voorbereiding",
+      "startPrepDesc": "Ga naar Meeting Prep met {count} contact(en)"
+    }
   }
 }
 

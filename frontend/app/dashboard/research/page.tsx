@@ -10,6 +10,7 @@ import { Icons } from '@/components/icons'
 import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout'
+import { useTranslations } from 'next-intl'
 
 interface ResearchBrief {
   id: string
@@ -28,6 +29,7 @@ export default function ResearchPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const { toast } = useToast()
+  const t = useTranslations('research')
   
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -64,8 +66,8 @@ export default function ResearchPage() {
   const searchCompanies = async () => {
     if (!companyName || companyName.length < 3) {
       toast({
-        title: "Bedrijfsnaam te kort",
-        description: "Vul minimaal 3 tekens in",
+        title: t('validation.companyNameTooShort'),
+        description: t('validation.companyNameTooShortDesc'),
         variant: "destructive"
       })
       return
@@ -73,8 +75,8 @@ export default function ResearchPage() {
     
     if (!country || country.length < 2) {
       toast({
-        title: "Land verplicht",
-        description: "Vul een land in om het juiste bedrijf te vinden",
+        title: t('validation.countryRequired'),
+        description: t('validation.countryRequiredDesc'),
         variant: "destructive"
       })
       return
@@ -115,8 +117,8 @@ export default function ResearchPage() {
         } else {
           setCompanyOptions([])
           toast({
-            title: "Geen bedrijven gevonden",
-            description: `Geen match voor "${companyName}" in ${country}. Vul handmatig de website in.`,
+            title: t('search.noResults'),
+            description: t('search.noResultsDesc', { company: companyName, country }),
             variant: "destructive"
           })
         }
@@ -124,8 +126,8 @@ export default function ResearchPage() {
     } catch (error) {
       console.error('Company search failed:', error)
       toast({
-        title: "Zoeken mislukt",
-        description: "Er ging iets mis. Probeer het opnieuw.",
+        title: t('search.failed'),
+        description: t('search.failedDesc'),
         variant: "destructive"
       })
     } finally {
@@ -152,8 +154,8 @@ export default function ResearchPage() {
     setShowOptions(false)
     
     toast({
-      title: "Bedrijf geselecteerd",
-      description: `${option.company_name} - gegevens automatisch ingevuld`,
+      title: t('search.selected'),
+      description: t('search.selectedDesc', { company: option.company_name }),
     })
   }
   
@@ -196,8 +198,8 @@ export default function ResearchPage() {
     if (!companyName.trim()) {
       toast({
         variant: "destructive",
-        title: "Bedrijfsnaam verplicht",
-        description: "Vul een bedrijfsnaam in",
+        title: t('validation.companyNameRequired'),
+        description: t('validation.companyNameRequiredDesc'),
       })
       return
     }
@@ -245,8 +247,8 @@ export default function ResearchPage() {
       await fetchBriefs()
       
       toast({
-        title: "Research gestart",
-        description: "Je research wordt gegenereerd. Dit duurt 2-3 minuten.",
+        title: t('toast.started'),
+        description: t('toast.startedDesc'),
       })
       
       setTimeout(() => fetchBriefs(), 3000)
@@ -254,8 +256,8 @@ export default function ResearchPage() {
       console.error('Research failed:', error)
       toast({
         variant: "destructive",
-        title: "Research mislukt",
-        description: error.message || 'Kon research niet starten',
+        title: t('toast.failed'),
+        description: error.message || t('toast.failedDesc'),
       })
     } finally {
       setResearching(false)
@@ -281,8 +283,8 @@ export default function ResearchPage() {
       if (response.ok) {
         await fetchBriefs()
         toast({
-          title: "Verwijderd",
-          description: "Research brief is verwijderd",
+          title: t('toast.deleted'),
+          description: t('toast.deletedDesc'),
         })
       } else {
         throw new Error('Delete failed')
@@ -291,8 +293,8 @@ export default function ResearchPage() {
       console.error('Delete failed:', error)
       toast({
         variant: "destructive",
-        title: "Verwijderen mislukt",
-        description: "Kon de research niet verwijderen. Probeer opnieuw.",
+        title: t('toast.deleteFailed'),
+        description: t('toast.deleteFailedDesc'),
       })
     }
   }
@@ -318,7 +320,7 @@ export default function ResearchPage() {
         <div className="flex items-center justify-center h-full">
           <div className="text-center space-y-4">
             <Icons.spinner className="h-8 w-8 animate-spin text-blue-600 mx-auto" />
-            <p className="text-slate-500 dark:text-slate-400">Laden...</p>
+            <p className="text-slate-500 dark:text-slate-400">{t('loading')}</p>
           </div>
         </div>
       </DashboardLayout>
@@ -339,10 +341,10 @@ export default function ResearchPage() {
         {/* Page Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
-            Research Agent
+            {t('title')}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm">
-            AI-powered prospect research voor je verkoopgesprekken
+            {t('subtitle')}
           </p>
         </div>
 

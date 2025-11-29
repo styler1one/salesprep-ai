@@ -122,6 +122,131 @@
     "unauthorized": "Unauthorized",
     "notFound": "Not found",
     "validation": "Please check your input"
+  },
+  "research": {
+    "title": "Research Agent",
+    "subtitle": "AI-powered prospect research for your sales conversations",
+    "loading": "Loading...",
+    "form": {
+      "title": "New Research",
+      "companyName": "Company Name",
+      "companyNamePlaceholder": "e.g. Shell, Philips...",
+      "country": "Country",
+      "countryPlaceholder": "e.g. Netherlands",
+      "searchCompany": "Search Company",
+      "searching": "Searching...",
+      "extraOptions": "Extra options",
+      "website": "Website (optional)",
+      "websitePlaceholder": "https://...",
+      "linkedin": "LinkedIn (optional)",
+      "linkedinPlaceholder": "https://linkedin.com/company/...",
+      "city": "City",
+      "cityPlaceholder": "e.g. Amsterdam",
+      "startResearch": "Start Research",
+      "researching": "Analyzing..."
+    },
+    "validation": {
+      "companyNameTooShort": "Company name too short",
+      "companyNameTooShortDesc": "Enter at least 3 characters",
+      "countryRequired": "Country required",
+      "countryRequiredDesc": "Enter a country to find the right company",
+      "companyNameRequired": "Company name required",
+      "companyNameRequiredDesc": "Enter a company name"
+    },
+    "search": {
+      "noResults": "No companies found",
+      "noResultsDesc": "No match for \"{company}\" in {country}. Enter the website manually.",
+      "failed": "Search failed",
+      "failedDesc": "Something went wrong. Please try again.",
+      "selected": "Company selected",
+      "selectedDesc": "{company} - data filled in automatically"
+    },
+    "toast": {
+      "started": "Research started",
+      "startedDesc": "Your research is being generated. This takes 2-3 minutes.",
+      "failed": "Research failed",
+      "failedDesc": "Could not start research",
+      "deleted": "Deleted",
+      "deletedDesc": "Research brief has been deleted",
+      "deleteFailed": "Delete failed",
+      "deleteFailedDesc": "Could not delete the research. Please try again.",
+      "loadFailed": "Could not load brief",
+      "loadFailedDesc": "An error occurred while loading the research brief"
+    },
+    "history": {
+      "title": "My Prospects",
+      "empty": "No research yet",
+      "emptyDesc": "Start your first prospect research on the right →",
+      "viewAll": "View all {count} briefs"
+    },
+    "stats": {
+      "title": "Overview",
+      "completed": "Completed",
+      "researching": "In Progress",
+      "failed": "Failed"
+    },
+    "howItWorks": {
+      "title": "How does it work?",
+      "step1": "Research",
+      "step1Desc": "AI gathers company info",
+      "step2": "Contacts",
+      "step2Desc": "Add contact persons",
+      "step3": "Preparation",
+      "step3Desc": "Generate meeting brief"
+    },
+    "brief": {
+      "generatedAt": "Generated on",
+      "view": "View",
+      "copy": "Copy",
+      "copied": "Copied!",
+      "download": "Download PDF",
+      "delete": "Delete"
+    },
+    "contacts": {
+      "title": "Contact Persons",
+      "add": "Add Contact",
+      "addShort": "Add",
+      "name": "Name",
+      "namePlaceholder": "e.g. John Smith",
+      "role": "Role/Title",
+      "rolePlaceholder": "e.g. Sales Director",
+      "linkedinUrl": "LinkedIn URL",
+      "linkedinPlaceholder": "https://linkedin.com/in/...",
+      "searchOnline": "Search online",
+      "searching": "Searching...",
+      "cancel": "Cancel",
+      "empty": "No contact persons yet",
+      "emptyDesc": "Add contact persons for personalized preparation",
+      "analyzing": "Analyzing...",
+      "analyzed": "Analyzed",
+      "primary": "Primary",
+      "viewAnalysis": "View analysis",
+      "found": "Person found",
+      "foundDesc": "{role} on LinkedIn",
+      "foundProfile": "LinkedIn profile found",
+      "notFound": "Not found",
+      "notFoundDesc": "Could not find a LinkedIn profile. Enter manually.",
+      "searchFailed": "Search failed",
+      "searchFailedDesc": "An error occurred while searching",
+      "added": "Contact added",
+      "addedDesc": "AI analysis started...",
+      "analysisComplete": "Analysis complete",
+      "analysisCompleteDesc": "{name} has been analyzed",
+      "addFailed": "Could not add contact"
+    },
+    "context": {
+      "title": "AI Context",
+      "salesProfile": "Your Sales Profile",
+      "companyProfile": "Company Profile",
+      "researchBrief": "Research Brief",
+      "contacts": "Contact Persons"
+    },
+    "nextStep": {
+      "addContact": "Add Contact Person",
+      "addContactDesc": "Add a contact person first before going to preparation",
+      "startPrep": "Start Preparation",
+      "startPrepDesc": "Go to Meeting Prep with {count} contact(s)"
+    }
   }
 }
 

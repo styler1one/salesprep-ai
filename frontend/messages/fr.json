@@ -122,6 +122,131 @@
     "unauthorized": "Non autorisé",
     "notFound": "Non trouvé",
     "validation": "Veuillez vérifier vos données"
+  },
+  "research": {
+    "title": "Agent de Recherche",
+    "subtitle": "Recherche de prospects propulsée par l'IA pour vos conversations commerciales",
+    "loading": "Chargement...",
+    "form": {
+      "title": "Nouvelle Recherche",
+      "companyName": "Nom de l'entreprise",
+      "companyNamePlaceholder": "ex. Total, Renault...",
+      "country": "Pays",
+      "countryPlaceholder": "ex. France",
+      "searchCompany": "Rechercher",
+      "searching": "Recherche...",
+      "extraOptions": "Options supplémentaires",
+      "website": "Site web (optionnel)",
+      "websitePlaceholder": "https://...",
+      "linkedin": "LinkedIn (optionnel)",
+      "linkedinPlaceholder": "https://linkedin.com/company/...",
+      "city": "Ville",
+      "cityPlaceholder": "ex. Paris",
+      "startResearch": "Démarrer la recherche",
+      "researching": "Analyse en cours..."
+    },
+    "validation": {
+      "companyNameTooShort": "Nom trop court",
+      "companyNameTooShortDesc": "Entrez au moins 3 caractères",
+      "countryRequired": "Pays requis",
+      "countryRequiredDesc": "Entrez un pays pour trouver la bonne entreprise",
+      "companyNameRequired": "Nom requis",
+      "companyNameRequiredDesc": "Entrez un nom d'entreprise"
+    },
+    "search": {
+      "noResults": "Aucune entreprise trouvée",
+      "noResultsDesc": "Aucun résultat pour \"{company}\" en {country}. Entrez le site web manuellement.",
+      "failed": "Recherche échouée",
+      "failedDesc": "Une erreur s'est produite. Veuillez réessayer.",
+      "selected": "Entreprise sélectionnée",
+      "selectedDesc": "{company} - données remplies automatiquement"
+    },
+    "toast": {
+      "started": "Recherche démarrée",
+      "startedDesc": "Votre recherche est en cours de génération. Cela prend 2-3 minutes.",
+      "failed": "Recherche échouée",
+      "failedDesc": "Impossible de démarrer la recherche",
+      "deleted": "Supprimé",
+      "deletedDesc": "Le brief de recherche a été supprimé",
+      "deleteFailed": "Suppression échouée",
+      "deleteFailedDesc": "Impossible de supprimer la recherche. Veuillez réessayer.",
+      "loadFailed": "Impossible de charger",
+      "loadFailedDesc": "Une erreur s'est produite lors du chargement du brief"
+    },
+    "history": {
+      "title": "Mes Prospects",
+      "empty": "Pas encore de recherche",
+      "emptyDesc": "Démarrez votre première recherche de prospect à droite →",
+      "viewAll": "Voir les {count} briefs"
+    },
+    "stats": {
+      "title": "Aperçu",
+      "completed": "Terminé",
+      "researching": "En cours",
+      "failed": "Échoué"
+    },
+    "howItWorks": {
+      "title": "Comment ça marche ?",
+      "step1": "Recherche",
+      "step1Desc": "L'IA collecte les infos",
+      "step2": "Contacts",
+      "step2Desc": "Ajoutez des contacts",
+      "step3": "Préparation",
+      "step3Desc": "Générez le brief"
+    },
+    "brief": {
+      "generatedAt": "Généré le",
+      "view": "Voir",
+      "copy": "Copier",
+      "copied": "Copié !",
+      "download": "Télécharger PDF",
+      "delete": "Supprimer"
+    },
+    "contacts": {
+      "title": "Contacts",
+      "add": "Ajouter un contact",
+      "addShort": "Ajouter",
+      "name": "Nom",
+      "namePlaceholder": "ex. Jean Dupont",
+      "role": "Rôle/Poste",
+      "rolePlaceholder": "ex. Directeur Commercial",
+      "linkedinUrl": "URL LinkedIn",
+      "linkedinPlaceholder": "https://linkedin.com/in/...",
+      "searchOnline": "Rechercher en ligne",
+      "searching": "Recherche...",
+      "cancel": "Annuler",
+      "empty": "Pas encore de contacts",
+      "emptyDesc": "Ajoutez des contacts pour une préparation personnalisée",
+      "analyzing": "Analyse...",
+      "analyzed": "Analysé",
+      "primary": "Principal",
+      "viewAnalysis": "Voir l'analyse",
+      "found": "Personne trouvée",
+      "foundDesc": "{role} sur LinkedIn",
+      "foundProfile": "Profil LinkedIn trouvé",
+      "notFound": "Non trouvé",
+      "notFoundDesc": "Impossible de trouver un profil LinkedIn. Entrez manuellement.",
+      "searchFailed": "Recherche échouée",
+      "searchFailedDesc": "Une erreur s'est produite lors de la recherche",
+      "added": "Contact ajouté",
+      "addedDesc": "Analyse IA démarrée...",
+      "analysisComplete": "Analyse terminée",
+      "analysisCompleteDesc": "{name} a été analysé",
+      "addFailed": "Impossible d'ajouter le contact"
+    },
+    "context": {
+      "title": "Contexte IA",
+      "salesProfile": "Votre Profil Commercial",
+      "companyProfile": "Profil Entreprise",
+      "researchBrief": "Brief de Recherche",
+      "contacts": "Contacts"
+    },
+    "nextStep": {
+      "addContact": "Ajouter un Contact",
+      "addContactDesc": "Ajoutez d'abord un contact avant de passer à la préparation",
+      "startPrep": "Démarrer Préparation",
+      "startPrepDesc": "Aller au Brief de Réunion avec {count} contact(s)"
+    }
   }
 }
 
