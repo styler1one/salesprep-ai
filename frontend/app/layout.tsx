@@ -2,6 +2,8 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale, getMessages } from 'next-intl/server'
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -14,22 +16,31 @@ export const metadata: Metadata = {
   description: "AI-powered sales enablement platform",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  // Get locale and messages for i18n
+  const locale = await getLocale()
+  const messages = await getMessages()
+  
+  // Determine text direction (RTL for Arabic)
+  const dir = locale === 'ar' ? 'rtl' : 'ltr'
+
   return (
-    <html lang="en" suppressHydrationWarning className={inter.variable}>
+    <html lang={locale} dir={dir} suppressHydrationWarning className={inter.variable}>
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+        <NextIntlClientProvider messages={messages}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   )

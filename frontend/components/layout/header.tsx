@@ -6,7 +6,10 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { LanguageSelector } from '@/components/language-selector'
 import { cn } from '@/lib/utils'
+import { useLocale } from 'next-intl'
+import type { Locale } from '@/i18n/config'
 
 interface HeaderProps {
   user: any
@@ -17,6 +20,7 @@ export function Header({ user, className }: HeaderProps) {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const locale = useLocale() as Locale
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -40,6 +44,9 @@ export function Header({ user, className }: HeaderProps) {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
+          {/* Language Selector */}
+          <LanguageSelector currentLocale={locale} />
+
           {/* Theme Toggle */}
           <ThemeToggle />
 
