@@ -46,6 +46,8 @@ import {
     Edit,
     Circle,
     Info,
+    Sun,
+    Moon,
 } from 'lucide-react'
 
 // Custom Google Icon (official colors)
@@ -128,6 +130,8 @@ export const Icons = {
     edit: Edit,
     circle: Circle,
     info: Info,
+    sun: Sun,
+    moon: Moon,
     google: GoogleIcon,
     microsoft: MicrosoftIcon,
 }
