@@ -353,7 +353,7 @@ export default function PreparationPage() {
                               }}
                             >
                               <Icons.mic className="h-3 w-3 mr-1" />
-                              Follow-up
+                              {t('history.toFollowup')}
                             </Button>
                           </>
                         )}

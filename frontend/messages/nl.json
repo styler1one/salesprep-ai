@@ -285,7 +285,8 @@
     "history": {
       "title": "Mijn Voorbereidingen",
       "empty": "Nog geen voorbereidingen",
-      "emptyDesc": "Start je eerste meeting voorbereiding hiernaast →"
+      "emptyDesc": "Start je eerste meeting voorbereiding hiernaast →",
+      "toFollowup": "→ Follow-up"
     },
     "stats": {
       "title": "Overzicht",

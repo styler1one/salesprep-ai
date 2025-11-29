@@ -285,7 +285,8 @@
     "history": {
       "title": "My Preparations",
       "empty": "No preparations yet",
-      "emptyDesc": "Start your first meeting preparation on the right →"
+      "emptyDesc": "Start your first meeting preparation on the right →",
+      "toFollowup": "→ Follow-up"
     },
     "stats": {
       "title": "Overview",

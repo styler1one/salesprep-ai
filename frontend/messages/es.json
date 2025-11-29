@@ -253,6 +253,12 @@
     "title": "Preparación de Reunión",
     "subtitle": "Briefings generados por IA para tus conversaciones de ventas",
     "loading": "Cargando...",
+    "context": {
+      "title": "Contexto IA",
+      "description": "Estos datos se combinaron para esta preparación:",
+      "salesProfile": "Tu Perfil de Ventas",
+      "companyProfile": "Tu Perfil de Empresa"
+    },
     "form": {
       "title": "Nueva Preparación",
       "selectProspect": "Seleccionar Prospecto",
@@ -268,7 +274,8 @@
     "history": {
       "title": "Mis Preparaciones",
       "empty": "Aún no hay preparaciones",
-      "emptyDesc": "Inicia tu primera preparación a la derecha →"
+      "emptyDesc": "Inicia tu primera preparación a la derecha →",
+      "toFollowup": "→ Seguimiento"
     },
     "stats": {
       "title": "Resumen",

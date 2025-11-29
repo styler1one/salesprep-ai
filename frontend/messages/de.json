@@ -253,6 +253,12 @@
     "title": "Meeting-Vorbereitung",
     "subtitle": "KI-generierte Briefings für deine Verkaufsgespräche",
     "loading": "Laden...",
+    "context": {
+      "title": "KI Kontext",
+      "description": "Diese Daten wurden für diese Vorbereitung kombiniert:",
+      "salesProfile": "Dein Sales Profil",
+      "companyProfile": "Dein Unternehmensprofil"
+    },
     "form": {
       "title": "Neue Vorbereitung",
       "selectProspect": "Interessent auswählen",
@@ -268,7 +274,8 @@
     "history": {
       "title": "Meine Vorbereitungen",
       "empty": "Noch keine Vorbereitungen",
-      "emptyDesc": "Starte deine erste Meeting-Vorbereitung rechts →"
+      "emptyDesc": "Starte deine erste Meeting-Vorbereitung rechts →",
+      "toFollowup": "→ Follow-up"
     },
     "stats": {
       "title": "Übersicht",
