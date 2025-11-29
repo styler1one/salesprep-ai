@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -10,18 +10,6 @@ import { Icons } from '@/components/icons'
 import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout'
-
-// Debounce helper
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value)
-  
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedValue(value), delay)
-    return () => clearTimeout(timer)
-  }, [value, delay])
-  
-  return debouncedValue
-}
 
 interface ResearchBrief {
   id: string
@@ -33,6 +21,7 @@ interface ResearchBrief {
   error_message?: string
   created_at: string
   completed_at?: string
+  contact_count?: number
 }
 
 export default function ResearchPage() {
@@ -57,6 +46,7 @@ export default function ResearchPage() {
   const [companyOptions, setCompanyOptions] = useState<any[]>([])
   const [showOptions, setShowOptions] = useState(false)
   const [selectedCompany, setSelectedCompany] = useState<any>(null)
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
   useEffect(() => {
     const getUser = async () => {
@@ -70,9 +60,8 @@ export default function ResearchPage() {
     getUser()
   }, [supabase])
   
-  // Manual search function - only called when user clicks "Zoek"
+  // Manual search function
   const searchCompanies = async () => {
-    // Validate inputs
     if (!companyName || companyName.length < 3) {
       toast({
         title: "Bedrijfsnaam te kort",
@@ -118,18 +107,16 @@ export default function ResearchPage() {
         if (data.options && data.options.length > 0) {
           setCompanyOptions(data.options)
           
-          // If only 1 option with high confidence, auto-select
           if (data.options.length === 1 && data.options[0].confidence >= 90) {
             selectCompanyOption(data.options[0])
           } else {
-            // Show options for user to choose
             setShowOptions(true)
           }
         } else {
           setCompanyOptions([])
           toast({
             title: "Geen bedrijven gevonden",
-            description: `Geen match voor "${companyName}" in ${country}. Je kunt handmatig de website invullen.`,
+            description: `Geen match voor "${companyName}" in ${country}. Vul handmatig de website in.`,
             variant: "destructive"
           })
         }
@@ -146,19 +133,16 @@ export default function ResearchPage() {
     }
   }
   
-  // Handle selecting a company option
   const selectCompanyOption = (option: any) => {
     setSelectedCompany(option)
     setCompanyName(option.company_name)
     if (option.website) setWebsiteUrl(option.website)
     if (option.linkedin_url) setLinkedinUrl(option.linkedin_url)
     
-    // Extract city from location (format: "City, Country" or just "City")
     if (option.location) {
       const locationParts = option.location.split(',')
       if (locationParts.length > 0) {
         const extractedCity = locationParts[0].trim()
-        // Only set if it looks like a city (not same as country)
         if (extractedCity.toLowerCase() !== country.toLowerCase()) {
           setCity(extractedCity)
         }
@@ -173,7 +157,6 @@ export default function ResearchPage() {
     })
   }
   
-  // Reset selection when company name is manually changed
   const handleCompanyNameChange = (value: string) => {
     setCompanyName(value)
     if (selectedCompany && value !== selectedCompany.company_name) {
@@ -213,8 +196,8 @@ export default function ResearchPage() {
     if (!companyName.trim()) {
       toast({
         variant: "destructive",
-        title: "Company name required",
-        description: "Please enter a company name",
+        title: "Bedrijfsnaam verplicht",
+        description: "Vul een bedrijfsnaam in",
       })
       return
     }
@@ -238,7 +221,7 @@ export default function ResearchPage() {
           body: JSON.stringify({
             company_name: companyName,
             company_linkedin_url: linkedinUrl || null,
-            company_website_url: websiteUrl || null,  // NEW: Website URL
+            company_website_url: websiteUrl || null,
             country: country || null,
             city: city || null
           })
@@ -256,30 +239,31 @@ export default function ResearchPage() {
       setWebsiteUrl('')
       setCountry('')
       setCity('')
+      setSelectedCompany(null)
+      setShowAdvanced(false)
       
-      // Refresh list
       await fetchBriefs()
       
       toast({
-        title: "Research started",
-        description: "Your research is being generated. This may take 2-3 minutes.",
+        title: "Research gestart",
+        description: "Je research wordt gegenereerd. Dit duurt 2-3 minuten.",
       })
       
-      // Start polling for updates
       setTimeout(() => fetchBriefs(), 3000)
     } catch (error: any) {
       console.error('Research failed:', error)
       toast({
         variant: "destructive",
-        title: "Research failed",
-        description: error.message || 'Failed to start research',
+        title: "Research mislukt",
+        description: error.message || 'Kon research niet starten',
       })
     } finally {
       setResearching(false)
     }
   }
 
-  const handleDeleteBrief = async (briefId: string) => {
+  const handleDeleteBrief = async (briefId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
@@ -297,8 +281,8 @@ export default function ResearchPage() {
       if (response.ok) {
         await fetchBriefs()
         toast({
-          title: "Research deleted",
-          description: "The research brief has been removed",
+          title: "Verwijderd",
+          description: "Research brief is verwijderd",
         })
       } else {
         throw new Error('Delete failed')
@@ -307,8 +291,8 @@ export default function ResearchPage() {
       console.error('Delete failed:', error)
       toast({
         variant: "destructive",
-        title: "Delete failed",
-        description: "Could not delete the research. Please try again.",
+        title: "Verwijderen mislukt",
+        description: "Kon de research niet verwijderen. Probeer opnieuw.",
       })
     }
   }
@@ -322,7 +306,7 @@ export default function ResearchPage() {
     if (hasProcessingBriefs) {
       const interval = setInterval(() => {
         fetchBriefs()
-      }, 5000) // Poll every 5 seconds
+      }, 5000)
 
       return () => clearInterval(interval)
     }
@@ -330,12 +314,14 @@ export default function ResearchPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="text-center space-y-4">
-          <Icons.spinner className="h-8 w-8 animate-spin text-blue-600 mx-auto" />
-          <p className="text-slate-500">Loading...</p>
+      <DashboardLayout user={user}>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center space-y-4">
+            <Icons.spinner className="h-8 w-8 animate-spin text-blue-600 mx-auto" />
+            <p className="text-slate-500">Laden...</p>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     )
   }
 
@@ -346,382 +332,372 @@ export default function ResearchPage() {
 
   const completedBriefs = briefs.filter(b => b.status === 'completed').length
   const processingBriefs = briefs.filter(b => b.status === 'researching' || b.status === 'pending').length
-  const failedBriefs = briefs.filter(b => b.status === 'failed').length
 
   return (
     <DashboardLayout user={user}>
-      <div className="p-6 lg:p-8 max-w-6xl mx-auto animate-fade-in">
+      <div className="p-4 lg:p-6">
         {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">
             Research Agent
           </h1>
-          <p className="text-slate-500">
-            AI-powered prospect research to help you prepare for sales conversations
+          <p className="text-slate-500 text-sm">
+            AI-powered prospect research voor je verkoopgesprekken
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-xl border p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-500 mb-1">Completed</p>
-                <p className="text-2xl font-bold text-green-600">{completedBriefs}</p>
-              </div>
-              <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-                <Icons.checkCircle className="h-5 w-5 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl border p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-500 mb-1">Researching</p>
-                <p className="text-2xl font-bold text-blue-600">{processingBriefs}</p>
-              </div>
-              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                {processingBriefs > 0 ? (
-                  <Icons.spinner className="h-5 w-5 text-blue-600 animate-spin" />
-                ) : (
-                  <Icons.clock className="h-5 w-5 text-blue-600" />
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl border p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-500 mb-1">Failed</p>
-                <p className="text-2xl font-bold text-red-600">{failedBriefs}</p>
-              </div>
-              <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
-                <Icons.alertCircle className="h-5 w-5 text-red-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Research Form */}
-        <div className="bg-white rounded-xl border p-6 mb-8">
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Icons.search className="h-5 w-5 text-blue-600" />
-            Research a Company
-          </h2>
+        {/* Two Column Layout */}
+        <div className="flex gap-6">
           
-          {/* Step indicator */}
-          <div className="mb-6 p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
-            <span className={companyName.length >= 3 && country.length >= 2 ? 'text-green-600' : ''}>
-              <strong>1.</strong> Bedrijfsnaam + land
-            </span>
-            {' → '}
-            <span className={selectedCompany ? 'text-green-600' : ''}>
-              <strong>2.</strong> Zoek & selecteer
-            </span>
-            {' → '}
-            <strong>3.</strong> Start research
-          </div>
-          
-          <form onSubmit={handleStartResearch} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="companyName">Bedrijfsnaam *</Label>
-                <Input
-                  id="companyName"
-                  value={companyName}
-                  onChange={(e) => handleCompanyNameChange(e.target.value)}
-                  placeholder="bijv. Precision Health Clinic"
-                  className={`mt-1 ${selectedCompany ? 'border-green-300 bg-green-50' : ''}`}
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="country">Land * (verplicht voor zoeken)</Label>
-                <Input
-                  id="country"
-                  value={country}
-                  onChange={(e) => { setCountry(e.target.value); setSelectedCompany(null) }}
-                  placeholder="bijv. Netherlands"
-                  className={`mt-1 ${country.length >= 2 ? 'border-blue-300' : ''}`}
-                  required
-                />
-              </div>
-            </div>
-            
-            {/* Search button - only show if not already selected a company */}
-            {!selectedCompany && (
-              <Button
-                type="button"
-                onClick={searchCompanies}
-                disabled={isSearching || companyName.length < 3 || country.length < 2}
-                variant="outline"
-                className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
-              >
-                {isSearching ? (
-                  <>
-                    <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                    Zoeken op Google...
-                  </>
-                ) : (
-                  <>
-                    <Icons.search className="mr-2 h-4 w-4" />
-                    🔍 Zoek bedrijf online
-                  </>
-                )}
+          {/* Left Column - Research History */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Icons.fileText className="h-5 w-5 text-slate-400" />
+                Mijn Prospects
+                <span className="text-sm font-normal text-slate-400">({briefs.length})</span>
+              </h2>
+              <Button variant="ghost" size="sm" onClick={fetchBriefs}>
+                <Icons.refresh className="h-4 w-4" />
               </Button>
-            )}
-            
-            {/* Help text */}
-            {!selectedCompany && !showOptions && (
-              <p className="text-sm text-slate-500 text-center">
-                {companyName.length < 3 ? '⚠️ Vul minimaal 3 tekens in voor bedrijfsnaam' :
-                 country.length < 2 ? '⚠️ Vul een land in' :
-                 '👆 Klik op "Zoek bedrijf online" om het juiste bedrijf te vinden'}
-              </p>
-            )}
-            
-            {/* Company Options Dropdown */}
-            {showOptions && companyOptions.length > 0 && (
-              <div className="border rounded-lg p-4 bg-blue-50 space-y-3">
-                <p className="font-medium text-blue-800">
-                  🔍 Meerdere bedrijven gevonden - selecteer het juiste:
-                </p>
-                {companyOptions.map((option, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => selectCompanyOption(option)}
-                    className="w-full text-left p-3 bg-white rounded-lg border hover:border-blue-500 hover:bg-blue-50 transition-colors"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium text-slate-800">{option.company_name}</p>
-                        {option.description && (
-                          <p className="text-sm text-slate-500 mt-1">{option.description}</p>
-                        )}
-                        {option.location && (
-                          <p className="text-xs text-slate-400 mt-1">📍 {option.location}</p>
-                        )}
-                      </div>
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                        {option.confidence}% match
-                      </span>
-                    </div>
-                    <div className="flex gap-4 mt-2 text-xs text-slate-500">
-                      {option.website && <span>🌐 {option.website}</span>}
-                      {option.linkedin_url && <span>💼 LinkedIn</span>}
-                    </div>
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setShowOptions(false)}
-                  className="text-sm text-slate-500 hover:text-slate-700"
-                >
-                  ✕ Sluiten en handmatig invullen
-                </button>
-              </div>
-            )}
-            
-            {/* Selected company indicator */}
-            {selectedCompany && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-green-800">✅ {selectedCompany.company_name}</p>
-                  <p className="text-sm text-green-600">{selectedCompany.description || selectedCompany.location}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => { setSelectedCompany(null); setWebsiteUrl(''); setLinkedinUrl(''); setCompanyOptions([]) }}
-                  className="text-sm text-green-700 hover:text-green-900 underline"
-                >
-                  Wijzigen
-                </button>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="websiteUrl" className="flex items-center gap-2">
-                  Website
-                  {websiteUrl && selectedCompany && (
-                    <span className="text-xs text-green-600 flex items-center gap-1">
-                      <Icons.checkCircle className="h-3 w-3" />
-                      Via Google gevonden
-                    </span>
-                  )}
-                </Label>
-                <Input
-                  id="websiteUrl"
-                  value={websiteUrl}
-                  onChange={(e) => setWebsiteUrl(e.target.value)}
-                  placeholder="https://www.company.com"
-                  className={`mt-1 ${websiteUrl && selectedCompany ? 'border-green-300 bg-green-50' : ''}`}
-                />
-                <p className="text-xs text-slate-400 mt-1">
-                  We scrapen deze website voor details
-                </p>
-              </div>
-
-              <div>
-                <Label htmlFor="linkedinUrl" className="flex items-center gap-2">
-                  LinkedIn URL
-                  {linkedinUrl && selectedCompany && (
-                    <span className="text-xs text-green-600 flex items-center gap-1">
-                      <Icons.checkCircle className="h-3 w-3" />
-                      Via Google gevonden
-                    </span>
-                  )}
-                </Label>
-                <Input
-                  id="linkedinUrl"
-                  value={linkedinUrl}
-                  onChange={(e) => setLinkedinUrl(e.target.value)}
-                  placeholder="https://linkedin.com/company/..."
-                  className={`mt-1 ${linkedinUrl && selectedCompany ? 'border-green-300 bg-green-50' : ''}`}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="city" className="flex items-center gap-2">
-                  Stad
-                  {city && selectedCompany && (
-                    <span className="text-xs text-green-600 flex items-center gap-1">
-                      <Icons.checkCircle className="h-3 w-3" />
-                      Via Google gevonden
-                    </span>
-                  )}
-                </Label>
-                <Input
-                  id="city"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="bijv. Amsterdam"
-                  className={`mt-1 ${city && selectedCompany ? 'border-green-300 bg-green-50' : ''}`}
-                />
-              </div>
             </div>
 
-            <Button 
-              type="submit" 
-              disabled={researching || !companyName || !country}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {researching ? (
-                <>
-                  <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                  Research starten...
-                </>
-              ) : (
-                <>
-                  <Icons.search className="mr-2 h-4 w-4" />
-                  Start Research
-                </>
-              )}
-            </Button>
-          </form>
-        </div>
-
-        {/* Research History */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Research History ({briefs.length})</h2>
-            <Button variant="outline" size="sm" onClick={fetchBriefs}>
-              <Icons.refresh className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
+            {briefs.length === 0 ? (
+              <div className="bg-white rounded-xl border p-12 text-center">
+                <Icons.search className="h-16 w-16 text-slate-200 mx-auto mb-4" />
+                <h3 className="font-semibold text-slate-700 mb-2">Nog geen prospects onderzocht</h3>
+                <p className="text-slate-500 text-sm mb-4">
+                  Start je eerste research via het formulier rechts →
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {briefs.map((brief) => (
+                  <div
+                    key={brief.id}
+                    className={`bg-white rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group ${
+                      brief.status === 'completed' ? 'hover:border-blue-300' : ''
+                    }`}
+                    onClick={() => brief.status === 'completed' && router.push(`/dashboard/research/${brief.id}`)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-semibold text-slate-900 truncate">{brief.company_name}</h4>
+                          
+                          {brief.status === 'completed' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 flex-shrink-0">
+                              <Icons.check className="h-3 w-3" />
+                              Klaar
+                            </span>
+                          )}
+                          {brief.status === 'researching' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 flex-shrink-0">
+                              <Icons.spinner className="h-3 w-3 animate-spin" />
+                              Bezig...
+                            </span>
+                          )}
+                          {brief.status === 'pending' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700 flex-shrink-0">
+                              <Icons.clock className="h-3 w-3" />
+                              Wachtrij
+                            </span>
+                          )}
+                          {brief.status === 'failed' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 flex-shrink-0">
+                              <Icons.alertCircle className="h-3 w-3" />
+                              Mislukt
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-3 text-xs text-slate-500">
+                          {(brief.city || brief.country) && (
+                            <span>📍 {[brief.city, brief.country].filter(Boolean).join(', ')}</span>
+                          )}
+                          <span>{new Date(brief.created_at).toLocaleDateString('nl-NL')}</span>
+                        </div>
+                        
+                        {brief.error_message && (
+                          <p className="text-xs text-red-600 mt-2 truncate">
+                            {brief.error_message}
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-1 ml-4">
+                        {brief.status === 'completed' && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                sessionStorage.setItem('prepareForCompany', brief.company_name)
+                                router.push('/dashboard/preparation')
+                              }}
+                            >
+                              <Icons.arrowRight className="h-3 w-3 mr-1" />
+                              Preparation
+                            </Button>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="h-8 text-xs bg-blue-600 hover:bg-blue-700"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                router.push(`/dashboard/research/${brief.id}`)
+                              }}
+                            >
+                              <Icons.eye className="h-3 w-3 mr-1" />
+                              Bekijk
+                            </Button>
+                          </>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => handleDeleteBrief(brief.id, e)}
+                        >
+                          <Icons.trash className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {briefs.length === 0 ? (
-            <div className="bg-white rounded-xl border p-12 text-center">
-              <Icons.search className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-              <p className="text-slate-500">
-                No research yet. Start by researching a company above.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {briefs.map((brief) => (
-                <div
-                  key={brief.id}
-                  className="bg-white rounded-xl border p-5 hover:shadow-md transition-all"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-semibold text-slate-900">{brief.company_name}</h4>
-                        {brief.status === 'completed' && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700">
-                            <Icons.checkCircle className="h-3 w-3" />
-                            Completed
-                          </span>
-                        )}
-                        {brief.status === 'researching' && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                            <Icons.spinner className="h-3 w-3 animate-spin" />
-                            Researching
-                          </span>
-                        )}
-                        {brief.status === 'pending' && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700">
-                            <Icons.clock className="h-3 w-3" />
-                            Pending
-                          </span>
-                        )}
-                        {brief.status === 'failed' && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700">
-                            <Icons.alertCircle className="h-3 w-3" />
-                            Failed
-                          </span>
-                        )}
-                      </div>
-                      
-                      {(brief.city || brief.country) && (
-                        <p className="text-sm text-slate-500 mb-1">
-                          📍 {[brief.city, brief.country].filter(Boolean).join(', ')}
-                        </p>
+          {/* Right Column - Sticky Sidebar */}
+          <div className="w-80 flex-shrink-0 hidden lg:block">
+            <div className="sticky top-4 space-y-4">
+              
+              {/* Stats Panel */}
+              <div className="rounded-xl border bg-white p-4 shadow-sm">
+                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                  <Icons.barChart className="h-4 w-4 text-slate-400" />
+                  Overzicht
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-green-50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-green-600">{completedBriefs}</p>
+                    <p className="text-xs text-green-700">Voltooid</p>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-blue-600">{processingBriefs}</p>
+                    <p className="text-xs text-blue-700">Bezig</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* New Research Form */}
+              <div className="rounded-xl border bg-white p-4 shadow-sm">
+                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                  <Icons.search className="h-4 w-4 text-blue-600" />
+                  Nieuw Onderzoek
+                </h3>
+                
+                <form onSubmit={handleStartResearch} className="space-y-3">
+                  <div>
+                    <Label htmlFor="companyName" className="text-xs">Bedrijfsnaam *</Label>
+                    <Input
+                      id="companyName"
+                      value={companyName}
+                      onChange={(e) => handleCompanyNameChange(e.target.value)}
+                      placeholder="bijv. Acme Corp"
+                      className={`mt-1 h-9 text-sm ${selectedCompany ? 'border-green-300 bg-green-50' : ''}`}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="country" className="text-xs">Land *</Label>
+                    <Input
+                      id="country"
+                      value={country}
+                      onChange={(e) => { setCountry(e.target.value); setSelectedCompany(null) }}
+                      placeholder="bijv. Nederland"
+                      className="mt-1 h-9 text-sm"
+                      required
+                    />
+                  </div>
+                  
+                  {/* Search button */}
+                  {!selectedCompany && (
+                    <Button
+                      type="button"
+                      onClick={searchCompanies}
+                      disabled={isSearching || companyName.length < 3 || country.length < 2}
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs"
+                    >
+                      {isSearching ? (
+                        <>
+                          <Icons.spinner className="mr-2 h-3 w-3 animate-spin" />
+                          Zoeken...
+                        </>
+                      ) : (
+                        <>
+                          <Icons.search className="mr-2 h-3 w-3" />
+                          Zoek bedrijf online
+                        </>
                       )}
-                      
-                      <p className="text-xs text-slate-400">
-                        {new Date(brief.created_at).toLocaleString()}
-                      </p>
-                      
-                      {brief.error_message && (
-                        <p className="text-sm text-red-600 mt-2">
-                          Error: {brief.error_message}
-                        </p>
-                      )}
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      {brief.status === 'completed' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => router.push(`/dashboard/research/${brief.id}`)}
+                    </Button>
+                  )}
+                  
+                  {/* Company Options */}
+                  {showOptions && companyOptions.length > 0 && (
+                    <div className="border rounded-lg p-2 bg-blue-50 space-y-2 max-h-48 overflow-y-auto">
+                      <p className="text-xs font-medium text-blue-800">Selecteer:</p>
+                      {companyOptions.map((option, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => selectCompanyOption(option)}
+                          className="w-full text-left p-2 bg-white rounded border text-xs hover:border-blue-500 transition-colors"
                         >
-                          <Icons.fileText className="h-4 w-4 mr-2" />
-                          View
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteBrief(brief.id)}
-                        className="text-slate-400 hover:text-red-600"
-                      >
-                        <Icons.trash className="h-4 w-4" />
-                      </Button>
+                          <p className="font-medium truncate">{option.company_name}</p>
+                          {option.location && (
+                            <p className="text-slate-500 truncate">📍 {option.location}</p>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Selected company indicator */}
+                  {selectedCompany && (
+                    <div className="p-2 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-green-800 truncate">✅ {selectedCompany.company_name}</p>
+                        <button
+                          type="button"
+                          onClick={() => { setSelectedCompany(null); setWebsiteUrl(''); setLinkedinUrl('') }}
+                          className="text-xs text-green-700 hover:text-green-900"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Advanced options toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
+                  >
+                    {showAdvanced ? <Icons.chevronDown className="h-3 w-3" /> : <Icons.chevronRight className="h-3 w-3" />}
+                    Extra opties
+                  </button>
+
+                  {showAdvanced && (
+                    <div className="space-y-3 pt-2 border-t">
+                      <div>
+                        <Label htmlFor="websiteUrl" className="text-xs">Website</Label>
+                        <Input
+                          id="websiteUrl"
+                          value={websiteUrl}
+                          onChange={(e) => setWebsiteUrl(e.target.value)}
+                          placeholder="https://..."
+                          className="mt-1 h-9 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="linkedinUrl" className="text-xs">LinkedIn URL</Label>
+                        <Input
+                          id="linkedinUrl"
+                          value={linkedinUrl}
+                          onChange={(e) => setLinkedinUrl(e.target.value)}
+                          placeholder="https://linkedin.com/..."
+                          className="mt-1 h-9 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="city" className="text-xs">Stad</Label>
+                        <Input
+                          id="city"
+                          value={city}
+                          onChange={(e) => setCity(e.target.value)}
+                          placeholder="bijv. Amsterdam"
+                          className="mt-1 h-9 text-sm"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <Button 
+                    type="submit" 
+                    disabled={researching || !companyName || !country}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                  >
+                    {researching ? (
+                      <>
+                        <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                        Starten...
+                      </>
+                    ) : (
+                      <>
+                        <Icons.zap className="mr-2 h-4 w-4" />
+                        Start Research
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </div>
+
+              {/* How it works Panel */}
+              <div className="rounded-xl border bg-gradient-to-br from-indigo-50 to-blue-50 p-4 shadow-sm">
+                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                  <Icons.sparkles className="h-4 w-4 text-indigo-600" />
+                  Hoe werkt het?
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center flex-shrink-0 font-bold">1</div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-800">Research</p>
+                      <p className="text-xs text-slate-600">AI onderzoekt het bedrijf</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center flex-shrink-0 font-bold">2</div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-800">Contactpersonen</p>
+                      <p className="text-xs text-slate-600">Voeg je gesprekspartners toe</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-green-600 text-white text-xs flex items-center justify-center flex-shrink-0 font-bold">3</div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-800">Preparation</p>
+                      <p className="text-xs text-slate-600">Krijg een gepersonaliseerde brief</p>
                     </div>
                   </div>
                 </div>
-              ))}
+              </div>
+
             </div>
-          )}
+          </div>
         </div>
+
+        {/* Mobile: Floating New Research Button */}
+        <div className="lg:hidden fixed bottom-6 right-6">
+          <Button 
+            className="rounded-full h-14 w-14 shadow-lg bg-blue-600 hover:bg-blue-700"
+            onClick={() => {
+              // Scroll to top where form is visible on mobile
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+          >
+            <Icons.plus className="h-6 w-6" />
+          </Button>
+        </div>
+
         <Toaster />
       </div>
     </DashboardLayout>
