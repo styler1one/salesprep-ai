@@ -13,6 +13,7 @@ from app.deps import get_current_user
 from app.services.rag_service import rag_service
 from app.services.prep_generator import prep_generator
 from app.services.prospect_service import get_prospect_service
+from app.services.usage_service import get_usage_service
 from supabase import create_client
 import os
 
@@ -162,6 +163,21 @@ async def start_prep(
         
         organization_id = org_response.data[0]["organization_id"]
         
+        # Check subscription limit
+        usage_service = get_usage_service()
+        limit_check = await usage_service.check_limit(organization_id, "preparation")
+        if not limit_check.get("allowed"):
+            raise HTTPException(
+                status_code=402,  # Payment Required
+                detail={
+                    "error": "limit_exceeded",
+                    "message": "Je hebt je preparation limiet bereikt voor deze maand",
+                    "current": limit_check.get("current", 0),
+                    "limit": limit_check.get("limit", 0),
+                    "upgrade_url": "/pricing"
+                }
+            )
+        
         # Get or create prospect (NEW!)
         prospect_service = get_prospect_service()
         prospect_id = prospect_service.get_or_create_prospect(
@@ -219,6 +235,9 @@ async def start_prep(
             request.contact_ids,  # Pass selected contacts
             request.language or "en"  # i18n: output language (fallback to English)
         )
+        
+        # Increment usage counter
+        await usage_service.increment_usage(organization_id, "preparation")
         
         contact_count = len(request.contact_ids) if request.contact_ids else 0
         logger.info(f"Created prep {prep_id} for {request.prospect_company_name} (prospect: {prospect_id}, contacts: {contact_count})")

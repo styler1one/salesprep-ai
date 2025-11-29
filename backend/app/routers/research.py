@@ -12,6 +12,7 @@ from supabase import create_client, Client
 from app.deps import get_current_user, get_auth_token
 from app.services.prospect_service import get_prospect_service
 from app.services.company_lookup import get_company_lookup
+from app.services.usage_service import get_usage_service
 
 
 router = APIRouter()
@@ -223,6 +224,21 @@ async def start_research(
     
     organization_id = org_response.data[0]["organization_id"]
     
+    # Check subscription limit
+    usage_service = get_usage_service()
+    limit_check = await usage_service.check_limit(organization_id, "research")
+    if not limit_check.get("allowed"):
+        raise HTTPException(
+            status_code=402,  # Payment Required
+            detail={
+                "error": "limit_exceeded",
+                "message": "Je hebt je research limiet bereikt voor deze maand",
+                "current": limit_check.get("current", 0),
+                "limit": limit_check.get("limit", 0),
+                "upgrade_url": "/pricing"
+            }
+        )
+    
     # Get or create prospect (NEW!)
     prospect_service = get_prospect_service()
     prospect_id = prospect_service.get_or_create_prospect(
@@ -274,8 +290,11 @@ async def start_research(
             request.company_website_url,
             organization_id,  # For seller context (what you sell)
             user_id,  # For sales profile context
-            request.language or "nl"  # i18n: output language
+            request.language or "en"  # i18n: output language
         )
+        
+        # Increment usage counter
+        await usage_service.increment_usage(organization_id, "research")
         
         return ResearchResponse(
             id=research_id,

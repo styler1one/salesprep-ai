@@ -20,6 +20,7 @@ from app.services.followup_generator import get_followup_generator
 from app.services.transcript_parser import get_transcript_parser
 from app.services.prospect_context_service import get_prospect_context_service
 from app.services.prospect_service import get_prospect_service
+from app.services.usage_service import get_usage_service
 
 logger = logging.getLogger(__name__)
 
@@ -313,6 +314,21 @@ async def upload_audio(
         
         organization_id = org_response.data[0]["organization_id"]
         
+        # Check subscription limit
+        usage_service = get_usage_service()
+        limit_check = await usage_service.check_limit(organization_id, "followup")
+        if not limit_check.get("allowed"):
+            raise HTTPException(
+                status_code=402,  # Payment Required
+                detail={
+                    "error": "limit_exceeded",
+                    "message": "Je hebt je follow-up limiet bereikt voor deze maand",
+                    "current": limit_check.get("current", 0),
+                    "limit": limit_check.get("limit", 0),
+                    "upgrade_url": "/pricing"
+                }
+            )
+        
         # Read file data
         audio_data = await file.read()
         
@@ -364,6 +380,9 @@ async def upload_audio(
             include_coaching,  # pass coaching flag
             language  # i18n: output language
         )
+        
+        # Increment usage counter
+        await usage_service.increment_usage(organization_id, "followup")
         
         logger.info(f"Created followup {followup_id} for prospect {prospect_id}, coaching={include_coaching}, starting background processing")
         
@@ -555,6 +574,21 @@ async def upload_transcript(
         
         organization_id = org_response.data[0]["organization_id"]
         
+        # Check subscription limit
+        usage_service = get_usage_service()
+        limit_check = await usage_service.check_limit(organization_id, "followup")
+        if not limit_check.get("allowed"):
+            raise HTTPException(
+                status_code=402,  # Payment Required
+                detail={
+                    "error": "limit_exceeded",
+                    "message": "Je hebt je follow-up limiet bereikt voor deze maand",
+                    "current": limit_check.get("current", 0),
+                    "limit": limit_check.get("limit", 0),
+                    "upgrade_url": "/pricing"
+                }
+            )
+        
         # Read file data
         file_data = await file.read()
         
@@ -623,6 +657,9 @@ async def upload_transcript(
             include_coaching,  # NEW: pass coaching flag
             language  # i18n: output language
         )
+        
+        # Increment usage counter
+        await usage_service.increment_usage(organization_id, "followup")
         
         logger.info(f"Created transcript followup {followup_id} for prospect {prospect_id}, coaching={include_coaching}, language={language}, starting background processing")
         
