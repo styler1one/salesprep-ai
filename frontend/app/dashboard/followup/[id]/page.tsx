@@ -420,7 +420,7 @@ export default function FollowupDetailPage() {
                       💰 Commerciële Signalen
                     </h2>
                     <div className="grid gap-4 md:grid-cols-3">
-                      {followup.commercial_signals?.koopsignalen?.length > 0 && (
+                      {followup.commercial_signals?.koopsignalen && followup.commercial_signals.koopsignalen.length > 0 && (
                         <div className="bg-white/60 p-4 rounded-lg">
                           <h4 className="font-semibold text-sm text-green-700 mb-2">✓ Koopsignalen</h4>
                           <ul className="space-y-1">
@@ -430,7 +430,7 @@ export default function FollowupDetailPage() {
                           </ul>
                         </div>
                       )}
-                      {followup.commercial_signals?.cross_sell?.length > 0 && (
+                      {followup.commercial_signals?.cross_sell && followup.commercial_signals.cross_sell.length > 0 && (
                         <div className="bg-white/60 p-4 rounded-lg">
                           <h4 className="font-semibold text-sm text-blue-700 mb-2">💡 Cross/Upsell</h4>
                           <ul className="space-y-1">
@@ -440,7 +440,7 @@ export default function FollowupDetailPage() {
                           </ul>
                         </div>
                       )}
-                      {followup.commercial_signals?.risks?.length > 0 && (
+                      {followup.commercial_signals?.risks && followup.commercial_signals.risks.length > 0 && (
                         <div className="bg-red-50 p-4 rounded-lg">
                           <h4 className="font-semibold text-sm text-red-700 mb-2">⚠️ Risico's</h4>
                           <ul className="space-y-1">
@@ -462,7 +462,7 @@ export default function FollowupDetailPage() {
                       🔎 Observaties & Signalen
                     </h2>
                     <div className="grid gap-4 md:grid-cols-2">
-                      {followup.observations?.doubts?.length > 0 && (
+                      {followup.observations?.doubts && followup.observations.doubts.length > 0 && (
                         <div className="bg-amber-50 p-4 rounded-lg">
                           <h4 className="font-semibold text-sm text-amber-700 mb-2">⚠️ Twijfel</h4>
                           <ul className="space-y-1">
@@ -472,7 +472,7 @@ export default function FollowupDetailPage() {
                           </ul>
                         </div>
                       )}
-                      {followup.observations?.unspoken_needs?.length > 0 && (
+                      {followup.observations?.unspoken_needs && followup.observations.unspoken_needs.length > 0 && (
                         <div className="bg-yellow-50 p-4 rounded-lg">
                           <h4 className="font-semibold text-sm text-yellow-700 mb-2">💡 Onuitgesproken</h4>
                           <ul className="space-y-1">
@@ -482,7 +482,7 @@ export default function FollowupDetailPage() {
                           </ul>
                         </div>
                       )}
-                      {followup.observations?.opportunities?.length > 0 && (
+                      {followup.observations?.opportunities && followup.observations.opportunities.length > 0 && (
                         <div className="bg-green-50 p-4 rounded-lg">
                           <h4 className="font-semibold text-sm text-green-700 mb-2">🎯 Kansen</h4>
                           <ul className="space-y-1">
@@ -492,7 +492,7 @@ export default function FollowupDetailPage() {
                           </ul>
                         </div>
                       )}
-                      {followup.observations?.red_flags?.length > 0 && (
+                      {followup.observations?.red_flags && followup.observations.red_flags.length > 0 && (
                         <div className="bg-red-50 p-4 rounded-lg">
                           <h4 className="font-semibold text-sm text-red-700 mb-2">🚩 Rode Vlaggen</h4>
                           <ul className="space-y-1">
@@ -514,7 +514,7 @@ export default function FollowupDetailPage() {
                       📈 Coaching Feedback
                     </h2>
                     <div className="grid gap-4 md:grid-cols-3">
-                      {followup.coaching_feedback?.strengths?.length > 0 && (
+                      {followup.coaching_feedback?.strengths && followup.coaching_feedback.strengths.length > 0 && (
                         <div className="bg-green-50 p-4 rounded-lg">
                           <h4 className="font-semibold text-sm text-green-700 mb-2">✅ Goed</h4>
                           <ul className="space-y-1">
@@ -524,17 +524,17 @@ export default function FollowupDetailPage() {
                           </ul>
                         </div>
                       )}
-                      {followup.coaching_feedback?.improvements?.length > 0 && (
+                      {followup.coaching_feedback?.improvements && followup.coaching_feedback.improvements.length > 0 && (
                         <div className="bg-orange-50 p-4 rounded-lg">
                           <h4 className="font-semibold text-sm text-orange-700 mb-2">🔧 Verbeter</h4>
                           <ul className="space-y-1">
-                            {followup.coaching_feedback.improvements.map((i, idx) => (
-                              <li key={idx} className="text-xs text-slate-700">{i}</li>
+                            {followup.coaching_feedback.improvements.map((item, idx) => (
+                              <li key={idx} className="text-xs text-slate-700">{item}</li>
                             ))}
                           </ul>
                         </div>
                       )}
-                      {followup.coaching_feedback?.tips?.length > 0 && (
+                      {followup.coaching_feedback?.tips && followup.coaching_feedback.tips.length > 0 && (
                         <div className="bg-blue-50 p-4 rounded-lg">
                           <h4 className="font-semibold text-sm text-blue-700 mb-2">💡 Tips</h4>
                           <ul className="space-y-1">
