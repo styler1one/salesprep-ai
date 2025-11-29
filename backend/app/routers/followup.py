@@ -11,6 +11,7 @@ from datetime import datetime
 import logging
 import os
 import uuid
+import asyncio
 
 from supabase import create_client
 from app.deps import get_current_user
@@ -81,8 +82,8 @@ class RegenerateEmailRequest(BaseModel):
     tone: str = "professional"
 
 
-# Background task for processing
-async def process_followup_background(
+# Background task for processing (sync wrapper for BackgroundTasks)
+def process_followup_background(
     followup_id: str,
     audio_data: bytes,
     filename: str,
@@ -93,8 +94,29 @@ async def process_followup_background(
     include_coaching: bool = False,  # opt-in coaching
     language: str = "en"  # i18n: output language (default: English)
 ):
-    """Background task to process audio and generate follow-up content"""
+    """Background task to process audio and generate follow-up content.
     
+    This is a sync function that runs async code via asyncio.run().
+    This pattern ensures BackgroundTasks properly runs it in a separate thread.
+    """
+    asyncio.run(_process_followup_async(
+        followup_id, audio_data, filename, organization_id, user_id,
+        meeting_prep_id, prospect_company, include_coaching, language
+    ))
+
+
+async def _process_followup_async(
+    followup_id: str,
+    audio_data: bytes,
+    filename: str,
+    organization_id: str,
+    user_id: str,
+    meeting_prep_id: Optional[str] = None,
+    prospect_company: Optional[str] = None,
+    include_coaching: bool = False,
+    language: str = "en"
+):
+    """Actual async processing logic for follow-up"""
     try:
         # Update status to transcribing
         supabase.table("followups").update({
@@ -358,8 +380,8 @@ async def upload_audio(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Background task for transcript processing
-async def process_transcript_background(
+# Background task for transcript processing (sync wrapper for BackgroundTasks)
+def process_transcript_background(
     followup_id: str,
     transcription_text: str,
     segments: list,
@@ -372,8 +394,32 @@ async def process_transcript_background(
     include_coaching: bool = False,  # opt-in coaching
     language: str = "en"  # i18n: output language (default: English)
 ):
-    """Background task to process transcript and generate follow-up content"""
+    """Background task to process transcript and generate follow-up content.
     
+    This is a sync function that runs async code via asyncio.run().
+    This pattern ensures BackgroundTasks properly runs it in a separate thread.
+    """
+    asyncio.run(_process_transcript_async(
+        followup_id, transcription_text, segments, speaker_count,
+        organization_id, user_id, meeting_prep_id, prospect_company,
+        estimated_duration, include_coaching, language
+    ))
+
+
+async def _process_transcript_async(
+    followup_id: str,
+    transcription_text: str,
+    segments: list,
+    speaker_count: int,
+    organization_id: str,
+    user_id: str,
+    meeting_prep_id: Optional[str] = None,
+    prospect_company: Optional[str] = None,
+    estimated_duration: Optional[float] = None,
+    include_coaching: bool = False,
+    language: str = "en"
+):
+    """Actual async processing logic for transcript"""
     try:
         # Update status to summarizing
         supabase.table("followups").update({
