@@ -322,10 +322,10 @@ export default function PreparationDetailPage() {
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 p-4 shadow-sm">
                   <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                     <Icons.sparkles className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    AI Context
+                    {t('context.title')}
                   </h3>
                   <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
-                    Deze data is gecombineerd voor deze voorbereiding:
+                    {t('context.description')}
                   </p>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm">
@@ -335,7 +335,7 @@ export default function PreparationDetailPage() {
                         <Icons.circle className="h-4 w-4 text-slate-300 dark:text-slate-600" />
                       )}
                       <span className={profileStatus.hasSalesProfile ? 'text-slate-700 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500'}>
-                        Jouw Sales Profiel
+                        {t('context.salesProfile')}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
@@ -345,7 +345,7 @@ export default function PreparationDetailPage() {
                         <Icons.circle className="h-4 w-4 text-slate-300 dark:text-slate-600" />
                       )}
                       <span className={profileStatus.hasCompanyProfile ? 'text-slate-700 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500'}>
-                        Jouw Bedrijfsprofiel
+                        {t('context.companyProfile')}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">

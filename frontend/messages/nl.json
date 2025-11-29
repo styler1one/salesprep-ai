@@ -264,6 +264,12 @@
     "title": "Meeting Voorbereiding",
     "subtitle": "AI-gegenereerde briefings voor je verkoopgesprekken",
     "loading": "Laden...",
+    "context": {
+      "title": "AI Context",
+      "description": "Deze data is gecombineerd voor deze voorbereiding:",
+      "salesProfile": "Jouw Sales Profiel",
+      "companyProfile": "Jouw Bedrijfsprofiel"
+    },
     "form": {
       "title": "Nieuwe Voorbereiding",
       "selectProspect": "Selecteer Prospect",

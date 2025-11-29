@@ -264,6 +264,12 @@
     "title": "Meeting Preparation",
     "subtitle": "AI-generated briefings for your sales conversations",
     "loading": "Loading...",
+    "context": {
+      "title": "AI Context",
+      "description": "This data was combined for this preparation:",
+      "salesProfile": "Your Sales Profile",
+      "companyProfile": "Your Company Profile"
+    },
     "form": {
       "title": "New Preparation",
       "selectProspect": "Select Prospect",
