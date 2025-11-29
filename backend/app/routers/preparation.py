@@ -217,7 +217,7 @@ async def start_prep(
             user_id,  # Pass user_id for personalized briefs
             request.custom_notes,
             request.contact_ids,  # Pass selected contacts
-            request.language or "nl"  # i18n: output language
+            request.language or "en"  # i18n: output language (fallback to English)
         )
         
         contact_count = len(request.contact_ids) if request.contact_ids else 0

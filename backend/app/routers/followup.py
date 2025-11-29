@@ -129,7 +129,7 @@ async def process_followup_background(
         transcription_result = await transcription_service.transcribe_audio_bytes(
             audio_data,
             filename,
-            language="nl"
+            language=language  # Use the language from request
         )
         
         # Convert segments to dict format
@@ -259,7 +259,7 @@ async def upload_audio(
     meeting_date: Optional[str] = Form(None),
     meeting_subject: Optional[str] = Form(None),
     include_coaching: bool = Form(False),  # opt-in coaching feedback
-    language: str = Form("nl"),  # i18n: output language (default: Dutch)
+    language: str = Form("en"),  # i18n: output language (default: English)
     current_user: dict = Depends(get_current_user)
 ):
     """
@@ -475,6 +475,7 @@ async def upload_transcript(
     meeting_date: Optional[str] = Form(None),
     meeting_subject: Optional[str] = Form(None),
     include_coaching: bool = Form(False),  # NEW: opt-in coaching feedback
+    language: str = Form("en"),  # i18n: output language (default: English)
     current_user: dict = Depends(get_current_user)
 ):
     """
@@ -573,10 +574,11 @@ async def upload_transcript(
             meeting_prep_id,
             prospect_company_name,
             parsed.estimated_duration,
-            include_coaching  # NEW: pass coaching flag
+            include_coaching,  # NEW: pass coaching flag
+            language  # i18n: output language
         )
         
-        logger.info(f"Created transcript followup {followup_id} for prospect {prospect_id}, coaching={include_coaching}, starting background processing")
+        logger.info(f"Created transcript followup {followup_id} for prospect {prospect_id}, coaching={include_coaching}, language={language}, starting background processing")
         
         return FollowupResponse(
             id=followup_id,
