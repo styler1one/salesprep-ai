@@ -618,6 +618,22 @@
     "next": "Siguiente",
     "back": "Atrás",
     "finish": "Finalizar"
+  },
+  "language": {
+    "outputLanguage": "Idioma de salida",
+    "outputLanguageDesc": "Idioma para el contenido generado por IA",
+    "emailLanguage": "Idioma del correo",
+    "emailLanguageDesc": "Idioma para el correo de seguimiento",
+    "suggestedFrom": "Sugerido según el país",
+    "languages": {
+      "nl": "Nederlands",
+      "en": "English",
+      "de": "Deutsch",
+      "fr": "Français",
+      "es": "Español",
+      "hi": "हिन्दी",
+      "ar": "العربية"
+    }
   }
 }
 

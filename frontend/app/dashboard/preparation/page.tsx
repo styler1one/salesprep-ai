@@ -13,6 +13,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout'
 import { ProspectAutocomplete } from '@/components/prospect-autocomplete'
+import { LanguageSelect } from '@/components/language-select'
 import { useTranslations } from 'next-intl'
 
 interface MeetingPrep {
@@ -45,6 +46,7 @@ export default function PreparationPage() {
   const supabase = createClientComponentClient()
   const { toast } = useToast()
   const t = useTranslations('preparation')
+  const tLang = useTranslations('language')
 
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -55,6 +57,7 @@ export default function PreparationPage() {
   const [companyName, setCompanyName] = useState('')
   const [meetingType, setMeetingType] = useState('discovery')
   const [customNotes, setCustomNotes] = useState('')
+  const [outputLanguage, setOutputLanguage] = useState('nl')
   const [showAdvanced, setShowAdvanced] = useState(false)
   
   // Contact persons state
@@ -186,7 +189,8 @@ export default function PreparationPage() {
           prospect_company_name: companyName,
           meeting_type: meetingType,
           custom_notes: customNotes || null,
-          contact_ids: selectedContactIds.length > 0 ? selectedContactIds : null
+          contact_ids: selectedContactIds.length > 0 ? selectedContactIds : null,
+          language: outputLanguage
         })
       })
 
@@ -194,6 +198,7 @@ export default function PreparationPage() {
         toast({ title: 'Gestart', description: 'Voorbereiding wordt gegenereerd...' })
         setCompanyName('')
         setCustomNotes('')
+        setOutputLanguage('nl')
         setSelectedContactIds([])
         setAvailableContacts([])
         setShowAdvanced(false)
@@ -485,15 +490,26 @@ export default function PreparationPage() {
                   </button>
 
                   {showAdvanced && (
-                    <div>
-                      <Label htmlFor="notes" className="text-xs text-slate-700 dark:text-slate-300">{t('form.customNotes')}</Label>
-                      <Textarea
-                        id="notes"
-                        value={customNotes}
-                        onChange={(e) => setCustomNotes(e.target.value)}
-                        placeholder={t('form.customNotesPlaceholder')}
-                        rows={2}
-                        className="text-sm"
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor="notes" className="text-xs text-slate-700 dark:text-slate-300">{t('form.customNotes')}</Label>
+                        <Textarea
+                          id="notes"
+                          value={customNotes}
+                          onChange={(e) => setCustomNotes(e.target.value)}
+                          placeholder={t('form.customNotesPlaceholder')}
+                          rows={2}
+                          className="text-sm"
+                        />
+                      </div>
+                      
+                      {/* Output Language Selector */}
+                      <LanguageSelect
+                        value={outputLanguage}
+                        onChange={setOutputLanguage}
+                        label={tLang('outputLanguage')}
+                        description={tLang('outputLanguageDesc')}
+                        disabled={loading}
                       />
                     </div>
                   )}

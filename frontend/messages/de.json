@@ -624,6 +624,22 @@
     "next": "Weiter",
     "back": "Zurück",
     "finish": "Abschließen"
+  },
+  "language": {
+    "outputLanguage": "Ausgabesprache",
+    "outputLanguageDesc": "Sprache für KI-generierte Inhalte",
+    "emailLanguage": "E-Mail-Sprache",
+    "emailLanguageDesc": "Sprache für die Follow-up-E-Mail",
+    "suggestedFrom": "Vorgeschlagen basierend auf Land",
+    "languages": {
+      "nl": "Nederlands",
+      "en": "English",
+      "de": "Deutsch",
+      "fr": "Français",
+      "es": "Español",
+      "hi": "हिन्दी",
+      "ar": "العربية"
+    }
   }
 }
 

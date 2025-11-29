@@ -10,6 +10,8 @@ import { Icons } from '@/components/icons'
 import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout'
+import { LanguageSelect } from '@/components/language-select'
+import { suggestLanguageFromCountry } from '@/lib/language-utils'
 import { useTranslations } from 'next-intl'
 
 interface ResearchBrief {
@@ -30,6 +32,7 @@ export default function ResearchPage() {
   const supabase = createClientComponentClient()
   const { toast } = useToast()
   const t = useTranslations('research')
+  const tLang = useTranslations('language')
   
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -42,6 +45,7 @@ export default function ResearchPage() {
   const [websiteUrl, setWebsiteUrl] = useState('')
   const [country, setCountry] = useState('')
   const [city, setCity] = useState('')
+  const [outputLanguage, setOutputLanguage] = useState('nl') // Default to Dutch
   
   // Company search state
   const [isSearching, setIsSearching] = useState(false)
@@ -61,6 +65,14 @@ export default function ResearchPage() {
     }
     getUser()
   }, [supabase])
+
+  // Auto-suggest language when country changes
+  useEffect(() => {
+    if (country && country.length >= 2) {
+      const suggested = suggestLanguageFromCountry(country)
+      setOutputLanguage(suggested)
+    }
+  }, [country])
   
   // Manual search function
   const searchCompanies = async () => {
@@ -225,7 +237,8 @@ export default function ResearchPage() {
             company_linkedin_url: linkedinUrl || null,
             company_website_url: websiteUrl || null,
             country: country || null,
-            city: city || null
+            city: city || null,
+            language: outputLanguage
           })
         }
       )
@@ -241,6 +254,7 @@ export default function ResearchPage() {
       setWebsiteUrl('')
       setCountry('')
       setCity('')
+      setOutputLanguage('nl')
       setSelectedCompany(null)
       setShowAdvanced(false)
       
@@ -616,6 +630,16 @@ export default function ResearchPage() {
                           className="mt-1 h-9 text-sm"
                         />
                       </div>
+                      
+                      {/* Output Language Selector */}
+                      <LanguageSelect
+                        value={outputLanguage}
+                        onChange={setOutputLanguage}
+                        label={tLang('outputLanguage')}
+                        description={tLang('outputLanguageDesc')}
+                        showSuggestion={!!country}
+                        suggestionSource={country}
+                      />
                     </div>
                   )}
 

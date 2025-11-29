@@ -618,6 +618,22 @@
     "next": "अगला",
     "back": "वापस",
     "finish": "समाप्त करें"
+  },
+  "language": {
+    "outputLanguage": "आउटपुट भाषा",
+    "outputLanguageDesc": "AI-जनित सामग्री के लिए भाषा",
+    "emailLanguage": "ईमेल भाषा",
+    "emailLanguageDesc": "फॉलो-अप ईमेल के लिए भाषा",
+    "suggestedFrom": "देश के आधार पर सुझाया गया",
+    "languages": {
+      "nl": "Nederlands",
+      "en": "English",
+      "de": "Deutsch",
+      "fr": "Français",
+      "es": "Español",
+      "hi": "हिन्दी",
+      "ar": "العربية"
+    }
   }
 }
 

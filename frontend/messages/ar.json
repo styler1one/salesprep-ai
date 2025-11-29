@@ -618,6 +618,22 @@
     "next": "التالي",
     "back": "رجوع",
     "finish": "إنهاء"
+  },
+  "language": {
+    "outputLanguage": "لغة الإخراج",
+    "outputLanguageDesc": "اللغة للمحتوى المُنشأ بالذكاء الاصطناعي",
+    "emailLanguage": "لغة البريد الإلكتروني",
+    "emailLanguageDesc": "اللغة لرسالة المتابعة",
+    "suggestedFrom": "مقترح بناءً على البلد",
+    "languages": {
+      "nl": "Nederlands",
+      "en": "English",
+      "de": "Deutsch",
+      "fr": "Français",
+      "es": "Español",
+      "hi": "हिन्दी",
+      "ar": "العربية"
+    }
   }
 }
 

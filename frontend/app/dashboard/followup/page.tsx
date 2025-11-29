@@ -12,6 +12,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout'
 import { ProspectAutocomplete } from '@/components/prospect-autocomplete'
+import { LanguageSelect } from '@/components/language-select'
 import { useTranslations } from 'next-intl'
 
 interface Followup {
@@ -32,6 +33,7 @@ export default function FollowupPage() {
   const { toast } = useToast()
   const t = useTranslations('followup')
   const tCommon = useTranslations('common')
+  const tLang = useTranslations('language')
   
   const [user, setUser] = useState<any>(null)
   const [followups, setFollowups] = useState<Followup[]>([])
@@ -46,6 +48,7 @@ export default function FollowupPage() {
   const [meetingSubject, setMeetingSubject] = useState('')
   const [meetingDate, setMeetingDate] = useState('')
   const [includeCoaching, setIncludeCoaching] = useState(false)
+  const [emailLanguage, setEmailLanguage] = useState('nl')
   const [showAdvanced, setShowAdvanced] = useState(false)
   
   const fetchFollowups = useCallback(async () => {
@@ -179,6 +182,7 @@ export default function FollowupPage() {
       if (meetingSubject) formData.append('meeting_subject', meetingSubject)
       if (meetingDate) formData.append('meeting_date', meetingDate)
       formData.append('include_coaching', includeCoaching.toString())
+      formData.append('language', emailLanguage)
 
       setUploadProgress(30)
 
@@ -214,6 +218,7 @@ export default function FollowupPage() {
       setMeetingSubject('')
       setMeetingDate('')
       setIncludeCoaching(false)
+      setEmailLanguage('nl')
       setShowAdvanced(false)
       
       fetchFollowups()
@@ -588,6 +593,15 @@ export default function FollowupPage() {
                       </Label>
                     </div>
                   </div>
+
+                  {/* Email Language Selector */}
+                  <LanguageSelect
+                    value={emailLanguage}
+                    onChange={setEmailLanguage}
+                    label={tLang('emailLanguage')}
+                    description={tLang('emailLanguageDesc')}
+                    disabled={uploading}
+                  />
 
                   <Button 
                     className="w-full bg-orange-600 hover:bg-orange-700" 
