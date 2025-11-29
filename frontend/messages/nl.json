@@ -691,6 +691,110 @@
       "description": "Stel je e-mail en push notificaties in"
     },
     "comingSoon": "Binnenkort"
+  },
+  "billing": {
+    "currentPlan": "Huidig plan",
+    "trialEnds": "Trial eindigt",
+    "soon": "binnenkort",
+    "usageThisMonth": "Gebruik deze maand",
+    "upgradeToSolo": "Upgrade naar Solo",
+    "manageSubscription": "Beheer abonnement",
+    "viewAllPlans": "Bekijk alle plannen",
+    "cancelWarning": "Je abonnement wordt geannuleerd op {date}",
+    "perMonth": "/maand",
+    "perYear": "/jaar",
+    "checkoutError": "Kon checkout niet starten. Probeer opnieuw.",
+    "portalError": "Kon beheerportaal niet openen. Probeer opnieuw.",
+    "pricing": {
+      "title": "Kies het plan dat bij je past",
+      "subtitle": "Start gratis en upgrade wanneer je klaar bent. 14 dagen gratis proberen, geen creditcard nodig.",
+      "monthly": "Maandelijks",
+      "yearly": "Jaarlijks",
+      "save": "Bespaar {percent}%",
+      "backToDashboard": "Terug naar dashboard",
+      "popular": "Populair",
+      "currentPlan": "Huidig plan",
+      "select": "Selecteer",
+      "startTrial": "Start 14 dagen trial",
+      "contactUs": "Neem contact op",
+      "perYear": "per jaar",
+      "contactForPricing": "Neem contact op voor pricing",
+      "custom": "Op maat",
+      "compareFeatures": "Vergelijk features",
+      "feature": "Feature",
+      "trustBadges": "🔒 Veilig betalen via Stripe • 💳 iDEAL, creditcard, Bancontact • ❌ Opzeggen wanneer je wilt"
+    },
+    "plans": {
+      "free": {
+        "name": "Free",
+        "description": "Perfect om te starten"
+      },
+      "solo": {
+        "name": "Solo",
+        "description": "Voor de individuele sales pro"
+      },
+      "teams": {
+        "name": "Teams",
+        "description": "Voor sales teams"
+      }
+    },
+    "features": {
+      "researchBriefs": "research briefs",
+      "meetingPreps": "meeting preps",
+      "followups": "follow-ups",
+      "transcription": "Transcriptie",
+      "knowledgeBase": "Knowledge base",
+      "users": "Gebruikers",
+      "crmIntegration": "CRM integratie",
+      "perMonth": "/maand",
+      "unlimited": "Onbeperkt",
+      "hours": "uur",
+      "docs": "docs",
+      "free": {
+        "research": "3 research briefs per maand",
+        "prep": "3 meeting preps per maand",
+        "followup": "1 follow-up transcriptie",
+        "support": "Community support",
+        "users": "1 gebruiker",
+        "kb": "Knowledge base",
+        "contacts": "Volledige contact analyse",
+        "pdf": "Clean PDF exports"
+      },
+      "solo": {
+        "research": "Onbeperkt research briefs",
+        "prep": "Onbeperkt meeting preps",
+        "followup": "Onbeperkt follow-ups",
+        "transcription": "10 uur transcriptie/maand",
+        "kb": "Knowledge base (50 docs)",
+        "contacts": "Volledige contact analyse",
+        "pdf": "Clean PDF exports",
+        "support": "Email support (48u)",
+        "users": "1 gebruiker"
+      },
+      "teams": {
+        "everything": "Alles van Solo",
+        "users": "Onbeperkt gebruikers",
+        "transcription": "Onbeperkt transcriptie",
+        "kb": "Onbeperkt knowledge base",
+        "crm": "CRM integratie",
+        "sharing": "Team sharing & collab",
+        "analytics": "Team analytics",
+        "sso": "SSO/SAML",
+        "support": "Dedicated support",
+        "onboarding": "Onboarding call"
+      }
+    },
+    "success": {
+      "title": "Betaling gelukt!",
+      "description": "Bedankt voor je aankoop. Je account wordt nu geactiveerd.",
+      "redirecting": "Je wordt doorgestuurd naar het dashboard...",
+      "goToDashboard": "Ga naar Dashboard"
+    },
+    "cancel": {
+      "title": "Betaling geannuleerd",
+      "description": "Je betaling is geannuleerd. Je kunt het opnieuw proberen wanneer je wilt.",
+      "backToPricing": "Terug naar Prijzen"
+    }
   }
 }
 

@@ -680,6 +680,110 @@
       "description": "Konfiguriere deine E-Mail- und Push-Benachrichtigungen"
     },
     "comingSoon": "Demnächst"
+  },
+  "billing": {
+    "currentPlan": "Aktueller Plan",
+    "trialEnds": "Testphase endet",
+    "soon": "bald",
+    "usageThisMonth": "Nutzung diesen Monat",
+    "upgradeToSolo": "Upgrade auf Solo",
+    "manageSubscription": "Abonnement verwalten",
+    "viewAllPlans": "Alle Pläne anzeigen",
+    "cancelWarning": "Dein Abonnement wird am {date} gekündigt",
+    "perMonth": "/Monat",
+    "perYear": "/Jahr",
+    "checkoutError": "Checkout konnte nicht gestartet werden. Bitte versuche es erneut.",
+    "portalError": "Portal konnte nicht geöffnet werden. Bitte versuche es erneut.",
+    "pricing": {
+      "title": "Wähle den Plan, der zu dir passt",
+      "subtitle": "Starte kostenlos und upgrade, wenn du bereit bist. 14 Tage kostenlos testen, keine Kreditkarte erforderlich.",
+      "monthly": "Monatlich",
+      "yearly": "Jährlich",
+      "save": "Spare {percent}%",
+      "backToDashboard": "Zurück zum Dashboard",
+      "popular": "Beliebt",
+      "currentPlan": "Aktueller Plan",
+      "select": "Auswählen",
+      "startTrial": "14 Tage kostenlos testen",
+      "contactUs": "Kontaktiere uns",
+      "perYear": "pro Jahr",
+      "contactForPricing": "Kontaktiere uns für Preise",
+      "custom": "Individuell",
+      "compareFeatures": "Features vergleichen",
+      "feature": "Feature",
+      "trustBadges": "🔒 Sichere Zahlung über Stripe • 💳 Alle gängigen Karten • ❌ Jederzeit kündbar"
+    },
+    "plans": {
+      "free": {
+        "name": "Free",
+        "description": "Perfekt zum Starten"
+      },
+      "solo": {
+        "name": "Solo",
+        "description": "Für den individuellen Sales-Profi"
+      },
+      "teams": {
+        "name": "Teams",
+        "description": "Für Sales-Teams"
+      }
+    },
+    "features": {
+      "researchBriefs": "Research-Briefs",
+      "meetingPreps": "Meeting-Vorbereitungen",
+      "followups": "Follow-ups",
+      "transcription": "Transkription",
+      "knowledgeBase": "Wissensdatenbank",
+      "users": "Benutzer",
+      "crmIntegration": "CRM-Integration",
+      "perMonth": "/Monat",
+      "unlimited": "Unbegrenzt",
+      "hours": "Stunden",
+      "docs": "Dokumente",
+      "free": {
+        "research": "3 Research-Briefs pro Monat",
+        "prep": "3 Meeting-Vorbereitungen pro Monat",
+        "followup": "1 Follow-up-Transkription",
+        "support": "Community-Support",
+        "users": "1 Benutzer",
+        "kb": "Wissensdatenbank",
+        "contacts": "Vollständige Kontaktanalyse",
+        "pdf": "Saubere PDF-Exporte"
+      },
+      "solo": {
+        "research": "Unbegrenzt Research-Briefs",
+        "prep": "Unbegrenzt Meeting-Vorbereitungen",
+        "followup": "Unbegrenzt Follow-ups",
+        "transcription": "10 Stunden Transkription/Monat",
+        "kb": "Wissensdatenbank (50 Dokumente)",
+        "contacts": "Vollständige Kontaktanalyse",
+        "pdf": "Saubere PDF-Exporte",
+        "support": "E-Mail-Support (48h)",
+        "users": "1 Benutzer"
+      },
+      "teams": {
+        "everything": "Alles aus Solo",
+        "users": "Unbegrenzt Benutzer",
+        "transcription": "Unbegrenzt Transkription",
+        "kb": "Unbegrenzt Wissensdatenbank",
+        "crm": "CRM-Integration",
+        "sharing": "Team-Sharing & Zusammenarbeit",
+        "analytics": "Team-Analysen",
+        "sso": "SSO/SAML",
+        "support": "Dedizierter Support",
+        "onboarding": "Onboarding-Call"
+      }
+    },
+    "success": {
+      "title": "Zahlung erfolgreich!",
+      "description": "Vielen Dank für deinen Kauf. Dein Konto wird jetzt aktiviert.",
+      "redirecting": "Weiterleitung zum Dashboard...",
+      "goToDashboard": "Zum Dashboard"
+    },
+    "cancel": {
+      "title": "Zahlung abgebrochen",
+      "description": "Deine Zahlung wurde abgebrochen. Du kannst es jederzeit erneut versuchen.",
+      "backToPricing": "Zurück zu Preisen"
+    }
   }
 }
 

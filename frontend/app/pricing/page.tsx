@@ -20,48 +20,15 @@ import {
 } from 'lucide-react'
 import { useBilling } from '@/lib/billing-context'
 import { useToast } from '@/components/ui/use-toast'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
-
-const features = {
-  free: [
-    { text: '3 research briefs per maand', included: true },
-    { text: '3 meeting preps per maand', included: true },
-    { text: '1 follow-up transcriptie', included: true },
-    { text: 'Community support', included: true },
-    { text: '1 gebruiker', included: true },
-    { text: 'Knowledge base', included: false },
-    { text: 'Volledige contact analyse', included: false },
-    { text: 'Clean PDF exports', included: false },
-  ],
-  solo: [
-    { text: 'Onbeperkt research briefs', included: true },
-    { text: 'Onbeperkt meeting preps', included: true },
-    { text: 'Onbeperkt follow-ups', included: true },
-    { text: '10 uur transcriptie/maand', included: true },
-    { text: 'Knowledge base (50 docs)', included: true },
-    { text: 'Volledige contact analyse', included: true },
-    { text: 'Clean PDF exports', included: true },
-    { text: 'Email support (48u)', included: true },
-    { text: '1 gebruiker', included: true },
-  ],
-  teams: [
-    { text: 'Alles van Solo', included: true },
-    { text: 'Onbeperkt gebruikers', included: true },
-    { text: 'Onbeperkt transcriptie', included: true },
-    { text: 'Onbeperkt knowledge base', included: true },
-    { text: 'CRM integratie', included: true },
-    { text: 'Team sharing & collab', included: true },
-    { text: 'Team analytics', included: true },
-    { text: 'SSO/SAML', included: true },
-    { text: 'Dedicated support', included: true },
-    { text: 'Onboarding call', included: true },
-  ],
-}
 
 export default function PricingPage() {
   const router = useRouter()
   const { toast } = useToast()
   const { subscription, createCheckoutSession } = useBilling()
+  const t = useTranslations('billing')
+  const tCommon = useTranslations('common')
   const [isYearly, setIsYearly] = useState(false)
   const [loading, setLoading] = useState<string | null>(null)
 
@@ -69,19 +36,56 @@ export default function PricingPage() {
   const yearlyPrice = 19 // per month when paid yearly
   const yearlyTotal = 228
 
+  // Features arrays using translations
+  const features = {
+    free: [
+      { text: t('features.free.research'), included: true },
+      { text: t('features.free.prep'), included: true },
+      { text: t('features.free.followup'), included: true },
+      { text: t('features.free.support'), included: true },
+      { text: t('features.free.users'), included: true },
+      { text: t('features.free.kb'), included: false },
+      { text: t('features.free.contacts'), included: false },
+      { text: t('features.free.pdf'), included: false },
+    ],
+    solo: [
+      { text: t('features.solo.research'), included: true },
+      { text: t('features.solo.prep'), included: true },
+      { text: t('features.solo.followup'), included: true },
+      { text: t('features.solo.transcription'), included: true },
+      { text: t('features.solo.kb'), included: true },
+      { text: t('features.solo.contacts'), included: true },
+      { text: t('features.solo.pdf'), included: true },
+      { text: t('features.solo.support'), included: true },
+      { text: t('features.solo.users'), included: true },
+    ],
+    teams: [
+      { text: t('features.teams.everything'), included: true },
+      { text: t('features.teams.users'), included: true },
+      { text: t('features.teams.transcription'), included: true },
+      { text: t('features.teams.kb'), included: true },
+      { text: t('features.teams.crm'), included: true },
+      { text: t('features.teams.sharing'), included: true },
+      { text: t('features.teams.analytics'), included: true },
+      { text: t('features.teams.sso'), included: true },
+      { text: t('features.teams.support'), included: true },
+      { text: t('features.teams.onboarding'), included: true },
+    ],
+  }
+
   const handleSelectPlan = async (planId: string) => {
     if (planId === 'free') {
       // Already on free or want to downgrade
       toast({
         title: 'Free plan',
-        description: 'Je bent al op het gratis plan.',
+        description: t('pricing.currentPlan'),
       })
       return
     }
 
     if (planId === 'teams') {
       // Contact sales
-      window.location.href = 'mailto:sales@salesprep.ai?subject=Teams%20Plan%20Aanvraag'
+      window.location.href = 'mailto:sales@salesprep.ai?subject=Teams%20Plan%20Request'
       return
     }
 
@@ -89,12 +93,14 @@ export default function PricingPage() {
     try {
       const checkoutPlanId = isYearly ? 'solo_yearly' : 'solo_monthly'
       const checkoutUrl = await createCheckoutSession(checkoutPlanId)
-      window.location.href = checkoutUrl
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl
+      }
     } catch (error) {
       console.error('Checkout failed:', error)
       toast({
-        title: 'Error',
-        description: 'Kon checkout niet starten. Probeer opnieuw.',
+        title: tCommon('errors.generic'),
+        description: t('checkoutError'),
         variant: 'destructive',
       })
     } finally {
@@ -116,7 +122,7 @@ export default function PricingPage() {
           <div className="flex items-center justify-between">
             <Link href="/dashboard" className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
               <ArrowLeft className="h-4 w-4" />
-              Terug naar dashboard
+              {t('pricing.backToDashboard')}
             </Link>
             <Link href="/" className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               SalesPrep AI
@@ -129,26 +135,26 @@ export default function PricingPage() {
         {/* Title */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
-            Kies het plan dat bij je past
+            {t('pricing.title')}
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            Start gratis en upgrade wanneer je klaar bent. 14 dagen gratis proberen, geen creditcard nodig.
+            {t('pricing.subtitle')}
           </p>
 
           {/* Billing Toggle */}
           <div className="flex items-center justify-center gap-4 mt-8">
             <span className={`text-sm ${!isYearly ? 'text-slate-900 dark:text-white font-medium' : 'text-slate-500'}`}>
-              Maandelijks
+              {t('pricing.monthly')}
             </span>
             <Switch
               checked={isYearly}
               onCheckedChange={setIsYearly}
             />
             <span className={`text-sm ${isYearly ? 'text-slate-900 dark:text-white font-medium' : 'text-slate-500'}`}>
-              Jaarlijks
+              {t('pricing.yearly')}
             </span>
             {isYearly && (
-              <Badge className="bg-emerald-500">Bespaar 34%</Badge>
+              <Badge className="bg-emerald-500">{t('pricing.save', { percent: '34' })}</Badge>
             )}
           </div>
         </div>
@@ -162,12 +168,12 @@ export default function PricingPage() {
                 <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
                   <Zap className="h-5 w-5 text-slate-600 dark:text-slate-400" />
                 </div>
-                <CardTitle>Free</CardTitle>
+                <CardTitle>{t('plans.free.name')}</CardTitle>
               </div>
-              <CardDescription>Perfect om te starten</CardDescription>
+              <CardDescription>{t('plans.free.description')}</CardDescription>
               <div className="mt-4">
                 <span className="text-4xl font-bold text-slate-900 dark:text-white">€0</span>
-                <span className="text-slate-500">/maand</span>
+                <span className="text-slate-500">{t('perMonth')}</span>
               </div>
             </CardHeader>
             <CardContent>
@@ -192,7 +198,7 @@ export default function PricingPage() {
                 className="w-full"
                 disabled={isCurrentPlan('free')}
               >
-                {isCurrentPlan('free') ? 'Huidig plan' : 'Selecteer'}
+                {isCurrentPlan('free') ? t('pricing.currentPlan') : t('pricing.select')}
               </Button>
             </CardFooter>
           </Card>
@@ -201,7 +207,7 @@ export default function PricingPage() {
           <Card className="relative border-2 border-blue-500 shadow-lg shadow-blue-500/10 scale-105">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
               <Badge className="bg-gradient-to-r from-blue-500 to-indigo-500 px-4">
-                Populair
+                {t('pricing.popular')}
               </Badge>
             </div>
             <CardHeader>
@@ -209,17 +215,17 @@ export default function PricingPage() {
                 <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
                   <Crown className="h-5 w-5 text-blue-600" />
                 </div>
-                <CardTitle>Solo</CardTitle>
+                <CardTitle>{t('plans.solo.name')}</CardTitle>
               </div>
-              <CardDescription>Voor de individuele sales pro</CardDescription>
+              <CardDescription>{t('plans.solo.description')}</CardDescription>
               <div className="mt-4">
                 <span className="text-4xl font-bold text-slate-900 dark:text-white">
                   €{isYearly ? yearlyPrice : monthlyPrice}
                 </span>
-                <span className="text-slate-500">/maand</span>
+                <span className="text-slate-500">{t('perMonth')}</span>
                 {isYearly && (
                   <p className="text-sm text-slate-500 mt-1">
-                    €{yearlyTotal} per jaar
+                    €{yearlyTotal} {t('pricing.perYear')}
                   </p>
                 )}
               </div>
@@ -243,11 +249,11 @@ export default function PricingPage() {
                 {loading === 'solo' ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : isCurrentPlan('solo') ? (
-                  'Huidig plan'
+                  t('pricing.currentPlan')
                 ) : (
                   <>
                     <Sparkles className="h-4 w-4 mr-2" />
-                    Start 14 dagen trial
+                    {t('pricing.startTrial')}
                   </>
                 )}
               </Button>
@@ -261,13 +267,13 @@ export default function PricingPage() {
                 <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
                   <Users className="h-5 w-5 text-purple-600" />
                 </div>
-                <CardTitle>Teams</CardTitle>
+                <CardTitle>{t('plans.teams.name')}</CardTitle>
               </div>
-              <CardDescription>Voor sales teams</CardDescription>
+              <CardDescription>{t('plans.teams.description')}</CardDescription>
               <div className="mt-4">
-                <span className="text-2xl font-bold text-slate-900 dark:text-white">Op maat</span>
+                <span className="text-2xl font-bold text-slate-900 dark:text-white">{t('pricing.custom')}</span>
                 <p className="text-sm text-slate-500 mt-1">
-                  Neem contact op voor pricing
+                  {t('pricing.contactForPricing')}
                 </p>
               </div>
             </CardHeader>
@@ -288,7 +294,7 @@ export default function PricingPage() {
                 onClick={() => handleSelectPlan('teams')}
               >
                 <Mail className="h-4 w-4 mr-2" />
-                Neem contact op
+                {t('pricing.contactUs')}
               </Button>
             </CardFooter>
           </Card>
@@ -297,64 +303,64 @@ export default function PricingPage() {
         {/* FAQ / Trust Section */}
         <div className="mt-16 text-center">
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            🔒 Veilig betalen via Stripe • 💳 iDEAL, creditcard, Bancontact • ❌ Opzeggen wanneer je wilt
+            {t('pricing.trustBadges')}
           </p>
         </div>
 
         {/* Feature Comparison - Simple */}
         <div className="mt-16 max-w-3xl mx-auto">
           <h2 className="text-2xl font-bold text-center text-slate-900 dark:text-white mb-8">
-            Vergelijk features
+            {t('pricing.compareFeatures')}
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-medium text-slate-700 dark:text-slate-300">Feature</th>
-                  <th className="text-center py-3 px-4 font-medium text-slate-700 dark:text-slate-300">Free</th>
-                  <th className="text-center py-3 px-4 font-medium text-blue-600">Solo</th>
-                  <th className="text-center py-3 px-4 font-medium text-purple-600">Teams</th>
+                  <th className="text-left py-3 px-4 font-medium text-slate-700 dark:text-slate-300">{t('pricing.feature')}</th>
+                  <th className="text-center py-3 px-4 font-medium text-slate-700 dark:text-slate-300">{t('plans.free.name')}</th>
+                  <th className="text-center py-3 px-4 font-medium text-blue-600">{t('plans.solo.name')}</th>
+                  <th className="text-center py-3 px-4 font-medium text-purple-600">{t('plans.teams.name')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 <tr>
-                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">Research briefs</td>
-                  <td className="py-3 px-4 text-center">3/maand</td>
+                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{t('features.researchBriefs')}</td>
+                  <td className="py-3 px-4 text-center">3{t('features.perMonth')}</td>
                   <td className="py-3 px-4 text-center text-emerald-600">∞</td>
                   <td className="py-3 px-4 text-center text-emerald-600">∞</td>
                 </tr>
                 <tr>
-                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">Meeting preps</td>
-                  <td className="py-3 px-4 text-center">3/maand</td>
+                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{t('features.meetingPreps')}</td>
+                  <td className="py-3 px-4 text-center">3{t('features.perMonth')}</td>
                   <td className="py-3 px-4 text-center text-emerald-600">∞</td>
                   <td className="py-3 px-4 text-center text-emerald-600">∞</td>
                 </tr>
                 <tr>
-                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">Follow-ups</td>
-                  <td className="py-3 px-4 text-center">1/maand</td>
+                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{t('features.followups')}</td>
+                  <td className="py-3 px-4 text-center">1{t('features.perMonth')}</td>
                   <td className="py-3 px-4 text-center text-emerald-600">∞</td>
                   <td className="py-3 px-4 text-center text-emerald-600">∞</td>
                 </tr>
                 <tr>
-                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">Transcriptie</td>
+                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{t('features.transcription')}</td>
                   <td className="py-3 px-4 text-center">—</td>
-                  <td className="py-3 px-4 text-center">10 uur/maand</td>
+                  <td className="py-3 px-4 text-center">10 {t('features.hours')}{t('features.perMonth')}</td>
                   <td className="py-3 px-4 text-center text-emerald-600">∞</td>
                 </tr>
                 <tr>
-                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">Knowledge base</td>
+                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{t('features.knowledgeBase')}</td>
                   <td className="py-3 px-4 text-center">—</td>
-                  <td className="py-3 px-4 text-center">50 docs</td>
+                  <td className="py-3 px-4 text-center">50 {t('features.docs')}</td>
                   <td className="py-3 px-4 text-center text-emerald-600">∞</td>
                 </tr>
                 <tr>
-                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">Gebruikers</td>
+                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{t('features.users')}</td>
                   <td className="py-3 px-4 text-center">1</td>
                   <td className="py-3 px-4 text-center">1</td>
                   <td className="py-3 px-4 text-center text-emerald-600">∞</td>
                 </tr>
                 <tr>
-                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">CRM integratie</td>
+                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{t('features.crmIntegration')}</td>
                   <td className="py-3 px-4 text-center"><X className="h-4 w-4 mx-auto text-slate-300" /></td>
                   <td className="py-3 px-4 text-center"><X className="h-4 w-4 mx-auto text-slate-300" /></td>
                   <td className="py-3 px-4 text-center"><Check className="h-4 w-4 mx-auto text-emerald-500" /></td>

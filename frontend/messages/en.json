@@ -691,6 +691,110 @@
       "description": "Configure your email and push notifications"
     },
     "comingSoon": "Coming Soon"
+  },
+  "billing": {
+    "currentPlan": "Current plan",
+    "trialEnds": "Trial ends",
+    "soon": "soon",
+    "usageThisMonth": "Usage this month",
+    "upgradeToSolo": "Upgrade to Solo",
+    "manageSubscription": "Manage subscription",
+    "viewAllPlans": "View all plans",
+    "cancelWarning": "Your subscription will be cancelled on {date}",
+    "perMonth": "/month",
+    "perYear": "/year",
+    "checkoutError": "Could not start checkout. Please try again.",
+    "portalError": "Could not open portal. Please try again.",
+    "pricing": {
+      "title": "Choose the plan that fits you",
+      "subtitle": "Start free and upgrade when you're ready. 14 days free trial, no credit card required.",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "save": "Save {percent}%",
+      "backToDashboard": "Back to dashboard",
+      "popular": "Popular",
+      "currentPlan": "Current plan",
+      "select": "Select",
+      "startTrial": "Start 14-day trial",
+      "contactUs": "Contact us",
+      "perYear": "per year",
+      "contactForPricing": "Contact us for pricing",
+      "custom": "Custom",
+      "compareFeatures": "Compare features",
+      "feature": "Feature",
+      "trustBadges": "🔒 Secure payment via Stripe • 💳 All major cards accepted • ❌ Cancel anytime"
+    },
+    "plans": {
+      "free": {
+        "name": "Free",
+        "description": "Perfect to get started"
+      },
+      "solo": {
+        "name": "Solo",
+        "description": "For the individual sales pro"
+      },
+      "teams": {
+        "name": "Teams",
+        "description": "For sales teams"
+      }
+    },
+    "features": {
+      "researchBriefs": "research briefs",
+      "meetingPreps": "meeting preps",
+      "followups": "follow-ups",
+      "transcription": "Transcription",
+      "knowledgeBase": "Knowledge base",
+      "users": "Users",
+      "crmIntegration": "CRM integration",
+      "perMonth": "/month",
+      "unlimited": "Unlimited",
+      "hours": "hours",
+      "docs": "docs",
+      "free": {
+        "research": "3 research briefs per month",
+        "prep": "3 meeting preps per month",
+        "followup": "1 follow-up transcription",
+        "support": "Community support",
+        "users": "1 user",
+        "kb": "Knowledge base",
+        "contacts": "Full contact analysis",
+        "pdf": "Clean PDF exports"
+      },
+      "solo": {
+        "research": "Unlimited research briefs",
+        "prep": "Unlimited meeting preps",
+        "followup": "Unlimited follow-ups",
+        "transcription": "10 hours transcription/month",
+        "kb": "Knowledge base (50 docs)",
+        "contacts": "Full contact analysis",
+        "pdf": "Clean PDF exports",
+        "support": "Email support (48h)",
+        "users": "1 user"
+      },
+      "teams": {
+        "everything": "Everything in Solo",
+        "users": "Unlimited users",
+        "transcription": "Unlimited transcription",
+        "kb": "Unlimited knowledge base",
+        "crm": "CRM integration",
+        "sharing": "Team sharing & collab",
+        "analytics": "Team analytics",
+        "sso": "SSO/SAML",
+        "support": "Dedicated support",
+        "onboarding": "Onboarding call"
+      }
+    },
+    "success": {
+      "title": "Payment successful!",
+      "description": "Thank you for your purchase. Your account is being activated.",
+      "redirecting": "Redirecting to dashboard...",
+      "goToDashboard": "Go to Dashboard"
+    },
+    "cancel": {
+      "title": "Payment cancelled",
+      "description": "Your payment was cancelled. You can try again whenever you want.",
+      "backToPricing": "Back to Pricing"
+    }
   }
 }
 

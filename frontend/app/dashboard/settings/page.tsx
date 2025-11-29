@@ -34,6 +34,7 @@ export default function SettingsPage() {
   const supabase = createClientComponentClient()
   const t = useTranslations('settings')
   const tCommon = useTranslations('common')
+  const tBilling = useTranslations('billing')
   const { toast } = useToast()
   
   const { settings, updateSettings, loading: settingsLoading } = useSettings()
@@ -119,8 +120,8 @@ export default function SettingsPage() {
     } catch (error) {
       console.error('Failed to start checkout:', error)
       toast({
-        title: 'Error',
-        description: 'Kon checkout niet starten. Probeer opnieuw.',
+        title: tCommon('errors.generic'),
+        description: tBilling('checkoutError'),
         variant: 'destructive',
       })
     } finally {
@@ -136,8 +137,8 @@ export default function SettingsPage() {
     } catch (error) {
       console.error('Failed to open portal:', error)
       toast({
-        title: 'Error',
-        description: 'Kon beheerportaal niet openen. Probeer opnieuw.',
+        title: tCommon('errors.generic'),
+        description: tBilling('portalError'),
         variant: 'destructive',
       })
     } finally {
@@ -316,11 +317,11 @@ export default function SettingsPage() {
                   <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                        Huidig plan
+                        {tBilling('currentPlan')}
                       </span>
                       {subscription?.is_trialing && (
                         <span className="text-xs text-amber-600 dark:text-amber-400">
-                          Trial eindigt {subscription.trial_end ? new Date(subscription.trial_end).toLocaleDateString('nl-NL') : 'binnenkort'}
+                          {tBilling('trialEnds')} {subscription.trial_end ? new Date(subscription.trial_end).toLocaleDateString() : tBilling('soon')}
                         </span>
                       )}
                     </div>
@@ -333,13 +334,13 @@ export default function SettingsPage() {
                       </span>
                       {subscription?.price_cents && subscription.price_cents > 0 && (
                         <span className="text-sm text-slate-500">
-                          €{(subscription.price_cents / 100).toFixed(0)}/{subscription.billing_interval === 'year' ? 'jaar' : 'maand'}
+                          €{(subscription.price_cents / 100).toFixed(0)}{subscription.billing_interval === 'year' ? tBilling('perYear') : tBilling('perMonth')}
                         </span>
                       )}
                     </div>
                     {subscription?.cancel_at_period_end && (
                       <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                        ⚠️ Je abonnement wordt geannuleerd op {subscription.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString('nl-NL') : 'het einde van de periode'}
+                        ⚠️ {tBilling('cancelWarning', { date: subscription.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString() : '' })}
                       </p>
                     )}
                   </div>
@@ -348,7 +349,7 @@ export default function SettingsPage() {
                   {usage && (
                     <div className="space-y-4">
                       <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Gebruik deze maand
+                        {tBilling('usageThisMonth')}
                       </h4>
                       <UsageMeter
                         label="Research"
@@ -390,7 +391,7 @@ export default function SettingsPage() {
                         ) : (
                           <Sparkles className="h-4 w-4" />
                         )}
-                        Upgrade naar Solo
+                        {tBilling('upgradeToSolo')}
                       </Button>
                     ) : (
                       <Button 
@@ -404,7 +405,7 @@ export default function SettingsPage() {
                         ) : (
                           <ExternalLink className="h-4 w-4" />
                         )}
-                        Beheer abonnement
+                        {tBilling('manageSubscription')}
                       </Button>
                     )}
                     <Button 
@@ -412,7 +413,7 @@ export default function SettingsPage() {
                       onClick={() => router.push('/pricing')}
                       className="gap-2"
                     >
-                      Bekijk alle plannen
+                      {tBilling('viewAllPlans')}
                     </Button>
                   </div>
                 </>

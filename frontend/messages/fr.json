@@ -674,6 +674,110 @@
       "description": "Configurez vos notifications e-mail et push"
     },
     "comingSoon": "Bientôt disponible"
+  },
+  "billing": {
+    "currentPlan": "Plan actuel",
+    "trialEnds": "L'essai se termine",
+    "soon": "bientôt",
+    "usageThisMonth": "Utilisation ce mois",
+    "upgradeToSolo": "Passer à Solo",
+    "manageSubscription": "Gérer l'abonnement",
+    "viewAllPlans": "Voir tous les plans",
+    "cancelWarning": "Votre abonnement sera annulé le {date}",
+    "perMonth": "/mois",
+    "perYear": "/an",
+    "checkoutError": "Impossible de démarrer le paiement. Veuillez réessayer.",
+    "portalError": "Impossible d'ouvrir le portail. Veuillez réessayer.",
+    "pricing": {
+      "title": "Choisissez le plan qui vous convient",
+      "subtitle": "Commencez gratuitement et passez à la version supérieure quand vous êtes prêt. 14 jours d'essai gratuit, sans carte bancaire.",
+      "monthly": "Mensuel",
+      "yearly": "Annuel",
+      "save": "Économisez {percent}%",
+      "backToDashboard": "Retour au tableau de bord",
+      "popular": "Populaire",
+      "currentPlan": "Plan actuel",
+      "select": "Sélectionner",
+      "startTrial": "Essai gratuit 14 jours",
+      "contactUs": "Contactez-nous",
+      "perYear": "par an",
+      "contactForPricing": "Contactez-nous pour les tarifs",
+      "custom": "Sur mesure",
+      "compareFeatures": "Comparer les fonctionnalités",
+      "feature": "Fonctionnalité",
+      "trustBadges": "🔒 Paiement sécurisé via Stripe • 💳 Toutes cartes acceptées • ❌ Annulation à tout moment"
+    },
+    "plans": {
+      "free": {
+        "name": "Free",
+        "description": "Parfait pour commencer"
+      },
+      "solo": {
+        "name": "Solo",
+        "description": "Pour le commercial individuel"
+      },
+      "teams": {
+        "name": "Teams",
+        "description": "Pour les équipes commerciales"
+      }
+    },
+    "features": {
+      "researchBriefs": "briefs de recherche",
+      "meetingPreps": "préparations de réunion",
+      "followups": "suivis",
+      "transcription": "Transcription",
+      "knowledgeBase": "Base de connaissances",
+      "users": "Utilisateurs",
+      "crmIntegration": "Intégration CRM",
+      "perMonth": "/mois",
+      "unlimited": "Illimité",
+      "hours": "heures",
+      "docs": "documents",
+      "free": {
+        "research": "3 briefs de recherche par mois",
+        "prep": "3 préparations de réunion par mois",
+        "followup": "1 transcription de suivi",
+        "support": "Support communautaire",
+        "users": "1 utilisateur",
+        "kb": "Base de connaissances",
+        "contacts": "Analyse complète des contacts",
+        "pdf": "Exports PDF propres"
+      },
+      "solo": {
+        "research": "Briefs de recherche illimités",
+        "prep": "Préparations de réunion illimitées",
+        "followup": "Suivis illimités",
+        "transcription": "10 heures de transcription/mois",
+        "kb": "Base de connaissances (50 docs)",
+        "contacts": "Analyse complète des contacts",
+        "pdf": "Exports PDF propres",
+        "support": "Support email (48h)",
+        "users": "1 utilisateur"
+      },
+      "teams": {
+        "everything": "Tout de Solo",
+        "users": "Utilisateurs illimités",
+        "transcription": "Transcription illimitée",
+        "kb": "Base de connaissances illimitée",
+        "crm": "Intégration CRM",
+        "sharing": "Partage d'équipe & collaboration",
+        "analytics": "Analyses d'équipe",
+        "sso": "SSO/SAML",
+        "support": "Support dédié",
+        "onboarding": "Appel d'intégration"
+      }
+    },
+    "success": {
+      "title": "Paiement réussi !",
+      "description": "Merci pour votre achat. Votre compte est en cours d'activation.",
+      "redirecting": "Redirection vers le tableau de bord...",
+      "goToDashboard": "Aller au tableau de bord"
+    },
+    "cancel": {
+      "title": "Paiement annulé",
+      "description": "Votre paiement a été annulé. Vous pouvez réessayer quand vous voulez.",
+      "backToPricing": "Retour aux tarifs"
+    }
   }
 }
 

@@ -674,6 +674,110 @@
       "description": "Configura tus notificaciones de correo y push"
     },
     "comingSoon": "Próximamente"
+  },
+  "billing": {
+    "currentPlan": "Plan actual",
+    "trialEnds": "La prueba termina",
+    "soon": "pronto",
+    "usageThisMonth": "Uso este mes",
+    "upgradeToSolo": "Actualizar a Solo",
+    "manageSubscription": "Gestionar suscripción",
+    "viewAllPlans": "Ver todos los planes",
+    "cancelWarning": "Tu suscripción se cancelará el {date}",
+    "perMonth": "/mes",
+    "perYear": "/año",
+    "checkoutError": "No se pudo iniciar el pago. Por favor, inténtalo de nuevo.",
+    "portalError": "No se pudo abrir el portal. Por favor, inténtalo de nuevo.",
+    "pricing": {
+      "title": "Elige el plan que te convenga",
+      "subtitle": "Empieza gratis y actualiza cuando estés listo. 14 días de prueba gratis, sin tarjeta de crédito.",
+      "monthly": "Mensual",
+      "yearly": "Anual",
+      "save": "Ahorra {percent}%",
+      "backToDashboard": "Volver al panel",
+      "popular": "Popular",
+      "currentPlan": "Plan actual",
+      "select": "Seleccionar",
+      "startTrial": "Prueba gratis 14 días",
+      "contactUs": "Contáctanos",
+      "perYear": "por año",
+      "contactForPricing": "Contáctanos para precios",
+      "custom": "Personalizado",
+      "compareFeatures": "Comparar características",
+      "feature": "Característica",
+      "trustBadges": "🔒 Pago seguro via Stripe • 💳 Todas las tarjetas aceptadas • ❌ Cancela cuando quieras"
+    },
+    "plans": {
+      "free": {
+        "name": "Free",
+        "description": "Perfecto para empezar"
+      },
+      "solo": {
+        "name": "Solo",
+        "description": "Para el profesional de ventas individual"
+      },
+      "teams": {
+        "name": "Teams",
+        "description": "Para equipos de ventas"
+      }
+    },
+    "features": {
+      "researchBriefs": "briefs de investigación",
+      "meetingPreps": "preparaciones de reunión",
+      "followups": "seguimientos",
+      "transcription": "Transcripción",
+      "knowledgeBase": "Base de conocimientos",
+      "users": "Usuarios",
+      "crmIntegration": "Integración CRM",
+      "perMonth": "/mes",
+      "unlimited": "Ilimitado",
+      "hours": "horas",
+      "docs": "documentos",
+      "free": {
+        "research": "3 briefs de investigación al mes",
+        "prep": "3 preparaciones de reunión al mes",
+        "followup": "1 transcripción de seguimiento",
+        "support": "Soporte comunitario",
+        "users": "1 usuario",
+        "kb": "Base de conocimientos",
+        "contacts": "Análisis completo de contactos",
+        "pdf": "Exportaciones PDF limpias"
+      },
+      "solo": {
+        "research": "Briefs de investigación ilimitados",
+        "prep": "Preparaciones de reunión ilimitadas",
+        "followup": "Seguimientos ilimitados",
+        "transcription": "10 horas de transcripción/mes",
+        "kb": "Base de conocimientos (50 docs)",
+        "contacts": "Análisis completo de contactos",
+        "pdf": "Exportaciones PDF limpias",
+        "support": "Soporte por email (48h)",
+        "users": "1 usuario"
+      },
+      "teams": {
+        "everything": "Todo de Solo",
+        "users": "Usuarios ilimitados",
+        "transcription": "Transcripción ilimitada",
+        "kb": "Base de conocimientos ilimitada",
+        "crm": "Integración CRM",
+        "sharing": "Compartir en equipo y colaboración",
+        "analytics": "Análisis de equipo",
+        "sso": "SSO/SAML",
+        "support": "Soporte dedicado",
+        "onboarding": "Llamada de incorporación"
+      }
+    },
+    "success": {
+      "title": "¡Pago exitoso!",
+      "description": "Gracias por tu compra. Tu cuenta se está activando.",
+      "redirecting": "Redirigiendo al panel...",
+      "goToDashboard": "Ir al Panel"
+    },
+    "cancel": {
+      "title": "Pago cancelado",
+      "description": "Tu pago fue cancelado. Puedes intentarlo de nuevo cuando quieras.",
+      "backToPricing": "Volver a Precios"
+    }
   }
 }
 
