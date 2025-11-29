@@ -81,6 +81,8 @@ interface CompanyProfile {
 export default function CompanyProfilePage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
+  const t = useTranslations('companyProfile')
+  const tCommon = useTranslations('common')
   
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<CompanyProfile | null>(null)

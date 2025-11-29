@@ -21,6 +21,8 @@ interface InterviewResponse {
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const t = useTranslations('onboarding')
+  const tCommon = useTranslations('common')
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [currentQuestionId, setCurrentQuestionId] = useState<number | null>(null)
   const [currentQuestionText, setCurrentQuestionText] = useState<string>("")  

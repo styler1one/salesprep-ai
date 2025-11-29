@@ -28,6 +28,8 @@ export default function KnowledgeBasePage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const { toast } = useToast()
+  const t = useTranslations('knowledgeBase')
+  const tCommon = useTranslations('common')
   const [user, setUser] = useState<any>(null)
   const [files, setFiles] = useState<KnowledgeBaseFile[]>([])
   const [loading, setLoading] = useState(true)

@@ -45,6 +45,8 @@ interface SalesProfile {
 export default function ProfilePage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
+  const t = useTranslations('profile')
+  const tCommon = useTranslations('common')
   
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<SalesProfile | null>(null)
