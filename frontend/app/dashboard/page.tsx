@@ -6,28 +6,31 @@ import { useEffect, useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
 import { DashboardLayout } from '@/components/layout'
+import { useTranslations, useLocale } from 'next-intl'
 
-// Helper function for relative time
-function getRelativeTime(dateString: string): string {
+// Helper function for relative time (locale-aware)
+function getRelativeTime(dateString: string, locale: string): string {
     const date = new Date(dateString)
     const now = new Date()
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
     
-    if (diffInSeconds < 60) return 'Zojuist'
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min geleden`
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} uur geleden`
-    if (diffInSeconds < 172800) return 'Gisteren'
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} dagen geleden`
-    return date.toLocaleDateString('nl-NL')
+    // Use Intl.RelativeTimeFormat for proper localization
+    const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
+    
+    if (diffInSeconds < 60) return rtf.format(0, 'second')
+    if (diffInSeconds < 3600) return rtf.format(-Math.floor(diffInSeconds / 60), 'minute')
+    if (diffInSeconds < 86400) return rtf.format(-Math.floor(diffInSeconds / 3600), 'hour')
+    if (diffInSeconds < 604800) return rtf.format(-Math.floor(diffInSeconds / 86400), 'day')
+    return date.toLocaleDateString(locale)
 }
 
-// Helper function for time-based greeting
-function getGreeting(): { greeting: string; emoji: string } {
+// Helper function for time-based greeting key
+function getGreetingKey(): { key: string; emoji: string } {
     const hour = new Date().getHours()
-    if (hour < 12) return { greeting: 'Goedemorgen', emoji: '☀️' }
-    if (hour < 17) return { greeting: 'Goedemiddag', emoji: '👋' }
-    if (hour < 21) return { greeting: 'Goedenavond', emoji: '🌆' }
-    return { greeting: 'Goedenacht', emoji: '🌙' }
+    if (hour < 12) return { key: 'morning', emoji: '☀️' }
+    if (hour < 17) return { key: 'afternoon', emoji: '👋' }
+    if (hour < 21) return { key: 'evening', emoji: '🌆' }
+    return { key: 'night', emoji: '🌙' }
 }
 
 // Helper to count items from last 7 days
@@ -218,12 +221,16 @@ export default function DashboardPage() {
             .sort((a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime())
     }, [researchBriefs, meetingPreps, followups])
 
+    const t = useTranslations('dashboard')
+    const tCommon = useTranslations('common')
+    const locale = useLocale()
+
     if (loading) {
         return (
             <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
                 <div className="text-center">
                     <Icons.spinner className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Dashboard laden...</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{t('loading')}</p>
                 </div>
             </div>
         )
@@ -232,39 +239,39 @@ export default function DashboardPage() {
     // Smart suggestion based on activity
     const getSuggestion = () => {
         if (!profile?.full_name) return { 
-            text: 'Start met het aanmaken van je sales profiel voor gepersonaliseerde AI outputs', 
+            text: t('suggestions.createProfile'), 
             action: '/onboarding', 
-            actionText: 'Profiel Maken',
+            actionText: t('actions.createProfile'),
             icon: Icons.user,
             color: 'violet'
         }
         if (!companyProfile?.company_name) return { 
-            text: 'Voeg je bedrijfsprofiel toe zodat de AI je producten en diensten kent', 
+            text: t('suggestions.addCompany'), 
             action: '/onboarding/company', 
-            actionText: 'Bedrijf Toevoegen',
+            actionText: t('actions.addCompany'),
             icon: Icons.building,
             color: 'indigo'
         }
         if (researchBriefs.length === 0) return { 
-            text: 'Research je eerste prospect om te beginnen met je sales voorbereiding', 
+            text: t('suggestions.startResearch'), 
             action: '/dashboard/research', 
-            actionText: 'Start Research',
+            actionText: t('actions.startResearch'),
             icon: Icons.search,
             color: 'blue'
         }
         // Find a completed research without contacts to suggest adding contacts first
         const completedResearch = researchBriefs.find(b => b.status === 'completed')
         if (meetingPreps.length === 0 && completedResearch) return { 
-            text: `Research voor ${completedResearch.company_name} is klaar - voeg nu een contactpersoon toe`, 
+            text: t('suggestions.addContact', { company: completedResearch.company_name }), 
             action: `/dashboard/research/${completedResearch.id}`, 
-            actionText: 'Voeg Contact Toe',
+            actionText: t('actions.addContact'),
             icon: Icons.userPlus,
             color: 'amber'
         }
         if (followups.length === 0 && meetingPreps.some(p => p.status === 'completed')) return { 
-            text: 'Na je meeting: upload de opname voor transcriptie en follow-up acties', 
+            text: t('suggestions.uploadMeeting'), 
             action: '/dashboard/followup', 
-            actionText: 'Upload Meeting',
+            actionText: t('actions.uploadMeeting'),
             icon: Icons.mic,
             color: 'orange'
         }
@@ -272,33 +279,34 @@ export default function DashboardPage() {
         // Check for prospects that need attention - first add contact, then prep
         const needsContact = prospects.find(p => p.hasResearch && p.researchStatus === 'completed' && !p.hasPrep)
         if (needsContact) return {
-            text: `Je research voor ${needsContact.company_name} is klaar - voeg nu een contactpersoon toe`,
+            text: t('suggestions.addContact', { company: needsContact.company_name }),
             action: `/dashboard/research/${needsContact.researchId}`,
-            actionText: 'Contact Toevoegen',
+            actionText: t('actions.addContact'),
             icon: Icons.userPlus,
             color: 'amber'
         }
         
         const needsFollowup = prospects.find(p => p.hasPrep && p.prepStatus === 'completed' && !p.hasFollowup)
         if (needsFollowup) return {
-            text: `Meeting met ${needsFollowup.company_name} gehad? Upload de opname voor follow-up`,
+            text: t('suggestions.needsFollowup', { company: needsFollowup.company_name }),
             action: '/dashboard/followup',
-            actionText: 'Follow-up',
+            actionText: t('actions.followup'),
             icon: Icons.mic,
             color: 'orange'
         }
 
         return { 
-            text: 'Goed bezig! Je sales voorbereiding loopt op schema 🎉', 
+            text: t('suggestions.allDone'), 
             action: '/dashboard/research', 
-            actionText: 'Nieuwe Prospect',
+            actionText: t('actions.newProspect'),
             icon: Icons.sparkles,
             color: 'emerald'
         }
     }
     
     const suggestion = getSuggestion()
-    const { greeting, emoji } = getGreeting()
+    const { key: greetingKey, emoji } = getGreetingKey()
+    const greeting = t(`greeting.${greetingKey}`)
 
     const colorClasses: Record<string, { bg: string; text: string; border: string; gradient: string }> = {
         blue: { bg: 'bg-blue-50 dark:bg-blue-950', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800', gradient: 'from-blue-500 to-blue-600' },
@@ -320,7 +328,7 @@ export default function DashboardPage() {
                 return (
                     <span className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
                         <Icons.spinner className="h-3 w-3 animate-spin" />
-                        Research bezig...
+                        {t('actions.researchInProgress')}
                     </span>
                 )
             case 'prep':
@@ -331,7 +339,7 @@ export default function DashboardPage() {
                         router.push('/dashboard/preparation')
                     }}>
                         <Icons.fileText className="h-3 w-3 mr-1" />
-                        Voorbereiden
+                        {t('actions.prepare')}
                     </Button>
                 )
             case 'followup':
@@ -342,14 +350,14 @@ export default function DashboardPage() {
                         router.push('/dashboard/followup')
                     }}>
                         <Icons.mic className="h-3 w-3 mr-1" />
-                        Follow-up
+                        {t('actions.followup')}
                     </Button>
                 )
             case 'complete':
                 return (
                     <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                         <Icons.check className="h-3 w-3" />
-                        Compleet
+                        {t('actions.complete')}
                     </span>
                 )
         }
@@ -377,7 +385,7 @@ export default function DashboardPage() {
                         {greeting}{typeof profile?.full_name === 'string' && profile.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! {emoji}
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
-                        Hier is je sales voorbereiding overzicht.
+                        {t('title')}
                     </p>
                     
                     {/* Smart Suggestion - Prominent */}
@@ -407,25 +415,25 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                                 <Icons.users className="h-5 w-5 text-slate-400" />
-                                Mijn Prospects
+                                {t('prospects.title')}
                                 <span className="text-sm font-normal text-slate-400">({prospects.length})</span>
                             </h2>
                             <Button size="sm" onClick={() => router.push('/dashboard/research')}>
                                 <Icons.plus className="h-4 w-4 mr-1" />
-                                Nieuwe Prospect
+                                {t('actions.newProspect')}
                             </Button>
                         </div>
 
                         {prospects.length === 0 ? (
                             <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center">
                                 <Icons.users className="h-16 w-16 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
-                                <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-2">Nog geen prospects</h3>
+                                <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-2">{t('prospects.empty')}</h3>
                                 <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
-                                    Start met je eerste prospect research
+                                    {t('prospects.emptyDescription')}
                                 </p>
                                 <Button onClick={() => router.push('/dashboard/research')}>
                                     <Icons.search className="h-4 w-4 mr-2" />
-                                    Start Research
+                                    {t('actions.startResearch')}
                                 </Button>
                             </div>
                         ) : (
@@ -450,7 +458,7 @@ export default function DashboardPage() {
                                                     {/* Company Info */}
                                                     <div className="min-w-0 flex-1">
                                                         <h3 className="font-semibold text-slate-900 dark:text-white truncate">{prospect.company_name}</h3>
-                                                        <p className="text-xs text-slate-500 dark:text-slate-400">{getRelativeTime(prospect.lastActivity)}</p>
+                                                        <p className="text-xs text-slate-500 dark:text-slate-400">{getRelativeTime(prospect.lastActivity, locale)}</p>
                                                     </div>
 
                                                     {/* Status Indicators */}
@@ -522,7 +530,7 @@ export default function DashboardPage() {
                                         className="w-full py-3 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center gap-2"
                                         onClick={() => router.push('/dashboard/research')}
                                     >
-                                        Bekijk alle {prospects.length} prospects
+                                        {t('prospects.viewAll', { count: prospects.length })}
                                         <Icons.arrowRight className="h-4 w-4" />
                                     </button>
                                 )}
@@ -538,7 +546,7 @@ export default function DashboardPage() {
                             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                                 <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                                     <Icons.barChart className="h-4 w-4 text-slate-400" />
-                                    Deze Week
+                                    {t('stats.thisWeek')}
                                 </h3>
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
@@ -546,7 +554,7 @@ export default function DashboardPage() {
                                             <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900 flex items-center justify-center">
                                                 <Icons.search className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                                             </div>
-                                            <span className="text-sm text-slate-600 dark:text-slate-300">Research</span>
+                                            <span className="text-sm text-slate-600 dark:text-slate-300">{t('stats.research')}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="font-bold text-slate-900 dark:text-white">{researchBriefs.length}</span>
@@ -562,7 +570,7 @@ export default function DashboardPage() {
                                             <div className="w-8 h-8 rounded-lg bg-green-50 dark:bg-green-900 flex items-center justify-center">
                                                 <Icons.fileText className="h-4 w-4 text-green-600 dark:text-green-400" />
                                             </div>
-                                            <span className="text-sm text-slate-600 dark:text-slate-300">Voorbereidingen</span>
+                                            <span className="text-sm text-slate-600 dark:text-slate-300">{t('stats.preparations')}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="font-bold text-slate-900 dark:text-white">{meetingPreps.length}</span>
@@ -578,7 +586,7 @@ export default function DashboardPage() {
                                             <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-900 flex items-center justify-center">
                                                 <Icons.mail className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                                             </div>
-                                            <span className="text-sm text-slate-600 dark:text-slate-300">Follow-ups</span>
+                                            <span className="text-sm text-slate-600 dark:text-slate-300">{t('stats.followups')}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="font-bold text-slate-900 dark:text-white">{followups.length}</span>
@@ -596,7 +604,7 @@ export default function DashboardPage() {
                             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                                 <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                                     <Icons.zap className="h-4 w-4 text-amber-500" />
-                                    Snelle Acties
+                                    {t('quickActions.title')}
                                 </h3>
                                 <div className="grid grid-cols-2 gap-2">
                                     <button
@@ -634,7 +642,7 @@ export default function DashboardPage() {
                             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                                 <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                                     <Icons.user className="h-4 w-4 text-slate-400" />
-                                    Profielen
+                                    {t('profile.salesProfile')}
                                 </h3>
                                 <div className="space-y-2">
                                     <button
@@ -647,7 +655,7 @@ export default function DashboardPage() {
                                             }`}>
                                                 <Icons.user className={`h-4 w-4 ${profile?.full_name ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400'}`} />
                                             </div>
-                                            <span className="text-sm text-slate-700 dark:text-slate-200">Sales Profiel</span>
+                                            <span className="text-sm text-slate-700 dark:text-slate-200">{t('profile.salesProfile')}</span>
                                         </div>
                                         {profile?.full_name ? (
                                             <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
@@ -655,7 +663,7 @@ export default function DashboardPage() {
                                                 {profile.profile_completeness || 0}%
                                             </span>
                                         ) : (
-                                            <span className="text-xs text-amber-600 dark:text-amber-400">Invullen →</span>
+                                            <span className="text-xs text-amber-600 dark:text-amber-400">{t('profile.incomplete')} →</span>
                                         )}
                                     </button>
                                     <button
@@ -668,7 +676,7 @@ export default function DashboardPage() {
                                             }`}>
                                                 <Icons.building className={`h-4 w-4 ${companyProfile?.company_name ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
                                             </div>
-                                            <span className="text-sm text-slate-700 dark:text-slate-200">Bedrijfsprofiel</span>
+                                            <span className="text-sm text-slate-700 dark:text-slate-200">{t('profile.companyProfile')}</span>
                                         </div>
                                         {companyProfile?.company_name ? (
                                             <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
@@ -676,7 +684,7 @@ export default function DashboardPage() {
                                                 {companyProfile.profile_completeness || 0}%
                                             </span>
                                         ) : (
-                                            <span className="text-xs text-amber-600 dark:text-amber-400">Invullen →</span>
+                                            <span className="text-xs text-amber-600 dark:text-amber-400">{t('profile.incomplete')} →</span>
                                         )}
                                     </button>
                                 </div>
@@ -689,7 +697,7 @@ export default function DashboardPage() {
                                     Knowledge Base
                                 </h3>
                                 <p className="text-xs text-slate-600 dark:text-slate-300 mb-3">
-                                    {knowledgeBase.length} document{knowledgeBase.length !== 1 ? 'en' : ''} geüpload
+                                    {t('profile.documentsCount', { count: knowledgeBase.length })}
                                 </p>
                                 <Button 
                                     variant="outline" 
@@ -698,7 +706,7 @@ export default function DashboardPage() {
                                     onClick={() => router.push('/dashboard/knowledge-base')}
                                 >
                                     <Icons.upload className="h-4 w-4 mr-2" />
-                                    Upload Documenten
+                                    {tCommon('upload')}
                                 </Button>
                             </div>
 

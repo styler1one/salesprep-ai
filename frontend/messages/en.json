@@ -1,4 +1,60 @@
 {
+  "dashboard": {
+    "loading": "Loading dashboard...",
+    "title": "Here's your sales preparation overview.",
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening",
+      "night": "Good night"
+    },
+    "suggestions": {
+      "createProfile": "Start by creating your sales profile for personalized AI outputs",
+      "addCompany": "Add your company profile so the AI knows your products and services",
+      "startResearch": "Research your first prospect to start your sales preparation",
+      "addContact": "Research for {company} is ready - now add a contact person",
+      "uploadMeeting": "After your meeting: upload the recording for transcription and follow-up actions",
+      "needsFollowup": "Had a meeting with {company}? Upload the recording for follow-up",
+      "allDone": "Great job! Your sales preparation is on track 🎉"
+    },
+    "actions": {
+      "createProfile": "Create Profile",
+      "addCompany": "Add Company",
+      "startResearch": "Start Research",
+      "addContact": "Add Contact",
+      "uploadMeeting": "Upload Meeting",
+      "followup": "Follow-up",
+      "newProspect": "New Prospect",
+      "prepare": "Prepare",
+      "complete": "Complete",
+      "researchInProgress": "Research in progress..."
+    },
+    "prospects": {
+      "title": "My Prospects",
+      "empty": "No prospects yet",
+      "emptyDescription": "Start with your first prospect research",
+      "viewAll": "View all {count} prospects"
+    },
+    "stats": {
+      "thisWeek": "This Week",
+      "research": "Research",
+      "preparations": "Preparations",
+      "followups": "Follow-ups"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "newResearch": "New Research",
+      "newPreparation": "New Preparation",
+      "newFollowup": "New Follow-up"
+    },
+    "profile": {
+      "salesProfile": "Sales Profile",
+      "companyProfile": "Company Profile",
+      "complete": "Complete",
+      "incomplete": "Incomplete",
+      "documentsCount": "{count} documents"
+    }
+  },
   "common": {
     "loading": "Loading...",
     "save": "Save",
@@ -18,7 +74,9 @@
     "yes": "Yes",
     "no": "No",
     "or": "or",
-    "and": "and"
+    "and": "and",
+    "upload": "Upload Documents",
+    "download": "Download"
   },
   "navigation": {
     "dashboard": "Dashboard",

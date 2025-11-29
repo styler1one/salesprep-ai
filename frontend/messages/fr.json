@@ -1,4 +1,60 @@
 {
+  "dashboard": {
+    "loading": "Chargement du tableau de bord...",
+    "title": "Voici votre aperçu de préparation commerciale.",
+    "greeting": {
+      "morning": "Bonjour",
+      "afternoon": "Bon après-midi",
+      "evening": "Bonsoir",
+      "night": "Bonne nuit"
+    },
+    "suggestions": {
+      "createProfile": "Commencez par créer votre profil de vente pour des sorties IA personnalisées",
+      "addCompany": "Ajoutez votre profil d'entreprise pour que l'IA connaisse vos produits et services",
+      "startResearch": "Recherchez votre premier prospect pour commencer votre préparation commerciale",
+      "addContact": "La recherche pour {company} est prête - ajoutez maintenant une personne de contact",
+      "uploadMeeting": "Après votre réunion : téléchargez l'enregistrement pour la transcription et le suivi",
+      "needsFollowup": "Réunion avec {company} effectuée ? Téléchargez l'enregistrement pour le suivi",
+      "allDone": "Excellent travail ! Votre préparation commerciale est sur la bonne voie 🎉"
+    },
+    "actions": {
+      "createProfile": "Créer un profil",
+      "addCompany": "Ajouter une entreprise",
+      "startResearch": "Démarrer la recherche",
+      "addContact": "Ajouter un contact",
+      "uploadMeeting": "Télécharger la réunion",
+      "followup": "Suivi",
+      "newProspect": "Nouveau prospect",
+      "prepare": "Préparer",
+      "complete": "Terminé",
+      "researchInProgress": "Recherche en cours..."
+    },
+    "prospects": {
+      "title": "Mes prospects",
+      "empty": "Pas encore de prospects",
+      "emptyDescription": "Commencez par votre première recherche de prospect",
+      "viewAll": "Voir les {count} prospects"
+    },
+    "stats": {
+      "thisWeek": "Cette semaine",
+      "research": "Recherche",
+      "preparations": "Préparations",
+      "followups": "Suivis"
+    },
+    "quickActions": {
+      "title": "Actions rapides",
+      "newResearch": "Nouvelle recherche",
+      "newPreparation": "Nouvelle préparation",
+      "newFollowup": "Nouveau suivi"
+    },
+    "profile": {
+      "salesProfile": "Profil de vente",
+      "companyProfile": "Profil d'entreprise",
+      "complete": "Complet",
+      "incomplete": "Incomplet",
+      "documentsCount": "{count} documents"
+    }
+  },
   "common": {
     "loading": "Chargement...",
     "save": "Enregistrer",
@@ -18,7 +74,9 @@
     "yes": "Oui",
     "no": "Non",
     "or": "ou",
-    "and": "et"
+    "and": "et",
+    "upload": "Télécharger des documents",
+    "download": "Télécharger"
   },
   "navigation": {
     "dashboard": "Tableau de bord",

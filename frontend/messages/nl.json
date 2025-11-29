@@ -1,4 +1,60 @@
 {
+  "dashboard": {
+    "loading": "Dashboard laden...",
+    "title": "Hier is je sales voorbereiding overzicht.",
+    "greeting": {
+      "morning": "Goedemorgen",
+      "afternoon": "Goedemiddag",
+      "evening": "Goedenavond",
+      "night": "Goedenacht"
+    },
+    "suggestions": {
+      "createProfile": "Start met het aanmaken van je sales profiel voor gepersonaliseerde AI outputs",
+      "addCompany": "Voeg je bedrijfsprofiel toe zodat de AI je producten en diensten kent",
+      "startResearch": "Research je eerste prospect om te beginnen met je sales voorbereiding",
+      "addContact": "Research voor {company} is klaar - voeg nu een contactpersoon toe",
+      "uploadMeeting": "Na je meeting: upload de opname voor transcriptie en follow-up acties",
+      "needsFollowup": "Meeting met {company} gehad? Upload de opname voor follow-up",
+      "allDone": "Goed bezig! Je sales voorbereiding loopt op schema 🎉"
+    },
+    "actions": {
+      "createProfile": "Profiel Maken",
+      "addCompany": "Bedrijf Toevoegen",
+      "startResearch": "Start Research",
+      "addContact": "Voeg Contact Toe",
+      "uploadMeeting": "Upload Meeting",
+      "followup": "Follow-up",
+      "newProspect": "Nieuwe Prospect",
+      "prepare": "Voorbereiden",
+      "complete": "Compleet",
+      "researchInProgress": "Research bezig..."
+    },
+    "prospects": {
+      "title": "Mijn Prospects",
+      "empty": "Nog geen prospects",
+      "emptyDescription": "Start met je eerste prospect research",
+      "viewAll": "Bekijk alle {count} prospects"
+    },
+    "stats": {
+      "thisWeek": "Deze Week",
+      "research": "Research",
+      "preparations": "Voorbereidingen",
+      "followups": "Follow-ups"
+    },
+    "quickActions": {
+      "title": "Snelle Acties",
+      "newResearch": "Nieuwe Research",
+      "newPreparation": "Nieuwe Voorbereiding",
+      "newFollowup": "Nieuwe Follow-up"
+    },
+    "profile": {
+      "salesProfile": "Sales Profiel",
+      "companyProfile": "Bedrijfsprofiel",
+      "complete": "Compleet",
+      "incomplete": "Incompleet",
+      "documentsCount": "{count} documenten"
+    }
+  },
   "common": {
     "loading": "Laden...",
     "save": "Opslaan",
@@ -18,7 +74,9 @@
     "yes": "Ja",
     "no": "Nee",
     "or": "of",
-    "and": "en"
+    "and": "en",
+    "upload": "Upload Documenten",
+    "download": "Downloaden"
   },
   "navigation": {
     "dashboard": "Dashboard",

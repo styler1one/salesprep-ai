@@ -1,4 +1,60 @@
 {
+  "dashboard": {
+    "loading": "Dashboard wird geladen...",
+    "title": "Hier ist deine Verkaufsvorbereitung-Übersicht.",
+    "greeting": {
+      "morning": "Guten Morgen",
+      "afternoon": "Guten Tag",
+      "evening": "Guten Abend",
+      "night": "Gute Nacht"
+    },
+    "suggestions": {
+      "createProfile": "Beginne mit der Erstellung deines Verkaufsprofils für personalisierte KI-Ausgaben",
+      "addCompany": "Füge dein Unternehmensprofil hinzu, damit die KI deine Produkte und Dienstleistungen kennt",
+      "startResearch": "Recherchiere deinen ersten Interessenten, um mit deiner Verkaufsvorbereitung zu beginnen",
+      "addContact": "Recherche für {company} ist fertig - füge jetzt eine Kontaktperson hinzu",
+      "uploadMeeting": "Nach deinem Meeting: Lade die Aufnahme für Transkription und Nachverfolgung hoch",
+      "needsFollowup": "Meeting mit {company} gehabt? Lade die Aufnahme für die Nachverfolgung hoch",
+      "allDone": "Gut gemacht! Deine Verkaufsvorbereitung läuft nach Plan 🎉"
+    },
+    "actions": {
+      "createProfile": "Profil erstellen",
+      "addCompany": "Unternehmen hinzufügen",
+      "startResearch": "Recherche starten",
+      "addContact": "Kontakt hinzufügen",
+      "uploadMeeting": "Meeting hochladen",
+      "followup": "Nachverfolgung",
+      "newProspect": "Neuer Interessent",
+      "prepare": "Vorbereiten",
+      "complete": "Abgeschlossen",
+      "researchInProgress": "Recherche läuft..."
+    },
+    "prospects": {
+      "title": "Meine Interessenten",
+      "empty": "Noch keine Interessenten",
+      "emptyDescription": "Beginne mit deiner ersten Interessenten-Recherche",
+      "viewAll": "Alle {count} Interessenten anzeigen"
+    },
+    "stats": {
+      "thisWeek": "Diese Woche",
+      "research": "Recherche",
+      "preparations": "Vorbereitungen",
+      "followups": "Nachverfolgungen"
+    },
+    "quickActions": {
+      "title": "Schnellaktionen",
+      "newResearch": "Neue Recherche",
+      "newPreparation": "Neue Vorbereitung",
+      "newFollowup": "Neue Nachverfolgung"
+    },
+    "profile": {
+      "salesProfile": "Verkaufsprofil",
+      "companyProfile": "Unternehmensprofil",
+      "complete": "Vollständig",
+      "incomplete": "Unvollständig",
+      "documentsCount": "{count} Dokumente"
+    }
+  },
   "common": {
     "loading": "Laden...",
     "save": "Speichern",
@@ -18,7 +74,9 @@
     "yes": "Ja",
     "no": "Nein",
     "or": "oder",
-    "and": "und"
+    "and": "und",
+    "upload": "Dokumente hochladen",
+    "download": "Herunterladen"
   },
   "navigation": {
     "dashboard": "Dashboard",
