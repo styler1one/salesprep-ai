@@ -426,34 +426,20 @@ export default function ResearchBriefPage() {
       <>
         <div className="p-4 lg:p-6">
           {/* Page Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push('/dashboard/research')}
-              >
-                <Icons.arrowLeft className="h-4 w-4 mr-2" />
-                Terug
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900">{brief.company_name}</h1>
-                <p className="text-sm text-slate-500">
-                  Research Brief • {new Date(brief.completed_at).toLocaleDateString('nl-NL')}
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => {
-                navigator.clipboard.writeText(brief.brief_content)
-                toast({
-                  title: "Gekopieerd!",
-                  description: "Research brief is naar het klembord gekopieerd",
-                })
-              }}>
-                <Icons.copy className="h-4 w-4 mr-2" />
-                Kopieer
-              </Button>
+          <div className="flex items-center gap-4 mb-6">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/dashboard/research')}
+            >
+              <Icons.arrowLeft className="h-4 w-4 mr-2" />
+              Terug
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">{brief.company_name}</h1>
+              <p className="text-sm text-slate-500">
+                Research Brief • {new Date(brief.completed_at).toLocaleDateString('nl-NL')}
+              </p>
             </div>
           </div>
 
@@ -462,6 +448,20 @@ export default function ResearchBriefPage() {
             {/* Left Column - Brief Content (scrollable) */}
             <div className="flex-1 min-w-0">
               <div className="rounded-xl border bg-white p-6 lg:p-8 shadow-sm">
+                {/* Copy button - rechtsboven in de brief */}
+                <div className="flex justify-end mb-4">
+                  <Button variant="outline" size="sm" onClick={() => {
+                    navigator.clipboard.writeText(brief.brief_content)
+                    toast({
+                      title: "Gekopieerd!",
+                      description: "Research brief is naar het klembord gekopieerd",
+                    })
+                  }}>
+                    <Icons.copy className="h-4 w-4 mr-2" />
+                    Kopieer Brief
+                  </Button>
+                </div>
+                
                 <div className="prose prose-slate max-w-none prose-headings:scroll-mt-20">
                   <ReactMarkdown
                     components={{
@@ -646,33 +646,42 @@ export default function ResearchBriefPage() {
                     </div>
                   ) : (
                     <div className="space-y-2">
+                      {/* Hint voor gebruiker */}
+                      <p className="text-xs text-slate-400 mb-2 flex items-center gap-1">
+                        <Icons.info className="h-3 w-3" />
+                        Klik voor uitgebreide analyse
+                      </p>
+                      
                       {contacts.map((contact) => {
                         const isAnalyzing = analyzingContactIds.has(contact.id) || (!contact.analyzed_at && contact.profile_brief === "Analyse wordt uitgevoerd...")
+                        const hasAnalysis = contact.analyzed_at && contact.profile_brief
                         
                         return (
                           <div 
                             key={contact.id}
-                            className={`p-2 rounded-lg border cursor-pointer transition-all ${
+                            className={`p-3 rounded-lg border transition-all ${
                               selectedContact?.id === contact.id 
-                                ? 'border-blue-500 bg-blue-50' 
+                                ? 'border-blue-500 bg-blue-50 shadow-md' 
                                 : isAnalyzing
                                   ? 'border-amber-400 bg-amber-50'
-                                  : 'border-slate-200 hover:border-slate-300'
+                                  : hasAnalysis
+                                    ? 'border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 cursor-pointer hover:shadow-sm'
+                                    : 'border-slate-200'
                             }`}
-                            onClick={() => setSelectedContact(selectedContact?.id === contact.id ? null : contact)}
+                            onClick={() => hasAnalysis && setSelectedContact(selectedContact?.id === contact.id ? null : contact)}
                           >
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <div className={`h-7 w-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                  isAnalyzing ? 'bg-amber-200' : 'bg-slate-200'
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <div className={`h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                  isAnalyzing ? 'bg-amber-200' : hasAnalysis ? 'bg-blue-100' : 'bg-slate-200'
                                 }`}>
                                   {isAnalyzing ? (
-                                    <Icons.spinner className="h-3 w-3 text-amber-600 animate-spin" />
+                                    <Icons.spinner className="h-4 w-4 text-amber-600 animate-spin" />
                                   ) : (
-                                    <Icons.user className="h-3 w-3 text-slate-500" />
+                                    <Icons.user className={`h-4 w-4 ${hasAnalysis ? 'text-blue-600' : 'text-slate-500'}`} />
                                   )}
                                 </div>
-                                <div className="min-w-0">
+                                <div className="min-w-0 flex-1">
                                   <div className="font-medium text-sm truncate flex items-center gap-1">
                                     {contact.name}
                                     {getAuthorityBadge(contact.decision_authority)}
@@ -682,15 +691,40 @@ export default function ResearchBriefPage() {
                                   )}
                                 </div>
                               </div>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                className="h-6 w-6 p-0 text-slate-400 hover:text-red-500"
-                                onClick={(e) => handleDeleteContact(contact.id, e)}
-                              >
-                                <Icons.x className="h-3 w-3" />
-                              </Button>
+                              
+                              <div className="flex items-center gap-1">
+                                {/* Bekijk profiel indicator */}
+                                {hasAnalysis && (
+                                  <div className="flex items-center gap-1 text-blue-600 mr-1">
+                                    <span className="text-xs font-medium hidden sm:inline">Bekijk</span>
+                                    <Icons.chevronRight className="h-4 w-4" />
+                                  </div>
+                                )}
+                                {isAnalyzing && (
+                                  <span className="text-xs text-amber-600 mr-1">Analyseren...</span>
+                                )}
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="h-6 w-6 p-0 text-slate-400 hover:text-red-500"
+                                  onClick={(e) => handleDeleteContact(contact.id, e)}
+                                >
+                                  <Icons.x className="h-3 w-3" />
+                                </Button>
+                              </div>
                             </div>
+                            
+                            {/* Preview van de analyse */}
+                            {hasAnalysis && contact.communication_style && (
+                              <div className="mt-2 pt-2 border-t border-slate-100">
+                                <div className="flex items-center gap-2 text-xs text-slate-500">
+                                  <span className="bg-slate-100 px-2 py-0.5 rounded">{contact.communication_style}</span>
+                                  {contact.probable_drivers && (
+                                    <span className="truncate">• {contact.probable_drivers.split(',')[0]}</span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )
                       })}
