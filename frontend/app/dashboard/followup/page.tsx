@@ -80,6 +80,13 @@ export default function FollowupPage() {
     }
     getUser()
     fetchFollowups()
+
+    // Check for pre-selected company from Preparation page
+    const followupFor = sessionStorage.getItem('followupForCompany')
+    if (followupFor) {
+      setProspectCompany(followupFor)
+      sessionStorage.removeItem('followupForCompany')
+    }
   }, [fetchFollowups, supabase])
 
   useEffect(() => {

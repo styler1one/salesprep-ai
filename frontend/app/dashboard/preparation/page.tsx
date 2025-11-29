@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Icons } from '@/components/icons'
 import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
-import ReactMarkdown from 'react-markdown'
 import { DashboardLayout } from '@/components/layout'
 import { ProspectAutocomplete } from '@/components/prospect-autocomplete'
 
@@ -48,7 +47,7 @@ export default function PreparationPage() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [preps, setPreps] = useState<MeetingPrep[]>([])
-  const [selectedPrep, setSelectedPrep] = useState<MeetingPrep | null>(null)
+  const [initialLoading, setInitialLoading] = useState(true)
 
   // Form state
   const [companyName, setCompanyName] = useState('')
@@ -102,6 +101,8 @@ export default function PreparationPage() {
       }
     } catch (error) {
       console.error('Failed to load preps:', error)
+    } finally {
+      setInitialLoading(false)
     }
   }
 
@@ -206,23 +207,8 @@ export default function PreparationPage() {
     }
   }
 
-  const viewPrep = async (prepId: string) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/api/v1/prep/${prepId}`, {
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setSelectedPrep(data)
-      }
-    } catch (error) {
-      console.error('Failed to load prep:', error)
-    }
+  const viewPrep = (prepId: string) => {
+    router.push(`/dashboard/preparation/${prepId}`)
   }
 
   const deletePrep = async (prepId: string, e: React.MouseEvent) => {
@@ -241,20 +227,10 @@ export default function PreparationPage() {
 
       if (response.ok) {
         toast({ title: 'Verwijderd' })
-        if (selectedPrep?.id === prepId) setSelectedPrep(null)
         loadPreps()
       }
     } catch (error) {
       toast({ title: 'Fout', description: 'Kon niet verwijderen', variant: 'destructive' })
-    }
-  }
-
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      toast({ title: 'Gekopieerd!' })
-    } catch (error) {
-      toast({ title: 'Fout', description: 'Kon niet kopiëren', variant: 'destructive' })
     }
   }
 
@@ -314,10 +290,8 @@ export default function PreparationPage() {
                 {preps.map((prep) => (
                   <div
                     key={prep.id}
-                    className={`bg-white rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group ${
-                      selectedPrep?.id === prep.id ? 'border-green-500 ring-1 ring-green-500' : ''
-                    }`}
-                    onClick={() => viewPrep(prep.id)}
+                    className="bg-white rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group hover:border-green-300"
+                    onClick={() => prep.status === 'completed' && viewPrep(prep.id)}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
@@ -353,18 +327,33 @@ export default function PreparationPage() {
                       
                       <div className="flex items-center gap-1 ml-4">
                         {prep.status === 'completed' && (
-                          <Button
-                            variant="default"
-                            size="sm"
-                            className="h-8 text-xs bg-green-600 hover:bg-green-700 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              viewPrep(prep.id)
-                            }}
-                          >
-                            <Icons.eye className="h-3 w-3 mr-1" />
-                            Bekijk
-                          </Button>
+                          <>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="h-8 text-xs bg-green-600 hover:bg-green-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                viewPrep(prep.id)
+                              }}
+                            >
+                              <Icons.eye className="h-3 w-3 mr-1" />
+                              Bekijk
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs border-orange-300 text-orange-600 hover:bg-orange-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                sessionStorage.setItem('followupForCompany', prep.prospect_company_name)
+                                router.push('/dashboard/followup')
+                              }}
+                            >
+                              <Icons.mic className="h-3 w-3 mr-1" />
+                              Follow-up
+                            </Button>
+                          </>
                         )}
                         <Button
                           variant="ghost"
@@ -378,50 +367,6 @@ export default function PreparationPage() {
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
-
-            {/* Selected Prep Content */}
-            {selectedPrep && selectedPrep.status === 'completed' && selectedPrep.brief_content && (
-              <div className="mt-6 bg-white rounded-xl border p-6 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="font-bold text-lg">{selectedPrep.prospect_company_name}</h3>
-                    <p className="text-sm text-slate-500">{getMeetingTypeLabel(selectedPrep.meeting_type)}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => copyToClipboard(selectedPrep.brief_content!)}
-                    >
-                      <Icons.copy className="h-4 w-4 mr-1" />
-                      Kopieer
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedPrep(null)}
-                    >
-                      <Icons.x className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                <div className="prose prose-sm prose-slate max-w-none">
-                  <ReactMarkdown
-                    components={{
-                      h1: ({ children }) => <h1 className="text-xl font-bold mt-6 mb-3">{children}</h1>,
-                      h2: ({ children }) => <h2 className="text-lg font-semibold mt-5 mb-2 pb-1 border-b">{children}</h2>,
-                      h3: ({ children }) => <h3 className="text-base font-semibold mt-4 mb-2">{children}</h3>,
-                      p: ({ children }) => <p className="mb-2 text-slate-700">{children}</p>,
-                      ul: ({ children }) => <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>,
-                      li: ({ children }) => <li className="text-slate-700">{children}</li>,
-                      strong: ({ children }) => <strong className="font-semibold text-slate-900">{children}</strong>,
-                    }}
-                  >
-                    {selectedPrep.brief_content}
-                  </ReactMarkdown>
-                </div>
               </div>
             )}
           </div>

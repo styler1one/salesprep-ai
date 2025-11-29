@@ -1,0 +1,482 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useRouter, useParams } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Icons } from '@/components/icons'
+import { useToast } from '@/components/ui/use-toast'
+import { Toaster } from '@/components/ui/toaster'
+import { DashboardLayout } from '@/components/layout/dashboard-layout'
+import ReactMarkdown from 'react-markdown'
+
+interface MeetingPrep {
+  id: string
+  prospect_id?: string
+  prospect_company_name: string
+  meeting_type: string
+  status: string
+  custom_notes?: string
+  brief_content?: string
+  talking_points?: any[]
+  questions?: string[]
+  strategy?: string
+  pdf_url?: string
+  created_at: string
+  completed_at?: string
+  error_message?: string
+}
+
+interface ProfileStatus {
+  hasSalesProfile: boolean
+  hasCompanyProfile: boolean
+}
+
+interface ResearchBrief {
+  id: string
+  company_name: string
+  completed_at: string
+}
+
+export default function PreparationDetailPage() {
+  const router = useRouter()
+  const params = useParams()
+  const supabase = createClientComponentClient()
+  const { toast } = useToast()
+  
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [prep, setPrep] = useState<MeetingPrep | null>(null)
+  const [profileStatus, setProfileStatus] = useState<ProfileStatus>({ hasSalesProfile: false, hasCompanyProfile: false })
+  const [researchBrief, setResearchBrief] = useState<ResearchBrief | null>(null)
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+      if (user) {
+        fetchPrep()
+        fetchProfileStatus()
+      } else {
+        router.push('/login')
+      }
+    }
+    getUser()
+  }, [supabase, params.id])
+
+  const fetchProfileStatus = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      
+      const [salesRes, companyRes] = await Promise.all([
+        fetch(`${apiUrl}/api/v1/profile/sales`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        }),
+        fetch(`${apiUrl}/api/v1/profile/company`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        })
+      ])
+
+      setProfileStatus({
+        hasSalesProfile: salesRes.ok && (await salesRes.json())?.full_name,
+        hasCompanyProfile: companyRes.ok && (await companyRes.json())?.company_name
+      })
+    } catch (error) {
+      console.error('Failed to fetch profile status:', error)
+    }
+  }
+
+  const fetchPrep = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/api/v1/prep/${params.id}`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setPrep(data)
+        
+        // Try to find the research brief for this company
+        if (data.prospect_company_name) {
+          fetchResearchBrief(data.prospect_company_name, session.access_token)
+        }
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Kon voorbereiding niet laden",
+          description: "Er is een fout opgetreden",
+        })
+        router.push('/dashboard/preparation')
+      }
+    } catch (error) {
+      console.error('Failed to fetch prep:', error)
+      toast({
+        variant: "destructive",
+        title: "Fout",
+        description: "Er is een fout opgetreden",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchResearchBrief = async (companyName: string, token: string) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/api/v1/research/briefs`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const brief = data.briefs?.find((b: any) => 
+          b.company_name.toLowerCase() === companyName.toLowerCase() && b.status === 'completed'
+        )
+        if (brief) {
+          setResearchBrief(brief)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch research brief:', error)
+    }
+  }
+
+  const handleStartFollowup = () => {
+    // Store prep context for follow-up page
+    if (prep) {
+      sessionStorage.setItem('followupForCompany', prep.prospect_company_name)
+    }
+    router.push('/dashboard/followup')
+  }
+
+  const getMeetingTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      discovery: '🔍 Discovery Call',
+      demo: '🖥️ Product Demo',
+      closing: '🤝 Closing Call',
+      follow_up: '📞 Follow-up Meeting',
+      other: '📋 Anders'
+    }
+    return labels[type] || type
+  }
+
+  const getMeetingTypeIcon = (type: string) => {
+    const icons: Record<string, string> = {
+      discovery: '🔍',
+      demo: '🖥️',
+      closing: '🤝',
+      follow_up: '📞',
+      other: '📋'
+    }
+    return icons[type] || '📋'
+  }
+
+  if (loading) {
+    return (
+      <DashboardLayout user={user}>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center space-y-4">
+            <Icons.spinner className="h-8 w-8 animate-spin text-green-600 mx-auto" />
+            <p className="text-slate-500">Voorbereiding laden...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  if (!prep) {
+    return null
+  }
+
+  return (
+    <DashboardLayout user={user}>
+      <>
+        <div className="p-4 lg:p-6">
+          {/* Page Header */}
+          <div className="flex items-center gap-4 mb-6">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/dashboard/preparation')}
+            >
+              <Icons.arrowLeft className="h-4 w-4 mr-2" />
+              Terug
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">{prep.prospect_company_name}</h1>
+              <p className="text-sm text-slate-500">
+                {getMeetingTypeLabel(prep.meeting_type)} • {new Date(prep.completed_at || prep.created_at).toLocaleDateString('nl-NL')}
+              </p>
+            </div>
+          </div>
+
+          {/* Two Column Layout */}
+          <div className="flex gap-6">
+            {/* Left Column - Brief Content (scrollable) */}
+            <div className="flex-1 min-w-0">
+              {prep.status === 'completed' && prep.brief_content ? (
+                <div className="rounded-xl border bg-white p-6 lg:p-8 shadow-sm">
+                  {/* Copy button - rechtsboven in de brief */}
+                  <div className="flex justify-end mb-4">
+                    <Button variant="outline" size="sm" onClick={() => {
+                      navigator.clipboard.writeText(prep.brief_content || '')
+                      toast({
+                        title: "Gekopieerd!",
+                        description: "Voorbereiding is naar het klembord gekopieerd",
+                      })
+                    }}>
+                      <Icons.copy className="h-4 w-4 mr-2" />
+                      Kopieer Brief
+                    </Button>
+                  </div>
+                  
+                  <div className="prose prose-slate max-w-none prose-headings:scroll-mt-20">
+                    <ReactMarkdown
+                      components={{
+                        h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4" {...props} />,
+                        h2: ({ node, ...props }) => <h2 className="text-xl font-bold mt-8 mb-4 pb-2 border-b" {...props} />,
+                        h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mt-6 mb-3" {...props} />,
+                        p: ({ node, ...props }) => <p className="mb-4 leading-relaxed text-slate-700" {...props} />,
+                        ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
+                        ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
+                        li: ({ node, ...props }) => <li className="ml-4 text-slate-700" {...props} />,
+                        strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900" {...props} />,
+                        table: ({ node, ...props }) => (
+                          <div className="overflow-x-auto my-4">
+                            <table className="min-w-full border-collapse border border-slate-200" {...props} />
+                          </div>
+                        ),
+                        th: ({ node, ...props }) => <th className="border border-slate-200 px-3 py-2 bg-slate-50 text-left font-semibold" {...props} />,
+                        td: ({ node, ...props }) => <td className="border border-slate-200 px-3 py-2" {...props} />,
+                      }}
+                    >
+                      {prep.brief_content}
+                    </ReactMarkdown>
+                  </div>
+
+                  {/* Questions Section */}
+                  {prep.questions && prep.questions.length > 0 && (
+                    <div className="mt-8 pt-6 border-t">
+                      <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                        <Icons.message className="h-5 w-5 text-green-600" />
+                        Discovery Vragen
+                      </h3>
+                      <div className="space-y-3">
+                        {prep.questions.map((q, i) => (
+                          <div key={i} className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
+                            <span className="font-bold text-green-600 min-w-[24px]">{i + 1}.</span>
+                            <span className="text-slate-700">{q}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : prep.status === 'failed' ? (
+                <div className="rounded-xl border bg-white p-8 shadow-sm text-center">
+                  <Icons.alertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+                  <h3 className="font-bold text-lg mb-2">Generatie Mislukt</h3>
+                  <p className="text-slate-500 mb-4">{prep.error_message || 'Er is een fout opgetreden'}</p>
+                  <Button onClick={() => router.push('/dashboard/preparation')}>
+                    Probeer Opnieuw
+                  </Button>
+                </div>
+              ) : (
+                <div className="rounded-xl border bg-white p-8 shadow-sm text-center">
+                  <Icons.spinner className="h-16 w-16 text-green-600 mx-auto mb-4 animate-spin" />
+                  <h3 className="font-bold text-lg mb-2">Voorbereiding wordt gegenereerd...</h3>
+                  <p className="text-slate-500">Dit duurt meestal 30-60 seconden</p>
+                </div>
+              )}
+            </div>
+
+            {/* Right Column - Sticky Sidebar */}
+            <div className="w-80 flex-shrink-0 hidden lg:block">
+              <div className="sticky top-4 space-y-4">
+                
+                {/* Meeting Type Badge */}
+                <div className="rounded-xl border bg-white p-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">{getMeetingTypeIcon(prep.meeting_type)}</span>
+                    <div>
+                      <p className="font-semibold text-slate-900">{getMeetingTypeLabel(prep.meeting_type).replace(/^[^\s]+\s/, '')}</p>
+                      <p className="text-xs text-slate-500">
+                        {new Date(prep.completed_at || prep.created_at).toLocaleDateString('nl-NL', {
+                          weekday: 'long',
+                          day: 'numeric',
+                          month: 'long'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Context Panel */}
+                <div className="rounded-xl border bg-gradient-to-br from-green-50 to-emerald-50 p-4 shadow-sm">
+                  <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                    <Icons.sparkles className="h-4 w-4 text-green-600" />
+                    AI Context
+                  </h3>
+                  <p className="text-xs text-slate-600 mb-3">
+                    Deze data is gecombineerd voor deze voorbereiding:
+                  </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      {profileStatus.hasSalesProfile ? (
+                        <Icons.check className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Icons.circle className="h-4 w-4 text-slate-300" />
+                      )}
+                      <span className={profileStatus.hasSalesProfile ? 'text-slate-700' : 'text-slate-400'}>
+                        Jouw Sales Profiel
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      {profileStatus.hasCompanyProfile ? (
+                        <Icons.check className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Icons.circle className="h-4 w-4 text-slate-300" />
+                      )}
+                      <span className={profileStatus.hasCompanyProfile ? 'text-slate-700' : 'text-slate-400'}>
+                        Jouw Bedrijfsprofiel
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      {researchBrief ? (
+                        <Icons.check className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Icons.circle className="h-4 w-4 text-slate-300" />
+                      )}
+                      <span className={researchBrief ? 'text-slate-700' : 'text-slate-400'}>
+                        Research Brief
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Icons.check className="h-4 w-4 text-green-600" />
+                      <span className="text-slate-700">Meeting Context</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Research Link */}
+                {researchBrief && (
+                  <div className="rounded-xl border bg-white p-4 shadow-sm">
+                    <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
+                      <Icons.search className="h-4 w-4 text-blue-600" />
+                      Gekoppelde Research
+                    </h3>
+                    <button
+                      onClick={() => router.push(`/dashboard/research/${researchBrief.id}`)}
+                      className="w-full p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left group"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-sm text-blue-900">{researchBrief.company_name}</p>
+                          <p className="text-xs text-blue-600">
+                            {new Date(researchBrief.completed_at).toLocaleDateString('nl-NL')}
+                          </p>
+                        </div>
+                        <Icons.chevronRight className="h-4 w-4 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </button>
+                  </div>
+                )}
+
+                {/* Custom Notes */}
+                {prep.custom_notes && (
+                  <div className="rounded-xl border bg-white p-4 shadow-sm">
+                    <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
+                      <Icons.fileText className="h-4 w-4 text-slate-600" />
+                      Jouw Notities
+                    </h3>
+                    <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg">
+                      {prep.custom_notes}
+                    </p>
+                  </div>
+                )}
+
+                {/* CTA Panel - Follow-up */}
+                <div className="rounded-xl border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 p-4 shadow-sm">
+                  <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
+                    <Icons.arrowRight className="h-4 w-4 text-orange-600" />
+                    Na je Meeting
+                  </h3>
+                  <p className="text-xs text-slate-600 mb-3">
+                    Upload je meeting opname voor transcriptie, samenvatting en follow-up acties.
+                  </p>
+                  <Button 
+                    className="w-full bg-orange-600 hover:bg-orange-700"
+                    onClick={handleStartFollowup}
+                  >
+                    <Icons.mic className="h-4 w-4 mr-2" />
+                    Start Follow-up
+                  </Button>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="rounded-xl border bg-white p-4 shadow-sm">
+                  <h3 className="font-semibold text-slate-900 mb-3 text-sm">Snelle Acties</h3>
+                  <div className="space-y-2">
+                    {prep.pdf_url && (
+                      <Button variant="outline" size="sm" className="w-full justify-start" asChild>
+                        <a href={prep.pdf_url} target="_blank" rel="noopener noreferrer">
+                          <Icons.download className="h-4 w-4 mr-2" />
+                          Download PDF
+                        </a>
+                      </Button>
+                    )}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        navigator.clipboard.writeText(prep.brief_content || '')
+                        toast({ title: "Gekopieerd!" })
+                      }}
+                    >
+                      <Icons.copy className="h-4 w-4 mr-2" />
+                      Kopieer Alles
+                    </Button>
+                    {researchBrief && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full justify-start"
+                        onClick={() => router.push(`/dashboard/research/${researchBrief.id}`)}
+                      >
+                        <Icons.search className="h-4 w-4 mr-2" />
+                        Bekijk Research
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile: Floating Action Button */}
+          <div className="lg:hidden fixed bottom-6 right-6">
+            <Button 
+              className="rounded-full h-14 w-14 shadow-lg bg-orange-600 hover:bg-orange-700"
+              onClick={handleStartFollowup}
+            >
+              <Icons.mic className="h-6 w-6" />
+            </Button>
+          </div>
+
+        </div>
+      
+        <Toaster />
+      </>
+    </DashboardLayout>
+  )
+}
+
