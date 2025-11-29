@@ -30,6 +30,8 @@ export default function FollowupPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const { toast } = useToast()
+  const t = useTranslations('followup')
+  const tCommon = useTranslations('common')
   
   const [user, setUser] = useState<any>(null)
   const [followups, setFollowups] = useState<Followup[]>([])
@@ -247,12 +249,12 @@ export default function FollowupPage() {
       )
 
       if (response.ok) {
-        toast({ title: 'Follow-up verwijderd' })
+        toast({ title: t('toast.deleted') })
         fetchFollowups()
       }
     } catch (error) {
       toast({
-        title: 'Verwijderen mislukt',
+        title: t('toast.failed'),
         variant: 'destructive'
       })
     }
@@ -274,7 +276,7 @@ export default function FollowupPage() {
         <div className="flex items-center justify-center h-full">
           <div className="text-center space-y-4">
             <Icons.spinner className="h-8 w-8 animate-spin text-orange-600 mx-auto" />
-            <p className="text-slate-500 dark:text-slate-400">Laden...</p>
+            <p className="text-slate-500 dark:text-slate-400">{t('loading')}</p>
           </div>
         </div>
       </DashboardLayout>
@@ -287,10 +289,10 @@ export default function FollowupPage() {
         {/* Page Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
-            Follow-up Agent
+            {t('title')}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm">
-            Upload meeting opnames voor transcriptie, samenvatting en follow-up acties
+            {t('subtitle')}
           </p>
         </div>
 
@@ -302,7 +304,7 @@ export default function FollowupPage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <Icons.mail className="h-5 w-5 text-slate-400" />
-                Mijn Follow-ups
+                {t('history.title')}
                 <span className="text-sm font-normal text-slate-400">({followups.length})</span>
               </h2>
               <Button variant="ghost" size="sm" onClick={fetchFollowups}>
@@ -313,9 +315,9 @@ export default function FollowupPage() {
             {followups.length === 0 ? (
               <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center">
                 <Icons.mic className="h-16 w-16 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
-                <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-2">Nog geen follow-ups</h3>
+                <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-2">{t('history.empty')}</h3>
                 <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
-                  Upload een meeting opname via het formulier rechts →
+                  {t('history.emptyDesc')}
                 </p>
               </div>
             ) : (
@@ -336,31 +338,31 @@ export default function FollowupPage() {
                           {followup.status === 'completed' && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 dark:bg-green-900/50 text-green-700 dark:text-green-400 flex-shrink-0">
                               <Icons.check className="h-3 w-3" />
-                              Klaar
+                              {t('stats.completed')}
                             </span>
                           )}
                           {followup.status === 'transcribing' && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-50 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-400 flex-shrink-0">
                               <Icons.spinner className="h-3 w-3 animate-spin" />
-                              Transcriberen
+                              {t('form.processing')}
                             </span>
                           )}
                           {followup.status === 'summarizing' && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-50 dark:bg-purple-900/50 text-purple-700 dark:text-purple-400 flex-shrink-0">
                               <Icons.spinner className="h-3 w-3 animate-spin" />
-                              Samenvatten
+                              {t('form.processing')}
                             </span>
                           )}
                           {followup.status === 'uploading' && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 flex-shrink-0">
                               <Icons.spinner className="h-3 w-3 animate-spin" />
-                              Uploaden
+                              {t('form.processing')}
                             </span>
                           )}
                           {followup.status === 'failed' && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 dark:bg-red-900/50 text-red-700 dark:text-red-400 flex-shrink-0">
                               <Icons.alertCircle className="h-3 w-3" />
-                              Mislukt
+                              {t('toast.failed')}
                             </span>
                           )}
                         </div>
@@ -397,7 +399,7 @@ export default function FollowupPage() {
                             }}
                           >
                             <Icons.eye className="h-3 w-3 mr-1" />
-                            Bekijk
+                            {tCommon('view')}
                           </Button>
                         )}
                         <Button
@@ -424,16 +426,16 @@ export default function FollowupPage() {
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                   <Icons.barChart className="h-4 w-4 text-slate-400" />
-                  Overzicht
+                  {t('stats.title')}
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-3 text-center">
                     <p className="text-2xl font-bold text-green-600 dark:text-green-400">{completedFollowups}</p>
-                    <p className="text-xs text-green-700 dark:text-green-300">Voltooid</p>
+                    <p className="text-xs text-green-700 dark:text-green-300">{t('stats.completed')}</p>
                   </div>
                   <div className="bg-orange-50 dark:bg-orange-900/30 rounded-lg p-3 text-center">
                     <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{processingFollowups}</p>
-                    <p className="text-xs text-orange-700 dark:text-orange-300">Bezig</p>
+                    <p className="text-xs text-orange-700 dark:text-orange-300">{t('stats.processing')}</p>
                   </div>
                 </div>
               </div>
@@ -442,7 +444,7 @@ export default function FollowupPage() {
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                   <Icons.upload className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                  Nieuwe Follow-up
+                  {t('form.title')}
                 </h3>
                 
                 <div className="space-y-3">
@@ -456,7 +458,7 @@ export default function FollowupPage() {
                       className="flex-1 h-8 text-xs"
                     >
                       <Icons.mic className="h-3 w-3 mr-1" />
-                      Audio
+                      {t('form.uploadAudio')}
                     </Button>
                     <Button
                       variant={uploadType === 'transcript' ? 'default' : 'outline'}
@@ -466,7 +468,7 @@ export default function FollowupPage() {
                       className="flex-1 h-8 text-xs"
                     >
                       <Icons.fileText className="h-3 w-3 mr-1" />
-                      Transcript
+                      {t('form.uploadTranscript')}
                     </Button>
                   </div>
 
@@ -501,10 +503,10 @@ export default function FollowupPage() {
                       <>
                         <Icons.upload className="h-8 w-8 mx-auto text-gray-400 dark:text-slate-500 mb-1" />
                         <p className="text-xs text-gray-600 dark:text-slate-300">
-                          Klik om {uploadType === 'audio' ? 'audio' : 'transcript'} te uploaden
+                          {t('form.dragDrop')}
                         </p>
                         <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
-                          {uploadType === 'audio' ? 'MP3, M4A, WAV (max 50MB)' : 'TXT, MD, DOCX (max 10MB)'}
+                          {t('form.supportedFormats')}
                         </p>
                       </>
                     )}
@@ -528,11 +530,11 @@ export default function FollowupPage() {
 
                   {/* Prospect field */}
                   <div>
-                    <Label className="text-xs text-slate-700 dark:text-slate-300">Prospect</Label>
+                    <Label className="text-xs text-slate-700 dark:text-slate-300">{t('form.selectProspect')}</Label>
                     <ProspectAutocomplete
                       value={prospectCompany}
                       onChange={setProspectCompany}
-                      placeholder="Zoek bedrijf..."
+                      placeholder={t('form.selectProspectPlaceholder')}
                       disabled={uploading}
                     />
                   </div>
@@ -544,7 +546,7 @@ export default function FollowupPage() {
                     className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center gap-1"
                   >
                     {showAdvanced ? <Icons.chevronDown className="h-3 w-3" /> : <Icons.chevronRight className="h-3 w-3" />}
-                    Extra opties
+                    {tCommon('extraOptions')}
                   </button>
 
                   {showAdvanced && (
@@ -582,11 +584,8 @@ export default function FollowupPage() {
                     />
                     <div className="grid gap-0.5 leading-none">
                       <Label htmlFor="coaching" className="text-xs cursor-pointer text-slate-700 dark:text-slate-300">
-                        📈 Coaching feedback
+                        📈 {t('form.includeCoaching')}
                       </Label>
-                      <p className="text-xs text-slate-400 dark:text-slate-500">
-                        Tips over wat goed ging
-                      </p>
                     </div>
                   </div>
 
@@ -598,12 +597,12 @@ export default function FollowupPage() {
                     {uploading ? (
                       <>
                         <Icons.spinner className="h-4 w-4 mr-2 animate-spin" />
-                        Verwerken...
+                        {t('form.processing')}
                       </>
                     ) : (
                       <>
                         <Icons.zap className="h-4 w-4 mr-2" />
-                        Upload & Verwerk
+                        {t('form.startFollowup')}
                       </>
                     )}
                   </Button>
@@ -614,24 +613,24 @@ export default function FollowupPage() {
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950 dark:to-amber-950 p-4 shadow-sm">
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                   <Icons.sparkles className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                  Wat krijg je?
+                  {t('whatYouGet.title')}
                 </h3>
                 <ul className="space-y-2 text-xs text-slate-700 dark:text-slate-300">
                   <li className="flex items-start gap-2">
                     <Icons.check className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
-                    <span>Volledige transcriptie</span>
+                    <span>{t('whatYouGet.item1')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Icons.check className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
-                    <span>Executive summary</span>
+                    <span>{t('whatYouGet.item2')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Icons.check className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
-                    <span>Actiepunten & next steps</span>
+                    <span>{t('detail.actionItems')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Icons.check className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
-                    <span>Follow-up email concept</span>
+                    <span>{t('whatYouGet.item3')}</span>
                   </li>
                 </ul>
               </div>

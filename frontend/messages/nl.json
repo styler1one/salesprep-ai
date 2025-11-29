@@ -76,7 +76,8 @@
     "or": "of",
     "and": "en",
     "upload": "Upload Documenten",
-    "download": "Downloaden"
+    "download": "Downloaden",
+    "extraOptions": "Extra opties"
   },
   "navigation": {
     "dashboard": "Dashboard",

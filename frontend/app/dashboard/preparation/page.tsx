@@ -256,10 +256,10 @@ export default function PreparationPage() {
         {/* Page Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
-            Preparation Agent
+            {t('title')}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm">
-            AI-gegenereerde meeting briefs met context van je profiel en research
+            {t('subtitle')}
           </p>
         </div>
 
@@ -271,7 +271,7 @@ export default function PreparationPage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <Icons.fileText className="h-5 w-5 text-slate-400" />
-                Mijn Voorbereidingen
+                {t('history.title')}
                 <span className="text-sm font-normal text-slate-400">({preps.length})</span>
               </h2>
               <Button variant="ghost" size="sm" onClick={loadPreps}>
@@ -282,9 +282,9 @@ export default function PreparationPage() {
             {preps.length === 0 ? (
               <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center">
                 <Icons.fileText className="h-16 w-16 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
-                <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-2">Nog geen voorbereidingen</h3>
+                <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-2">{t('history.empty')}</h3>
                 <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
-                  Genereer je eerste meeting brief via het formulier rechts →
+                  {t('history.emptyDesc')}
                 </p>
               </div>
             ) : (
@@ -303,19 +303,19 @@ export default function PreparationPage() {
                           {prep.status === 'completed' && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 dark:bg-green-900/50 text-green-700 dark:text-green-400 flex-shrink-0">
                               <Icons.check className="h-3 w-3" />
-                              Klaar
+                              {t('stats.completed')}
                             </span>
                           )}
                           {(prep.status === 'generating' || prep.status === 'pending') && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 flex-shrink-0">
                               <Icons.spinner className="h-3 w-3 animate-spin" />
-                              Bezig...
+                              {t('stats.generating')}
                             </span>
                           )}
                           {prep.status === 'failed' && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 dark:bg-red-900/50 text-red-700 dark:text-red-400 flex-shrink-0">
                               <Icons.alertCircle className="h-3 w-3" />
-                              Mislukt
+                              {t('toast.failed')}
                             </span>
                           )}
                         </div>
@@ -340,7 +340,7 @@ export default function PreparationPage() {
                               }}
                             >
                               <Icons.eye className="h-3 w-3 mr-1" />
-                              Bekijk
+                              {t('brief.view')}
                             </Button>
                             <Button
                               variant="outline"
@@ -381,16 +381,16 @@ export default function PreparationPage() {
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                   <Icons.barChart className="h-4 w-4 text-slate-400" />
-                  Overzicht
+                  {t('stats.title')}
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-3 text-center">
                     <p className="text-2xl font-bold text-green-600 dark:text-green-400">{completedPreps}</p>
-                    <p className="text-xs text-green-700 dark:text-green-300">Voltooid</p>
+                    <p className="text-xs text-green-700 dark:text-green-300">{t('stats.completed')}</p>
                   </div>
                   <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3 text-center">
                     <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{processingPreps}</p>
-                    <p className="text-xs text-blue-700 dark:text-blue-300">Bezig</p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300">{t('stats.generating')}</p>
                   </div>
                 </div>
               </div>
@@ -399,16 +399,16 @@ export default function PreparationPage() {
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                   <Icons.fileText className="h-4 w-4 text-green-600 dark:text-green-400" />
-                  Nieuwe Voorbereiding
+                  {t('form.title')}
                 </h3>
                 
                 <form onSubmit={handleSubmit} className="space-y-3">
                   <div>
-                    <Label htmlFor="company" className="text-xs text-slate-700 dark:text-slate-300">Prospect *</Label>
+                    <Label htmlFor="company" className="text-xs text-slate-700 dark:text-slate-300">{t('form.selectProspect')} *</Label>
                     <ProspectAutocomplete
                       value={companyName}
                       onChange={setCompanyName}
-                      placeholder="Zoek bedrijf..."
+                      placeholder={t('form.selectProspectPlaceholder')}
                     />
                   </div>
 
@@ -432,8 +432,7 @@ export default function PreparationPage() {
                   {availableContacts.length > 0 && (
                     <div>
                       <Label className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                        👥 Contactpersonen
-                        <span className="text-slate-400 dark:text-slate-500 font-normal">(optioneel)</span>
+                        👥 {t('form.selectContacts')}
                       </Label>
                       <div className="mt-1 space-y-1 max-h-32 overflow-y-auto p-2 border border-slate-200 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-800">
                         {availableContacts.map((contact) => {
@@ -471,7 +470,7 @@ export default function PreparationPage() {
                   {contactsLoading && (
                     <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
                       <Icons.spinner className="h-3 w-3 animate-spin" />
-                      Contacten laden...
+                      {t('loading')}
                     </div>
                   )}
 
@@ -482,17 +481,17 @@ export default function PreparationPage() {
                     className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center gap-1"
                   >
                     {showAdvanced ? <Icons.chevronDown className="h-3 w-3" /> : <Icons.chevronRight className="h-3 w-3" />}
-                    Extra context
+                    {t('form.customNotes')}
                   </button>
 
                   {showAdvanced && (
                     <div>
-                      <Label htmlFor="notes" className="text-xs text-slate-700 dark:text-slate-300">Notities</Label>
+                      <Label htmlFor="notes" className="text-xs text-slate-700 dark:text-slate-300">{t('form.customNotes')}</Label>
                       <Textarea
                         id="notes"
                         value={customNotes}
                         onChange={(e) => setCustomNotes(e.target.value)}
-                        placeholder="Specifieke aandachtspunten..."
+                        placeholder={t('form.customNotesPlaceholder')}
                         rows={2}
                         className="text-sm"
                       />
@@ -507,12 +506,12 @@ export default function PreparationPage() {
                     {loading ? (
                       <>
                         <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                        Genereren...
+                        {t('form.generating')}
                       </>
                     ) : (
                       <>
                         <Icons.zap className="mr-2 h-4 w-4" />
-                        Genereer Brief
+                        {t('form.startPrep')}
                       </>
                     )}
                   </Button>
@@ -523,24 +522,20 @@ export default function PreparationPage() {
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 p-4 shadow-sm">
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                   <Icons.sparkles className="h-4 w-4 text-green-600 dark:text-green-400" />
-                  Wat krijg je?
+                  {t('whatYouGet.title')}
                 </h3>
                 <ul className="space-y-2 text-xs text-slate-700 dark:text-slate-300">
                   <li className="flex items-start gap-2">
                     <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
-                    <span>Gepersonaliseerde gespreksopeners</span>
+                    <span>{t('whatYouGet.item1')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
-                    <span>Relevante discovery vragen</span>
+                    <span>{t('whatYouGet.item2')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
-                    <span>Bezwaren & responses</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
-                    <span>Klantgerichte value props</span>
+                    <span>{t('whatYouGet.item3')}</span>
                   </li>
                 </ul>
               </div>

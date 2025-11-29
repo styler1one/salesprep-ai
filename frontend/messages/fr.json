@@ -76,7 +76,8 @@
     "or": "ou",
     "and": "et",
     "upload": "Télécharger des documents",
-    "download": "Télécharger"
+    "download": "Télécharger",
+    "extraOptions": "Options supplémentaires"
   },
   "navigation": {
     "dashboard": "Tableau de bord",

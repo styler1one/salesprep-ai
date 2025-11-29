@@ -76,7 +76,8 @@
     "or": "या",
     "and": "और",
     "upload": "दस्तावेज़ अपलोड करें",
-    "download": "डाउनलोड करें"
+    "download": "डाउनलोड करें",
+    "extraOptions": "अतिरिक्त विकल्प"
   },
   "navigation": {
     "dashboard": "डैशबोर्ड",

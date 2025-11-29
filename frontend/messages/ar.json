@@ -76,7 +76,8 @@
     "or": "أو",
     "and": "و",
     "upload": "رفع المستندات",
-    "download": "تحميل"
+    "download": "تحميل",
+    "extraOptions": "خيارات إضافية"
   },
   "navigation": {
     "dashboard": "لوحة التحكم",
