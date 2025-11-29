@@ -558,6 +558,8 @@
     }
   },
   "auth": {
+    "continueWithGoogle": "Mit Google fortfahren",
+    "continueWithMicrosoft": "Mit Microsoft fortfahren",
     "login": {
       "title": "Willkommen zurück",
       "subtitle": "Melde dich an, um fortzufahren",

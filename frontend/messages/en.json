@@ -569,6 +569,8 @@
     }
   },
   "auth": {
+    "continueWithGoogle": "Continue with Google",
+    "continueWithMicrosoft": "Continue with Microsoft",
     "login": {
       "title": "Welcome back",
       "subtitle": "Log in to continue",

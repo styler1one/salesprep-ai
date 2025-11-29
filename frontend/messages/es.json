@@ -552,6 +552,8 @@
     }
   },
   "auth": {
+    "continueWithGoogle": "Continuar con Google",
+    "continueWithMicrosoft": "Continuar con Microsoft",
     "login": {
       "title": "Bienvenido de vuelta",
       "subtitle": "Inicia sesión para continuar",
