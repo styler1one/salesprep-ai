@@ -34,6 +34,7 @@ export default function SettingsPage() {
   const supabase = createClientComponentClient()
   const t = useTranslations('settings')
   const tCommon = useTranslations('common')
+  const tErrors = useTranslations('errors')
   const tBilling = useTranslations('billing')
   const { toast } = useToast()
   
@@ -120,7 +121,7 @@ export default function SettingsPage() {
     } catch (error) {
       console.error('Failed to start checkout:', error)
       toast({
-        title: tCommon('errors.generic'),
+        title: tErrors('generic'),
         description: tBilling('checkoutError'),
         variant: 'destructive',
       })
@@ -137,7 +138,7 @@ export default function SettingsPage() {
     } catch (error) {
       console.error('Failed to open portal:', error)
       toast({
-        title: tCommon('errors.generic'),
+        title: tErrors('generic'),
         description: tBilling('portalError'),
         variant: 'destructive',
       })

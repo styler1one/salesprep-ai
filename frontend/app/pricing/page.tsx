@@ -28,7 +28,7 @@ export default function PricingPage() {
   const { toast } = useToast()
   const { subscription, createCheckoutSession } = useBilling()
   const t = useTranslations('billing')
-  const tCommon = useTranslations('common')
+  const tErrors = useTranslations('errors')
   const [isYearly, setIsYearly] = useState(false)
   const [loading, setLoading] = useState<string | null>(null)
 
@@ -99,7 +99,7 @@ export default function PricingPage() {
     } catch (error) {
       console.error('Checkout failed:', error)
       toast({
-        title: tCommon('errors.generic'),
+        title: tErrors('generic'),
         description: t('checkoutError'),
         variant: 'destructive',
       })
