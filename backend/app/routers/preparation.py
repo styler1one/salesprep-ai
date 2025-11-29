@@ -56,7 +56,7 @@ supabase = create_client(
 )
 
 
-async def generate_prep_background(
+def generate_prep_background(
     prep_id: str,
     prospect_company: str,
     meeting_type: str,
@@ -66,66 +66,73 @@ async def generate_prep_background(
     contact_ids: Optional[List[str]] = None,
     language: str = "en"  # i18n: output language (default: English)
 ):
-    """Background task to generate meeting prep"""
-    try:
-        # Update status to generating
-        supabase.table("meeting_preps").update({
-            "status": "generating"
-        }).eq("id", prep_id).execute()
-        
-        logger.info(f"Starting prep generation for {prep_id}")
-        
-        # Build context using RAG (now includes profile context)
-        context = await rag_service.build_context_for_ai(
-            prospect_company=prospect_company,
-            meeting_type=meeting_type,
-            organization_id=organization_id,
-            user_id=user_id,
-            custom_notes=custom_notes
-        )
-        
-        # Fetch contact persons if specified
-        contacts_data = []
-        if contact_ids:
-            logger.info(f"Fetching {len(contact_ids)} contacts for prep")
-            contacts_response = supabase.table("prospect_contacts")\
-                .select("*")\
-                .in_("id", contact_ids)\
-                .eq("organization_id", organization_id)\
-                .execute()
+    """Background task to generate meeting prep (synchronous for BackgroundTasks)"""
+    import asyncio
+    
+    async def _generate():
+        """Inner async function to do the actual work"""
+        try:
+            # Update status to generating
+            supabase.table("meeting_preps").update({
+                "status": "generating"
+            }).eq("id", prep_id).execute()
             
-            if contacts_response.data:
-                contacts_data = contacts_response.data
-                logger.info(f"Found {len(contacts_data)} contacts with analysis")
-        
-        # Add contacts to context
-        context["contacts"] = contacts_data
-        context["has_contacts"] = len(contacts_data) > 0
-        
-        # Generate brief with AI
-        result = await prep_generator.generate_meeting_brief(context, language=language)
-        
-        # Update database with results
-        supabase.table("meeting_preps").update({
-            "status": "completed",
-            "brief_content": result["brief_content"],
-            "talking_points": result["talking_points"],
-            "questions": result["questions"],
-            "strategy": result["strategy"],
-            "rag_sources": result["rag_sources"],
-            "completed_at": datetime.utcnow().isoformat()
-        }).eq("id", prep_id).execute()
-        
-        logger.info(f"Successfully completed prep generation for {prep_id}")
-        
-    except Exception as e:
-        logger.error(f"Error generating prep {prep_id}: {e}")
-        
-        # Update status to failed
-        supabase.table("meeting_preps").update({
-            "status": "failed",
-            "error_message": str(e)
-        }).eq("id", prep_id).execute()
+            logger.info(f"Starting prep generation for {prep_id}")
+            
+            # Build context using RAG (now includes profile context)
+            context = await rag_service.build_context_for_ai(
+                prospect_company=prospect_company,
+                meeting_type=meeting_type,
+                organization_id=organization_id,
+                user_id=user_id,
+                custom_notes=custom_notes
+            )
+            
+            # Fetch contact persons if specified
+            contacts_data = []
+            if contact_ids:
+                logger.info(f"Fetching {len(contact_ids)} contacts for prep")
+                contacts_response = supabase.table("prospect_contacts")\
+                    .select("*")\
+                    .in_("id", contact_ids)\
+                    .eq("organization_id", organization_id)\
+                    .execute()
+                
+                if contacts_response.data:
+                    contacts_data = contacts_response.data
+                    logger.info(f"Found {len(contacts_data)} contacts with analysis")
+            
+            # Add contacts to context
+            context["contacts"] = contacts_data
+            context["has_contacts"] = len(contacts_data) > 0
+            
+            # Generate brief with AI
+            result = await prep_generator.generate_meeting_brief(context, language=language)
+            
+            # Update database with results
+            supabase.table("meeting_preps").update({
+                "status": "completed",
+                "brief_content": result["brief_content"],
+                "talking_points": result["talking_points"],
+                "questions": result["questions"],
+                "strategy": result["strategy"],
+                "rag_sources": result["rag_sources"],
+                "completed_at": datetime.utcnow().isoformat()
+            }).eq("id", prep_id).execute()
+            
+            logger.info(f"Successfully completed prep generation for {prep_id}")
+            
+        except Exception as e:
+            logger.error(f"Error generating prep {prep_id}: {e}")
+            
+            # Update status to failed
+            supabase.table("meeting_preps").update({
+                "status": "failed",
+                "error_message": str(e)
+            }).eq("id", prep_id).execute()
+    
+    # Run the async function in a new event loop (like research does)
+    asyncio.run(_generate())
 
 
 @router.post("/start", response_model=dict, status_code=202)
