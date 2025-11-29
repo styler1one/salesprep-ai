@@ -318,7 +318,7 @@ export default function ResearchPage() {
         <div className="flex items-center justify-center h-full">
           <div className="text-center space-y-4">
             <Icons.spinner className="h-8 w-8 animate-spin text-blue-600 mx-auto" />
-            <p className="text-slate-500">Laden...</p>
+            <p className="text-slate-500 dark:text-slate-400">Laden...</p>
           </div>
         </div>
       </DashboardLayout>
@@ -338,10 +338,10 @@ export default function ResearchPage() {
       <div className="p-4 lg:p-6">
         {/* Page Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900 mb-1">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
             Research Agent
           </h1>
-          <p className="text-slate-500 text-sm">
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
             AI-powered prospect research voor je verkoopgesprekken
           </p>
         </div>
@@ -352,7 +352,7 @@ export default function ResearchPage() {
           {/* Left Column - Research History */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <Icons.fileText className="h-5 w-5 text-slate-400" />
                 Mijn Prospects
                 <span className="text-sm font-normal text-slate-400">({briefs.length})</span>
@@ -363,10 +363,10 @@ export default function ResearchPage() {
             </div>
 
             {briefs.length === 0 ? (
-              <div className="bg-white rounded-xl border p-12 text-center">
-                <Icons.search className="h-16 w-16 text-slate-200 mx-auto mb-4" />
-                <h3 className="font-semibold text-slate-700 mb-2">Nog geen prospects onderzocht</h3>
-                <p className="text-slate-500 text-sm mb-4">
+              <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center">
+                <Icons.search className="h-16 w-16 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
+                <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-2">Nog geen prospects onderzocht</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
                   Start je eerste research via het formulier rechts →
                 </p>
               </div>
@@ -375,43 +375,43 @@ export default function ResearchPage() {
                 {briefs.map((brief) => (
                   <div
                     key={brief.id}
-                    className={`bg-white rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group ${
-                      brief.status === 'completed' ? 'hover:border-blue-300' : ''
+                    className={`bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 hover:shadow-md dark:hover:shadow-slate-800/50 transition-all cursor-pointer group ${
+                      brief.status === 'completed' ? 'hover:border-blue-300 dark:hover:border-blue-700' : ''
                     }`}
                     onClick={() => brief.status === 'completed' && router.push(`/dashboard/research/${brief.id}`)}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-slate-900 truncate">{brief.company_name}</h4>
+                          <h4 className="font-semibold text-slate-900 dark:text-white truncate">{brief.company_name}</h4>
                           
                           {brief.status === 'completed' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 flex-shrink-0">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 dark:bg-green-900/50 text-green-700 dark:text-green-400 flex-shrink-0">
                               <Icons.check className="h-3 w-3" />
                               Klaar
                             </span>
                           )}
                           {brief.status === 'researching' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 flex-shrink-0">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 flex-shrink-0">
                               <Icons.spinner className="h-3 w-3 animate-spin" />
                               Bezig...
                             </span>
                           )}
                           {brief.status === 'pending' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700 flex-shrink-0">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-50 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-400 flex-shrink-0">
                               <Icons.clock className="h-3 w-3" />
                               Wachtrij
                             </span>
                           )}
                           {brief.status === 'failed' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 flex-shrink-0">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 dark:bg-red-900/50 text-red-700 dark:text-red-400 flex-shrink-0">
                               <Icons.alertCircle className="h-3 w-3" />
                               Mislukt
                             </span>
                           )}
                         </div>
                         
-                        <div className="flex items-center gap-3 text-xs text-slate-500">
+                        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                           {(brief.city || brief.country) && (
                             <span>📍 {[brief.city, brief.country].filter(Boolean).join(', ')}</span>
                           )}
@@ -419,7 +419,7 @@ export default function ResearchPage() {
                         </div>
                         
                         {brief.error_message && (
-                          <p className="text-xs text-red-600 mt-2 truncate">
+                          <p className="text-xs text-red-600 dark:text-red-400 mt-2 truncate">
                             {brief.error_message}
                           </p>
                         )}
@@ -458,7 +458,7 @@ export default function ResearchPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-600 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={(e) => handleDeleteBrief(brief.id, e)}
                         >
                           <Icons.trash className="h-4 w-4" />
@@ -476,45 +476,45 @@ export default function ResearchPage() {
             <div className="sticky top-4 space-y-4">
               
               {/* Stats Panel */}
-              <div className="rounded-xl border bg-white p-4 shadow-sm">
-                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                   <Icons.barChart className="h-4 w-4 text-slate-400" />
                   Overzicht
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-green-50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-green-600">{completedBriefs}</p>
-                    <p className="text-xs text-green-700">Voltooid</p>
+                  <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">{completedBriefs}</p>
+                    <p className="text-xs text-green-700 dark:text-green-300">Voltooid</p>
                   </div>
-                  <div className="bg-blue-50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-blue-600">{processingBriefs}</p>
-                    <p className="text-xs text-blue-700">Bezig</p>
+                  <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{processingBriefs}</p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300">Bezig</p>
                   </div>
                 </div>
               </div>
 
               {/* New Research Form */}
-              <div className="rounded-xl border bg-white p-4 shadow-sm">
-                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                  <Icons.search className="h-4 w-4 text-blue-600" />
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                  <Icons.search className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   Nieuw Onderzoek
                 </h3>
                 
                 <form onSubmit={handleStartResearch} className="space-y-3">
                   <div>
-                    <Label htmlFor="companyName" className="text-xs">Bedrijfsnaam *</Label>
+                    <Label htmlFor="companyName" className="text-xs text-slate-700 dark:text-slate-300">Bedrijfsnaam *</Label>
                     <Input
                       id="companyName"
                       value={companyName}
                       onChange={(e) => handleCompanyNameChange(e.target.value)}
                       placeholder="bijv. Acme Corp"
-                      className={`mt-1 h-9 text-sm ${selectedCompany ? 'border-green-300 bg-green-50' : ''}`}
+                      className={`mt-1 h-9 text-sm ${selectedCompany ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/30' : ''}`}
                       required
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="country" className="text-xs">Land *</Label>
+                    <Label htmlFor="country" className="text-xs text-slate-700 dark:text-slate-300">Land *</Label>
                     <Input
                       id="country"
                       value={country}
@@ -551,18 +551,18 @@ export default function ResearchPage() {
                   
                   {/* Company Options */}
                   {showOptions && companyOptions.length > 0 && (
-                    <div className="border rounded-lg p-2 bg-blue-50 space-y-2 max-h-48 overflow-y-auto">
-                      <p className="text-xs font-medium text-blue-800">Selecteer:</p>
+                    <div className="border border-blue-200 dark:border-blue-800 rounded-lg p-2 bg-blue-50 dark:bg-blue-900/30 space-y-2 max-h-48 overflow-y-auto">
+                      <p className="text-xs font-medium text-blue-800 dark:text-blue-200">Selecteer:</p>
                       {companyOptions.map((option, index) => (
                         <button
                           key={index}
                           type="button"
                           onClick={() => selectCompanyOption(option)}
-                          className="w-full text-left p-2 bg-white rounded border text-xs hover:border-blue-500 transition-colors"
+                          className="w-full text-left p-2 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 text-xs hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
                         >
-                          <p className="font-medium truncate">{option.company_name}</p>
+                          <p className="font-medium text-slate-900 dark:text-white truncate">{option.company_name}</p>
                           {option.location && (
-                            <p className="text-slate-500 truncate">📍 {option.location}</p>
+                            <p className="text-slate-500 dark:text-slate-400 truncate">📍 {option.location}</p>
                           )}
                         </button>
                       ))}
@@ -571,13 +571,13 @@ export default function ResearchPage() {
                   
                   {/* Selected company indicator */}
                   {selectedCompany && (
-                    <div className="p-2 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="p-2 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
                       <div className="flex items-center justify-between">
-                        <p className="text-xs font-medium text-green-800 truncate">✅ {selectedCompany.company_name}</p>
+                        <p className="text-xs font-medium text-green-800 dark:text-green-200 truncate">✅ {selectedCompany.company_name}</p>
                         <button
                           type="button"
                           onClick={() => { setSelectedCompany(null); setWebsiteUrl(''); setLinkedinUrl('') }}
-                          className="text-xs text-green-700 hover:text-green-900"
+                          className="text-xs text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100"
                         >
                           ✕
                         </button>
@@ -589,16 +589,16 @@ export default function ResearchPage() {
                   <button
                     type="button"
                     onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
+                    className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center gap-1"
                   >
                     {showAdvanced ? <Icons.chevronDown className="h-3 w-3" /> : <Icons.chevronRight className="h-3 w-3" />}
                     Extra opties
                   </button>
 
                   {showAdvanced && (
-                    <div className="space-y-3 pt-2 border-t">
+                    <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-700">
                       <div>
-                        <Label htmlFor="websiteUrl" className="text-xs">Website</Label>
+                        <Label htmlFor="websiteUrl" className="text-xs text-slate-700 dark:text-slate-300">Website</Label>
                         <Input
                           id="websiteUrl"
                           value={websiteUrl}
@@ -608,7 +608,7 @@ export default function ResearchPage() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="linkedinUrl" className="text-xs">LinkedIn URL</Label>
+                        <Label htmlFor="linkedinUrl" className="text-xs text-slate-700 dark:text-slate-300">LinkedIn URL</Label>
                         <Input
                           id="linkedinUrl"
                           value={linkedinUrl}
@@ -618,7 +618,7 @@ export default function ResearchPage() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="city" className="text-xs">Stad</Label>
+                        <Label htmlFor="city" className="text-xs text-slate-700 dark:text-slate-300">Stad</Label>
                         <Input
                           id="city"
                           value={city}
@@ -651,31 +651,31 @@ export default function ResearchPage() {
               </div>
 
               {/* How it works Panel */}
-              <div className="rounded-xl border bg-gradient-to-br from-indigo-50 to-blue-50 p-4 shadow-sm">
-                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                  <Icons.sparkles className="h-4 w-4 text-indigo-600" />
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950 dark:to-blue-950 p-4 shadow-sm">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                  <Icons.sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                   Hoe werkt het?
                 </h3>
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
                     <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center flex-shrink-0 font-bold">1</div>
                     <div>
-                      <p className="text-sm font-medium text-slate-800">Research</p>
-                      <p className="text-xs text-slate-600">AI onderzoekt het bedrijf</p>
+                      <p className="text-sm font-medium text-slate-800 dark:text-slate-100">Research</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">AI onderzoekt het bedrijf</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center flex-shrink-0 font-bold">2</div>
                     <div>
-                      <p className="text-sm font-medium text-slate-800">Contactpersonen</p>
-                      <p className="text-xs text-slate-600">Voeg je gesprekspartners toe</p>
+                      <p className="text-sm font-medium text-slate-800 dark:text-slate-100">Contactpersonen</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">Voeg je gesprekspartners toe</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="w-6 h-6 rounded-full bg-green-600 text-white text-xs flex items-center justify-center flex-shrink-0 font-bold">3</div>
                     <div>
-                      <p className="text-sm font-medium text-slate-800">Preparation</p>
-                      <p className="text-xs text-slate-600">Krijg een gepersonaliseerde brief</p>
+                      <p className="text-sm font-medium text-slate-800 dark:text-slate-100">Preparation</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">Krijg een gepersonaliseerde brief</p>
                     </div>
                   </div>
                 </div>

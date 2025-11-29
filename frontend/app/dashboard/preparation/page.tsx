@@ -253,10 +253,10 @@ export default function PreparationPage() {
       <div className="p-4 lg:p-6">
         {/* Page Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900 mb-1">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
             Preparation Agent
           </h1>
-          <p className="text-slate-500 text-sm">
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
             AI-gegenereerde meeting briefs met context van je profiel en research
           </p>
         </div>
@@ -267,7 +267,7 @@ export default function PreparationPage() {
           {/* Left Column - Preparations History */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <Icons.fileText className="h-5 w-5 text-slate-400" />
                 Mijn Voorbereidingen
                 <span className="text-sm font-normal text-slate-400">({preps.length})</span>
@@ -278,10 +278,10 @@ export default function PreparationPage() {
             </div>
 
             {preps.length === 0 ? (
-              <div className="bg-white rounded-xl border p-12 text-center">
-                <Icons.fileText className="h-16 w-16 text-slate-200 mx-auto mb-4" />
-                <h3 className="font-semibold text-slate-700 mb-2">Nog geen voorbereidingen</h3>
-                <p className="text-slate-500 text-sm mb-4">
+              <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center">
+                <Icons.fileText className="h-16 w-16 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
+                <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-2">Nog geen voorbereidingen</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
                   Genereer je eerste meeting brief via het formulier rechts →
                 </p>
               </div>
@@ -290,35 +290,35 @@ export default function PreparationPage() {
                 {preps.map((prep) => (
                   <div
                     key={prep.id}
-                    className="bg-white rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group hover:border-green-300"
+                    className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 hover:shadow-md dark:hover:shadow-slate-800/50 transition-all cursor-pointer group hover:border-green-300 dark:hover:border-green-700"
                     onClick={() => prep.status === 'completed' && viewPrep(prep.id)}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-slate-900 truncate">{prep.prospect_company_name}</h4>
+                          <h4 className="font-semibold text-slate-900 dark:text-white truncate">{prep.prospect_company_name}</h4>
                           
                           {prep.status === 'completed' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 flex-shrink-0">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 dark:bg-green-900/50 text-green-700 dark:text-green-400 flex-shrink-0">
                               <Icons.check className="h-3 w-3" />
                               Klaar
                             </span>
                           )}
                           {(prep.status === 'generating' || prep.status === 'pending') && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 flex-shrink-0">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 flex-shrink-0">
                               <Icons.spinner className="h-3 w-3 animate-spin" />
                               Bezig...
                             </span>
                           )}
                           {prep.status === 'failed' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 flex-shrink-0">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 dark:bg-red-900/50 text-red-700 dark:text-red-400 flex-shrink-0">
                               <Icons.alertCircle className="h-3 w-3" />
                               Mislukt
                             </span>
                           )}
                         </div>
                         
-                        <div className="flex items-center gap-3 text-xs text-slate-500">
+                        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                           <span>{getMeetingTypeLabel(prep.meeting_type)}</span>
                           <span>•</span>
                           <span>{new Date(prep.created_at).toLocaleDateString('nl-NL')}</span>
@@ -343,7 +343,7 @@ export default function PreparationPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-8 text-xs border-orange-300 text-orange-600 hover:bg-orange-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="h-8 text-xs border-orange-300 dark:border-orange-700 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 opacity-0 group-hover:opacity-100 transition-opacity"
                               onClick={(e) => {
                                 e.stopPropagation()
                                 sessionStorage.setItem('followupForCompany', prep.prospect_company_name)
@@ -358,7 +358,7 @@ export default function PreparationPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-600 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={(e) => deletePrep(prep.id, e)}
                         >
                           <Icons.trash className="h-4 w-4" />
@@ -376,33 +376,33 @@ export default function PreparationPage() {
             <div className="sticky top-4 space-y-4">
               
               {/* Stats Panel */}
-              <div className="rounded-xl border bg-white p-4 shadow-sm">
-                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                   <Icons.barChart className="h-4 w-4 text-slate-400" />
                   Overzicht
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-green-50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-green-600">{completedPreps}</p>
-                    <p className="text-xs text-green-700">Voltooid</p>
+                  <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">{completedPreps}</p>
+                    <p className="text-xs text-green-700 dark:text-green-300">Voltooid</p>
                   </div>
-                  <div className="bg-blue-50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-blue-600">{processingPreps}</p>
-                    <p className="text-xs text-blue-700">Bezig</p>
+                  <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{processingPreps}</p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300">Bezig</p>
                   </div>
                 </div>
               </div>
 
               {/* New Preparation Form */}
-              <div className="rounded-xl border bg-white p-4 shadow-sm">
-                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                  <Icons.fileText className="h-4 w-4 text-green-600" />
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                  <Icons.fileText className="h-4 w-4 text-green-600 dark:text-green-400" />
                   Nieuwe Voorbereiding
                 </h3>
                 
                 <form onSubmit={handleSubmit} className="space-y-3">
                   <div>
-                    <Label htmlFor="company" className="text-xs">Prospect *</Label>
+                    <Label htmlFor="company" className="text-xs text-slate-700 dark:text-slate-300">Prospect *</Label>
                     <ProspectAutocomplete
                       value={companyName}
                       onChange={setCompanyName}
@@ -411,7 +411,7 @@ export default function PreparationPage() {
                   </div>
 
                   <div>
-                    <Label className="text-xs">Meeting Type *</Label>
+                    <Label className="text-xs text-slate-700 dark:text-slate-300">Meeting Type *</Label>
                     <Select value={meetingType} onValueChange={setMeetingType}>
                       <SelectTrigger className="h-9 text-sm">
                         <SelectValue />
@@ -429,18 +429,18 @@ export default function PreparationPage() {
                   {/* Contact Persons */}
                   {availableContacts.length > 0 && (
                     <div>
-                      <Label className="text-xs flex items-center gap-1">
+                      <Label className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1">
                         👥 Contactpersonen
-                        <span className="text-slate-400 font-normal">(optioneel)</span>
+                        <span className="text-slate-400 dark:text-slate-500 font-normal">(optioneel)</span>
                       </Label>
-                      <div className="mt-1 space-y-1 max-h-32 overflow-y-auto p-2 border rounded-md bg-slate-50">
+                      <div className="mt-1 space-y-1 max-h-32 overflow-y-auto p-2 border border-slate-200 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-800">
                         {availableContacts.map((contact) => {
                           const isSelected = selectedContactIds.includes(contact.id)
                           return (
                             <label
                               key={contact.id}
                               className={`flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs ${
-                                isSelected ? 'bg-green-100' : 'hover:bg-slate-100'
+                                isSelected ? 'bg-green-100 dark:bg-green-900/50' : 'hover:bg-slate-100 dark:hover:bg-slate-700'
                               }`}
                             >
                               <input
@@ -453,11 +453,11 @@ export default function PreparationPage() {
                                     setSelectedContactIds(prev => prev.filter(id => id !== contact.id))
                                   }
                                 }}
-                                className="rounded border-gray-300"
+                                className="rounded border-gray-300 dark:border-gray-600"
                               />
-                              <span className="truncate">{contact.name}</span>
+                              <span className="truncate text-slate-900 dark:text-white">{contact.name}</span>
                               {contact.decision_authority === 'decision_maker' && (
-                                <span className="text-xs bg-green-200 text-green-700 px-1 rounded">DM</span>
+                                <span className="text-xs bg-green-200 dark:bg-green-800 text-green-700 dark:text-green-300 px-1 rounded">DM</span>
                               )}
                             </label>
                           )
@@ -467,7 +467,7 @@ export default function PreparationPage() {
                   )}
 
                   {contactsLoading && (
-                    <div className="text-xs text-slate-500 flex items-center gap-1">
+                    <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
                       <Icons.spinner className="h-3 w-3 animate-spin" />
                       Contacten laden...
                     </div>
@@ -477,7 +477,7 @@ export default function PreparationPage() {
                   <button
                     type="button"
                     onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
+                    className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center gap-1"
                   >
                     {showAdvanced ? <Icons.chevronDown className="h-3 w-3" /> : <Icons.chevronRight className="h-3 w-3" />}
                     Extra context
@@ -485,7 +485,7 @@ export default function PreparationPage() {
 
                   {showAdvanced && (
                     <div>
-                      <Label htmlFor="notes" className="text-xs">Notities</Label>
+                      <Label htmlFor="notes" className="text-xs text-slate-700 dark:text-slate-300">Notities</Label>
                       <Textarea
                         id="notes"
                         value={customNotes}
@@ -518,26 +518,26 @@ export default function PreparationPage() {
               </div>
 
               {/* How it works Panel */}
-              <div className="rounded-xl border bg-gradient-to-br from-green-50 to-emerald-50 p-4 shadow-sm">
-                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                  <Icons.sparkles className="h-4 w-4 text-green-600" />
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 p-4 shadow-sm">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                  <Icons.sparkles className="h-4 w-4 text-green-600 dark:text-green-400" />
                   Wat krijg je?
                 </h3>
-                <ul className="space-y-2 text-xs text-slate-700">
+                <ul className="space-y-2 text-xs text-slate-700 dark:text-slate-300">
                   <li className="flex items-start gap-2">
-                    <Icons.check className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
+                    <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
                     <span>Gepersonaliseerde gespreksopeners</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Icons.check className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
+                    <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
                     <span>Relevante discovery vragen</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Icons.check className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
+                    <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
                     <span>Bezwaren & responses</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Icons.check className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
+                    <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
                     <span>Klantgerichte value props</span>
                   </li>
                 </ul>

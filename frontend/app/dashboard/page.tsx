@@ -220,10 +220,10 @@ export default function DashboardPage() {
 
     if (loading) {
         return (
-            <div className="flex h-screen items-center justify-center bg-slate-50">
+            <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
                 <div className="text-center">
                     <Icons.spinner className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-                    <p className="text-sm text-slate-500">Dashboard laden...</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Dashboard laden...</p>
                 </div>
             </div>
         )
@@ -299,13 +299,13 @@ export default function DashboardPage() {
     const { greeting, emoji } = getGreeting()
 
     const colorClasses: Record<string, { bg: string; text: string; border: string; gradient: string }> = {
-        blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200', gradient: 'from-blue-500 to-blue-600' },
-        green: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200', gradient: 'from-green-500 to-green-600' },
-        orange: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200', gradient: 'from-orange-500 to-orange-600' },
-        purple: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200', gradient: 'from-purple-500 to-purple-600' },
-        violet: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200', gradient: 'from-violet-500 to-violet-600' },
-        indigo: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200', gradient: 'from-indigo-500 to-indigo-600' },
-        emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200', gradient: 'from-emerald-500 to-emerald-600' },
+        blue: { bg: 'bg-blue-50 dark:bg-blue-950', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800', gradient: 'from-blue-500 to-blue-600' },
+        green: { bg: 'bg-green-50 dark:bg-green-950', text: 'text-green-600 dark:text-green-400', border: 'border-green-200 dark:border-green-800', gradient: 'from-green-500 to-green-600' },
+        orange: { bg: 'bg-orange-50 dark:bg-orange-950', text: 'text-orange-600 dark:text-orange-400', border: 'border-orange-200 dark:border-orange-800', gradient: 'from-orange-500 to-orange-600' },
+        purple: { bg: 'bg-purple-50 dark:bg-purple-950', text: 'text-purple-600 dark:text-purple-400', border: 'border-purple-200 dark:border-purple-800', gradient: 'from-purple-500 to-purple-600' },
+        violet: { bg: 'bg-violet-50 dark:bg-violet-950', text: 'text-violet-600 dark:text-violet-400', border: 'border-violet-200 dark:border-violet-800', gradient: 'from-violet-500 to-violet-600' },
+        indigo: { bg: 'bg-indigo-50 dark:bg-indigo-950', text: 'text-indigo-600 dark:text-indigo-400', border: 'border-indigo-200 dark:border-indigo-800', gradient: 'from-indigo-500 to-indigo-600' },
+        emerald: { bg: 'bg-emerald-50 dark:bg-emerald-950', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-200 dark:border-emerald-800', gradient: 'from-emerald-500 to-emerald-600' },
     }
 
     const suggestionColors = colorClasses[suggestion.color] || colorClasses.blue
@@ -315,7 +315,7 @@ export default function DashboardPage() {
         switch (prospect.nextAction) {
             case 'research':
                 return (
-                    <span className="text-xs text-blue-600 flex items-center gap-1">
+                    <span className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
                         <Icons.spinner className="h-3 w-3 animate-spin" />
                         Research bezig...
                     </span>
@@ -344,7 +344,7 @@ export default function DashboardPage() {
                 )
             case 'complete':
                 return (
-                    <span className="text-xs text-emerald-600 flex items-center gap-1">
+                    <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                         <Icons.check className="h-3 w-3" />
                         Compleet
                     </span>
@@ -370,10 +370,10 @@ export default function DashboardPage() {
             <div className="p-4 lg:p-6">
                 {/* Welcome + Suggestion */}
                 <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-slate-900 mb-1">
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
                         {greeting}{typeof profile?.full_name === 'string' && profile.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! {emoji}
                     </h1>
-                    <p className="text-slate-500 text-sm mb-4">
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
                         Hier is je sales voorbereiding overzicht.
                     </p>
                     
@@ -383,7 +383,7 @@ export default function DashboardPage() {
                             <SuggestionIcon className="h-6 w-6 text-white" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="font-medium text-slate-900">{suggestion.text}</p>
+                            <p className="font-medium text-slate-900 dark:text-white">{suggestion.text}</p>
                         </div>
                         {suggestion.action && (
                             <Button 
@@ -402,7 +402,7 @@ export default function DashboardPage() {
                     {/* Left: Prospects */}
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                                 <Icons.users className="h-5 w-5 text-slate-400" />
                                 Mijn Prospects
                                 <span className="text-sm font-normal text-slate-400">({prospects.length})</span>
@@ -414,10 +414,10 @@ export default function DashboardPage() {
                         </div>
 
                         {prospects.length === 0 ? (
-                            <div className="bg-white rounded-xl border p-12 text-center">
-                                <Icons.users className="h-16 w-16 text-slate-200 mx-auto mb-4" />
-                                <h3 className="font-semibold text-slate-700 mb-2">Nog geen prospects</h3>
-                                <p className="text-slate-500 text-sm mb-4">
+                            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center">
+                                <Icons.users className="h-16 w-16 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
+                                <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-2">Nog geen prospects</h3>
+                                <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
                                     Start met je eerste prospect research
                                 </p>
                                 <Button onClick={() => router.push('/dashboard/research')}>
@@ -432,22 +432,22 @@ export default function DashboardPage() {
                                     return (
                                         <div
                                             key={prospect.id}
-                                            className={`bg-white rounded-xl border p-4 hover:shadow-md transition-all ${link ? 'cursor-pointer' : ''}`}
+                                            className={`bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 hover:shadow-md dark:hover:shadow-slate-800/50 transition-all ${link ? 'cursor-pointer' : ''}`}
                                             onClick={() => link && router.push(link)}
                                         >
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-4 min-w-0 flex-1">
                                                     {/* Company Initial */}
-                                                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
-                                                        <span className="font-bold text-slate-600">
+                                                    <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
+                                                        <span className="font-bold text-slate-600 dark:text-slate-300">
                                                             {prospect.company_name.charAt(0).toUpperCase()}
                                                         </span>
                                                     </div>
                                                     
                                                     {/* Company Info */}
                                                     <div className="min-w-0 flex-1">
-                                                        <h3 className="font-semibold text-slate-900 truncate">{prospect.company_name}</h3>
-                                                        <p className="text-xs text-slate-500">{getRelativeTime(prospect.lastActivity)}</p>
+                                                        <h3 className="font-semibold text-slate-900 dark:text-white truncate">{prospect.company_name}</h3>
+                                                        <p className="text-xs text-slate-500 dark:text-slate-400">{getRelativeTime(prospect.lastActivity)}</p>
                                                     </div>
 
                                                     {/* Status Indicators */}
@@ -455,51 +455,51 @@ export default function DashboardPage() {
                                                         {/* Research */}
                                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                                                             prospect.hasResearch && prospect.researchStatus === 'completed' 
-                                                                ? 'bg-blue-100' 
+                                                                ? 'bg-blue-100 dark:bg-blue-900' 
                                                                 : prospect.hasResearch 
-                                                                    ? 'bg-blue-50' 
-                                                                    : 'bg-slate-100'
+                                                                    ? 'bg-blue-50 dark:bg-blue-950' 
+                                                                    : 'bg-slate-100 dark:bg-slate-800'
                                                         }`} title="Research">
                                                             {prospect.hasResearch && prospect.researchStatus === 'completed' ? (
-                                                                <Icons.check className="h-4 w-4 text-blue-600" />
+                                                                <Icons.check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                                                             ) : prospect.hasResearch ? (
                                                                 <Icons.spinner className="h-4 w-4 text-blue-400 animate-spin" />
                                                             ) : (
-                                                                <Icons.search className="h-4 w-4 text-slate-300" />
+                                                                <Icons.search className="h-4 w-4 text-slate-300 dark:text-slate-600" />
                                                             )}
                                                         </div>
                                                         
                                                         {/* Prep */}
                                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                                                             prospect.hasPrep && prospect.prepStatus === 'completed' 
-                                                                ? 'bg-green-100' 
+                                                                ? 'bg-green-100 dark:bg-green-900' 
                                                                 : prospect.hasPrep 
-                                                                    ? 'bg-green-50' 
-                                                                    : 'bg-slate-100'
+                                                                    ? 'bg-green-50 dark:bg-green-950' 
+                                                                    : 'bg-slate-100 dark:bg-slate-800'
                                                         }`} title="Voorbereiding">
                                                             {prospect.hasPrep && prospect.prepStatus === 'completed' ? (
-                                                                <Icons.check className="h-4 w-4 text-green-600" />
+                                                                <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400" />
                                                             ) : prospect.hasPrep ? (
                                                                 <Icons.spinner className="h-4 w-4 text-green-400 animate-spin" />
                                                             ) : (
-                                                                <Icons.fileText className="h-4 w-4 text-slate-300" />
+                                                                <Icons.fileText className="h-4 w-4 text-slate-300 dark:text-slate-600" />
                                                             )}
                                                         </div>
                                                         
                                                         {/* Follow-up */}
                                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                                                             prospect.hasFollowup && prospect.followupStatus === 'completed' 
-                                                                ? 'bg-orange-100' 
+                                                                ? 'bg-orange-100 dark:bg-orange-900' 
                                                                 : prospect.hasFollowup 
-                                                                    ? 'bg-orange-50' 
-                                                                    : 'bg-slate-100'
+                                                                    ? 'bg-orange-50 dark:bg-orange-950' 
+                                                                    : 'bg-slate-100 dark:bg-slate-800'
                                                         }`} title="Follow-up">
                                                             {prospect.hasFollowup && prospect.followupStatus === 'completed' ? (
-                                                                <Icons.check className="h-4 w-4 text-orange-600" />
+                                                                <Icons.check className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                                                             ) : prospect.hasFollowup ? (
                                                                 <Icons.spinner className="h-4 w-4 text-orange-400 animate-spin" />
                                                             ) : (
-                                                                <Icons.mail className="h-4 w-4 text-slate-300" />
+                                                                <Icons.mail className="h-4 w-4 text-slate-300 dark:text-slate-600" />
                                                             )}
                                                         </div>
                                                     </div>
@@ -516,7 +516,7 @@ export default function DashboardPage() {
                                 
                                 {prospects.length > 8 && (
                                     <button 
-                                        className="w-full py-3 text-sm text-slate-500 hover:text-slate-700 flex items-center justify-center gap-2"
+                                        className="w-full py-3 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center gap-2"
                                         onClick={() => router.push('/dashboard/research')}
                                     >
                                         Bekijk alle {prospects.length} prospects
@@ -532,23 +532,23 @@ export default function DashboardPage() {
                         <div className="sticky top-4 space-y-4">
                             
                             {/* Stats */}
-                            <div className="rounded-xl border bg-white p-4 shadow-sm">
-                                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                                <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                                     <Icons.barChart className="h-4 w-4 text-slate-400" />
                                     Deze Week
                                 </h3>
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                                                <Icons.search className="h-4 w-4 text-blue-600" />
+                                            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900 flex items-center justify-center">
+                                                <Icons.search className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                                             </div>
-                                            <span className="text-sm text-slate-600">Research</span>
+                                            <span className="text-sm text-slate-600 dark:text-slate-300">Research</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="font-bold text-slate-900">{researchBriefs.length}</span>
+                                            <span className="font-bold text-slate-900 dark:text-white">{researchBriefs.length}</span>
                                             {recentResearch > 0 && (
-                                                <span className="text-xs font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">
+                                                <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900 px-1.5 py-0.5 rounded-full">
                                                     +{recentResearch}
                                                 </span>
                                             )}
@@ -556,15 +556,15 @@ export default function DashboardPage() {
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
-                                                <Icons.fileText className="h-4 w-4 text-green-600" />
+                                            <div className="w-8 h-8 rounded-lg bg-green-50 dark:bg-green-900 flex items-center justify-center">
+                                                <Icons.fileText className="h-4 w-4 text-green-600 dark:text-green-400" />
                                             </div>
-                                            <span className="text-sm text-slate-600">Voorbereidingen</span>
+                                            <span className="text-sm text-slate-600 dark:text-slate-300">Voorbereidingen</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="font-bold text-slate-900">{meetingPreps.length}</span>
+                                            <span className="font-bold text-slate-900 dark:text-white">{meetingPreps.length}</span>
                                             {recentPreps > 0 && (
-                                                <span className="text-xs font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">
+                                                <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900 px-1.5 py-0.5 rounded-full">
                                                     +{recentPreps}
                                                 </span>
                                             )}
@@ -572,15 +572,15 @@ export default function DashboardPage() {
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
-                                                <Icons.mail className="h-4 w-4 text-orange-600" />
+                                            <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-900 flex items-center justify-center">
+                                                <Icons.mail className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                                             </div>
-                                            <span className="text-sm text-slate-600">Follow-ups</span>
+                                            <span className="text-sm text-slate-600 dark:text-slate-300">Follow-ups</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="font-bold text-slate-900">{followups.length}</span>
+                                            <span className="font-bold text-slate-900 dark:text-white">{followups.length}</span>
                                             {recentFollowups > 0 && (
-                                                <span className="text-xs font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">
+                                                <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900 px-1.5 py-0.5 rounded-full">
                                                     +{recentFollowups}
                                                 </span>
                                             )}
@@ -590,102 +590,102 @@ export default function DashboardPage() {
                             </div>
 
                             {/* Quick Actions */}
-                            <div className="rounded-xl border bg-white p-4 shadow-sm">
-                                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                                <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                                     <Icons.zap className="h-4 w-4 text-amber-500" />
                                     Snelle Acties
                                 </h3>
                                 <div className="grid grid-cols-2 gap-2">
                                     <button
                                         onClick={() => router.push('/dashboard/research')}
-                                        className="p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors text-center"
+                                        className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors text-center"
                                     >
-                                        <Icons.search className="h-5 w-5 text-blue-600 mx-auto mb-1" />
-                                        <span className="text-xs font-medium text-blue-700">Research</span>
+                                        <Icons.search className="h-5 w-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                                        <span className="text-xs font-medium text-blue-700 dark:text-blue-300">Research</span>
                                     </button>
                                     <button
                                         onClick={() => router.push('/dashboard/preparation')}
-                                        className="p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors text-center"
+                                        className="p-3 rounded-lg bg-green-50 dark:bg-green-900/50 hover:bg-green-100 dark:hover:bg-green-900 transition-colors text-center"
                                     >
-                                        <Icons.fileText className="h-5 w-5 text-green-600 mx-auto mb-1" />
-                                        <span className="text-xs font-medium text-green-700">Prep</span>
+                                        <Icons.fileText className="h-5 w-5 text-green-600 dark:text-green-400 mx-auto mb-1" />
+                                        <span className="text-xs font-medium text-green-700 dark:text-green-300">Prep</span>
                                     </button>
                                     <button
                                         onClick={() => router.push('/dashboard/followup')}
-                                        className="p-3 rounded-lg bg-orange-50 hover:bg-orange-100 transition-colors text-center"
+                                        className="p-3 rounded-lg bg-orange-50 dark:bg-orange-900/50 hover:bg-orange-100 dark:hover:bg-orange-900 transition-colors text-center"
                                     >
-                                        <Icons.mic className="h-5 w-5 text-orange-600 mx-auto mb-1" />
-                                        <span className="text-xs font-medium text-orange-700">Follow-up</span>
+                                        <Icons.mic className="h-5 w-5 text-orange-600 dark:text-orange-400 mx-auto mb-1" />
+                                        <span className="text-xs font-medium text-orange-700 dark:text-orange-300">Follow-up</span>
                                     </button>
                                     <button
                                         onClick={() => router.push('/dashboard/knowledge-base')}
-                                        className="p-3 rounded-lg bg-purple-50 hover:bg-purple-100 transition-colors text-center"
+                                        className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/50 hover:bg-purple-100 dark:hover:bg-purple-900 transition-colors text-center"
                                     >
-                                        <Icons.book className="h-5 w-5 text-purple-600 mx-auto mb-1" />
-                                        <span className="text-xs font-medium text-purple-700">Docs</span>
+                                        <Icons.book className="h-5 w-5 text-purple-600 dark:text-purple-400 mx-auto mb-1" />
+                                        <span className="text-xs font-medium text-purple-700 dark:text-purple-300">Docs</span>
                                     </button>
                                 </div>
                             </div>
 
                             {/* Profiles Status */}
-                            <div className="rounded-xl border bg-white p-4 shadow-sm">
-                                <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                                <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                                     <Icons.user className="h-4 w-4 text-slate-400" />
                                     Profielen
                                 </h3>
                                 <div className="space-y-2">
                                     <button
                                         onClick={() => router.push(profile?.full_name ? '/dashboard/profile' : '/onboarding')}
-                                        className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors"
+                                        className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                                     >
                                         <div className="flex items-center gap-2">
                                             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                                profile?.full_name ? 'bg-violet-100' : 'bg-slate-100'
+                                                profile?.full_name ? 'bg-violet-100 dark:bg-violet-900' : 'bg-slate-100 dark:bg-slate-800'
                                             }`}>
-                                                <Icons.user className={`h-4 w-4 ${profile?.full_name ? 'text-violet-600' : 'text-slate-400'}`} />
+                                                <Icons.user className={`h-4 w-4 ${profile?.full_name ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400'}`} />
                                             </div>
-                                            <span className="text-sm text-slate-700">Sales Profiel</span>
+                                            <span className="text-sm text-slate-700 dark:text-slate-200">Sales Profiel</span>
                                         </div>
                                         {profile?.full_name ? (
-                                            <span className="text-xs text-green-600 flex items-center gap-1">
+                                            <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
                                                 <Icons.check className="h-3 w-3" />
                                                 {profile.profile_completeness || 0}%
                                             </span>
                                         ) : (
-                                            <span className="text-xs text-amber-600">Invullen →</span>
+                                            <span className="text-xs text-amber-600 dark:text-amber-400">Invullen →</span>
                                         )}
                                     </button>
                                     <button
                                         onClick={() => router.push(companyProfile?.company_name ? '/dashboard/company-profile' : '/onboarding/company')}
-                                        className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors"
+                                        className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                                     >
                                         <div className="flex items-center gap-2">
                                             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                                companyProfile?.company_name ? 'bg-indigo-100' : 'bg-slate-100'
+                                                companyProfile?.company_name ? 'bg-indigo-100 dark:bg-indigo-900' : 'bg-slate-100 dark:bg-slate-800'
                                             }`}>
-                                                <Icons.building className={`h-4 w-4 ${companyProfile?.company_name ? 'text-indigo-600' : 'text-slate-400'}`} />
+                                                <Icons.building className={`h-4 w-4 ${companyProfile?.company_name ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
                                             </div>
-                                            <span className="text-sm text-slate-700">Bedrijfsprofiel</span>
+                                            <span className="text-sm text-slate-700 dark:text-slate-200">Bedrijfsprofiel</span>
                                         </div>
                                         {companyProfile?.company_name ? (
-                                            <span className="text-xs text-green-600 flex items-center gap-1">
+                                            <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
                                                 <Icons.check className="h-3 w-3" />
                                                 {companyProfile.profile_completeness || 0}%
                                             </span>
                                         ) : (
-                                            <span className="text-xs text-amber-600">Invullen →</span>
+                                            <span className="text-xs text-amber-600 dark:text-amber-400">Invullen →</span>
                                         )}
                                     </button>
                                 </div>
                             </div>
 
                             {/* Knowledge Base */}
-                            <div className="rounded-xl border bg-gradient-to-br from-purple-50 to-indigo-50 p-4 shadow-sm">
-                                <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
-                                    <Icons.book className="h-4 w-4 text-purple-600" />
+                            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-950 dark:to-indigo-950 p-4 shadow-sm">
+                                <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                                    <Icons.book className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                                     Knowledge Base
                                 </h3>
-                                <p className="text-xs text-slate-600 mb-3">
+                                <p className="text-xs text-slate-600 dark:text-slate-300 mb-3">
                                     {knowledgeBase.length} document{knowledgeBase.length !== 1 ? 'en' : ''} geüpload
                                 </p>
                                 <Button 

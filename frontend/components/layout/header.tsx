@@ -24,7 +24,7 @@ export function Header({ user, className }: HeaderProps) {
   }
 
   return (
-    <header className={cn('h-16 border-b bg-white/80 backdrop-blur-sm sticky top-0 z-40', className)}>
+    <header className={cn('h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-40', className)}>
       <div className="h-full px-6 flex items-center justify-between">
         {/* Left side - can add breadcrumbs here */}
         <div className="flex items-center gap-4">
@@ -59,7 +59,7 @@ export function Header({ user, className }: HeaderProps) {
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-white font-medium text-sm">
                 {user?.email?.charAt(0).toUpperCase() || 'U'}
               </div>
-              <span className="hidden md:block text-sm font-medium max-w-[150px] truncate">
+              <span className="hidden md:block text-sm font-medium max-w-[150px] truncate text-slate-900 dark:text-white">
                 {user?.email?.split('@')[0] || 'User'}
               </span>
               <Icons.chevronDown className="h-4 w-4 text-muted-foreground" />
@@ -72,14 +72,14 @@ export function Header({ user, className }: HeaderProps) {
                   className="fixed inset-0 z-40" 
                   onClick={() => setDropdownOpen(false)}
                 />
-                <div className="absolute right-0 mt-2 w-56 rounded-lg border bg-white shadow-lg z-50 animate-scale-in">
-                  <div className="p-3 border-b">
-                    <p className="text-sm font-medium">{user?.email?.split('@')[0]}</p>
+                <div className="absolute right-0 mt-2 w-56 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg z-50 animate-scale-in">
+                  <div className="p-3 border-b border-slate-200 dark:border-slate-700">
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">{user?.email?.split('@')[0]}</p>
                     <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                   </div>
                   <div className="p-1">
                     <button
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded-md hover:bg-muted transition-colors"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded-md text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                       onClick={() => {
                         router.push('/dashboard/profile')
                         setDropdownOpen(false)
@@ -89,7 +89,7 @@ export function Header({ user, className }: HeaderProps) {
                       Sales Profile
                     </button>
                     <button
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded-md hover:bg-muted transition-colors"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded-md text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                       onClick={() => {
                         router.push('/dashboard/company-profile')
                         setDropdownOpen(false)
@@ -99,16 +99,16 @@ export function Header({ user, className }: HeaderProps) {
                       Company Profile
                     </button>
                     <button
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded-md hover:bg-muted transition-colors"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded-md text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                       onClick={() => setDropdownOpen(false)}
                     >
                       <Icons.settings className="h-4 w-4" />
                       Settings
                     </button>
                   </div>
-                  <div className="p-1 border-t">
+                  <div className="p-1 border-t border-slate-200 dark:border-slate-700">
                     <button
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded-md hover:bg-red-50 text-red-600 transition-colors"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
                       onClick={handleSignOut}
                     >
                       <Icons.logOut className="h-4 w-4" />
