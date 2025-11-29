@@ -284,3 +284,4 @@ def get_prospect_service() -> ProspectService:
     if _prospect_service is None:
         _prospect_service = ProspectService()
     return _prospect_service
+

@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
 import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
-import { ThemeToggle } from '@/components/theme-toggle'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import ReactMarkdown from 'react-markdown'
 
 interface ResearchBrief {
@@ -110,11 +110,6 @@ export default function ResearchBriefPage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push('/login')
   }
 
   // Fetch contacts for this research
@@ -393,12 +388,14 @@ export default function ResearchBriefPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-900">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-slate-600 dark:text-slate-400">Loading research brief...</p>
+      <DashboardLayout user={user}>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center space-y-4">
+            <Icons.spinner className="h-8 w-8 animate-spin text-blue-600 mx-auto" />
+            <p className="text-slate-500">Research brief laden...</p>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     )
   }
 
@@ -407,88 +404,72 @@ export default function ResearchBriefPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-white dark:bg-slate-950">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md">
-        <div className="container flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-3">
+    <DashboardLayout user={user}>
+      <div className="p-6 lg:p-8 max-w-5xl mx-auto">
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => router.push('/dashboard/research')}
             >
               <Icons.arrowLeft className="h-4 w-4 mr-2" />
-              Back
+              Terug
             </Button>
-            <div className="h-6 w-px bg-slate-200 dark:bg-slate-800" />
             <div>
-              <h1 className="text-lg font-bold">{brief.company_name}</h1>
-              <p className="text-xs text-muted-foreground">Research Brief</p>
+              <h1 className="text-2xl font-bold text-slate-900">{brief.company_name}</h1>
+              <p className="text-sm text-slate-500">Research Brief</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <div className="hidden sm:block text-sm text-slate-600 dark:text-slate-400">
-              {user?.email}
-            </div>
-            <Button variant="outline" size="sm" onClick={handleSignOut}>
-              Sign Out
+          <div className="flex gap-2">
+            {brief.pdf_url && (
+              <Button variant="outline" size="sm">
+                <Icons.download className="h-4 w-4 mr-2" />
+                Download PDF
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={() => {
+              navigator.clipboard.writeText(brief.brief_content)
+              toast({
+                title: "Gekopieerd!",
+                description: "Research brief is naar het klembord gekopieerd",
+              })
+            }}>
+              <Icons.copy className="h-4 w-4 mr-2" />
+              Kopieer
             </Button>
           </div>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="flex-1 bg-slate-50 dark:bg-slate-900">
-        <div className="container py-8 px-4 max-w-4xl">
-          {/* Actions */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="text-sm text-slate-600 dark:text-slate-400">
-              Generated {new Date(brief.completed_at).toLocaleString()}
-            </div>
-            <div className="flex gap-2">
-              {brief.pdf_url && (
-                <Button variant="outline" size="sm">
-                  <Icons.download className="h-4 w-4 mr-2" />
-                  Download PDF
-                </Button>
-              )}
-              <Button variant="outline" size="sm" onClick={() => {
-                navigator.clipboard.writeText(brief.brief_content)
-                toast({
-                  title: "Copied!",
-                  description: "Research brief copied to clipboard",
-                })
-              }}>
-                <Icons.copy className="h-4 w-4 mr-2" />
-                Copy
-              </Button>
-            </div>
+        {/* Generated timestamp */}
+        <div className="mb-6 text-sm text-slate-500">
+          Gegenereerd op {new Date(brief.completed_at).toLocaleString('nl-NL')}
+        </div>
+
+        {/* Brief Content */}
+        <div className="rounded-xl border bg-white p-8 shadow-sm">
+          <div className="prose prose-slate max-w-none">
+            <ReactMarkdown
+              components={{
+                h1: ({ node, ...props }) => <h1 className="text-3xl font-bold mb-4" {...props} />,
+                h2: ({ node, ...props }) => <h2 className="text-2xl font-bold mt-8 mb-4" {...props} />,
+                h3: ({ node, ...props }) => <h3 className="text-xl font-semibold mt-6 mb-3" {...props} />,
+                p: ({ node, ...props }) => <p className="mb-4 leading-relaxed" {...props} />,
+                ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
+                ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
+                li: ({ node, ...props }) => <li className="ml-4" {...props} />,
+                strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900" {...props} />,
+                code: ({ node, ...props }) => <code className="bg-slate-100 px-1 py-0.5 rounded text-sm" {...props} />,
+              }}
+            >
+              {brief.brief_content}
+            </ReactMarkdown>
           </div>
+        </div>
 
-          {/* Brief Content */}
-          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-sm">
-            <div className="prose prose-slate dark:prose-invert max-w-none">
-              <ReactMarkdown
-                components={{
-                  h1: ({ node, ...props }) => <h1 className="text-3xl font-bold mb-4" {...props} />,
-                  h2: ({ node, ...props }) => <h2 className="text-2xl font-bold mt-8 mb-4" {...props} />,
-                  h3: ({ node, ...props }) => <h3 className="text-xl font-semibold mt-6 mb-3" {...props} />,
-                  p: ({ node, ...props }) => <p className="mb-4 leading-relaxed" {...props} />,
-                  ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
-                  ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
-                  li: ({ node, ...props }) => <li className="ml-4" {...props} />,
-                  strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900 dark:text-white" {...props} />,
-                  code: ({ node, ...props }) => <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-sm" {...props} />,
-                }}
-              >
-                {brief.brief_content}
-              </ReactMarkdown>
-            </div>
-          </div>
-
-          {/* Contacts Section */}
-          <div className="mt-8 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+        {/* Contacts Section */}
+        <div className="mt-8 rounded-xl border bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold flex items-center gap-2">
                 <Icons.user className="h-5 w-5" />
@@ -504,9 +485,9 @@ export default function ResearchBriefPage() {
               </Button>
             </div>
 
-            {/* Add Contact Form */}
-            {showAddContact && (
-              <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+          {/* Add Contact Form */}
+          {showAddContact && (
+            <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <h3 className="font-semibold mb-3">Nieuwe contactpersoon</h3>
                 
                 {/* Step 1: Name + Lookup */}
@@ -629,10 +610,10 @@ export default function ResearchBriefPage() {
                     key={contact.id}
                     className={`p-4 rounded-lg border cursor-pointer transition-all ${
                       selectedContact?.id === contact.id 
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                        ? 'border-blue-500 bg-blue-50' 
                         : isAnalyzing
-                          ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/10 animate-pulse'
-                          : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                          ? 'border-amber-400 bg-amber-50 animate-pulse'
+                          : 'border-slate-200 hover:border-slate-300'
                     }`}
                     onClick={() => setSelectedContact(selectedContact?.id === contact.id ? null : contact)}
                   >
@@ -640,8 +621,8 @@ export default function ResearchBriefPage() {
                       <div className="flex items-center gap-3">
                         <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
                           isAnalyzing 
-                            ? 'bg-amber-200 dark:bg-amber-800' 
-                            : 'bg-slate-200 dark:bg-slate-700'
+                            ? 'bg-amber-200' 
+                            : 'bg-slate-200'
                         }`}>
                           {isAnalyzing ? (
                             <Icons.spinner className="h-5 w-5 text-amber-600 animate-spin" />
@@ -685,8 +666,8 @@ export default function ResearchBriefPage() {
 
                     {/* Analysis Progress Indicator */}
                     {isAnalyzing && selectedContact?.id === contact.id && (
-                      <div className="mt-4 pt-4 border-t border-amber-200 dark:border-amber-700">
-                        <div className="flex items-center gap-3 text-amber-700 dark:text-amber-400">
+                      <div className="mt-4 pt-4 border-t border-amber-200">
+                        <div className="flex items-center gap-3 text-amber-700">
                           <Icons.spinner className="h-5 w-5 animate-spin" />
                           <div>
                             <p className="font-medium">Analyse bezig...</p>
@@ -698,7 +679,7 @@ export default function ResearchBriefPage() {
                             </p>
                           </div>
                         </div>
-                        <div className="mt-3 h-1.5 bg-amber-200 dark:bg-amber-800 rounded-full overflow-hidden">
+                        <div className="mt-3 h-1.5 bg-amber-200 rounded-full overflow-hidden">
                           <div className="h-full bg-amber-500 rounded-full animate-pulse" style={{ width: '60%' }} />
                         </div>
                       </div>
@@ -706,9 +687,9 @@ export default function ResearchBriefPage() {
 
                     {/* Expanded Contact Analysis */}
                     {selectedContact?.id === contact.id && contact.profile_brief && !isAnalyzing && (
-                      <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                      <div className="mt-4 pt-4 border-t border-slate-200">
                         {contact.analyzed_at ? (
-                          <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
+                          <div className="prose prose-sm prose-slate max-w-none">
                             <ReactMarkdown
                               components={{
                                 h1: ({ node, ...props }) => <h1 className="text-xl font-bold mb-3" {...props} />,
@@ -727,13 +708,13 @@ export default function ResearchBriefPage() {
                             {(contact.opening_suggestions?.length || contact.questions_to_ask?.length) && (
                               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                                 {contact.opening_suggestions && contact.opening_suggestions.length > 0 && (
-                                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                                    <h4 className="font-semibold text-green-700 dark:text-green-400 mb-2 text-sm">
+                                  <div className="p-3 bg-green-50 rounded-lg">
+                                    <h4 className="font-semibold text-green-700 mb-2 text-sm">
                                       💬 Openingszinnen
                                     </h4>
                                     <ul className="space-y-1">
                                       {contact.opening_suggestions.slice(0, 3).map((s, i) => (
-                                        <li key={i} className="text-xs text-green-800 dark:text-green-300">
+                                        <li key={i} className="text-xs text-green-800">
                                           "{s}"
                                         </li>
                                       ))}
@@ -741,13 +722,13 @@ export default function ResearchBriefPage() {
                                   </div>
                                 )}
                                 {contact.questions_to_ask && contact.questions_to_ask.length > 0 && (
-                                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                                    <h4 className="font-semibold text-blue-700 dark:text-blue-400 mb-2 text-sm">
+                                  <div className="p-3 bg-blue-50 rounded-lg">
+                                    <h4 className="font-semibold text-blue-700 mb-2 text-sm">
                                       ❓ Discovery Vragen
                                     </h4>
                                     <ul className="space-y-1">
                                       {contact.questions_to_ask.slice(0, 3).map((q, i) => (
-                                        <li key={i} className="text-xs text-blue-800 dark:text-blue-300">
+                                        <li key={i} className="text-xs text-blue-800">
                                           {q}
                                         </li>
                                       ))}
@@ -772,18 +753,10 @@ export default function ResearchBriefPage() {
             )}
           </div>
         </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-6 mt-auto">
-        <div className="container px-4 text-center">
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            Built with <span className="text-red-500">♥</span> by SalesPrep AI
-          </p>
-        </div>
-      </footer>
+      </div>
       
       <Toaster />
-    </div>
+    </DashboardLayout>
   )
 }
+
