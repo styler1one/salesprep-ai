@@ -375,6 +375,18 @@
     "edit": "Edit",
     "save": "Save",
     "saving": "Saving...",
+    "noProfile": "No profile found",
+    "startOnboarding": "Start onboarding to create your profile",
+    "startOnboardingBtn": "Start Onboarding",
+    "myStory": "My Story",
+    "myStoryDesc": "This story is used by the AI to generate personalized outputs",
+    "summary": "Summary",
+    "strengthsTitle": "Strengths & Development",
+    "strengths": "Strengths",
+    "weaknesses": "Areas for improvement",
+    "approach": "Approach",
+    "notSet": "Not set",
+    "years": "years",
     "sections": {
       "personal": "Personal Details",
       "experience": "Experience & Expertise",
@@ -409,6 +421,12 @@
     "edit": "Edit",
     "save": "Save",
     "saving": "Saving...",
+    "noProfile": "No company profile found",
+    "noProfileDesc": "Create a company profile to get personalized AI outputs",
+    "createProfile": "Create Company Profile",
+    "ourStory": "Our Story",
+    "ourStoryDesc": "This story is used by the AI to generate personalized sales content",
+    "summary": "Summary",
     "sections": {
       "basic": "Basic Information",
       "products": "Products & Services",
@@ -453,13 +471,20 @@
       "failed": "Failed",
       "delete": "Delete"
     },
+    "stats": {
+      "completed": "Completed",
+      "processing": "Processing",
+      "failed": "Failed"
+    },
     "toast": {
       "uploaded": "Document uploaded",
       "uploadedDesc": "The document is being processed",
       "deleted": "Document deleted",
       "deletedDesc": "The document has been removed from the knowledge base",
       "failed": "Upload failed",
-      "failedDesc": "Could not upload document"
+      "failedDesc": "Could not upload document",
+      "deleteFailed": "Delete failed",
+      "deleteFailedDesc": "Could not delete the file"
     }
   },
   "auth": {

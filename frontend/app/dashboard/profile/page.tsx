@@ -106,12 +106,12 @@ export default function ProfilePage() {
         <div className="p-6 lg:p-8 max-w-4xl mx-auto">
           <div className="text-center py-16">
             <User className="h-16 w-16 mx-auto text-slate-200 dark:text-slate-700 mb-4" />
-            <h2 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Geen profiel gevonden</h2>
+            <h2 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">{t('noProfile')}</h2>
             <p className="text-slate-500 dark:text-slate-400 mb-6">
-              Start de onboarding om je profiel aan te maken
+              {t('startOnboarding')}
             </p>
             <Button onClick={() => router.push('/onboarding')}>
-              Start Onboarding
+              {t('startOnboardingBtn')}
             </Button>
           </div>
         </div>
@@ -133,7 +133,7 @@ export default function ProfilePage() {
             </div>
             <Button onClick={() => router.push('/onboarding')}>
               <Edit className="h-4 w-4 mr-2" />
-              Update Profile
+              {t('edit')}
             </Button>
           </div>
         </div>
@@ -142,7 +142,7 @@ export default function ProfilePage() {
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Profile Completeness</span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{t('completeness')}</span>
             <span className="text-sm font-bold text-slate-900 dark:text-white">{profile.profile_completeness}%</span>
           </div>
           <div className="h-2 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -164,10 +164,10 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-primary" />
-              Mijn Verhaal
+              {t('myStory')}
             </CardTitle>
             <CardDescription>
-              Dit verhaal wordt gebruikt door de AI om gepersonaliseerde meeting prep en follow-ups te genereren
+              {t('myStoryDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -188,7 +188,7 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5" />
-              Samenvatting
+              {t('summary')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -203,29 +203,29 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Briefcase className="h-5 w-5" />
-              Professionele Info
+              {t('sections.experience')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Ervaring</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('fields.yearsExperience')}</p>
               <p className="text-base">
-                {profile.experience_years ? `${profile.experience_years} jaar` : 'Niet ingesteld'}
+                {profile.experience_years ? `${profile.experience_years} ${t('years')}` : t('notSet')}
               </p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Sales Methodologie</p>
-              <p className="text-base">{profile.sales_methodology || 'Niet ingesteld'}</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('fields.sellingStyle')}</p>
+              <p className="text-base">{profile.sales_methodology || t('notSet')}</p>
             </div>
             {profile.methodology_description && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Aanpak</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('approach')}</p>
                 <p className="text-base text-gray-700 dark:text-slate-300">{profile.methodology_description}</p>
               </div>
             )}
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Communicatiestijl</p>
-              <p className="text-base">{profile.communication_style || 'Niet ingesteld'}</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('fields.communicationPreference')}</p>
+              <p className="text-base">{profile.communication_style || t('notSet')}</p>
             </div>
           </CardContent>
         </Card>
@@ -235,13 +235,13 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Award className="h-5 w-5" />
-              Sterktes & Ontwikkeling
+              {t('strengthsTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {profile.strengths && profile.strengths.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Sterktes</p>
+                <p className="text-sm font-medium text-muted-foreground mb-2">{t('strengths')}</p>
                 <div className="flex flex-wrap gap-2">
                   {profile.strengths.map((strength, i) => (
                     <span 

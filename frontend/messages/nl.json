@@ -375,6 +375,18 @@
     "edit": "Bewerken",
     "save": "Opslaan",
     "saving": "Opslaan...",
+    "noProfile": "Geen profiel gevonden",
+    "startOnboarding": "Start de onboarding om je profiel aan te maken",
+    "startOnboardingBtn": "Start Onboarding",
+    "myStory": "Mijn Verhaal",
+    "myStoryDesc": "Dit verhaal wordt gebruikt door de AI om gepersonaliseerde outputs te genereren",
+    "summary": "Samenvatting",
+    "strengthsTitle": "Sterktes & Ontwikkeling",
+    "strengths": "Sterktes",
+    "weaknesses": "Ontwikkelpunten",
+    "approach": "Aanpak",
+    "notSet": "Niet ingesteld",
+    "years": "jaar",
     "sections": {
       "personal": "Persoonlijke Gegevens",
       "experience": "Ervaring & Expertise",
@@ -409,6 +421,12 @@
     "edit": "Bewerken",
     "save": "Opslaan",
     "saving": "Opslaan...",
+    "noProfile": "Geen bedrijfsprofiel gevonden",
+    "noProfileDesc": "Maak een bedrijfsprofiel aan om gepersonaliseerde AI-output te krijgen",
+    "createProfile": "Bedrijfsprofiel Aanmaken",
+    "ourStory": "Ons Verhaal",
+    "ourStoryDesc": "Dit verhaal wordt gebruikt door de AI om gepersonaliseerde sales content te genereren",
+    "summary": "Samenvatting",
     "sections": {
       "basic": "Basisinformatie",
       "products": "Producten & Diensten",
@@ -453,13 +471,20 @@
       "failed": "Mislukt",
       "delete": "Verwijderen"
     },
+    "stats": {
+      "completed": "Verwerkt",
+      "processing": "Bezig",
+      "failed": "Mislukt"
+    },
     "toast": {
       "uploaded": "Document geüpload",
       "uploadedDesc": "Het document wordt verwerkt",
       "deleted": "Document verwijderd",
       "deletedDesc": "Het document is verwijderd uit de knowledge base",
       "failed": "Upload mislukt",
-      "failedDesc": "Kon document niet uploaden"
+      "failedDesc": "Kon document niet uploaden",
+      "deleteFailed": "Verwijderen mislukt",
+      "deleteFailedDesc": "Kon het document niet verwijderen"
     }
   },
   "auth": {

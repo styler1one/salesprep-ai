@@ -104,8 +104,8 @@ export default function KnowledgeBasePage() {
       await fetchFiles()
       
       toast({
-        title: "Upload successful",
-        description: `${file.name} is being processed`,
+        title: t('toast.uploaded'),
+        description: t('toast.uploadedDesc'),
       })
       
       // Start polling for status updates
@@ -115,8 +115,8 @@ export default function KnowledgeBasePage() {
       const errorMessage = error.message || 'Failed to fetch'
       toast({
         variant: "destructive",
-        title: "Upload failed",
-        description: errorMessage,
+        title: t('toast.failed'),
+        description: t('toast.failedDesc'),
       })
     } finally {
       setUploading(false)
@@ -141,8 +141,8 @@ export default function KnowledgeBasePage() {
       if (response.ok) {
         await fetchFiles()
         toast({
-          title: "File deleted",
-          description: "The file has been removed from your knowledge base",
+          title: t('toast.deleted'),
+          description: t('toast.deletedDesc'),
         })
       } else {
         throw new Error('Delete failed')
@@ -151,8 +151,8 @@ export default function KnowledgeBasePage() {
       console.error('Delete failed:', error)
       toast({
         variant: "destructive",
-        title: "Delete failed",
-        description: "Could not delete the file. Please try again.",
+        title: t('toast.deleteFailed'),
+        description: t('toast.deleteFailedDesc'),
       })
     }
   }
@@ -182,7 +182,7 @@ export default function KnowledgeBasePage() {
       <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-900">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-slate-600 dark:text-slate-400">Loading...</p>
+          <p className="text-slate-600 dark:text-slate-400">{t('loading')}</p>
         </div>
       </div>
     )
@@ -203,10 +203,10 @@ export default function KnowledgeBasePage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white mb-2">
-            Knowledge Base
+            {t('title')}
           </h1>
           <p className="text-slate-500 dark:text-slate-400">
-            Upload and manage your company documents for AI context
+            {t('subtitle')}
           </p>
         </div>
 
@@ -216,7 +216,7 @@ export default function KnowledgeBasePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
-                  Completed Files
+                  {t('stats.completed')}
                 </p>
                 <p className="text-3xl font-bold text-green-600 dark:text-green-400">{completedFiles}</p>
               </div>

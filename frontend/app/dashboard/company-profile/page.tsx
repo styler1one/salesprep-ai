@@ -142,13 +142,13 @@ export default function CompanyProfilePage() {
         <div className="p-6 lg:p-8 max-w-4xl mx-auto">
           <div className="text-center py-16">
             <Building2 className="h-16 w-16 mx-auto text-slate-200 dark:text-slate-700 mb-4" />
-            <h2 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Geen bedrijfsprofiel gevonden</h2>
+            <h2 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">{t('noProfile')}</h2>
             <p className="text-slate-500 dark:text-slate-400 mb-6">
-              Maak een bedrijfsprofiel aan om gepersonaliseerde AI-output te krijgen
+              {t('noProfileDesc')}
             </p>
             <Button onClick={() => router.push('/onboarding/company')}>
               <Building2 className="h-4 w-4 mr-2" />
-              Bedrijfsprofiel Aanmaken
+              {t('createProfile')}
             </Button>
           </div>
         </div>
@@ -170,7 +170,7 @@ export default function CompanyProfilePage() {
           </div>
           <Button onClick={() => router.push('/onboarding/company')}>
             <Edit className="h-4 w-4 mr-2" />
-            Update Profiel
+            {t('edit')}
           </Button>
         </div>
       </div>
@@ -179,7 +179,7 @@ export default function CompanyProfilePage() {
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Profiel Compleetheid</span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{t('completeness')}</span>
             <span className="text-sm font-bold text-slate-900 dark:text-white">{profile.profile_completeness}%</span>
           </div>
           <div className="h-2 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -201,10 +201,10 @@ export default function CompanyProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-primary" />
-              Ons Verhaal
+              {t('ourStory')}
             </CardTitle>
             <CardDescription>
-              Dit verhaal wordt gebruikt door de AI om gepersonaliseerde sales content te genereren
+              {t('ourStoryDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -225,7 +225,7 @@ export default function CompanyProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5" />
-              Samenvatting
+              {t('summary')}
             </CardTitle>
           </CardHeader>
           <CardContent>
