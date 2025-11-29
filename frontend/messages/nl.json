@@ -1,0 +1,67 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "view": "Bekijk",
+    "back": "Terug",
+    "next": "Volgende",
+    "search": "Zoeken",
+    "close": "Sluiten",
+    "copy": "Kopieer",
+    "copied": "Gekopieerd!",
+    "refresh": "Vernieuwen",
+    "add": "Toevoegen",
+    "remove": "Verwijderen",
+    "yes": "Ja",
+    "no": "Nee",
+    "or": "of",
+    "and": "en"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "research": "Research",
+    "preparation": "Voorbereiding",
+    "followup": "Follow-up",
+    "profile": "Profiel",
+    "companyProfile": "Bedrijfsprofiel",
+    "knowledgeBase": "Kennisbank",
+    "settings": "Instellingen",
+    "logout": "Uitloggen"
+  },
+  "auth": {
+    "login": "Inloggen",
+    "signup": "Aanmelden",
+    "email": "E-mailadres",
+    "password": "Wachtwoord",
+    "forgotPassword": "Wachtwoord vergeten?",
+    "noAccount": "Nog geen account?",
+    "hasAccount": "Al een account?",
+    "continueWithGoogle": "Doorgaan met Google",
+    "continueWithMicrosoft": "Doorgaan met Microsoft"
+  },
+  "status": {
+    "completed": "Voltooid",
+    "inProgress": "Bezig",
+    "failed": "Mislukt",
+    "pending": "Wachtend",
+    "new": "Nieuw"
+  },
+  "time": {
+    "justNow": "Zojuist",
+    "minutesAgo": "{count} min geleden",
+    "hoursAgo": "{count} uur geleden",
+    "yesterday": "Gisteren",
+    "daysAgo": "{count} dagen geleden"
+  },
+  "errors": {
+    "generic": "Er is iets misgegaan",
+    "network": "Netwerkfout, probeer opnieuw",
+    "unauthorized": "Niet geautoriseerd",
+    "notFound": "Niet gevonden",
+    "validation": "Controleer de ingevoerde gegevens"
+  }
+}
+

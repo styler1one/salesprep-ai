@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* i18n: Import fonts for Hindi (Devanagari) and Arabic scripts */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap');
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -151,4 +155,26 @@ html {
 /* Card hover effect */
 .card-hover {
   @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5;
+}
+
+/* i18n: Language-specific font families */
+[lang="hi"] {
+  font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+}
+
+[lang="ar"] {
+  font-family: 'Noto Sans Arabic', 'Inter', sans-serif;
+}
+
+/* i18n: RTL support for Arabic */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
 }

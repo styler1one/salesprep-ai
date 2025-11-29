@@ -1,0 +1,67 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "view": "Ver",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "search": "Buscar",
+    "close": "Cerrar",
+    "copy": "Copiar",
+    "copied": "¡Copiado!",
+    "refresh": "Actualizar",
+    "add": "Añadir",
+    "remove": "Eliminar",
+    "yes": "Sí",
+    "no": "No",
+    "or": "o",
+    "and": "y"
+  },
+  "navigation": {
+    "dashboard": "Panel",
+    "research": "Investigación",
+    "preparation": "Preparación",
+    "followup": "Seguimiento",
+    "profile": "Perfil",
+    "companyProfile": "Perfil de empresa",
+    "knowledgeBase": "Base de conocimientos",
+    "settings": "Configuración",
+    "logout": "Cerrar sesión"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "signup": "Registrarse",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "noAccount": "¿No tienes cuenta?",
+    "hasAccount": "¿Ya tienes cuenta?",
+    "continueWithGoogle": "Continuar con Google",
+    "continueWithMicrosoft": "Continuar con Microsoft"
+  },
+  "status": {
+    "completed": "Completado",
+    "inProgress": "En progreso",
+    "failed": "Fallido",
+    "pending": "Pendiente",
+    "new": "Nuevo"
+  },
+  "time": {
+    "justNow": "Ahora mismo",
+    "minutesAgo": "hace {count} min",
+    "hoursAgo": "hace {count} h",
+    "yesterday": "Ayer",
+    "daysAgo": "hace {count} días"
+  },
+  "errors": {
+    "generic": "Algo salió mal",
+    "network": "Error de red, inténtalo de nuevo",
+    "unauthorized": "No autorizado",
+    "notFound": "No encontrado",
+    "validation": "Por favor verifica tus datos"
+  }
+}
+

@@ -1,0 +1,67 @@
+{
+  "common": {
+    "loading": "جاري التحميل...",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "view": "عرض",
+    "back": "رجوع",
+    "next": "التالي",
+    "search": "بحث",
+    "close": "إغلاق",
+    "copy": "نسخ",
+    "copied": "تم النسخ!",
+    "refresh": "تحديث",
+    "add": "إضافة",
+    "remove": "إزالة",
+    "yes": "نعم",
+    "no": "لا",
+    "or": "أو",
+    "and": "و"
+  },
+  "navigation": {
+    "dashboard": "لوحة التحكم",
+    "research": "البحث",
+    "preparation": "التحضير",
+    "followup": "المتابعة",
+    "profile": "الملف الشخصي",
+    "companyProfile": "ملف الشركة",
+    "knowledgeBase": "قاعدة المعرفة",
+    "settings": "الإعدادات",
+    "logout": "تسجيل الخروج"
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "signup": "إنشاء حساب",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "noAccount": "ليس لديك حساب؟",
+    "hasAccount": "لديك حساب بالفعل؟",
+    "continueWithGoogle": "المتابعة مع Google",
+    "continueWithMicrosoft": "المتابعة مع Microsoft"
+  },
+  "status": {
+    "completed": "مكتمل",
+    "inProgress": "قيد التنفيذ",
+    "failed": "فشل",
+    "pending": "قيد الانتظار",
+    "new": "جديد"
+  },
+  "time": {
+    "justNow": "الآن",
+    "minutesAgo": "منذ {count} دقيقة",
+    "hoursAgo": "منذ {count} ساعة",
+    "yesterday": "أمس",
+    "daysAgo": "منذ {count} أيام"
+  },
+  "errors": {
+    "generic": "حدث خطأ ما",
+    "network": "خطأ في الشبكة، يرجى المحاولة مرة أخرى",
+    "unauthorized": "غير مصرح",
+    "notFound": "غير موجود",
+    "validation": "يرجى التحقق من البيانات المدخلة"
+  }
+}
+

@@ -1,0 +1,67 @@
+{
+  "common": {
+    "loading": "लोड हो रहा है...",
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
+    "delete": "हटाएं",
+    "edit": "संपादित करें",
+    "view": "देखें",
+    "back": "वापस",
+    "next": "आगे",
+    "search": "खोजें",
+    "close": "बंद करें",
+    "copy": "कॉपी करें",
+    "copied": "कॉपी हो गया!",
+    "refresh": "रीफ्रेश करें",
+    "add": "जोड़ें",
+    "remove": "हटाएं",
+    "yes": "हां",
+    "no": "नहीं",
+    "or": "या",
+    "and": "और"
+  },
+  "navigation": {
+    "dashboard": "डैशबोर्ड",
+    "research": "रिसर्च",
+    "preparation": "तैयारी",
+    "followup": "फॉलो-अप",
+    "profile": "प्रोफ़ाइल",
+    "companyProfile": "कंपनी प्रोफ़ाइल",
+    "knowledgeBase": "ज्ञान आधार",
+    "settings": "सेटिंग्स",
+    "logout": "लॉग आउट"
+  },
+  "auth": {
+    "login": "लॉग इन",
+    "signup": "साइन अप",
+    "email": "ईमेल पता",
+    "password": "पासवर्ड",
+    "forgotPassword": "पासवर्ड भूल गए?",
+    "noAccount": "खाता नहीं है?",
+    "hasAccount": "पहले से खाता है?",
+    "continueWithGoogle": "Google से जारी रखें",
+    "continueWithMicrosoft": "Microsoft से जारी रखें"
+  },
+  "status": {
+    "completed": "पूर्ण",
+    "inProgress": "प्रगति में",
+    "failed": "विफल",
+    "pending": "लंबित",
+    "new": "नया"
+  },
+  "time": {
+    "justNow": "अभी",
+    "minutesAgo": "{count} मिनट पहले",
+    "hoursAgo": "{count} घंटे पहले",
+    "yesterday": "कल",
+    "daysAgo": "{count} दिन पहले"
+  },
+  "errors": {
+    "generic": "कुछ गलत हो गया",
+    "network": "नेटवर्क त्रुटि, कृपया पुनः प्रयास करें",
+    "unauthorized": "अनधिकृत",
+    "notFound": "नहीं मिला",
+    "validation": "कृपया अपना इनपुट जांचें"
+  }
+}
+

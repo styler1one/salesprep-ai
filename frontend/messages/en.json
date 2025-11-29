@@ -1,0 +1,67 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "back": "Back",
+    "next": "Next",
+    "search": "Search",
+    "close": "Close",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "refresh": "Refresh",
+    "add": "Add",
+    "remove": "Remove",
+    "yes": "Yes",
+    "no": "No",
+    "or": "or",
+    "and": "and"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "research": "Research",
+    "preparation": "Preparation",
+    "followup": "Follow-up",
+    "profile": "Profile",
+    "companyProfile": "Company Profile",
+    "knowledgeBase": "Knowledge Base",
+    "settings": "Settings",
+    "logout": "Log out"
+  },
+  "auth": {
+    "login": "Log in",
+    "signup": "Sign up",
+    "email": "Email address",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithMicrosoft": "Continue with Microsoft"
+  },
+  "status": {
+    "completed": "Completed",
+    "inProgress": "In progress",
+    "failed": "Failed",
+    "pending": "Pending",
+    "new": "New"
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{count} min ago",
+    "hoursAgo": "{count} hours ago",
+    "yesterday": "Yesterday",
+    "daysAgo": "{count} days ago"
+  },
+  "errors": {
+    "generic": "Something went wrong",
+    "network": "Network error, please try again",
+    "unauthorized": "Unauthorized",
+    "notFound": "Not found",
+    "validation": "Please check your input"
+  }
+}
+
