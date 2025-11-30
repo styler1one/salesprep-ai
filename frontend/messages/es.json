@@ -82,6 +82,7 @@
   },
   "navigation": {
     "dashboard": "Panel",
+    "prospects": "Prospectos",
     "research": "Investigación",
     "preparation": "Preparación",
     "followup": "Seguimiento",
@@ -793,6 +794,90 @@
       "description": "Configura tus notificaciones de correo y push"
     },
     "comingSoon": "Próximamente"
+  },
+  "prospects": {
+    "title": "Mis Prospectos",
+    "subtitle": "Gestiona todos tus prospectos y su recorrido de ventas",
+    "search": {
+      "placeholder": "Buscar prospectos..."
+    },
+    "actions": {
+      "newProspect": "Nuevo Prospecto",
+      "startResearch": "Iniciar Investigación"
+    },
+    "status": {
+      "new": "Nuevo",
+      "researching": "Investigando",
+      "qualified": "Calificado",
+      "meeting_scheduled": "Reunión Programada",
+      "proposal_sent": "Propuesta Enviada",
+      "won": "Ganado",
+      "lost": "Perdido",
+      "on_hold": "En Espera"
+    },
+    "empty": {
+      "title": "Sin Prospectos Aún",
+      "description": "Comienza investigando tu primer prospecto"
+    },
+    "errors": {
+      "loadFailed": "Error al cargar prospectos"
+    }
+  },
+  "prospectHub": {
+    "tabs": {
+      "overview": "Resumen",
+      "research": "Investigación",
+      "contacts": "Contactos",
+      "deals": "Deals",
+      "timeline": "Cronología"
+    },
+    "stats": {
+      "research": "Investigación",
+      "contacts": "Contactos",
+      "activeDeals": "Deals Activos",
+      "meetings": "Reuniones"
+    },
+    "sections": {
+      "activeDeals": "Deals Activos",
+      "activeDealsDesc": "Oportunidades actuales con este prospecto",
+      "latestResearch": "Última Investigación",
+      "keyContacts": "Contactos Clave",
+      "recentActivity": "Actividad Reciente",
+      "researchBrief": "Brief de Investigación",
+      "allContacts": "Todos los Contactos",
+      "archivedDeals": "Deals Archivados",
+      "activityTimeline": "Cronología de Actividades"
+    },
+    "status": {
+      "active": "Activo",
+      "archived": "Archivado",
+      "completed": "Completado"
+    },
+    "actions": {
+      "newDeal": "Nuevo Deal",
+      "createFirstDeal": "Crear Primer Deal",
+      "viewAll": "Ver Todo",
+      "viewResearch": "Ver Investigación",
+      "startResearch": "Iniciar Investigación",
+      "openFull": "Abrir Completo",
+      "addContact": "Agregar Contacto"
+    },
+    "empty": {
+      "noDeals": "Aún no hay deals activos",
+      "noContacts": "Sin contactos agregados",
+      "noActivity": "Sin actividad reciente",
+      "noResearchTitle": "Sin Investigación Aún",
+      "noResearchDesc": "Comienza a investigar este prospecto para obtener insights de IA",
+      "noContactsTitle": "Sin Contactos Aún",
+      "noContactsDesc": "Agrega contactos para personalizar tu enfoque de ventas",
+      "noActiveDeals": "Sin deals activos",
+      "noTimelineTitle": "Sin Actividad Aún",
+      "noTimelineDesc": "Las actividades aparecerán aquí mientras trabajas con este prospecto"
+    },
+    "errors": {
+      "loadFailed": "Error al cargar datos del prospecto",
+      "notFound": "Prospecto no encontrado"
+    }
   },
   "billing": {
     "currentPlan": "Plan actual",

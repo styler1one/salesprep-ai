@@ -82,6 +82,7 @@
   },
   "navigation": {
     "dashboard": "لوحة التحكم",
+    "prospects": "العملاء المحتملون",
     "research": "البحث",
     "preparation": "التحضير",
     "followup": "المتابعة",
@@ -793,6 +794,90 @@
       "description": "تكوين إشعارات البريد الإلكتروني والدفع"
     },
     "comingSoon": "قريباً"
+  },
+  "prospects": {
+    "title": "عملائي المحتملون",
+    "subtitle": "إدارة جميع العملاء المحتملين ورحلة مبيعاتهم",
+    "search": {
+      "placeholder": "البحث عن العملاء المحتملين..."
+    },
+    "actions": {
+      "newProspect": "عميل محتمل جديد",
+      "startResearch": "بدء البحث"
+    },
+    "status": {
+      "new": "جديد",
+      "researching": "قيد البحث",
+      "qualified": "مؤهل",
+      "meeting_scheduled": "اجتماع مجدول",
+      "proposal_sent": "تم إرسال العرض",
+      "won": "فاز",
+      "lost": "خسر",
+      "on_hold": "معلق"
+    },
+    "empty": {
+      "title": "لا يوجد عملاء محتملون بعد",
+      "description": "ابدأ بالبحث عن أول عميل محتمل لك"
+    },
+    "errors": {
+      "loadFailed": "فشل تحميل العملاء المحتملين"
+    }
+  },
+  "prospectHub": {
+    "tabs": {
+      "overview": "نظرة عامة",
+      "research": "البحث",
+      "contacts": "جهات الاتصال",
+      "deals": "الصفقات",
+      "timeline": "الجدول الزمني"
+    },
+    "stats": {
+      "research": "البحث",
+      "contacts": "جهات الاتصال",
+      "activeDeals": "الصفقات النشطة",
+      "meetings": "الاجتماعات"
+    },
+    "sections": {
+      "activeDeals": "الصفقات النشطة",
+      "activeDealsDesc": "الفرص الحالية مع هذا العميل المحتمل",
+      "latestResearch": "أحدث بحث",
+      "keyContacts": "جهات الاتصال الرئيسية",
+      "recentActivity": "النشاط الأخير",
+      "researchBrief": "ملخص البحث",
+      "allContacts": "جميع جهات الاتصال",
+      "archivedDeals": "الصفقات المؤرشفة",
+      "activityTimeline": "الجدول الزمني للنشاط"
+    },
+    "status": {
+      "active": "نشط",
+      "archived": "مؤرشف",
+      "completed": "مكتمل"
+    },
+    "actions": {
+      "newDeal": "صفقة جديدة",
+      "createFirstDeal": "إنشاء أول صفقة",
+      "viewAll": "عرض الكل",
+      "viewResearch": "عرض البحث",
+      "startResearch": "بدء البحث",
+      "openFull": "فتح كامل",
+      "addContact": "إضافة جهة اتصال"
+    },
+    "empty": {
+      "noDeals": "لا توجد صفقات نشطة بعد",
+      "noContacts": "لم تتم إضافة جهات اتصال",
+      "noActivity": "لا يوجد نشاط حديث",
+      "noResearchTitle": "لا يوجد بحث بعد",
+      "noResearchDesc": "ابدأ البحث عن هذا العميل المحتمل للحصول على رؤى مدعومة بالذكاء الاصطناعي",
+      "noContactsTitle": "لا توجد جهات اتصال بعد",
+      "noContactsDesc": "أضف جهات اتصال لتخصيص نهج المبيعات الخاص بك",
+      "noActiveDeals": "لا توجد صفقات نشطة",
+      "noTimelineTitle": "لا يوجد نشاط بعد",
+      "noTimelineDesc": "ستظهر الأنشطة هنا أثناء عملك مع هذا العميل المحتمل"
+    },
+    "errors": {
+      "loadFailed": "فشل تحميل بيانات العميل المحتمل",
+      "notFound": "العميل المحتمل غير موجود"
+    }
   },
   "billing": {
     "currentPlan": "الخطة الحالية",

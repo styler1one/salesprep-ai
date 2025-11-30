@@ -20,6 +20,12 @@ const navigationItems = [
     color: 'text-slate-500',
   },
   {
+    key: 'prospects',
+    href: '/dashboard/prospects',
+    icon: Icons.building,
+    color: 'text-cyan-500',
+  },
+  {
     key: 'research',
     href: '/dashboard/research',
     icon: Icons.search,

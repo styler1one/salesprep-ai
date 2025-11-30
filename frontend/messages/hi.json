@@ -82,6 +82,7 @@
   },
   "navigation": {
     "dashboard": "डैशबोर्ड",
+    "prospects": "संभावित ग्राहक",
     "research": "रिसर्च",
     "preparation": "तैयारी",
     "followup": "फॉलो-अप",
@@ -793,6 +794,90 @@
       "description": "अपनी ईमेल और पुश सूचनाएं कॉन्फ़िगर करें"
     },
     "comingSoon": "जल्द आ रहा है"
+  },
+  "prospects": {
+    "title": "मेरे संभावित ग्राहक",
+    "subtitle": "अपने सभी संभावित ग्राहकों और उनकी बिक्री यात्रा का प्रबंधन करें",
+    "search": {
+      "placeholder": "संभावित ग्राहक खोजें..."
+    },
+    "actions": {
+      "newProspect": "नया संभावित ग्राहक",
+      "startResearch": "अनुसंधान शुरू करें"
+    },
+    "status": {
+      "new": "नया",
+      "researching": "शोध जारी",
+      "qualified": "योग्य",
+      "meeting_scheduled": "मीटिंग निर्धारित",
+      "proposal_sent": "प्रस्ताव भेजा गया",
+      "won": "जीता",
+      "lost": "खोया",
+      "on_hold": "रुका हुआ"
+    },
+    "empty": {
+      "title": "अभी तक कोई संभावित ग्राहक नहीं",
+      "description": "अपने पहले संभावित ग्राहक पर शोध से शुरू करें"
+    },
+    "errors": {
+      "loadFailed": "संभावित ग्राहकों को लोड करने में विफल"
+    }
+  },
+  "prospectHub": {
+    "tabs": {
+      "overview": "अवलोकन",
+      "research": "अनुसंधान",
+      "contacts": "संपर्क",
+      "deals": "डील्स",
+      "timeline": "समयरेखा"
+    },
+    "stats": {
+      "research": "अनुसंधान",
+      "contacts": "संपर्क",
+      "activeDeals": "सक्रिय डील्स",
+      "meetings": "मीटिंग्स"
+    },
+    "sections": {
+      "activeDeals": "सक्रिय डील्स",
+      "activeDealsDesc": "इस संभावित ग्राहक के साथ वर्तमान अवसर",
+      "latestResearch": "नवीनतम अनुसंधान",
+      "keyContacts": "मुख्य संपर्क",
+      "recentActivity": "हालिया गतिविधि",
+      "researchBrief": "अनुसंधान संक्षेप",
+      "allContacts": "सभी संपर्क",
+      "archivedDeals": "संग्रहीत डील्स",
+      "activityTimeline": "गतिविधि समयरेखा"
+    },
+    "status": {
+      "active": "सक्रिय",
+      "archived": "संग्रहीत",
+      "completed": "पूर्ण"
+    },
+    "actions": {
+      "newDeal": "नई डील",
+      "createFirstDeal": "पहली डील बनाएं",
+      "viewAll": "सभी देखें",
+      "viewResearch": "अनुसंधान देखें",
+      "startResearch": "अनुसंधान शुरू करें",
+      "openFull": "पूर्ण खोलें",
+      "addContact": "संपर्क जोड़ें"
+    },
+    "empty": {
+      "noDeals": "अभी तक कोई सक्रिय डील नहीं",
+      "noContacts": "कोई संपर्क नहीं जोड़ा गया",
+      "noActivity": "कोई हालिया गतिविधि नहीं",
+      "noResearchTitle": "अभी तक कोई अनुसंधान नहीं",
+      "noResearchDesc": "AI-संचालित अंतर्दृष्टि के लिए इस संभावित ग्राहक पर शोध शुरू करें",
+      "noContactsTitle": "अभी तक कोई संपर्क नहीं",
+      "noContactsDesc": "अपने बिक्री दृष्टिकोण को वैयक्तिकृत करने के लिए संपर्क जोड़ें",
+      "noActiveDeals": "कोई सक्रिय डील नहीं",
+      "noTimelineTitle": "अभी तक कोई गतिविधि नहीं",
+      "noTimelineDesc": "इस संभावित ग्राहक के साथ काम करते समय यहां गतिविधियां दिखाई देंगी"
+    },
+    "errors": {
+      "loadFailed": "संभावित ग्राहक डेटा लोड करने में विफल",
+      "notFound": "संभावित ग्राहक नहीं मिला"
+    }
   },
   "billing": {
     "currentPlan": "वर्तमान प्लान",

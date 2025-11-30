@@ -82,6 +82,7 @@
   },
   "navigation": {
     "dashboard": "Dashboard",
+    "prospects": "Prospects",
     "research": "Research",
     "preparation": "Preparation",
     "followup": "Follow-up",
@@ -805,6 +806,90 @@
       "description": "Configure your email and push notifications"
     },
     "comingSoon": "Coming Soon"
+  },
+  "prospects": {
+    "title": "My Prospects",
+    "subtitle": "Manage all your prospects and their sales journey",
+    "search": {
+      "placeholder": "Search prospects..."
+    },
+    "actions": {
+      "newProspect": "New Prospect",
+      "startResearch": "Start Research"
+    },
+    "status": {
+      "new": "New",
+      "researching": "Researching",
+      "qualified": "Qualified",
+      "meeting_scheduled": "Meeting Scheduled",
+      "proposal_sent": "Proposal Sent",
+      "won": "Won",
+      "lost": "Lost",
+      "on_hold": "On Hold"
+    },
+    "empty": {
+      "title": "No Prospects Yet",
+      "description": "Start by researching your first prospect"
+    },
+    "errors": {
+      "loadFailed": "Failed to load prospects"
+    }
+  },
+  "prospectHub": {
+    "tabs": {
+      "overview": "Overview",
+      "research": "Research",
+      "contacts": "Contacts",
+      "deals": "Deals",
+      "timeline": "Timeline"
+    },
+    "stats": {
+      "research": "Research",
+      "contacts": "Contacts",
+      "activeDeals": "Active Deals",
+      "meetings": "Meetings"
+    },
+    "sections": {
+      "activeDeals": "Active Deals",
+      "activeDealsDesc": "Current opportunities with this prospect",
+      "latestResearch": "Latest Research",
+      "keyContacts": "Key Contacts",
+      "recentActivity": "Recent Activity",
+      "researchBrief": "Research Brief",
+      "allContacts": "All Contacts",
+      "archivedDeals": "Archived Deals",
+      "activityTimeline": "Activity Timeline"
+    },
+    "status": {
+      "active": "Active",
+      "archived": "Archived",
+      "completed": "Completed"
+    },
+    "actions": {
+      "newDeal": "New Deal",
+      "createFirstDeal": "Create First Deal",
+      "viewAll": "View All",
+      "viewResearch": "View Research",
+      "startResearch": "Start Research",
+      "openFull": "Open Full",
+      "addContact": "Add Contact"
+    },
+    "empty": {
+      "noDeals": "No active deals yet",
+      "noContacts": "No contacts added",
+      "noActivity": "No recent activity",
+      "noResearchTitle": "No Research Yet",
+      "noResearchDesc": "Start researching this prospect to get AI-powered insights",
+      "noContactsTitle": "No Contacts Yet",
+      "noContactsDesc": "Add contacts to personalize your sales approach",
+      "noActiveDeals": "No active deals",
+      "noTimelineTitle": "No Activity Yet",
+      "noTimelineDesc": "Activities will appear here as you work with this prospect"
+    },
+    "errors": {
+      "loadFailed": "Failed to load prospect data",
+      "notFound": "Prospect not found"
+    }
   },
   "billing": {
     "currentPlan": "Current plan",

@@ -82,6 +82,7 @@
   },
   "navigation": {
     "dashboard": "Dashboard",
+    "prospects": "Interessenten",
     "research": "Recherche",
     "preparation": "Vorbereitung",
     "followup": "Nachverfolgung",
@@ -799,6 +800,90 @@
       "description": "Konfiguriere deine E-Mail- und Push-Benachrichtigungen"
     },
     "comingSoon": "Demnächst"
+  },
+  "prospects": {
+    "title": "Meine Interessenten",
+    "subtitle": "Verwalten Sie alle Ihre Interessenten und deren Vertriebsweg",
+    "search": {
+      "placeholder": "Interessenten suchen..."
+    },
+    "actions": {
+      "newProspect": "Neuer Interessent",
+      "startResearch": "Recherche starten"
+    },
+    "status": {
+      "new": "Neu",
+      "researching": "Wird recherchiert",
+      "qualified": "Qualifiziert",
+      "meeting_scheduled": "Meeting geplant",
+      "proposal_sent": "Angebot gesendet",
+      "won": "Gewonnen",
+      "lost": "Verloren",
+      "on_hold": "Pausiert"
+    },
+    "empty": {
+      "title": "Noch keine Interessenten",
+      "description": "Beginnen Sie mit der Recherche Ihres ersten Interessenten"
+    },
+    "errors": {
+      "loadFailed": "Interessenten konnten nicht geladen werden"
+    }
+  },
+  "prospectHub": {
+    "tabs": {
+      "overview": "Übersicht",
+      "research": "Recherche",
+      "contacts": "Kontakte",
+      "deals": "Deals",
+      "timeline": "Zeitleiste"
+    },
+    "stats": {
+      "research": "Recherche",
+      "contacts": "Kontakte",
+      "activeDeals": "Aktive Deals",
+      "meetings": "Meetings"
+    },
+    "sections": {
+      "activeDeals": "Aktive Deals",
+      "activeDealsDesc": "Laufende Chancen bei diesem Interessenten",
+      "latestResearch": "Neueste Recherche",
+      "keyContacts": "Wichtige Kontakte",
+      "recentActivity": "Neueste Aktivität",
+      "researchBrief": "Recherche-Brief",
+      "allContacts": "Alle Kontakte",
+      "archivedDeals": "Archivierte Deals",
+      "activityTimeline": "Aktivitäten-Zeitleiste"
+    },
+    "status": {
+      "active": "Aktiv",
+      "archived": "Archiviert",
+      "completed": "Abgeschlossen"
+    },
+    "actions": {
+      "newDeal": "Neuer Deal",
+      "createFirstDeal": "Ersten Deal erstellen",
+      "viewAll": "Alle anzeigen",
+      "viewResearch": "Recherche anzeigen",
+      "startResearch": "Recherche starten",
+      "openFull": "Vollständig öffnen",
+      "addContact": "Kontakt hinzufügen"
+    },
+    "empty": {
+      "noDeals": "Noch keine aktiven Deals",
+      "noContacts": "Keine Kontakte hinzugefügt",
+      "noActivity": "Keine aktuelle Aktivität",
+      "noResearchTitle": "Noch keine Recherche",
+      "noResearchDesc": "Starten Sie die Recherche zu diesem Interessenten für KI-gestützte Einblicke",
+      "noContactsTitle": "Noch keine Kontakte",
+      "noContactsDesc": "Fügen Sie Kontakte hinzu, um Ihren Vertriebsansatz zu personalisieren",
+      "noActiveDeals": "Keine aktiven Deals",
+      "noTimelineTitle": "Noch keine Aktivität",
+      "noTimelineDesc": "Aktivitäten erscheinen hier, während Sie mit diesem Interessenten arbeiten"
+    },
+    "errors": {
+      "loadFailed": "Interessentendaten konnten nicht geladen werden",
+      "notFound": "Interessent nicht gefunden"
+    }
   },
   "billing": {
     "currentPlan": "Aktueller Plan",

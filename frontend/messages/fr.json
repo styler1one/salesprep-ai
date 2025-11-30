@@ -82,6 +82,7 @@
   },
   "navigation": {
     "dashboard": "Tableau de bord",
+    "prospects": "Prospects",
     "research": "Recherche",
     "preparation": "Préparation",
     "followup": "Suivi",
@@ -793,6 +794,90 @@
       "description": "Configurez vos notifications e-mail et push"
     },
     "comingSoon": "Bientôt disponible"
+  },
+  "prospects": {
+    "title": "Mes Prospects",
+    "subtitle": "Gérez tous vos prospects et leur parcours commercial",
+    "search": {
+      "placeholder": "Rechercher des prospects..."
+    },
+    "actions": {
+      "newProspect": "Nouveau Prospect",
+      "startResearch": "Démarrer la Recherche"
+    },
+    "status": {
+      "new": "Nouveau",
+      "researching": "En recherche",
+      "qualified": "Qualifié",
+      "meeting_scheduled": "Réunion Planifiée",
+      "proposal_sent": "Proposition Envoyée",
+      "won": "Gagné",
+      "lost": "Perdu",
+      "on_hold": "En Pause"
+    },
+    "empty": {
+      "title": "Pas Encore de Prospects",
+      "description": "Commencez par rechercher votre premier prospect"
+    },
+    "errors": {
+      "loadFailed": "Échec du chargement des prospects"
+    }
+  },
+  "prospectHub": {
+    "tabs": {
+      "overview": "Aperçu",
+      "research": "Recherche",
+      "contacts": "Contacts",
+      "deals": "Deals",
+      "timeline": "Chronologie"
+    },
+    "stats": {
+      "research": "Recherche",
+      "contacts": "Contacts",
+      "activeDeals": "Deals Actifs",
+      "meetings": "Réunions"
+    },
+    "sections": {
+      "activeDeals": "Deals Actifs",
+      "activeDealsDesc": "Opportunités en cours avec ce prospect",
+      "latestResearch": "Dernière Recherche",
+      "keyContacts": "Contacts Clés",
+      "recentActivity": "Activité Récente",
+      "researchBrief": "Brief de Recherche",
+      "allContacts": "Tous les Contacts",
+      "archivedDeals": "Deals Archivés",
+      "activityTimeline": "Chronologie des Activités"
+    },
+    "status": {
+      "active": "Actif",
+      "archived": "Archivé",
+      "completed": "Terminé"
+    },
+    "actions": {
+      "newDeal": "Nouveau Deal",
+      "createFirstDeal": "Créer le Premier Deal",
+      "viewAll": "Voir Tout",
+      "viewResearch": "Voir la Recherche",
+      "startResearch": "Démarrer la Recherche",
+      "openFull": "Ouvrir Complet",
+      "addContact": "Ajouter un Contact"
+    },
+    "empty": {
+      "noDeals": "Aucun deal actif pour le moment",
+      "noContacts": "Aucun contact ajouté",
+      "noActivity": "Aucune activité récente",
+      "noResearchTitle": "Pas Encore de Recherche",
+      "noResearchDesc": "Commencez à rechercher ce prospect pour obtenir des insights IA",
+      "noContactsTitle": "Pas Encore de Contacts",
+      "noContactsDesc": "Ajoutez des contacts pour personnaliser votre approche commerciale",
+      "noActiveDeals": "Aucun deal actif",
+      "noTimelineTitle": "Pas Encore d'Activité",
+      "noTimelineDesc": "Les activités apparaîtront ici au fur et à mesure que vous travaillez avec ce prospect"
+    },
+    "errors": {
+      "loadFailed": "Échec du chargement des données du prospect",
+      "notFound": "Prospect non trouvé"
+    }
   },
   "billing": {
     "currentPlan": "Plan actuel",

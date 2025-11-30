@@ -82,6 +82,7 @@
   },
   "navigation": {
     "dashboard": "Dashboard",
+    "prospects": "Prospects",
     "research": "Research",
     "preparation": "Voorbereiding",
     "followup": "Follow-up",
@@ -805,6 +806,90 @@
       "description": "Stel je e-mail en push notificaties in"
     },
     "comingSoon": "Binnenkort"
+  },
+  "prospects": {
+    "title": "Mijn Prospects",
+    "subtitle": "Beheer al je prospects en hun salestraject",
+    "search": {
+      "placeholder": "Zoek prospects..."
+    },
+    "actions": {
+      "newProspect": "Nieuwe Prospect",
+      "startResearch": "Start Research"
+    },
+    "status": {
+      "new": "Nieuw",
+      "researching": "Wordt onderzocht",
+      "qualified": "Gekwalificeerd",
+      "meeting_scheduled": "Meeting Gepland",
+      "proposal_sent": "Voorstel Verstuurd",
+      "won": "Gewonnen",
+      "lost": "Verloren",
+      "on_hold": "On Hold"
+    },
+    "empty": {
+      "title": "Nog Geen Prospects",
+      "description": "Begin met het onderzoeken van je eerste prospect"
+    },
+    "errors": {
+      "loadFailed": "Kon prospects niet laden"
+    }
+  },
+  "prospectHub": {
+    "tabs": {
+      "overview": "Overzicht",
+      "research": "Research",
+      "contacts": "Contacten",
+      "deals": "Deals",
+      "timeline": "Tijdlijn"
+    },
+    "stats": {
+      "research": "Research",
+      "contacts": "Contacten",
+      "activeDeals": "Actieve Deals",
+      "meetings": "Meetings"
+    },
+    "sections": {
+      "activeDeals": "Actieve Deals",
+      "activeDealsDesc": "Lopende kansen bij deze prospect",
+      "latestResearch": "Laatste Research",
+      "keyContacts": "Belangrijke Contacten",
+      "recentActivity": "Recente Activiteit",
+      "researchBrief": "Research Brief",
+      "allContacts": "Alle Contacten",
+      "archivedDeals": "Gearchiveerde Deals",
+      "activityTimeline": "Activiteiten Tijdlijn"
+    },
+    "status": {
+      "active": "Actief",
+      "archived": "Gearchiveerd",
+      "completed": "Voltooid"
+    },
+    "actions": {
+      "newDeal": "Nieuwe Deal",
+      "createFirstDeal": "Eerste Deal Aanmaken",
+      "viewAll": "Bekijk Alles",
+      "viewResearch": "Bekijk Research",
+      "startResearch": "Start Research",
+      "openFull": "Open Volledig",
+      "addContact": "Contact Toevoegen"
+    },
+    "empty": {
+      "noDeals": "Nog geen actieve deals",
+      "noContacts": "Geen contacten toegevoegd",
+      "noActivity": "Geen recente activiteit",
+      "noResearchTitle": "Nog Geen Research",
+      "noResearchDesc": "Start met het onderzoeken van deze prospect voor AI-gestuurde inzichten",
+      "noContactsTitle": "Nog Geen Contacten",
+      "noContactsDesc": "Voeg contacten toe om je sales aanpak te personaliseren",
+      "noActiveDeals": "Geen actieve deals",
+      "noTimelineTitle": "Nog Geen Activiteit",
+      "noTimelineDesc": "Activiteiten verschijnen hier terwijl je met deze prospect werkt"
+    },
+    "errors": {
+      "loadFailed": "Kon prospect data niet laden",
+      "notFound": "Prospect niet gevonden"
+    }
   },
   "billing": {
     "currentPlan": "Huidig plan",
