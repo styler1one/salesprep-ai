@@ -337,7 +337,15 @@
       "download": "PDF herunterladen",
       "generatedFor": "Vorbereitung für",
       "copyAll": "Alles kopieren",
-      "viewResearch": "Recherche ansehen"
+      "viewResearch": "Recherche ansehen",
+      "edit": "Bearbeiten",
+      "save": "Speichern",
+      "saving": "Speichern...",
+      "cancel": "Abbrechen",
+      "saved": "Änderungen gespeichert",
+      "savedDesc": "Ihre Änderungen wurden erfolgreich gespeichert",
+      "saveFailed": "Speichern fehlgeschlagen",
+      "saveFailedDesc": "Beim Speichern Ihrer Änderungen ist ein Fehler aufgetreten"
     },
     "toast": {
       "started": "Vorbereitung gestartet",
@@ -411,7 +419,15 @@
       "audioPlayer": "Audio-Player",
       "nextProspect": "Nächster Interessent?",
       "nextProspectDesc": "Starte eine neue Recherche für deinen nächsten Interessenten.",
-      "startNewResearch": "Neue Recherche starten"
+      "startNewResearch": "Neue Recherche starten",
+      "edit": "Bearbeiten",
+      "save": "Speichern",
+      "saving": "Speichern...",
+      "cancel": "Abbrechen",
+      "saved": "Änderungen gespeichert",
+      "savedDesc": "Ihre Änderungen wurden erfolgreich gespeichert",
+      "saveFailed": "Speichern fehlgeschlagen",
+      "saveFailedDesc": "Beim Speichern Ihrer Änderungen ist ein Fehler aufgetreten"
     },
     "toast": {
       "started": "Follow-up gestartet",

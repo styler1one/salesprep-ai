@@ -73,6 +73,8 @@ class UpdateFollowupRequest(BaseModel):
     email_draft: Optional[str] = None
     email_tone: Optional[str] = None
     meeting_subject: Optional[str] = None
+    executive_summary: Optional[str] = None
+    full_summary_content: Optional[str] = None
 
 
 class RegenerateEmailRequest(BaseModel):
@@ -793,6 +795,10 @@ async def update_followup(
             update_data["email_tone"] = request.email_tone
         if request.meeting_subject is not None:
             update_data["meeting_subject"] = request.meeting_subject
+        if request.executive_summary is not None:
+            update_data["executive_summary"] = request.executive_summary
+        if request.full_summary_content is not None:
+            update_data["full_summary_content"] = request.full_summary_content
         
         if not update_data:
             raise HTTPException(status_code=400, detail="No fields to update")

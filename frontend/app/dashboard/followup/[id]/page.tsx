@@ -9,6 +9,7 @@ import { Icons } from '@/components/icons'
 import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
+import { MarkdownEditor } from '@/components/markdown-editor'
 import { useTranslations } from 'next-intl'
 import { api } from '@/lib/api'
 import type { User } from '@supabase/supabase-js'
@@ -103,6 +104,11 @@ export default function FollowupDetailPage() {
   const [researchBrief, setResearchBrief] = useState<ResearchBrief | null>(null)
   const [meetingPrep, setMeetingPrep] = useState<MeetingPrep | null>(null)
   const [linkedContacts, setLinkedContacts] = useState<ProspectContact[]>([])
+  
+  // Edit summary states
+  const [isEditingSummary, setIsEditingSummary] = useState(false)
+  const [editedSummary, setEditedSummary] = useState('')
+  const [isSavingSummary, setIsSavingSummary] = useState(false)
 
   useEffect(() => {
     const getUser = async () => {
@@ -221,6 +227,61 @@ export default function FollowupDetailPage() {
       toast({ title: t('toast.failed'), variant: 'destructive' })
     } finally {
       setRegeneratingEmail(false)
+    }
+  }
+
+  // Start editing the summary
+  const handleStartEditSummary = () => {
+    if (followup?.executive_summary) {
+      setEditedSummary(followup.executive_summary)
+      setIsEditingSummary(true)
+    }
+  }
+
+  // Cancel editing
+  const handleCancelEditSummary = () => {
+    setIsEditingSummary(false)
+    setEditedSummary('')
+  }
+
+  // Save edited summary
+  const handleSaveSummary = async () => {
+    if (!followup || !editedSummary.trim()) return
+    
+    setIsSavingSummary(true)
+    try {
+      const { data, error } = await api.patch<Followup>(
+        `/api/v1/followup/${followupId}`,
+        { executive_summary: editedSummary }
+      )
+      
+      if (error) {
+        toast({
+          title: t('detail.saveFailed'),
+          description: t('detail.saveFailedDesc'),
+          variant: 'destructive'
+        })
+        return
+      }
+      
+      // Update local state
+      setFollowup({ ...followup, executive_summary: editedSummary })
+      setIsEditingSummary(false)
+      setEditedSummary('')
+      
+      toast({
+        title: t('detail.saved'),
+        description: t('detail.savedDesc')
+      })
+    } catch (err) {
+      console.error('Error saving summary:', err)
+      toast({
+        title: t('detail.saveFailed'),
+        description: t('detail.saveFailedDesc'),
+        variant: 'destructive'
+      })
+    } finally {
+      setIsSavingSummary(false)
     }
   }
 
@@ -345,16 +406,69 @@ export default function FollowupDetailPage() {
                       <Icons.fileText className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                       {t('detail.summary')}
                     </h2>
-                    <Button variant="outline" size="sm" onClick={() => handleCopy(
-                      `${followup.executive_summary}\n\nBelangrijkste punten:\n${followup.key_points?.map(p => `• ${p}`).join('\n')}\n\nVervolgstappen:\n${followup.next_steps?.map(s => `• ${s}`).join('\n')}`,
-                      'summary'
-                    )}>
-                      <Icons.copy className="h-4 w-4 mr-1" />
-                      {copied === 'summary' ? t('toast.copied') : tCommon('copy')}
-                    </Button>
+                    <div className="flex gap-2">
+                      {isEditingSummary ? (
+                        <>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={handleCancelEditSummary}
+                            disabled={isSavingSummary}
+                          >
+                            <Icons.x className="h-4 w-4 mr-1" />
+                            {t('detail.cancel')}
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={handleSaveSummary}
+                            disabled={isSavingSummary}
+                          >
+                            {isSavingSummary ? (
+                              <>
+                                <Icons.spinner className="h-4 w-4 mr-1 animate-spin" />
+                                {t('detail.saving')}
+                              </>
+                            ) : (
+                              <>
+                                <Icons.check className="h-4 w-4 mr-1" />
+                                {t('detail.save')}
+                              </>
+                            )}
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={handleStartEditSummary}
+                          >
+                            <Icons.edit className="h-4 w-4 mr-1" />
+                            {t('detail.edit')}
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => handleCopy(
+                            `${followup.executive_summary}\n\nBelangrijkste punten:\n${followup.key_points?.map(p => `• ${p}`).join('\n')}\n\nVervolgstappen:\n${followup.next_steps?.map(s => `• ${s}`).join('\n')}`,
+                            'summary'
+                          )}>
+                            <Icons.copy className="h-4 w-4 mr-1" />
+                            {copied === 'summary' ? t('toast.copied') : tCommon('copy')}
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                   
-                  {followup.executive_summary && (
+                  {isEditingSummary ? (
+                    <div className="mb-4">
+                      <MarkdownEditor
+                        value={editedSummary}
+                        onChange={setEditedSummary}
+                        placeholder={t('detail.edit')}
+                        disabled={isSavingSummary}
+                        className="min-h-[200px]"
+                      />
+                    </div>
+                  ) : followup.executive_summary && (
                     <div className="bg-orange-50 dark:bg-orange-900/30 p-4 rounded-lg mb-4">
                       <p className="text-sm text-slate-700 dark:text-slate-300">{followup.executive_summary}</p>
                     </div>

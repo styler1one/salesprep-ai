@@ -349,13 +349,19 @@ async def get_prep(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class UpdatePrepRequest(BaseModel):
+    """Request model for updating preparation"""
+    brief_content: Optional[str] = None
+    custom_notes: Optional[str] = None
+
+
 @router.patch("/{prep_id}", response_model=dict)
 async def update_prep(
     prep_id: str,
-    custom_notes: str,
+    request: UpdatePrepRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """Update meeting prep notes"""
+    """Update meeting prep (brief content or notes)"""
     try:
         user_id = current_user.get("sub") or current_user.get("id")
         
@@ -369,10 +375,20 @@ async def update_prep(
         
         organization_id = org_response.data[0]["organization_id"]
         
+        # Build update data
+        update_data = {}
+        if request.brief_content is not None:
+            update_data["brief_content"] = request.brief_content
+        if request.custom_notes is not None:
+            update_data["custom_notes"] = request.custom_notes
+        
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No fields to update")
+        
         # Update prep
-        response = supabase.table("meeting_preps").update({
-            "custom_notes": custom_notes
-        }).eq("id", prep_id).eq("organization_id", organization_id).execute()
+        response = supabase.table("meeting_preps").update(update_data).eq(
+            "id", prep_id
+        ).eq("organization_id", organization_id).execute()
         
         if not response.data:
             raise HTTPException(status_code=404, detail="Prep not found")

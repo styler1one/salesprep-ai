@@ -332,7 +332,15 @@
       "download": "Download PDF",
       "generatedFor": "Voorbereiding voor",
       "copyAll": "Kopieer Alles",
-      "viewResearch": "Bekijk Research"
+      "viewResearch": "Bekijk Research",
+      "edit": "Bewerken",
+      "save": "Opslaan",
+      "saving": "Opslaan...",
+      "cancel": "Annuleren",
+      "saved": "Wijzigingen opgeslagen",
+      "savedDesc": "Je aanpassingen zijn succesvol opgeslagen",
+      "saveFailed": "Kon niet opslaan",
+      "saveFailedDesc": "Er is een fout opgetreden bij het opslaan van je wijzigingen"
     },
     "toast": {
       "started": "Voorbereiding gestart",
@@ -414,7 +422,15 @@
       "nextProspect": "Volgende Prospect?",
       "nextProspectDesc": "Start een nieuwe research voor je volgende prospect.",
       "startNewResearch": "Nieuwe Research",
-      "speakers": "Sprekers"
+      "speakers": "Sprekers",
+      "edit": "Bewerken",
+      "save": "Opslaan",
+      "saving": "Opslaan...",
+      "cancel": "Annuleren",
+      "saved": "Wijzigingen opgeslagen",
+      "savedDesc": "Je aanpassingen zijn succesvol opgeslagen",
+      "saveFailed": "Kon niet opslaan",
+      "saveFailedDesc": "Er is een fout opgetreden bij het opslaan van je wijzigingen"
     },
     "toast": {
       "started": "Follow-up gestart",

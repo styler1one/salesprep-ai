@@ -337,7 +337,15 @@
       "download": "تحميل PDF",
       "generatedFor": "تحضير لـ",
       "copyAll": "نسخ الكل",
-      "viewResearch": "عرض البحث"
+      "viewResearch": "عرض البحث",
+      "edit": "تعديل",
+      "save": "حفظ",
+      "saving": "جاري الحفظ...",
+      "cancel": "إلغاء",
+      "saved": "تم حفظ التغييرات",
+      "savedDesc": "تم حفظ تعديلاتك بنجاح",
+      "saveFailed": "فشل الحفظ",
+      "saveFailedDesc": "حدث خطأ أثناء حفظ تعديلاتك"
     },
     "toast": {
       "started": "بدأ التحضير",
@@ -411,7 +419,15 @@
       "audioPlayer": "مشغل الصوت",
       "nextProspect": "العميل المحتمل التالي؟",
       "nextProspectDesc": "ابدأ بحثاً جديداً لعميلك المحتمل التالي.",
-      "startNewResearch": "بدء بحث جديد"
+      "startNewResearch": "بدء بحث جديد",
+      "edit": "تعديل",
+      "save": "حفظ",
+      "saving": "جاري الحفظ...",
+      "cancel": "إلغاء",
+      "saved": "تم حفظ التغييرات",
+      "savedDesc": "تم حفظ تعديلاتك بنجاح",
+      "saveFailed": "فشل الحفظ",
+      "saveFailedDesc": "حدث خطأ أثناء حفظ تعديلاتك"
     },
     "toast": {
       "started": "بدأت المتابعة",

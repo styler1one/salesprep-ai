@@ -332,7 +332,15 @@
       "download": "Download PDF",
       "generatedFor": "Preparation for",
       "copyAll": "Copy All",
-      "viewResearch": "View Research"
+      "viewResearch": "View Research",
+      "edit": "Edit",
+      "save": "Save",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "saved": "Changes saved",
+      "savedDesc": "Your edits have been saved successfully",
+      "saveFailed": "Could not save",
+      "saveFailedDesc": "An error occurred while saving your changes"
     },
     "toast": {
       "started": "Preparation started",
@@ -414,7 +422,15 @@
       "nextProspect": "Next Prospect?",
       "nextProspectDesc": "Start new research for your next prospect.",
       "startNewResearch": "New Research",
-      "speakers": "Speakers"
+      "speakers": "Speakers",
+      "edit": "Edit",
+      "save": "Save",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "saved": "Changes saved",
+      "savedDesc": "Your edits have been saved successfully",
+      "saveFailed": "Could not save",
+      "saveFailedDesc": "An error occurred while saving your changes"
     },
     "toast": {
       "started": "Follow-up started",

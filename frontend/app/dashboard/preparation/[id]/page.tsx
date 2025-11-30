@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import ReactMarkdown from 'react-markdown'
+import { MarkdownEditor } from '@/components/markdown-editor'
 import { useTranslations } from 'next-intl'
 import { api } from '@/lib/api'
 import type { User } from '@supabase/supabase-js'
@@ -66,6 +67,11 @@ export default function PreparationDetailPage() {
   const [profileStatus, setProfileStatus] = useState<ProfileStatus>({ hasSalesProfile: false, hasCompanyProfile: false })
   const [researchBrief, setResearchBrief] = useState<ResearchBrief | null>(null)
   const [linkedContacts, setLinkedContacts] = useState<ProspectContact[]>([])
+  
+  // Edit brief states
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedContent, setEditedContent] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     const getUser = async () => {
@@ -177,6 +183,61 @@ export default function PreparationDetailPage() {
     router.push('/dashboard/followup')
   }
 
+  // Start editing the brief
+  const handleStartEdit = () => {
+    if (prep?.brief_content) {
+      setEditedContent(prep.brief_content)
+      setIsEditing(true)
+    }
+  }
+
+  // Cancel editing
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+    setEditedContent('')
+  }
+
+  // Save edited brief
+  const handleSaveBrief = async () => {
+    if (!prep || !editedContent.trim()) return
+    
+    setIsSaving(true)
+    try {
+      const { data, error } = await api.patch<MeetingPrep>(
+        `/api/v1/preparation/${prep.id}`,
+        { brief_content: editedContent }
+      )
+      
+      if (error) {
+        toast({
+          title: t('brief.saveFailed'),
+          description: t('brief.saveFailedDesc'),
+          variant: 'destructive'
+        })
+        return
+      }
+      
+      // Update local state
+      setPrep({ ...prep, brief_content: editedContent })
+      setIsEditing(false)
+      setEditedContent('')
+      
+      toast({
+        title: t('brief.saved'),
+        description: t('brief.savedDesc')
+      })
+    } catch (err) {
+      console.error('Error saving brief:', err)
+      toast({
+        title: t('brief.saveFailed'),
+        description: t('brief.saveFailedDesc'),
+        variant: 'destructive'
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const getMeetingTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       discovery: '🔍 Discovery Call',
@@ -244,42 +305,93 @@ export default function PreparationDetailPage() {
             <div className="flex-1 min-w-0">
               {prep.status === 'completed' && prep.brief_content ? (
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 lg:p-8 shadow-sm">
-                  <div className="flex justify-end mb-4">
-                    <Button variant="outline" size="sm" onClick={() => {
-                      navigator.clipboard.writeText(prep.brief_content || '')
-                      toast({
-                        title: "Gekopieerd!",
-                        description: "Voorbereiding is naar het klembord gekopieerd",
-                      })
-                    }}>
-                      <Icons.copy className="h-4 w-4 mr-2" />
-                      Kopieer Brief
-                    </Button>
+                  {/* Action buttons */}
+                  <div className="flex justify-end gap-2 mb-4">
+                    {isEditing ? (
+                      <>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleCancelEdit}
+                          disabled={isSaving}
+                        >
+                          <Icons.x className="h-4 w-4 mr-2" />
+                          {t('brief.cancel')}
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          onClick={handleSaveBrief}
+                          disabled={isSaving}
+                        >
+                          {isSaving ? (
+                            <>
+                              <Icons.spinner className="h-4 w-4 mr-2 animate-spin" />
+                              {t('brief.saving')}
+                            </>
+                          ) : (
+                            <>
+                              <Icons.check className="h-4 w-4 mr-2" />
+                              {t('brief.save')}
+                            </>
+                          )}
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleStartEdit}
+                        >
+                          <Icons.edit className="h-4 w-4 mr-2" />
+                          {t('brief.edit')}
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => {
+                          navigator.clipboard.writeText(prep.brief_content || '')
+                          toast({
+                            title: t('brief.copied'),
+                            description: t('brief.copied'),
+                          })
+                        }}>
+                          <Icons.copy className="h-4 w-4 mr-2" />
+                          {t('brief.copy')}
+                        </Button>
+                      </>
+                    )}
                   </div>
                   
-                  <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:scroll-mt-20">
-                    <ReactMarkdown
-                      components={{
-                        h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white" {...props} />,
-                        h2: ({ node, ...props }) => <h2 className="text-xl font-bold mt-8 mb-4 pb-2 border-b border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white" {...props} />,
-                        h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mt-6 mb-3 text-slate-900 dark:text-white" {...props} />,
-                        p: ({ node, ...props }) => <p className="mb-4 leading-relaxed text-slate-700 dark:text-slate-300" {...props} />,
-                        ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
-                        ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
-                        li: ({ node, ...props }) => <li className="ml-4 text-slate-700 dark:text-slate-300" {...props} />,
-                        strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900 dark:text-white" {...props} />,
-                        table: ({ node, ...props }) => (
-                          <div className="overflow-x-auto my-4">
-                            <table className="min-w-full border-collapse border border-slate-200 dark:border-slate-700" {...props} />
-                          </div>
-                        ),
-                        th: ({ node, ...props }) => <th className="border border-slate-200 dark:border-slate-700 px-3 py-2 bg-slate-50 dark:bg-slate-800 text-left font-semibold text-slate-900 dark:text-white" {...props} />,
-                        td: ({ node, ...props }) => <td className="border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-700 dark:text-slate-300" {...props} />,
-                      }}
-                    >
-                      {prep.brief_content}
-                    </ReactMarkdown>
-                  </div>
+                  {isEditing ? (
+                    <MarkdownEditor
+                      value={editedContent}
+                      onChange={setEditedContent}
+                      placeholder={t('brief.edit')}
+                      disabled={isSaving}
+                    />
+                  ) : (
+                    <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:scroll-mt-20">
+                      <ReactMarkdown
+                        components={{
+                          h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white" {...props} />,
+                          h2: ({ node, ...props }) => <h2 className="text-xl font-bold mt-8 mb-4 pb-2 border-b border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white" {...props} />,
+                          h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mt-6 mb-3 text-slate-900 dark:text-white" {...props} />,
+                          p: ({ node, ...props }) => <p className="mb-4 leading-relaxed text-slate-700 dark:text-slate-300" {...props} />,
+                          ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
+                          ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
+                          li: ({ node, ...props }) => <li className="ml-4 text-slate-700 dark:text-slate-300" {...props} />,
+                          strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900 dark:text-white" {...props} />,
+                          table: ({ node, ...props }) => (
+                            <div className="overflow-x-auto my-4">
+                              <table className="min-w-full border-collapse border border-slate-200 dark:border-slate-700" {...props} />
+                            </div>
+                          ),
+                          th: ({ node, ...props }) => <th className="border border-slate-200 dark:border-slate-700 px-3 py-2 bg-slate-50 dark:bg-slate-800 text-left font-semibold text-slate-900 dark:text-white" {...props} />,
+                          td: ({ node, ...props }) => <td className="border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-700 dark:text-slate-300" {...props} />,
+                        }}
+                      >
+                        {prep.brief_content}
+                      </ReactMarkdown>
+                    </div>
+                  )}
 
                   {prep.questions && prep.questions.length > 0 && (
                     <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">

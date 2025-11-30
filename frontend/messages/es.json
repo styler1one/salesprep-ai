@@ -337,7 +337,15 @@
       "download": "Descargar PDF",
       "generatedFor": "Preparación para",
       "copyAll": "Copiar Todo",
-      "viewResearch": "Ver Investigación"
+      "viewResearch": "Ver Investigación",
+      "edit": "Editar",
+      "save": "Guardar",
+      "saving": "Guardando...",
+      "cancel": "Cancelar",
+      "saved": "Cambios guardados",
+      "savedDesc": "Tus cambios se han guardado correctamente",
+      "saveFailed": "Error al guardar",
+      "saveFailedDesc": "Se produjo un error al guardar tus cambios"
     },
     "toast": {
       "started": "Preparación iniciada",
@@ -411,7 +419,15 @@
       "audioPlayer": "Reproductor de Audio",
       "nextProspect": "¿Siguiente Prospecto?",
       "nextProspectDesc": "Inicia una nueva investigación para tu próximo prospecto.",
-      "startNewResearch": "Iniciar nueva investigación"
+      "startNewResearch": "Iniciar nueva investigación",
+      "edit": "Editar",
+      "save": "Guardar",
+      "saving": "Guardando...",
+      "cancel": "Cancelar",
+      "saved": "Cambios guardados",
+      "savedDesc": "Tus cambios se han guardado correctamente",
+      "saveFailed": "Error al guardar",
+      "saveFailedDesc": "Se produjo un error al guardar tus cambios"
     },
     "toast": {
       "started": "Seguimiento iniciado",

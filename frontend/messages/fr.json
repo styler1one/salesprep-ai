@@ -337,7 +337,15 @@
       "download": "Télécharger PDF",
       "generatedFor": "Préparation pour",
       "copyAll": "Tout Copier",
-      "viewResearch": "Voir Recherche"
+      "viewResearch": "Voir Recherche",
+      "edit": "Modifier",
+      "save": "Enregistrer",
+      "saving": "Enregistrement...",
+      "cancel": "Annuler",
+      "saved": "Modifications enregistrées",
+      "savedDesc": "Vos modifications ont été enregistrées avec succès",
+      "saveFailed": "Échec de l'enregistrement",
+      "saveFailedDesc": "Une erreur s'est produite lors de l'enregistrement de vos modifications"
     },
     "toast": {
       "started": "Préparation démarrée",
@@ -411,7 +419,15 @@
       "audioPlayer": "Lecteur Audio",
       "nextProspect": "Prochain Prospect ?",
       "nextProspectDesc": "Lancez une nouvelle recherche pour votre prochain prospect.",
-      "startNewResearch": "Démarrer nouvelle recherche"
+      "startNewResearch": "Démarrer nouvelle recherche",
+      "edit": "Modifier",
+      "save": "Enregistrer",
+      "saving": "Enregistrement...",
+      "cancel": "Annuler",
+      "saved": "Modifications enregistrées",
+      "savedDesc": "Vos modifications ont été enregistrées avec succès",
+      "saveFailed": "Échec de l'enregistrement",
+      "saveFailedDesc": "Une erreur s'est produite lors de l'enregistrement de vos modifications"
     },
     "toast": {
       "started": "Suivi démarré",
