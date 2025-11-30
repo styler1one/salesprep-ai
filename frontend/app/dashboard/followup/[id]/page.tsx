@@ -72,14 +72,16 @@ interface ProspectContact {
 interface ResearchBrief {
   id: string
   company_name: string
-  completed_at: string
+  status: string
+  completed_at?: string
 }
 
 interface MeetingPrep {
   id: string
   prospect_company_name: string
   meeting_type: string
-  completed_at: string
+  status: string
+  completed_at?: string
 }
 
 export default function FollowupDetailPage() {
@@ -145,20 +147,20 @@ export default function FollowupDetailPage() {
     try {
       // Fetch research briefs and preps in parallel
       const [researchRes, prepRes] = await Promise.all([
-        api.get<{ briefs: Array<{ company_name: string; status: string; id: string }> }>('/api/v1/research/briefs'),
-        api.get<{ preps: Array<{ prospect_company_name: string; status: string; id: string }> }>('/api/v1/prep/briefs')
+        api.get<{ briefs: ResearchBrief[] }>('/api/v1/research/briefs'),
+        api.get<{ preps: MeetingPrep[] }>('/api/v1/prep/briefs')
       ])
 
       if (!researchRes.error && researchRes.data) {
         const brief = researchRes.data.briefs?.find((b) => 
-          b.company_name.toLowerCase() === companyName.toLowerCase() && b.status === 'completed'
+          b.company_name.toLowerCase() === companyName.toLowerCase()
         )
         if (brief) setResearchBrief(brief)
       }
 
       if (!prepRes.error && prepRes.data) {
         const prep = prepRes.data.preps?.find((p) => 
-          p.prospect_company_name.toLowerCase() === companyName.toLowerCase() && p.status === 'completed'
+          p.prospect_company_name.toLowerCase() === companyName.toLowerCase()
         )
         if (prep) setMeetingPrep(prep)
       }

@@ -39,7 +39,8 @@ interface ProfileStatus {
 interface ResearchBrief {
   id: string
   company_name: string
-  completed_at: string
+  status: string
+  completed_at?: string
 }
 
 interface ProspectContact {
