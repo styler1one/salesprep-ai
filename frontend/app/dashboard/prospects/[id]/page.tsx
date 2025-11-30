@@ -366,7 +366,7 @@ export default function ProspectHubPage() {
           {/* Research Tab */}
           <TabsContent value="research" className="mt-6">
             <ResearchTabContent 
-              research={research} 
+              research={research || null} 
               prospectId={prospectId}
               companyName={prospect.company_name}
             />
