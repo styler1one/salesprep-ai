@@ -402,7 +402,16 @@ async def get_prospect_hub(prospect_id: UUID, organization_id: UUID):
     # Get deals with stats (using view)
     deals_result = supabase.table("deal_summary").select("*").eq("prospect_id", str(prospect_id)).order("is_active", desc=True).order("created_at", desc=True).execute()
     
-    deals = [DealWithStats(**d) for d in deals_result.data]
+    # Map view fields to model fields (view uses deal_id, model expects id)
+    deals = []
+    for d in deals_result.data:
+        # Rename deal_id to id for Pydantic model
+        if "deal_id" in d and "id" not in d:
+            d["id"] = d.pop("deal_id")
+        # Ensure updated_at exists (use created_at as fallback)
+        if "updated_at" not in d:
+            d["updated_at"] = d.get("created_at")
+        deals.append(DealWithStats(**d))
     
     # Get recent activities
     activities_result = supabase.table("prospect_activities").select("*").eq("prospect_id", str(prospect_id)).order("created_at", desc=True).limit(20).execute()
