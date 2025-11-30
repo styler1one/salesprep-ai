@@ -82,7 +82,6 @@ export default function KnowledgeBasePage() {
       formData.append('file', file)
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      console.log('Uploading to:', `${apiUrl}/api/v1/knowledge-base/upload`)
       
       const response = await fetch(
         `${apiUrl}/api/v1/knowledge-base/upload`,
