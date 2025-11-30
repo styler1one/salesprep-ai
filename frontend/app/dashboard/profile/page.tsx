@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { DashboardLayout } from '@/components/layout'
 import { 
   ArrowLeft, 
-  User, 
+  User as UserIcon, 
   Briefcase, 
   Target, 
   Award,
@@ -106,7 +106,7 @@ export default function ProfilePage() {
       <DashboardLayout user={user}>
         <div className="p-6 lg:p-8 max-w-4xl mx-auto">
           <div className="text-center py-16">
-            <User className="h-16 w-16 mx-auto text-slate-200 dark:text-slate-700 mb-4" />
+            <UserIcon className="h-16 w-16 mx-auto text-slate-200 dark:text-slate-700 mb-4" />
             <h2 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">{t('noProfile')}</h2>
             <p className="text-slate-500 dark:text-slate-400 mb-6">
               {t('startOnboarding')}
