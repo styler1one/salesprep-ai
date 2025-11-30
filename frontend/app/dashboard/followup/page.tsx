@@ -85,9 +85,9 @@ export default function FollowupPage() {
         const { data: { session } } = await supabase.auth.getSession()
         if (!session) return
         
-        // First get the prospect ID from company name
+        // First get the prospect ID from company name using search endpoint
         const prospectRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/prospects?search=${encodeURIComponent(prospectCompany)}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/prospects/search?q=${encodeURIComponent(prospectCompany)}&limit=5`,
           { headers: { 'Authorization': `Bearer ${session.access_token}` } }
         )
         
@@ -105,8 +105,9 @@ export default function FollowupPage() {
             )
             
             if (contactsRes.ok) {
-              const contacts = await contactsRes.json()
-              setAvailableContacts(contacts)
+              const contactsData = await contactsRes.json()
+              // API returns { contacts: [], count: number }
+              setAvailableContacts(contactsData.contacts || [])
             }
           }
         }

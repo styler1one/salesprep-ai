@@ -12,6 +12,7 @@ Endpoints:
 
 import logging
 import asyncio
+import os
 from typing import Optional, List
 from datetime import datetime
 from uuid import uuid4
@@ -547,6 +548,53 @@ async def list_contacts_for_prospect(
         .eq("organization_id", organization_id)\
         .order("is_primary", desc=True)\
         .order("created_at", desc=True)\
+        .execute()
+    
+    contacts = []
+    for c in response.data or []:
+        contacts.append(ContactResponse(
+            id=c["id"],
+            prospect_id=c["prospect_id"],
+            name=c["name"],
+            role=c.get("role"),
+            email=c.get("email"),
+            phone=c.get("phone"),
+            linkedin_url=c.get("linkedin_url"),
+            communication_style=c.get("communication_style"),
+            decision_authority=c.get("decision_authority"),
+            probable_drivers=c.get("probable_drivers"),
+            profile_brief=c.get("profile_brief"),
+            opening_suggestions=c.get("opening_suggestions"),
+            questions_to_ask=c.get("questions_to_ask"),
+            topics_to_avoid=c.get("topics_to_avoid"),
+            is_primary=c.get("is_primary", False),
+            analyzed_at=c.get("analyzed_at"),
+            created_at=c["created_at"]
+        ))
+    
+    return ContactListResponse(contacts=contacts, count=len(contacts))
+
+
+@router.get("/contacts", response_model=ContactListResponse)
+async def get_contacts_by_ids(
+    ids: str,  # Comma-separated contact IDs
+    current_user: dict = Depends(get_current_user)
+):
+    """Get multiple contacts by IDs (comma-separated)."""
+    user_id = current_user.get("sub")
+    organization_id = get_organization_id(user_id)
+    
+    # Parse IDs
+    contact_ids = [id.strip() for id in ids.split(",") if id.strip()]
+    
+    if not contact_ids:
+        return ContactListResponse(contacts=[], count=0)
+    
+    # Get contacts
+    response = supabase_service.table("prospect_contacts")\
+        .select("*")\
+        .in_("id", contact_ids)\
+        .eq("organization_id", organization_id)\
         .execute()
     
     contacts = []

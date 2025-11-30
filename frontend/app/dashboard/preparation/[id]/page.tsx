@@ -177,8 +177,9 @@ export default function PreparationDetailPage() {
       })
 
       if (response.ok) {
-        const contacts = await response.json()
-        setLinkedContacts(contacts)
+        const data = await response.json()
+        // API returns { contacts: [], count: number }
+        setLinkedContacts(data.contacts || [])
       }
     } catch (error) {
       console.error('Failed to fetch linked contacts:', error)
