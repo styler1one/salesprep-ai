@@ -115,24 +115,20 @@ export default function FollowupDetailPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/followup/${followupId}`,
-        { headers: { 'Authorization': `Bearer ${session.access_token}` } }
-      )
+      const { data, error } = await api.get<Followup>(`/api/v1/followup/${followupId}`)
 
-      if (response.ok) {
-        const data = await response.json()
+      if (!error && data) {
         setFollowup(data)
         setEmailDraft(data.email_draft || '')
         
         // Fetch related research and prep
         if (data.prospect_company_name) {
-          fetchRelatedData(data.prospect_company_name, session.access_token)
+          fetchRelatedData(data.prospect_company_name)
         }
         
         // Fetch linked contacts
         if (data.contact_ids && data.contact_ids.length > 0) {
-          fetchLinkedContacts(data.contact_ids, session.access_token)
+          fetchLinkedContacts(data.contact_ids)
         }
       } else {
         toast({ title: 'Follow-up niet gevonden', variant: 'destructive' })
@@ -145,29 +141,23 @@ export default function FollowupDetailPage() {
     }
   }, [followupId, supabase, router, toast])
 
-  const fetchRelatedData = async (companyName: string, token: string) => {
+  const fetchRelatedData = async (companyName: string) => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      
-      // Fetch research briefs
-      const researchRes = await fetch(`${apiUrl}/api/v1/research/briefs`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      if (researchRes.ok) {
-        const data = await researchRes.json()
-        const brief = data.briefs?.find((b: any) => 
+      // Fetch research briefs and preps in parallel
+      const [researchRes, prepRes] = await Promise.all([
+        api.get<{ briefs: Array<{ company_name: string; status: string; id: string }> }>('/api/v1/research/briefs'),
+        api.get<{ preps: Array<{ prospect_company_name: string; status: string; id: string }> }>('/api/v1/prep/briefs')
+      ])
+
+      if (!researchRes.error && researchRes.data) {
+        const brief = researchRes.data.briefs?.find((b) => 
           b.company_name.toLowerCase() === companyName.toLowerCase() && b.status === 'completed'
         )
         if (brief) setResearchBrief(brief)
       }
 
-      // Fetch meeting preps
-      const prepRes = await fetch(`${apiUrl}/api/v1/prep/briefs`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      if (prepRes.ok) {
-        const data = await prepRes.json()
-        const prep = data.preps?.find((p: any) => 
+      if (!prepRes.error && prepRes.data) {
+        const prep = prepRes.data.preps?.find((p) => 
           p.prospect_company_name.toLowerCase() === companyName.toLowerCase() && p.status === 'completed'
         )
         if (prep) setMeetingPrep(prep)
@@ -177,18 +167,13 @@ export default function FollowupDetailPage() {
     }
   }
 
-  const fetchLinkedContacts = async (contactIds: string[], token: string) => {
+  const fetchLinkedContacts = async (contactIds: string[]) => {
     if (!contactIds || contactIds.length === 0) return
     
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/api/v1/contacts?ids=${contactIds.join(',')}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
+      const { data, error } = await api.get<{ contacts: LinkedContact[]; count: number }>(`/api/v1/contacts?ids=${contactIds.join(',')}`)
 
-      if (response.ok) {
-        const data = await response.json()
-        // API returns { contacts: [], count: number }
+      if (!error && data) {
         setLinkedContacts(data.contacts || [])
       }
     } catch (error) {
@@ -221,20 +206,12 @@ export default function FollowupDetailPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/followup/${followupId}/regenerate-email`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ tone })
-        }
+      const { data, error } = await api.post<{ email_draft: string }>(
+        `/api/v1/followup/${followupId}/regenerate-email`,
+        { tone }
       )
 
-      if (response.ok) {
-        const data = await response.json()
+      if (!error && data) {
         setEmailDraft(data.email_draft)
         toast({ title: t('toast.copied') })
       }

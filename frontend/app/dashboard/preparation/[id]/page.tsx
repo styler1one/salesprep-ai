@@ -85,20 +85,14 @@ export default function PreparationDetailPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      
       const [salesRes, companyRes] = await Promise.all([
-        fetch(`${apiUrl}/api/v1/profile/sales`, {
-          headers: { 'Authorization': `Bearer ${session.access_token}` }
-        }),
-        fetch(`${apiUrl}/api/v1/profile/company`, {
-          headers: { 'Authorization': `Bearer ${session.access_token}` }
-        })
+        api.get<{ full_name?: string }>('/api/v1/profile/sales'),
+        api.get<{ company_name?: string }>('/api/v1/profile/company')
       ])
 
       setProfileStatus({
-        hasSalesProfile: salesRes.ok && (await salesRes.json())?.full_name,
-        hasCompanyProfile: companyRes.ok && (await companyRes.json())?.company_name
+        hasSalesProfile: !salesRes.error && !!salesRes.data?.full_name,
+        hasCompanyProfile: !companyRes.error && !!companyRes.data?.company_name
       })
     } catch (error) {
       console.error('Failed to fetch profile status:', error)
@@ -110,23 +104,19 @@ export default function PreparationDetailPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/api/v1/prep/${params.id}`, {
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
-      })
+      const { data, error } = await api.get<MeetingPrep>(`/api/v1/prep/${params.id}`)
 
-      if (response.ok) {
-        const data = await response.json()
+      if (!error && data) {
         setPrep(data)
         
         // Try to find the research brief for this company
         if (data.prospect_company_name) {
-          fetchResearchBrief(data.prospect_company_name, session.access_token)
+          fetchResearchBrief(data.prospect_company_name)
         }
         
         // Fetch linked contacts
         if (data.contact_ids && data.contact_ids.length > 0) {
-          fetchLinkedContacts(data.contact_ids, session.access_token)
+          fetchLinkedContacts(data.contact_ids)
         }
       } else {
         toast({
@@ -148,16 +138,12 @@ export default function PreparationDetailPage() {
     }
   }
 
-  const fetchResearchBrief = async (companyName: string, token: string) => {
+  const fetchResearchBrief = async (companyName: string) => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/api/v1/research/briefs`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
+      const { data, error } = await api.get<{ briefs: Array<{ company_name: string; status: string; id: string }> }>('/api/v1/research/briefs')
 
-      if (response.ok) {
-        const data = await response.json()
-        const brief = data.briefs?.find((b: any) => 
+      if (!error && data) {
+        const brief = data.briefs?.find((b) => 
           b.company_name.toLowerCase() === companyName.toLowerCase() && b.status === 'completed'
         )
         if (brief) {
@@ -169,18 +155,13 @@ export default function PreparationDetailPage() {
     }
   }
 
-  const fetchLinkedContacts = async (contactIds: string[], token: string) => {
+  const fetchLinkedContacts = async (contactIds: string[]) => {
     if (!contactIds || contactIds.length === 0) return
     
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/api/v1/contacts?ids=${contactIds.join(',')}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
+      const { data, error } = await api.get<{ contacts: LinkedContact[]; count: number }>(`/api/v1/contacts?ids=${contactIds.join(',')}`)
 
-      if (response.ok) {
-        const data = await response.json()
-        // API returns { contacts: [], count: number }
+      if (!error && data) {
         setLinkedContacts(data.contacts || [])
       }
     } catch (error) {

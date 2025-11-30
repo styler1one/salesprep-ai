@@ -92,20 +92,14 @@ export default function ResearchBriefPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      
       const [salesRes, companyRes] = await Promise.all([
-        fetch(`${apiUrl}/api/v1/profile/sales`, {
-          headers: { 'Authorization': `Bearer ${session.access_token}` }
-        }),
-        fetch(`${apiUrl}/api/v1/profile/company`, {
-          headers: { 'Authorization': `Bearer ${session.access_token}` }
-        })
+        api.get<{ full_name?: string }>('/api/v1/profile/sales'),
+        api.get<{ company_name?: string }>('/api/v1/profile/company')
       ])
 
       setProfileStatus({
-        hasSalesProfile: salesRes.ok && (await salesRes.json())?.full_name,
-        hasCompanyProfile: companyRes.ok && (await companyRes.json())?.company_name
+        hasSalesProfile: !salesRes.error && !!salesRes.data?.full_name,
+        hasCompanyProfile: !companyRes.error && !!companyRes.data?.company_name
       })
     } catch (error) {
       console.error('Failed to fetch profile status:', error)
@@ -117,17 +111,9 @@ export default function ResearchBriefPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/research/${params.id}/brief`,
-        {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        }
-      )
+      const { data, error } = await api.get<ResearchBrief>(`/api/v1/research/${params.id}/brief`)
 
-      if (response.ok) {
-        const data = await response.json()
+      if (!error && data) {
         setBrief(data)
       } else {
         toast({
@@ -156,17 +142,9 @@ export default function ResearchBriefPage() {
       if (!session) return
 
       setContactsLoading(true)
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/research/${params.id}/contacts`,
-        {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        }
-      )
+      const { data, error } = await api.get<{ contacts: Contact[] }>(`/api/v1/research/${params.id}/contacts`)
 
-      if (response.ok) {
-        const data = await response.json()
+      if (!error && data) {
         setContacts(data.contacts || [])
       }
     } catch (error) {
@@ -201,23 +179,12 @@ export default function ResearchBriefPage() {
       setLookingUpContact(true)
       setLookupResult(null)
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/contacts/lookup`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            name: newContact.name,
-            company_name: brief.company_name
-          })
-        }
+      const { data, error } = await api.post<{ found: boolean; confidence: number; role?: string; linkedin_url?: string }>(
+        '/api/v1/contacts/lookup',
+        { name: newContact.name, company_name: brief.company_name }
       )
 
-      if (response.ok) {
-        const data = await response.json()
+      if (!error && data) {
         setLookupResult({ found: data.found, confidence: data.confidence })
         
         if (data.found) {
@@ -273,24 +240,16 @@ export default function ResearchBriefPage() {
       if (!session) return
 
       setAddingContact(true)
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/research/${params.id}/contacts`,
+      const { data, error } = await api.post<Contact>(
+        `/api/v1/research/${params.id}/contacts`,
         {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            name: newContact.name,
-            role: newContact.role || null,
-            linkedin_url: newContact.linkedin_url || null
-          })
+          name: newContact.name,
+          role: newContact.role || null,
+          linkedin_url: newContact.linkedin_url || null
         }
       )
 
-      if (response.ok) {
-        const data = await response.json()
+      if (!error && data) {
         setContacts(prev => [...prev, data])
         setAnalyzingContactIds(prev => new Set([...prev, data.id]))
         setNewContact({ name: '', role: '', linkedin_url: '' })
@@ -333,11 +292,10 @@ export default function ResearchBriefPage() {
         
         setTimeout(() => pollForAnalysis(data.id, 0), 3000)
       } else {
-        const error = await response.json()
         toast({
           variant: "destructive",
           title: t('contacts.searchFailed'),
-          description: error.detail || t('contacts.addFailed'),
+          description: error?.message || t('contacts.addFailed'),
         })
       }
     } catch (error) {
@@ -359,17 +317,9 @@ export default function ResearchBriefPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/contacts/${contactId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        }
-      )
+      const { error } = await api.delete(`/api/v1/contacts/${contactId}`)
 
-      if (response.ok) {
+      if (!error) {
         setContacts(prev => prev.filter(c => c.id !== contactId))
         if (selectedContact?.id === contactId) {
           setSelectedContact(null)
