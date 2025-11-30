@@ -3,13 +3,12 @@ Knowledge Base API endpoints.
 Handles file uploads, processing, and retrieval.
 """
 
-import os
 import uuid
 from typing import List
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, BackgroundTasks, Response
 from fastapi.responses import JSONResponse
 from app.deps import get_current_user, get_auth_token
-from supabase import create_client, Client
+from app.database import get_supabase_service, get_user_client
 from app.services.file_processor import FileProcessor
 from app.services.text_chunker import TextChunker
 from app.services.embeddings import EmbeddingsService
@@ -17,30 +16,8 @@ from app.services.vector_store import VectorStore
 
 router = APIRouter()
 
-# Initialize Supabase clients
-supabase_url = os.getenv("SUPABASE_URL")
-supabase_anon_key = os.getenv("SUPABASE_KEY")  # Anon key for user operations
-supabase_service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", supabase_anon_key)  # Service role key for admin operations
-
-# Service role client for background tasks and storage (bypasses RLS)
-supabase_service: Client = create_client(supabase_url, supabase_service_key)
-
-def get_user_supabase_client(user_token: str) -> Client:
-    """
-    Create a Supabase client with user's JWT token for RLS.
-    This properly authenticates the user for RLS policies.
-    
-    Note: In Python supabase library, we set auth on postgrest.
-    Storage operations will inherit the auth from the client.
-    """
-    # Create client with anon key
-    client = create_client(supabase_url, supabase_anon_key)
-    
-    # Set the auth header with user's JWT token
-    # This applies to both PostgREST and Storage
-    client.postgrest.auth(user_token)
-    
-    return client
+# Use centralized database module
+supabase_service = get_supabase_service()
 
 # File upload configuration
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
@@ -163,7 +140,7 @@ async def upload_file(
     File is uploaded to storage and processed in the background.
     """
     # Create user-specific client for RLS security
-    user_supabase = get_user_supabase_client(auth_token)
+    user_supabase = get_user_client(auth_token)
     
     # Get user's organization (RLS ensures user can only see their own memberships)
     user_id = current_user.get("sub")
@@ -286,7 +263,7 @@ async def list_files(
     List all knowledge base files for the user's organization.
     """
     # Create user-specific client for RLS security
-    user_supabase = get_user_supabase_client(auth_token)
+    user_supabase = get_user_client(auth_token)
     
     # Get user's organization (RLS ensures user can only see their own memberships)
     user_id = current_user.get("sub")

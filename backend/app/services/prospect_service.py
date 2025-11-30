@@ -2,10 +2,10 @@
 Prospect Service - CRUD operations for prospects
 Uses the database function get_or_create_prospect for consistency
 """
-import os
 from typing import Optional, Dict, Any, List
-from supabase import create_client, Client
+from supabase import Client
 import logging
+from app.database import get_supabase_service
 
 logger = logging.getLogger(__name__)
 
@@ -14,14 +14,8 @@ class ProspectService:
     """Service for managing prospects."""
     
     def __init__(self):
-        """Initialize Supabase client."""
-        supabase_url = os.getenv("SUPABASE_URL")
-        supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-        
-        if not supabase_url or not supabase_key:
-            raise ValueError("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set")
-        
-        self.client: Client = create_client(supabase_url, supabase_key)
+        """Initialize Supabase client using centralized module."""
+        self.client: Client = get_supabase_service()
     
     def get_or_create_prospect(
         self,

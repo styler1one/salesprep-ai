@@ -10,12 +10,11 @@ from typing import List, Optional
 from datetime import datetime
 import logging
 from app.deps import get_current_user
+from app.database import get_supabase_service
 from app.services.rag_service import rag_service
 from app.services.prep_generator import prep_generator
 from app.services.prospect_service import get_prospect_service
 from app.services.usage_service import get_usage_service
-from supabase import create_client
-import os
 
 logger = logging.getLogger(__name__)
 
@@ -50,11 +49,8 @@ class PrepListResponse(BaseModel):
     total: int
 
 
-# Initialize Supabase client
-supabase = create_client(
-    os.getenv("SUPABASE_URL"),
-    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-)
+# Use centralized database module
+supabase = get_supabase_service()
 
 
 def generate_prep_background(

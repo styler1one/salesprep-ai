@@ -1,15 +1,14 @@
 """
 Research Agent API endpoints.
 """
-import os
 import uuid
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from supabase import create_client, Client
 
 from app.deps import get_current_user, get_auth_token
+from app.database import get_supabase_service, get_user_client
 from app.services.prospect_service import get_prospect_service
 from app.services.company_lookup import get_company_lookup
 from app.services.usage_service import get_usage_service
@@ -17,23 +16,8 @@ from app.services.usage_service import get_usage_service
 
 router = APIRouter()
 
-# Initialize Supabase clients
-supabase_url = os.getenv("SUPABASE_URL")
-supabase_anon_key = os.getenv("SUPABASE_KEY")
-supabase_service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", supabase_anon_key)
-
-# Service role client for background tasks and storage (bypasses RLS)
-supabase_service: Client = create_client(supabase_url, supabase_service_key)
-
-
-def get_user_supabase_client(user_token: str) -> Client:
-    """
-    Create a Supabase client with user's JWT token for RLS.
-    """
-    client = create_client(supabase_url, supabase_anon_key)
-    # Set auth for PostgREST operations
-    client.postgrest.auth(user_token)
-    return client
+# Use centralized database module
+supabase_service = get_supabase_service()
 
 
 # Request/Response models
@@ -213,7 +197,7 @@ async def start_research(
     Start a new research brief.
     """
     # Create user-specific client for RLS security
-    user_supabase = get_user_supabase_client(auth_token)
+    user_supabase = get_user_client(auth_token)
     
     # Get user's organization
     user_id = current_user.get("sub")
@@ -317,7 +301,7 @@ async def list_research_briefs(
     List all research briefs for user's organization.
     """
     # Create user-specific client for RLS security
-    user_supabase = get_user_supabase_client(auth_token)
+    user_supabase = get_user_client(auth_token)
     
     # Get user's organization
     user_id = current_user.get("sub")
@@ -346,7 +330,7 @@ async def get_research_status(
     Get status of a specific research brief.
     """
     # Create user-specific client for RLS security
-    user_supabase = get_user_supabase_client(auth_token)
+    user_supabase = get_user_client(auth_token)
     
     # Get research brief (RLS ensures user can only see their org's research)
     research_response = user_supabase.table("research_briefs").select("*").eq("id", research_id).execute()
@@ -379,7 +363,7 @@ async def delete_research(
     Delete a research brief.
     """
     # Create user-specific client for RLS security
-    user_supabase = get_user_supabase_client(auth_token)
+    user_supabase = get_user_client(auth_token)
     
     # Get research brief to check ownership and get PDF URL
     research_response = user_supabase.table("research_briefs").select("*").eq("id", research_id).execute()
@@ -416,7 +400,7 @@ async def get_research_brief(
     Get the full research brief content.
     """
     # Create user-specific client for RLS security
-    user_supabase = get_user_supabase_client(auth_token)
+    user_supabase = get_user_client(auth_token)
     
     # Get research brief (RLS ensures user can only see their org's research)
     research_response = user_supabase.table("research_briefs").select("*").eq("id", research_id).execute()

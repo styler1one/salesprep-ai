@@ -8,8 +8,8 @@ import os
 import logging
 from fastapi import APIRouter, Request, HTTPException, Header
 import stripe
-from supabase import create_client
 
+from app.database import get_supabase_service
 from app.services.subscription_service import get_subscription_service
 
 logger = logging.getLogger(__name__)
@@ -20,11 +20,8 @@ router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
-# Initialize Supabase for idempotency
-supabase = create_client(
-    os.getenv("SUPABASE_URL"),
-    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-)
+# Use centralized database module for idempotency
+supabase = get_supabase_service()
 
 
 @router.post("/stripe")

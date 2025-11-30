@@ -2,10 +2,10 @@
 Context Service - Unified context API for AI agents
 Provides sales profile + company profile + KB summary
 """
-import os
 from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
-from supabase import create_client, Client
+from supabase import Client
+from app.database import get_supabase_service
 import json
 
 
@@ -13,14 +13,8 @@ class ContextService:
     """Service for providing unified context to AI agents."""
     
     def __init__(self):
-        """Initialize Supabase client and cache."""
-        supabase_url = os.getenv("SUPABASE_URL")
-        supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-        
-        if not supabase_url or not supabase_key:
-            raise ValueError("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set")
-        
-        self.client: Client = create_client(supabase_url, supabase_key)
+        """Initialize Supabase client and cache using centralized module."""
+        self.client: Client = get_supabase_service()
         
         # Simple in-memory cache (in production, use Redis)
         self._cache: Dict[str, Dict[str, Any]] = {}

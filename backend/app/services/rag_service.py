@@ -9,8 +9,7 @@ Enhanced with Profile Context for personalized outputs.
 
 from typing import List, Dict, Any, Optional
 import logging
-from supabase import create_client
-import os
+from app.database import get_supabase_service
 
 logger = logging.getLogger(__name__)
 
@@ -45,10 +44,7 @@ class RAGService:
     """Service for Retrieval-Augmented Generation queries"""
     
     def __init__(self):
-        self.supabase = create_client(
-            os.getenv("SUPABASE_URL"),
-            os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-        )
+        self.supabase = get_supabase_service()
     
     async def query_knowledge_base(
         self,

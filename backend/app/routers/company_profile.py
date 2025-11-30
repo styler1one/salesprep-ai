@@ -5,17 +5,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
 import uuid
-import os
-from supabase import create_client, Client
 from app.deps import get_current_user
+from app.database import get_supabase_service
 from app.services.profile_service import ProfileService
 from app.services.company_interview_service import get_company_interview_service
 
-# Initialize Supabase client
-supabase: Client = create_client(
-    os.getenv("SUPABASE_URL"),
-    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-)
+# Use centralized database module
+supabase = get_supabase_service()
 
 router = APIRouter(prefix="/api/v1/profile/company", tags=["company_profile"])
 

@@ -9,21 +9,17 @@ from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import logging
-import os
 
-from supabase import create_client
 from app.deps import get_current_user
+from app.database import get_supabase_service
 from app.services.prospect_service import get_prospect_service
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/prospects", tags=["prospects"])
 
-# Initialize Supabase client
-supabase = create_client(
-    os.getenv("SUPABASE_URL"),
-    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-)
+# Use centralized database module
+supabase = get_supabase_service()
 
 
 # Request/Response models

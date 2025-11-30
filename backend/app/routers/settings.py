@@ -4,16 +4,12 @@ Settings Router - API endpoints for user settings
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from typing import Optional
-import os
-from supabase import create_client, Client
 from app.deps import get_current_user
+from app.database import get_supabase_service
 from app.i18n.config import SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE
 
-# Initialize Supabase client
-supabase: Client = create_client(
-    os.getenv("SUPABASE_URL"),
-    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-)
+# Use centralized database module
+supabase = get_supabase_service()
 
 router = APIRouter(prefix="/api/v1/settings", tags=["settings"])
 

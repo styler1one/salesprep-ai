@@ -9,12 +9,11 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 import logging
-import os
 import uuid
 import asyncio
 
-from supabase import create_client
 from app.deps import get_current_user
+from app.database import get_supabase_service
 from app.services.transcription_service import get_transcription_service
 from app.services.followup_generator import get_followup_generator
 from app.services.transcript_parser import get_transcript_parser
@@ -26,11 +25,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/followup", tags=["followup"])
 
-# Initialize Supabase client
-supabase = create_client(
-    os.getenv("SUPABASE_URL"),
-    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-)
+# Use centralized database module
+supabase = get_supabase_service()
 
 
 # Request/Response models

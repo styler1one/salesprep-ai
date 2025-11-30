@@ -16,7 +16,8 @@ import os
 import logging
 from typing import Dict, Any, Optional, List
 from anthropic import Anthropic
-from supabase import create_client, Client
+from supabase import Client
+from app.database import get_supabase_service
 from app.i18n.utils import get_language_instruction
 from app.i18n.config import DEFAULT_LANGUAGE
 
@@ -33,10 +34,7 @@ class ContactAnalyzer:
             raise ValueError("ANTHROPIC_API_KEY not set")
         
         self.client = Anthropic(api_key=api_key)
-        self.supabase: Client = create_client(
-            os.getenv("SUPABASE_URL"),
-            os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-        )
+        self.supabase: Client = get_supabase_service()
     
     async def analyze_contact(
         self,

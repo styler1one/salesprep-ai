@@ -7,14 +7,14 @@ Enhanced with full context awareness:
 - Knowledge Base integration (case studies, product info)
 """
 import asyncio
-import os
 import logging
 from typing import Dict, Any, Optional, List
-from supabase import create_client, Client
+from supabase import Client
 from .claude_researcher import ClaudeResearcher
 from .gemini_researcher import GeminiResearcher
 from .kvk_api import KVKApi
 from .website_scraper import get_website_scraper
+from app.database import get_supabase_service
 from app.i18n.utils import get_language_instruction
 from app.i18n.config import DEFAULT_LANGUAGE
 
@@ -31,11 +31,8 @@ class ResearchOrchestrator:
         self.kvk = KVKApi()
         self.website_scraper = get_website_scraper()
         
-        # Initialize Supabase for context retrieval
-        self.supabase: Client = create_client(
-            os.getenv("SUPABASE_URL"),
-            os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-        )
+        # Initialize Supabase using centralized module
+        self.supabase: Client = get_supabase_service()
     
     async def research_company(
         self,

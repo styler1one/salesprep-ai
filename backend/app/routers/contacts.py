@@ -10,7 +10,6 @@ Endpoints:
 - POST /contacts/lookup - Lookup contact LinkedIn and role online
 """
 
-import os
 import logging
 import asyncio
 from typing import Optional, List
@@ -19,20 +18,17 @@ from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel
-from supabase import create_client, Client
 
 from app.deps import get_current_user
+from app.database import get_supabase_service
 from app.services.contact_analyzer import get_contact_analyzer
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# Service client for background tasks
-supabase_service: Client = create_client(
-    os.getenv("SUPABASE_URL"),
-    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-)
+# Use centralized database module
+supabase_service = get_supabase_service()
 
 
 # ==================== Pydantic Models ====================

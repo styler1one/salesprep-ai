@@ -9,9 +9,9 @@ import logging
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
-from supabase import create_client
 
 from app.deps import get_current_user
+from app.database import get_supabase_service
 from app.services.subscription_service import get_subscription_service
 from app.services.usage_service import get_usage_service
 
@@ -19,11 +19,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/billing", tags=["billing"])
 
-# Initialize Supabase
-supabase = create_client(
-    os.getenv("SUPABASE_URL"),
-    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-)
+# Use centralized database module
+supabase = get_supabase_service()
 
 # Frontend URLs (set via environment)
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")

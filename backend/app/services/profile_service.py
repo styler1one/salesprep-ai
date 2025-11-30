@@ -1,10 +1,10 @@
 """
 Profile Service - CRUD operations for sales and company profiles
 """
-import os
 from typing import Optional, Dict, Any, List
 from datetime import datetime
-from supabase import create_client, Client
+from supabase import Client
+from app.database import get_supabase_service
 import json
 
 
@@ -12,14 +12,8 @@ class ProfileService:
     """Service for managing sales and company profiles."""
     
     def __init__(self):
-        """Initialize Supabase client."""
-        supabase_url = os.getenv("SUPABASE_URL")
-        supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-        
-        if not supabase_url or not supabase_key:
-            raise ValueError("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set")
-        
-        self.client: Client = create_client(supabase_url, supabase_key)
+        """Initialize Supabase client using centralized module."""
+        self.client: Client = get_supabase_service()
     
     # ==========================================
     # Sales Profile Methods

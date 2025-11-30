@@ -13,11 +13,11 @@ a specific prospect, combining:
 This ensures maximum context is available for AI to generate the best outputs.
 """
 
-import os
 import logging
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
-from supabase import create_client, Client
+from supabase import Client
+from app.database import get_supabase_service
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +31,8 @@ class ProspectContextService:
     """
     
     def __init__(self):
-        """Initialize Supabase client."""
-        self.client: Client = create_client(
-            os.getenv("SUPABASE_URL"),
-            os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-        )
+        """Initialize Supabase client using centralized module."""
+        self.client: Client = get_supabase_service()
         
         # Cache for expensive queries (in production, use Redis)
         self._cache: Dict[str, Dict[str, Any]] = {}
