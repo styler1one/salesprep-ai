@@ -1,11 +1,9 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
-import { SettingsProvider } from '@/lib/settings-context'
-import { BillingProvider } from '@/lib/billing-context'
+import { Providers } from '@/components/providers'
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -34,18 +32,9 @@ export default async function RootLayout({
     <html lang={locale} dir={dir} suppressHydrationWarning className={inter.variable}>
       <body className={inter.className}>
         <NextIntlClientProvider messages={messages}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <SettingsProvider>
-              <BillingProvider>
-                {children}
-              </BillingProvider>
-            </SettingsProvider>
-          </ThemeProvider>
+          <Providers>
+            {children}
+          </Providers>
         </NextIntlClientProvider>
       </body>
     </html>
