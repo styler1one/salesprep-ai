@@ -399,7 +399,7 @@ export default function PreparationDetailPage() {
                         <div>
                           <p className="font-medium text-sm text-blue-900 dark:text-blue-100">{researchBrief.company_name}</p>
                           <p className="text-xs text-blue-600 dark:text-blue-400">
-                            {new Date(researchBrief.completed_at).toLocaleDateString('nl-NL')}
+                            {researchBrief.completed_at ? new Date(researchBrief.completed_at).toLocaleDateString('nl-NL') : '-'}
                           </p>
                         </div>
                         <Icons.chevronRight className="h-4 w-4 text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform" />

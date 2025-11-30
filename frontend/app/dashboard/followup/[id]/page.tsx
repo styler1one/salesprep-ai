@@ -723,7 +723,7 @@ export default function FollowupDetailPage() {
                           <div>
                             <p className="font-medium text-sm text-blue-900 dark:text-blue-100">{researchBrief.company_name}</p>
                             <p className="text-xs text-blue-600 dark:text-blue-400">
-                              {new Date(researchBrief.completed_at).toLocaleDateString('nl-NL')}
+                              {researchBrief.completed_at ? new Date(researchBrief.completed_at).toLocaleDateString('nl-NL') : '-'}
                             </p>
                           </div>
                           <Icons.chevronRight className="h-4 w-4 text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform" />
@@ -747,7 +747,7 @@ export default function FollowupDetailPage() {
                           <div>
                             <p className="font-medium text-sm text-green-900 dark:text-green-100">{meetingPrep.prospect_company_name}</p>
                             <p className="text-xs text-green-600 dark:text-green-400">
-                              {meetingPrep.meeting_type} • {new Date(meetingPrep.completed_at).toLocaleDateString('nl-NL')}
+                              {meetingPrep.meeting_type} • {meetingPrep.completed_at ? new Date(meetingPrep.completed_at).toLocaleDateString('nl-NL') : '-'}
                             </p>
                           </div>
                           <Icons.chevronRight className="h-4 w-4 text-green-600 dark:text-green-400 group-hover:translate-x-1 transition-transform" />
