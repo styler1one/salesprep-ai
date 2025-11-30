@@ -7,6 +7,7 @@ import {
     Mic,
     Upload,
     AlertCircle,
+    AlertTriangle,
     Trash2,
     RefreshCw,
     Clock,
@@ -48,6 +49,9 @@ import {
     Info,
     Sun,
     Moon,
+    HelpCircle,
+    Inbox,
+    FolderOpen,
 } from 'lucide-react'
 
 // Custom Google Icon (official colors)
@@ -132,6 +136,10 @@ export const Icons = {
     info: Info,
     sun: Sun,
     moon: Moon,
+    helpCircle: HelpCircle,
+    alertTriangle: AlertTriangle,
+    inbox: Inbox,
+    folderOpen: FolderOpen,
     google: GoogleIcon,
     microsoft: MicrosoftIcon,
 }
