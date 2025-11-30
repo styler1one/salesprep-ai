@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { useTranslations } from 'next-intl'
+import type { User } from '@/types'
 
 interface Followup {
   id: string
@@ -89,7 +90,7 @@ export default function FollowupDetailPage() {
   const t = useTranslations('followup')
   const tCommon = useTranslations('common')
   
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [followup, setFollowup] = useState<Followup | null>(null)
   const [loading, setLoading] = useState(true)
   const [emailDraft, setEmailDraft] = useState('')

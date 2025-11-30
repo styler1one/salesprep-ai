@@ -16,6 +16,7 @@ import { ProspectAutocomplete } from '@/components/prospect-autocomplete'
 import { LanguageSelect } from '@/components/language-select'
 import { useTranslations } from 'next-intl'
 import { useSettings } from '@/lib/settings-context'
+import type { User, ProspectContact } from '@/types'
 
 interface MeetingPrep {
   id: string
@@ -24,22 +25,13 @@ interface MeetingPrep {
   status: string
   custom_notes?: string
   brief_content?: string
-  talking_points?: any[]
+  talking_points?: { topic: string; points: string[] }[]
   questions?: string[]
   strategy?: string
   pdf_url?: string
   created_at: string
   completed_at?: string
   error_message?: string
-}
-
-interface Contact {
-  id: string
-  name: string
-  role?: string
-  decision_authority?: string
-  communication_style?: string
-  analyzed_at?: string
 }
 
 export default function PreparationPage() {
@@ -50,7 +42,7 @@ export default function PreparationPage() {
   const tLang = useTranslations('language')
   const { settings, loaded: settingsLoaded } = useSettings()
 
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(false)
   const [preps, setPreps] = useState<MeetingPrep[]>([])
   const [initialLoading, setInitialLoading] = useState(true)
@@ -70,7 +62,7 @@ export default function PreparationPage() {
   }, [settingsLoaded, settings.output_language])
   
   // Contact persons state
-  const [availableContacts, setAvailableContacts] = useState<Contact[]>([])
+  const [availableContacts, setAvailableContacts] = useState<ProspectContact[]>([])
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([])
   const [contactsLoading, setContactsLoading] = useState(false)
 

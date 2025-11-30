@@ -14,19 +14,7 @@ import { LanguageSelect } from '@/components/language-select'
 import { suggestLanguageFromCountry } from '@/lib/language-utils'
 import { useTranslations } from 'next-intl'
 import { useSettings } from '@/lib/settings-context'
-
-interface ResearchBrief {
-  id: string
-  company_name: string
-  country?: string
-  city?: string
-  status: 'pending' | 'researching' | 'completed' | 'failed'
-  brief_content?: string
-  error_message?: string
-  created_at: string
-  completed_at?: string
-  contact_count?: number
-}
+import type { User, ResearchBrief, CompanyOption } from '@/types'
 
 export default function ResearchPage() {
   const router = useRouter()
@@ -36,7 +24,7 @@ export default function ResearchPage() {
   const tLang = useTranslations('language')
   const { settings, loaded: settingsLoaded } = useSettings()
   
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [researching, setResearching] = useState(false)
   const [briefs, setBriefs] = useState<ResearchBrief[]>([])
@@ -60,9 +48,9 @@ export default function ResearchPage() {
   
   // Company search state
   const [isSearching, setIsSearching] = useState(false)
-  const [companyOptions, setCompanyOptions] = useState<any[]>([])
+  const [companyOptions, setCompanyOptions] = useState<CompanyOption[]>([])
   const [showOptions, setShowOptions] = useState(false)
-  const [selectedCompany, setSelectedCompany] = useState<any>(null)
+  const [selectedCompany, setSelectedCompany] = useState<CompanyOption | null>(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
 
   useEffect(() => {

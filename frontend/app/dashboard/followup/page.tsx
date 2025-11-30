@@ -15,8 +15,9 @@ import { ProspectAutocomplete } from '@/components/prospect-autocomplete'
 import { LanguageSelect } from '@/components/language-select'
 import { useTranslations } from 'next-intl'
 import { useSettings } from '@/lib/settings-context'
+import type { User, ProspectContact } from '@/types'
 
-interface Followup {
+interface FollowupItem {
   id: string
   prospect_company_name: string | null
   meeting_subject: string | null
@@ -28,12 +29,6 @@ interface Followup {
   completed_at: string | null
 }
 
-interface ProspectContact {
-  id: string
-  name: string
-  role?: string
-}
-
 export default function FollowupPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
@@ -43,8 +38,8 @@ export default function FollowupPage() {
   const tLang = useTranslations('language')
   const { settings, loaded: settingsLoaded } = useSettings()
   
-  const [user, setUser] = useState<any>(null)
-  const [followups, setFollowups] = useState<Followup[]>([])
+  const [user, setUser] = useState<User | null>(null)
+  const [followups, setFollowups] = useState<FollowupItem[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -147,7 +142,7 @@ export default function FollowupPage() {
     }
   }, [supabase])
 
-  const followupsRef = useRef<Followup[]>([])
+  const followupsRef = useRef<FollowupItem[]>([])
   followupsRef.current = followups
 
   useEffect(() => {

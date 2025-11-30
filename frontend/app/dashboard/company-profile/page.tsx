@@ -20,6 +20,7 @@ import {
   TrendingUp
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import type { User } from '@/types'
 
 interface Product {
   name: string
@@ -84,7 +85,7 @@ export default function CompanyProfilePage() {
   const t = useTranslations('companyProfile')
   const tCommon = useTranslations('common')
   
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<CompanyProfile | null>(null)
   const [loading, setLoading] = useState(true)
 

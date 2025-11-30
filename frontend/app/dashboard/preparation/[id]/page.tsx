@@ -10,6 +10,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import ReactMarkdown from 'react-markdown'
 import { useTranslations } from 'next-intl'
+import type { User } from '@/types'
 
 interface MeetingPrep {
   id: string
@@ -57,7 +58,7 @@ export default function PreparationDetailPage() {
   const t = useTranslations('preparation')
   const tCommon = useTranslations('common')
   
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [prep, setPrep] = useState<MeetingPrep | null>(null)
   const [profileStatus, setProfileStatus] = useState<ProfileStatus>({ hasSalesProfile: false, hasCompanyProfile: false })

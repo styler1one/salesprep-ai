@@ -18,8 +18,9 @@ import {
   BookOpen
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import type { User } from '@/types'
 
-interface SalesProfile {
+interface SalesProfileData {
   id: string
   full_name: string
   role: string | null
@@ -48,8 +49,8 @@ export default function ProfilePage() {
   const t = useTranslations('profile')
   const tCommon = useTranslations('common')
   
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<SalesProfile | null>(null)
+  const [user, setUser] = useState<User | null>(null)
+  const [profile, setProfile] = useState<SalesProfileData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

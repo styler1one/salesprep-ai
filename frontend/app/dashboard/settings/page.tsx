@@ -28,6 +28,7 @@ import { LanguageSelect } from '@/components/language-select'
 import { Badge } from '@/components/ui/badge'
 import { useBilling } from '@/lib/billing-context'
 import { UsageMeter } from '@/components/usage-meter'
+import type { User } from '@/types'
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -42,7 +43,7 @@ export default function SettingsPage() {
   const { settings, updateSettings, loading: settingsLoading, loaded: settingsLoaded } = useSettings()
   const { subscription, usage, loading: billingLoading, createCheckoutSession, openBillingPortal } = useBilling()
   
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [billingActionLoading, setBillingActionLoading] = useState(false)

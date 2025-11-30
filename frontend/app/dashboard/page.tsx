@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
 import { DashboardLayout } from '@/components/layout'
 import { useTranslations, useLocale } from 'next-intl'
+import type { User, SalesProfile, CompanyProfile, KBFile, ResearchBrief, MeetingPrep, Followup } from '@/types'
 
 // Helper function for relative time (locale-aware)
 function getRelativeTime(dateString: string, locale: string): string {
@@ -59,14 +60,14 @@ interface ProspectWithStatus {
 export default function DashboardPage() {
     const router = useRouter()
     const supabase = createClientComponentClient()
-    const [user, setUser] = useState<any>(null)
+    const [user, setUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
-    const [profile, setProfile] = useState<any>(null)
-    const [companyProfile, setCompanyProfile] = useState<any>(null)
-    const [knowledgeBase, setKnowledgeBase] = useState<any[]>([])
-    const [researchBriefs, setResearchBriefs] = useState<any[]>([])
-    const [meetingPreps, setMeetingPreps] = useState<any[]>([])
-    const [followups, setFollowups] = useState<any[]>([])
+    const [profile, setProfile] = useState<SalesProfile | null>(null)
+    const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null)
+    const [knowledgeBase, setKnowledgeBase] = useState<KBFile[]>([])
+    const [researchBriefs, setResearchBriefs] = useState<ResearchBrief[]>([])
+    const [meetingPreps, setMeetingPreps] = useState<MeetingPrep[]>([])
+    const [followups, setFollowups] = useState<Followup[]>([])
 
     useEffect(() => {
         const loadData = async () => {

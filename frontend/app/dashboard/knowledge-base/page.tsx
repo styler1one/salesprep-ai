@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout'
 import { useTranslations } from 'next-intl'
+import type { User, KBFile } from '@/types'
 
 interface KnowledgeBaseFile {
   id: string
@@ -30,7 +31,7 @@ export default function KnowledgeBasePage() {
   const { toast } = useToast()
   const t = useTranslations('knowledgeBase')
   const tCommon = useTranslations('common')
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [files, setFiles] = useState<KnowledgeBaseFile[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)

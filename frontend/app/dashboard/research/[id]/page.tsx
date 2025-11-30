@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import ReactMarkdown from 'react-markdown'
 import { useTranslations } from 'next-intl'
+import type { User } from '@/types'
 
 interface ResearchBrief {
   id: string
@@ -55,7 +56,7 @@ export default function ResearchBriefPage() {
   const t = useTranslations('research')
   const tCommon = useTranslations('common')
   
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [brief, setBrief] = useState<ResearchBrief | null>(null)
   const [profileStatus, setProfileStatus] = useState<ProfileStatus>({ hasSalesProfile: false, hasCompanyProfile: false })
