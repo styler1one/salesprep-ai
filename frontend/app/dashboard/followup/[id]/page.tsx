@@ -406,69 +406,16 @@ export default function FollowupDetailPage() {
                       <Icons.fileText className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                       {t('detail.summary')}
                     </h2>
-                    <div className="flex gap-2">
-                      {isEditingSummary ? (
-                        <>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={handleCancelEditSummary}
-                            disabled={isSavingSummary}
-                          >
-                            <Icons.x className="h-4 w-4 mr-1" />
-                            {t('detail.cancel')}
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            onClick={handleSaveSummary}
-                            disabled={isSavingSummary}
-                          >
-                            {isSavingSummary ? (
-                              <>
-                                <Icons.spinner className="h-4 w-4 mr-1 animate-spin" />
-                                {t('detail.saving')}
-                              </>
-                            ) : (
-                              <>
-                                <Icons.check className="h-4 w-4 mr-1" />
-                                {t('detail.save')}
-                              </>
-                            )}
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={handleStartEditSummary}
-                          >
-                            <Icons.edit className="h-4 w-4 mr-1" />
-                            {t('detail.edit')}
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => handleCopy(
-                            `${followup.executive_summary}\n\nBelangrijkste punten:\n${followup.key_points?.map(p => `• ${p}`).join('\n')}\n\nVervolgstappen:\n${followup.next_steps?.map(s => `• ${s}`).join('\n')}`,
-                            'summary'
-                          )}>
-                            <Icons.copy className="h-4 w-4 mr-1" />
-                            {copied === 'summary' ? t('toast.copied') : tCommon('copy')}
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleCopy(
+                      `${followup.executive_summary}\n\nBelangrijkste punten:\n${followup.key_points?.map(p => `• ${p}`).join('\n')}\n\nVervolgstappen:\n${followup.next_steps?.map(s => `• ${s}`).join('\n')}`,
+                      'summary'
+                    )}>
+                      <Icons.copy className="h-4 w-4 mr-1" />
+                      {copied === 'summary' ? t('toast.copied') : tCommon('copy')}
+                    </Button>
                   </div>
                   
-                  {isEditingSummary ? (
-                    <div className="mb-4">
-                      <MarkdownEditor
-                        value={editedSummary}
-                        onChange={setEditedSummary}
-                        placeholder={t('detail.edit')}
-                        disabled={isSavingSummary}
-                        className="min-h-[200px]"
-                      />
-                    </div>
-                  ) : followup.executive_summary && (
+                  {followup.executive_summary && (
                     <div className="bg-orange-50 dark:bg-orange-900/30 p-4 rounded-lg mb-4">
                       <p className="text-sm text-slate-700 dark:text-slate-300">{followup.executive_summary}</p>
                     </div>
