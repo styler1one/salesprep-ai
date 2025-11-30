@@ -85,14 +85,14 @@ export function formatDate(
 ): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date
   
-  const options: Intl.DateTimeFormatOptions = {
+  const styleOptions: Record<DateFormatStyle, Intl.DateTimeFormatOptions> = {
     short: { month: 'numeric', day: 'numeric', year: '2-digit' },
     medium: { month: 'short', day: 'numeric', year: 'numeric' },
     long: { month: 'long', day: 'numeric', year: 'numeric' },
     full: { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' },
-  }[style]
+  }
   
-  return new Intl.DateTimeFormat(locale, options).format(dateObj)
+  return new Intl.DateTimeFormat(locale, styleOptions[style]).format(dateObj)
 }
 
 /**
