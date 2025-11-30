@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
-from app.routers import users, knowledge_base, research, sales_profile, company_profile, context, preparation, followup, prospects, contacts, settings, billing, webhooks
+from app.routers import users, knowledge_base, research, sales_profile, company_profile, context, preparation, followup, prospects, contacts, settings, billing, webhooks, deals
 
 load_dotenv()
 
@@ -37,6 +37,9 @@ app.include_router(contacts.router, prefix="/api/v1", tags=["contacts"])
 app.include_router(settings.router)  # Already has prefix
 app.include_router(billing.router, prefix="/api/v1", tags=["billing"])
 app.include_router(webhooks.router, prefix="/api/v1", tags=["webhooks"])
+app.include_router(deals.router)  # Already has prefix /api/v1/deals
+app.include_router(deals.meetings_router)  # Already has prefix /api/v1/meetings
+app.include_router(deals.hub_router)  # Already has prefix /api/v1/prospects (extends existing)
 
 @app.get("/")
 def read_root():

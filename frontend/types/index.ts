@@ -323,6 +323,184 @@ export interface UsageRecord {
 }
 
 // ==========================================
+// Deal Types
+// ==========================================
+
+export interface Deal {
+  id: string
+  prospect_id: string
+  organization_id: string
+  name: string
+  description?: string
+  is_active: boolean
+  
+  // CRM Sync fields (read-only, filled by CRM integration)
+  crm_deal_id?: string
+  crm_source?: string
+  crm_stage?: string
+  crm_value_cents?: number
+  crm_currency?: string
+  crm_probability?: number
+  crm_expected_close?: string
+  crm_owner?: string
+  crm_synced_at?: string
+  
+  created_at: string
+  updated_at?: string
+  created_by?: string
+}
+
+export interface DealWithStats extends Deal {
+  meeting_count: number
+  prep_count: number
+  followup_count: number
+  company_name?: string
+  latest_meeting?: {
+    id: string
+    title: string
+    scheduled_date?: string
+    status: string
+  }
+}
+
+export interface DealCreate {
+  prospect_id: string
+  name: string
+  description?: string
+}
+
+export interface DealUpdate {
+  name?: string
+  description?: string
+  is_active?: boolean
+}
+
+// ==========================================
+// Meeting Types
+// ==========================================
+
+export type MeetingStatus = 'scheduled' | 'completed' | 'cancelled' | 'no_show'
+export type MeetingOutcome = 'positive' | 'neutral' | 'negative'
+export type SalesMeetingType = 'discovery' | 'demo' | 'negotiation' | 'closing' | 'review' | 'other'
+
+export interface Meeting {
+  id: string
+  deal_id?: string
+  prospect_id: string
+  organization_id: string
+  title: string
+  meeting_type?: SalesMeetingType
+  scheduled_date?: string
+  actual_date?: string
+  duration_minutes?: number
+  location?: string
+  contact_ids: string[]
+  notes?: string
+  status: MeetingStatus
+  outcome?: MeetingOutcome
+  created_at: string
+  updated_at?: string
+  created_by?: string
+}
+
+export interface MeetingWithLinks extends Meeting {
+  has_prep: boolean
+  prep_id?: string
+  has_followup: boolean
+  followup_id?: string
+  contact_names: string[]
+}
+
+export interface MeetingCreate {
+  prospect_id: string
+  deal_id?: string
+  title: string
+  meeting_type?: SalesMeetingType
+  scheduled_date?: string
+  actual_date?: string
+  duration_minutes?: number
+  location?: string
+  contact_ids?: string[]
+  notes?: string
+}
+
+export interface MeetingUpdate {
+  title?: string
+  meeting_type?: SalesMeetingType
+  deal_id?: string
+  scheduled_date?: string
+  actual_date?: string
+  duration_minutes?: number
+  location?: string
+  contact_ids?: string[]
+  notes?: string
+  status?: MeetingStatus
+  outcome?: MeetingOutcome
+}
+
+// ==========================================
+// Activity Types (Timeline)
+// ==========================================
+
+export type ActivityType = 'research' | 'contact_added' | 'prep' | 'meeting' | 'followup' | 'deal_created' | 'note'
+
+export interface Activity {
+  id: string
+  prospect_id: string
+  deal_id?: string
+  meeting_id?: string
+  organization_id: string
+  activity_type: ActivityType
+  activity_id?: string
+  title: string
+  description?: string
+  icon?: string
+  metadata?: Record<string, unknown>
+  created_at: string
+  created_by?: string
+}
+
+export interface ActivityCreate {
+  prospect_id: string
+  deal_id?: string
+  meeting_id?: string
+  activity_type: ActivityType
+  activity_id?: string
+  title: string
+  description?: string
+  icon?: string
+  metadata?: Record<string, unknown>
+}
+
+// ==========================================
+// Prospect Hub Types
+// ==========================================
+
+export interface ProspectHubSummary {
+  prospect_id: string
+  company_name: string
+  status?: string
+  research_count: number
+  contact_count: number
+  active_deal_count: number
+  meeting_count: number
+  prep_count: number
+  followup_count: number
+  latest_activity?: Activity
+  created_at: string
+  last_activity_at?: string
+}
+
+export interface ProspectHub {
+  prospect: Prospect
+  research?: ResearchBrief
+  contacts: ProspectContact[]
+  deals: DealWithStats[]
+  recent_activities: Activity[]
+  stats: ProspectHubSummary
+}
+
+// ==========================================
 // API Response Types
 // ==========================================
 
