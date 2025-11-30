@@ -86,9 +86,14 @@ export default function FollowupPage() {
       
       setLoadingContacts(true)
       setLoadingDeals(true)
+      
       try {
         const { data: { session } } = await supabase.auth.getSession()
-        if (!session) return
+        if (!session) {
+          setLoadingContacts(false)
+          setLoadingDeals(false)
+          return
+        }
         
         // First get the prospect ID from company name using search endpoint
         const prospectRes = await fetch(
@@ -96,14 +101,28 @@ export default function FollowupPage() {
           { headers: { 'Authorization': `Bearer ${session.access_token}` } }
         )
         
-        if (prospectRes.ok) {
-          const prospects = await prospectRes.json()
-          const prospect = prospects.find((p: any) => 
-            p.company_name.toLowerCase() === prospectCompany.toLowerCase()
-          )
-          
-          if (prospect) {
-            // Fetch contacts for this prospect
+        if (!prospectRes.ok) {
+          setLoadingContacts(false)
+          setLoadingDeals(false)
+          return
+        }
+        
+        const prospects = await prospectRes.json()
+        
+        // Make sure prospects is an array
+        if (!Array.isArray(prospects)) {
+          setLoadingContacts(false)
+          setLoadingDeals(false)
+          return
+        }
+        
+        const prospect = prospects.find((p: any) => 
+          p.company_name?.toLowerCase() === prospectCompany.toLowerCase()
+        )
+        
+        if (prospect) {
+          // Fetch contacts for this prospect
+          try {
             const contactsRes = await fetch(
               `${process.env.NEXT_PUBLIC_API_URL}/api/v1/prospects/${prospect.id}/contacts`,
               { headers: { 'Authorization': `Bearer ${session.access_token}` } }
@@ -114,8 +133,12 @@ export default function FollowupPage() {
               // API returns { contacts: [], count: number }
               setAvailableContacts(contactsData.contacts || [])
             }
-            
-            // Fetch deals for this prospect
+          } catch (e) {
+            console.error('Error fetching contacts:', e)
+          }
+          
+          // Fetch deals for this prospect
+          try {
             const { data: dealsData, error: dealsError } = await supabase
               .from('deals')
               .select('*')
@@ -125,11 +148,21 @@ export default function FollowupPage() {
             
             if (!dealsError && dealsData) {
               setAvailableDeals(dealsData || [])
+            } else {
+              setAvailableDeals([])
             }
+          } catch (e) {
+            console.error('Error fetching deals:', e)
+            setAvailableDeals([])
           }
+        } else {
+          setAvailableContacts([])
+          setAvailableDeals([])
         }
       } catch (error) {
         console.error('Error fetching contacts/deals:', error)
+        setAvailableContacts([])
+        setAvailableDeals([])
       } finally {
         setLoadingContacts(false)
         setLoadingDeals(false)
@@ -684,12 +717,16 @@ export default function FollowupPage() {
                       <Label className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1">
                         🎯 {t('form.selectDeal')}
                       </Label>
-                      <Select value={selectedDealId} onValueChange={setSelectedDealId} disabled={uploading}>
+                      <Select 
+                        value={selectedDealId || 'none'} 
+                        onValueChange={(val) => setSelectedDealId(val === 'none' ? '' : val)} 
+                        disabled={uploading}
+                      >
                         <SelectTrigger className="h-9 text-sm mt-1">
                           <SelectValue placeholder={t('form.selectDealPlaceholder')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">— {t('form.noDeal')} —</SelectItem>
+                          <SelectItem value="none">— {t('form.noDeal')} —</SelectItem>
                           {availableDeals.map((deal) => (
                             <SelectItem key={deal.id} value={deal.id}>
                               🎯 {deal.name}

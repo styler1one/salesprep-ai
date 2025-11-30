@@ -166,37 +166,46 @@ export default function PreparationPage() {
       return
     }
 
+    setDealsLoading(true)
+    
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
-      setDealsLoading(true)
+      if (!session) {
+        setDealsLoading(false)
+        return
+      }
       
       // Find the prospect first
       const { data: prospects, error: prospectError } = await api.get<Array<{ id: string; company_name: string }>>(
         `/api/v1/prospects/search?q=${encodeURIComponent(prospectName)}`
       )
 
-      if (!prospectError && prospects) {
-        const exactMatch = prospects.find(
-          (p) => p.company_name.toLowerCase() === prospectName.toLowerCase()
-        )
+      if (prospectError || !prospects || !Array.isArray(prospects)) {
+        setAvailableDeals([])
+        setDealsLoading(false)
+        return
+      }
 
-        if (exactMatch) {
-          // Get deals for this prospect
-          const { data: dealsData, error: dealsError } = await supabase
-            .from('deals')
-            .select('*')
-            .eq('prospect_id', exactMatch.id)
-            .eq('is_active', true)
-            .order('created_at', { ascending: false })
+      const exactMatch = prospects.find(
+        (p) => p.company_name?.toLowerCase() === prospectName.toLowerCase()
+      )
 
-          if (!dealsError && dealsData) {
-            setAvailableDeals(dealsData || [])
-          }
+      if (exactMatch) {
+        // Get deals for this prospect
+        const { data: dealsData, error: dealsError } = await supabase
+          .from('deals')
+          .select('*')
+          .eq('prospect_id', exactMatch.id)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+
+        if (!dealsError && dealsData) {
+          setAvailableDeals(dealsData || [])
         } else {
           setAvailableDeals([])
         }
+      } else {
+        setAvailableDeals([])
       }
     } catch (error) {
       console.error('Failed to load deals:', error)
@@ -516,12 +525,15 @@ export default function PreparationPage() {
                       <Label className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1">
                         🎯 {t('form.selectDeal')}
                       </Label>
-                      <Select value={selectedDealId} onValueChange={setSelectedDealId}>
+                      <Select 
+                        value={selectedDealId || 'none'} 
+                        onValueChange={(val) => setSelectedDealId(val === 'none' ? '' : val)}
+                      >
                         <SelectTrigger className="h-9 text-sm mt-1">
                           <SelectValue placeholder={t('form.selectDealPlaceholder')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">— {t('form.noDeal')} —</SelectItem>
+                          <SelectItem value="none">— {t('form.noDeal')} —</SelectItem>
                           {availableDeals.map((deal) => (
                             <SelectItem key={deal.id} value={deal.id}>
                               🎯 {deal.name}
