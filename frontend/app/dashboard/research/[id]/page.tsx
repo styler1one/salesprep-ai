@@ -472,7 +472,7 @@ export default function ResearchBriefPage() {
                         onClick={handleCancelEdit}
                         disabled={isSaving}
                       >
-                        <Icons.close className="h-4 w-4 mr-2" />
+                        <Icons.x className="h-4 w-4 mr-2" />
                         {t('brief.cancel')}
                       </Button>
                       <Button 
