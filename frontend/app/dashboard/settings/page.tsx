@@ -28,7 +28,7 @@ import { LanguageSelect } from '@/components/language-select'
 import { Badge } from '@/components/ui/badge'
 import { useBilling } from '@/lib/billing-context'
 import { UsageMeter } from '@/components/usage-meter'
-import type { User } from '@/types'
+import type { User } from '@supabase/supabase-js'
 
 export default function SettingsPage() {
   const router = useRouter()

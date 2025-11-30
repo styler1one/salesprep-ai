@@ -11,7 +11,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout'
 import { useTranslations } from 'next-intl'
-import type { User, KBFile } from '@/types'
+import type { User } from '@supabase/supabase-js'
 
 interface KnowledgeBaseFile {
   id: string

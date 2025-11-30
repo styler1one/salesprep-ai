@@ -16,7 +16,8 @@ import { ProspectAutocomplete } from '@/components/prospect-autocomplete'
 import { LanguageSelect } from '@/components/language-select'
 import { useTranslations } from 'next-intl'
 import { useSettings } from '@/lib/settings-context'
-import type { User, ProspectContact } from '@/types'
+import type { User } from '@supabase/supabase-js'
+import type { ProspectContact } from '@/types'
 
 interface MeetingPrep {
   id: string

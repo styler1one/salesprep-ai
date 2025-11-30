@@ -20,7 +20,7 @@ import {
   TrendingUp
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import type { User } from '@/types'
+import type { User } from '@supabase/supabase-js'
 
 interface Product {
   name: string

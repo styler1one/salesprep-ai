@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
 import { DashboardLayout } from '@/components/layout'
 import { useTranslations, useLocale } from 'next-intl'
-import type { User, SalesProfile, CompanyProfile, KBFile, ResearchBrief, MeetingPrep, Followup } from '@/types'
+import type { User } from '@supabase/supabase-js'
+import type { SalesProfile, CompanyProfile, KBFile, ResearchBrief, MeetingPrep, Followup } from '@/types'
 
 // Helper function for relative time (locale-aware)
 function getRelativeTime(dateString: string, locale: string): string {

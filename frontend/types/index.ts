@@ -11,7 +11,7 @@
 
 export interface User {
   id: string
-  email: string
+  email?: string  // Optional to match Supabase's User type
   created_at?: string
   user_metadata?: UserMetadata
   app_metadata?: AppMetadata

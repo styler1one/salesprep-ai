@@ -10,7 +10,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import ReactMarkdown from 'react-markdown'
 import { useTranslations } from 'next-intl'
-import type { User } from '@/types'
+import type { User } from '@supabase/supabase-js'
 
 interface MeetingPrep {
   id: string

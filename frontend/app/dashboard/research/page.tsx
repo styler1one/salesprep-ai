@@ -14,7 +14,8 @@ import { LanguageSelect } from '@/components/language-select'
 import { suggestLanguageFromCountry } from '@/lib/language-utils'
 import { useTranslations } from 'next-intl'
 import { useSettings } from '@/lib/settings-context'
-import type { User, ResearchBrief, CompanyOption } from '@/types'
+import type { User } from '@supabase/supabase-js'
+import type { ResearchBrief, CompanyOption } from '@/types'
 
 export default function ResearchPage() {
   const router = useRouter()
