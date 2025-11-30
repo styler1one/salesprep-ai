@@ -70,9 +70,9 @@ export async function apiClient<T>(
   try {
     const token = await getAccessToken()
     
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...customHeaders,
+      ...(customHeaders as Record<string, string>),
     }
     
     if (token) {
@@ -161,7 +161,7 @@ export async function uploadFile<T>(
       })
     }
     
-    const headers: HeadersInit = {}
+    const headers: Record<string, string> = {}
     if (token) {
       headers['Authorization'] = `Bearer ${token}`
     }
