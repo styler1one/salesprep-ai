@@ -10,6 +10,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import ReactMarkdown from 'react-markdown'
 import { useTranslations } from 'next-intl'
@@ -72,6 +73,11 @@ export default function ResearchBriefPage() {
   const [lookingUpContact, setLookingUpContact] = useState(false)
   const [lookupResult, setLookupResult] = useState<{ found: boolean; confidence?: number } | null>(null)
   const [analyzingContactIds, setAnalyzingContactIds] = useState<Set<string>>(new Set())
+  
+  // Edit brief states
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedContent, setEditedContent] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     const getUser = async () => {
@@ -343,6 +349,61 @@ export default function ResearchBriefPage() {
     router.push('/dashboard/preparation')
   }
 
+  // Start editing the brief
+  const handleStartEdit = () => {
+    if (brief) {
+      setEditedContent(brief.brief_content)
+      setIsEditing(true)
+    }
+  }
+
+  // Cancel editing
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+    setEditedContent('')
+  }
+
+  // Save edited brief
+  const handleSaveBrief = async () => {
+    if (!brief || !editedContent.trim()) return
+    
+    setIsSaving(true)
+    try {
+      const { data, error } = await api.patch<{ id: string; brief_content: string }>(
+        `/api/v1/research/${brief.id}/brief`,
+        { brief_content: editedContent }
+      )
+      
+      if (error) {
+        toast({
+          title: t('brief.saveFailed'),
+          description: t('brief.saveFailedDesc'),
+          variant: 'destructive'
+        })
+        return
+      }
+      
+      // Update local state
+      setBrief({ ...brief, brief_content: editedContent })
+      setIsEditing(false)
+      setEditedContent('')
+      
+      toast({
+        title: t('brief.saved'),
+        description: t('brief.savedDesc')
+      })
+    } catch (err) {
+      console.error('Error saving brief:', err)
+      toast({
+        title: t('brief.saveFailed'),
+        description: t('brief.saveFailedDesc'),
+        variant: 'destructive'
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   // Get badge for decision authority
   const getAuthorityBadge = (authority?: string) => {
     switch (authority) {
@@ -401,37 +462,87 @@ export default function ResearchBriefPage() {
             {/* Left Column - Brief Content (scrollable) */}
             <div className="flex-1 min-w-0">
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 lg:p-8 shadow-sm">
-                {/* Copy button - rechtsboven in de brief */}
-                <div className="flex justify-end mb-4">
-                  <Button variant="outline" size="sm" onClick={() => {
-                    navigator.clipboard.writeText(brief.brief_content)
-                    toast({
-                      title: t('brief.copied'),
-                      description: t('brief.copied'),
-                    })
-                  }}>
-                    <Icons.copy className="h-4 w-4 mr-2" />
-                    {t('brief.copy')}
-                  </Button>
+                {/* Action buttons - rechtsboven in de brief */}
+                <div className="flex justify-end gap-2 mb-4">
+                  {isEditing ? (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleCancelEdit}
+                        disabled={isSaving}
+                      >
+                        <Icons.close className="h-4 w-4 mr-2" />
+                        {t('brief.cancel')}
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        onClick={handleSaveBrief}
+                        disabled={isSaving}
+                      >
+                        {isSaving ? (
+                          <>
+                            <Icons.spinner className="h-4 w-4 mr-2 animate-spin" />
+                            {t('brief.saving')}
+                          </>
+                        ) : (
+                          <>
+                            <Icons.check className="h-4 w-4 mr-2" />
+                            {t('brief.save')}
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleStartEdit}
+                      >
+                        <Icons.edit className="h-4 w-4 mr-2" />
+                        {t('brief.edit')}
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => {
+                        navigator.clipboard.writeText(brief.brief_content)
+                        toast({
+                          title: t('brief.copied'),
+                          description: t('brief.copied'),
+                        })
+                      }}>
+                        <Icons.copy className="h-4 w-4 mr-2" />
+                        {t('brief.copy')}
+                      </Button>
+                    </>
+                  )}
                 </div>
                 
-                <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:scroll-mt-20">
-                  <ReactMarkdown
-                    components={{
-                      h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white" {...props} />,
-                      h2: ({ node, ...props }) => <h2 className="text-xl font-bold mt-8 mb-4 pb-2 border-b border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white" {...props} />,
-                      h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mt-6 mb-3 text-slate-900 dark:text-white" {...props} />,
-                      p: ({ node, ...props }) => <p className="mb-4 leading-relaxed text-slate-700 dark:text-slate-300" {...props} />,
-                      ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
-                      ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
-                      li: ({ node, ...props }) => <li className="ml-4 text-slate-700 dark:text-slate-300" {...props} />,
-                      strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900 dark:text-white" {...props} />,
-                      code: ({ node, ...props }) => <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-sm" {...props} />,
-                    }}
-                  >
-                    {brief.brief_content}
-                  </ReactMarkdown>
-                </div>
+                {isEditing ? (
+                  <Textarea
+                    value={editedContent}
+                    onChange={(e) => setEditedContent(e.target.value)}
+                    className="min-h-[600px] font-mono text-sm dark:bg-slate-800 dark:border-slate-700"
+                    placeholder={t('brief.edit')}
+                  />
+                ) : (
+                  <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:scroll-mt-20">
+                    <ReactMarkdown
+                      components={{
+                        h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white" {...props} />,
+                        h2: ({ node, ...props }) => <h2 className="text-xl font-bold mt-8 mb-4 pb-2 border-b border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white" {...props} />,
+                        h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mt-6 mb-3 text-slate-900 dark:text-white" {...props} />,
+                        p: ({ node, ...props }) => <p className="mb-4 leading-relaxed text-slate-700 dark:text-slate-300" {...props} />,
+                        ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
+                        ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
+                        li: ({ node, ...props }) => <li className="ml-4 text-slate-700 dark:text-slate-300" {...props} />,
+                        strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900 dark:text-white" {...props} />,
+                        code: ({ node, ...props }) => <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-sm" {...props} />,
+                      }}
+                    >
+                      {brief.brief_content}
+                    </ReactMarkdown>
+                  </div>
+                )}
               </div>
             </div>
 

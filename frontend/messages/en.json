@@ -216,7 +216,15 @@
       "copy": "Copy",
       "copied": "Copied!",
       "download": "Download PDF",
-      "delete": "Delete"
+      "delete": "Delete",
+      "edit": "Edit",
+      "save": "Save",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "saved": "Changes saved",
+      "savedDesc": "Your edits have been saved successfully",
+      "saveFailed": "Could not save",
+      "saveFailedDesc": "An error occurred while saving your changes"
     },
     "contacts": {
       "title": "Contact Persons",

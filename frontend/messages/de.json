@@ -216,7 +216,15 @@
       "copy": "Kopieren",
       "copied": "Kopiert!",
       "download": "PDF herunterladen",
-      "delete": "Löschen"
+      "delete": "Löschen",
+      "edit": "Bearbeiten",
+      "save": "Speichern",
+      "saving": "Speichern...",
+      "cancel": "Abbrechen",
+      "saved": "Änderungen gespeichert",
+      "savedDesc": "Ihre Änderungen wurden erfolgreich gespeichert",
+      "saveFailed": "Speichern fehlgeschlagen",
+      "saveFailedDesc": "Beim Speichern Ihrer Änderungen ist ein Fehler aufgetreten"
     },
     "contacts": {
       "title": "Kontaktpersonen",

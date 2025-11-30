@@ -423,6 +423,57 @@ async def get_research_brief(
     }
 
 
+class UpdateBriefRequest(BaseModel):
+    """Request model for updating brief content"""
+    brief_content: str
+
+
+@router.patch("/{research_id}/brief")
+async def update_research_brief(
+    research_id: str,
+    request: UpdateBriefRequest,
+    current_user: dict = Depends(get_current_user),
+    auth_token: str = Depends(get_auth_token)
+):
+    """
+    Update the research brief content.
+    Allows users to edit AI-generated briefs for accuracy and personalization.
+    """
+    user_id = current_user.get("sub")
+    
+    # Create user-specific client for RLS security
+    user_supabase = get_user_client(auth_token)
+    
+    # Verify the research exists and belongs to user's org
+    research_response = user_supabase.table("research_briefs").select("id, status").eq("id", research_id).execute()
+    
+    if not research_response.data:
+        raise HTTPException(status_code=404, detail="Research not found")
+    
+    research = research_response.data[0]
+    
+    if research["status"] != "completed":
+        raise HTTPException(status_code=400, detail="Can only edit completed research briefs")
+    
+    # Update the brief content
+    try:
+        update_response = user_supabase.table("research_briefs").update({
+            "brief_content": request.brief_content
+        }).eq("id", research_id).execute()
+        
+        if not update_response.data:
+            raise HTTPException(status_code=500, detail="Failed to update brief")
+        
+        return {
+            "id": research_id,
+            "brief_content": request.brief_content,
+            "updated_at": update_response.data[0].get("updated_at")
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Update failed: {str(e)}")
+
+
 @router.post("/lookup", response_model=LookupResponse)
 async def lookup_company(
     request: LookupRequest,

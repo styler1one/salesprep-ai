@@ -216,7 +216,15 @@
       "copy": "Kopieer",
       "copied": "Gekopieerd!",
       "download": "Download PDF",
-      "delete": "Verwijderen"
+      "delete": "Verwijderen",
+      "edit": "Bewerken",
+      "save": "Opslaan",
+      "saving": "Opslaan...",
+      "cancel": "Annuleren",
+      "saved": "Wijzigingen opgeslagen",
+      "savedDesc": "Je aanpassingen zijn succesvol opgeslagen",
+      "saveFailed": "Kon niet opslaan",
+      "saveFailedDesc": "Er is een fout opgetreden bij het opslaan van je wijzigingen"
     },
     "contacts": {
       "title": "Contactpersonen",

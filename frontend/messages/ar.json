@@ -216,7 +216,15 @@
       "copy": "نسخ",
       "copied": "تم النسخ!",
       "download": "تحميل PDF",
-      "delete": "حذف"
+      "delete": "حذف",
+      "edit": "تعديل",
+      "save": "حفظ",
+      "saving": "جاري الحفظ...",
+      "cancel": "إلغاء",
+      "saved": "تم حفظ التغييرات",
+      "savedDesc": "تم حفظ تعديلاتك بنجاح",
+      "saveFailed": "فشل الحفظ",
+      "saveFailedDesc": "حدث خطأ أثناء حفظ تعديلاتك"
     },
     "contacts": {
       "title": "جهات الاتصال",

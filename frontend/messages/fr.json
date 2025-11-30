@@ -216,7 +216,15 @@
       "copy": "Copier",
       "copied": "Copié !",
       "download": "Télécharger PDF",
-      "delete": "Supprimer"
+      "delete": "Supprimer",
+      "edit": "Modifier",
+      "save": "Enregistrer",
+      "saving": "Enregistrement...",
+      "cancel": "Annuler",
+      "saved": "Modifications enregistrées",
+      "savedDesc": "Vos modifications ont été enregistrées avec succès",
+      "saveFailed": "Échec de l'enregistrement",
+      "saveFailedDesc": "Une erreur s'est produite lors de l'enregistrement de vos modifications"
     },
     "contacts": {
       "title": "Contacts",
