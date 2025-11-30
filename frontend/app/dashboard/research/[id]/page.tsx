@@ -70,7 +70,7 @@ export default function ResearchBriefPage() {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
   const [contactsLoading, setContactsLoading] = useState(false)
   const [lookingUpContact, setLookingUpContact] = useState(false)
-  const [lookupResult, setLookupResult] = useState<{ found: boolean; confidence?: string } | null>(null)
+  const [lookupResult, setLookupResult] = useState<{ found: boolean; confidence?: number } | null>(null)
   const [analyzingContactIds, setAnalyzingContactIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
