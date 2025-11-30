@@ -807,6 +807,70 @@
     },
     "comingSoon": "Binnenkort"
   },
+  "deals": {
+    "new": {
+      "title": "Nieuwe Deal Aanmaken",
+      "for": "voor",
+      "create": "Deal Aanmaken",
+      "info": "Deals helpen je om meerdere meetings en activiteiten voor dezelfde kans te organiseren. Je kunt voorbereidingen en follow-ups linken aan deze deal."
+    },
+    "form": {
+      "name": "Deal Naam",
+      "namePlaceholder": "bijv. Enterprise Licentie 2025",
+      "nameHelp": "Geef je deal een duidelijke, beschrijvende naam",
+      "description": "Beschrijving (optioneel)",
+      "descriptionPlaceholder": "Context, notities of andere nuttige info voor deze kans...",
+      "descriptionHelp": "Voeg context toe die je helpt deze kans te volgen"
+    },
+    "status": {
+      "active": "Actief",
+      "archived": "Gearchiveerd"
+    },
+    "stats": {
+      "meetings": "Meetings",
+      "preps": "Voorbereidingen",
+      "followups": "Follow-ups"
+    },
+    "sections": {
+      "meetings": "Meetings",
+      "meetingsDesc": "Alle meetings gekoppeld aan deze deal"
+    },
+    "actions": {
+      "archive": "Deal Archiveren",
+      "activate": "Deal Activeren",
+      "delete": "Deal Verwijderen",
+      "addMeeting": "Meeting Toevoegen",
+      "scheduleFirst": "Eerste Meeting Plannen"
+    },
+    "links": {
+      "viewPrep": "Bekijk Prep",
+      "createPrep": "Maak Prep",
+      "viewFollowup": "Bekijk Follow-up",
+      "createFollowup": "Maak Follow-up"
+    },
+    "empty": {
+      "noMeetings": "Nog Geen Meetings",
+      "noMeetingsDesc": "Begin met het plannen van je eerste meeting voor deze deal"
+    },
+    "confirm": {
+      "delete": "Weet je zeker dat je deze deal wilt verwijderen? Alle gekoppelde meetings worden ontkoppeld."
+    },
+    "success": {
+      "created": "Deal succesvol aangemaakt",
+      "archived": "Deal gearchiveerd",
+      "activated": "Deal geactiveerd",
+      "deleted": "Deal verwijderd"
+    },
+    "errors": {
+      "nameRequired": "Deal naam is verplicht",
+      "createFailed": "Deal aanmaken mislukt",
+      "updateFailed": "Deal bijwerken mislukt",
+      "deleteFailed": "Deal verwijderen mislukt",
+      "loadFailed": "Deal laden mislukt",
+      "notFound": "Deal niet gevonden"
+    },
+    "backToProspect": "Terug naar Prospect"
+  },
   "prospects": {
     "title": "Mijn Prospects",
     "subtitle": "Beheer al je prospects en hun salestraject",

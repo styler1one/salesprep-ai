@@ -801,6 +801,70 @@
     },
     "comingSoon": "Demnächst"
   },
+  "deals": {
+    "new": {
+      "title": "Neuen Deal erstellen",
+      "for": "für",
+      "create": "Deal erstellen",
+      "info": "Deals helfen Ihnen, mehrere Meetings und Aktivitäten für dieselbe Gelegenheit zu organisieren."
+    },
+    "form": {
+      "name": "Deal-Name",
+      "namePlaceholder": "z.B. Enterprise-Lizenz 2025",
+      "nameHelp": "Geben Sie Ihrem Deal einen klaren, beschreibenden Namen",
+      "description": "Beschreibung (optional)",
+      "descriptionPlaceholder": "Kontext, Notizen oder nützliche Informationen...",
+      "descriptionHelp": "Fügen Sie Kontext hinzu"
+    },
+    "status": {
+      "active": "Aktiv",
+      "archived": "Archiviert"
+    },
+    "stats": {
+      "meetings": "Meetings",
+      "preps": "Vorbereitungen",
+      "followups": "Follow-ups"
+    },
+    "sections": {
+      "meetings": "Meetings",
+      "meetingsDesc": "Alle Meetings für diesen Deal"
+    },
+    "actions": {
+      "archive": "Deal archivieren",
+      "activate": "Deal aktivieren",
+      "delete": "Deal löschen",
+      "addMeeting": "Meeting hinzufügen",
+      "scheduleFirst": "Erstes Meeting planen"
+    },
+    "links": {
+      "viewPrep": "Prep anzeigen",
+      "createPrep": "Prep erstellen",
+      "viewFollowup": "Follow-up anzeigen",
+      "createFollowup": "Follow-up erstellen"
+    },
+    "empty": {
+      "noMeetings": "Noch keine Meetings",
+      "noMeetingsDesc": "Planen Sie Ihr erstes Meeting für diesen Deal"
+    },
+    "confirm": {
+      "delete": "Möchten Sie diesen Deal wirklich löschen?"
+    },
+    "success": {
+      "created": "Deal erfolgreich erstellt",
+      "archived": "Deal archiviert",
+      "activated": "Deal aktiviert",
+      "deleted": "Deal gelöscht"
+    },
+    "errors": {
+      "nameRequired": "Deal-Name ist erforderlich",
+      "createFailed": "Deal konnte nicht erstellt werden",
+      "updateFailed": "Deal konnte nicht aktualisiert werden",
+      "deleteFailed": "Deal konnte nicht gelöscht werden",
+      "loadFailed": "Deal konnte nicht geladen werden",
+      "notFound": "Deal nicht gefunden"
+    },
+    "backToProspect": "Zurück zum Interessenten"
+  },
   "prospects": {
     "title": "Meine Interessenten",
     "subtitle": "Verwalten Sie alle Ihre Interessenten und deren Vertriebsweg",

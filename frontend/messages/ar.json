@@ -795,6 +795,70 @@
     },
     "comingSoon": "قريباً"
   },
+  "deals": {
+    "new": {
+      "title": "إنشاء صفقة جديدة",
+      "for": "لـ",
+      "create": "إنشاء الصفقة",
+      "info": "تساعدك الصفقات في تنظيم اجتماعات وأنشطة متعددة لنفس الفرصة."
+    },
+    "form": {
+      "name": "اسم الصفقة",
+      "namePlaceholder": "مثال: ترخيص المؤسسة 2025",
+      "nameHelp": "أعط صفقتك اسمًا واضحًا ووصفيًا",
+      "description": "الوصف (اختياري)",
+      "descriptionPlaceholder": "السياق والملاحظات أو المعلومات المفيدة...",
+      "descriptionHelp": "أضف السياق"
+    },
+    "status": {
+      "active": "نشط",
+      "archived": "مؤرشف"
+    },
+    "stats": {
+      "meetings": "الاجتماعات",
+      "preps": "التحضيرات",
+      "followups": "المتابعات"
+    },
+    "sections": {
+      "meetings": "الاجتماعات",
+      "meetingsDesc": "جميع الاجتماعات المرتبطة بهذه الصفقة"
+    },
+    "actions": {
+      "archive": "أرشفة الصفقة",
+      "activate": "تنشيط الصفقة",
+      "delete": "حذف الصفقة",
+      "addMeeting": "إضافة اجتماع",
+      "scheduleFirst": "جدولة أول اجتماع"
+    },
+    "links": {
+      "viewPrep": "عرض التحضير",
+      "createPrep": "إنشاء تحضير",
+      "viewFollowup": "عرض المتابعة",
+      "createFollowup": "إنشاء متابعة"
+    },
+    "empty": {
+      "noMeetings": "لا توجد اجتماعات بعد",
+      "noMeetingsDesc": "جدول أول اجتماع لهذه الصفقة"
+    },
+    "confirm": {
+      "delete": "هل أنت متأكد أنك تريد حذف هذه الصفقة؟"
+    },
+    "success": {
+      "created": "تم إنشاء الصفقة بنجاح",
+      "archived": "تم أرشفة الصفقة",
+      "activated": "تم تنشيط الصفقة",
+      "deleted": "تم حذف الصفقة"
+    },
+    "errors": {
+      "nameRequired": "اسم الصفقة مطلوب",
+      "createFailed": "فشل إنشاء الصفقة",
+      "updateFailed": "فشل تحديث الصفقة",
+      "deleteFailed": "فشل حذف الصفقة",
+      "loadFailed": "فشل تحميل الصفقة",
+      "notFound": "الصفقة غير موجودة"
+    },
+    "backToProspect": "العودة إلى العميل المحتمل"
+  },
   "prospects": {
     "title": "عملائي المحتملون",
     "subtitle": "إدارة جميع العملاء المحتملين ورحلة مبيعاتهم",

@@ -795,6 +795,70 @@
     },
     "comingSoon": "Próximamente"
   },
+  "deals": {
+    "new": {
+      "title": "Crear nuevo deal",
+      "for": "para",
+      "create": "Crear deal",
+      "info": "Los deals te ayudan a organizar múltiples reuniones y actividades para la misma oportunidad."
+    },
+    "form": {
+      "name": "Nombre del deal",
+      "namePlaceholder": "ej: Licencia Enterprise 2025",
+      "nameHelp": "Dale a tu deal un nombre claro y descriptivo",
+      "description": "Descripción (opcional)",
+      "descriptionPlaceholder": "Contexto, notas o información útil...",
+      "descriptionHelp": "Agrega contexto"
+    },
+    "status": {
+      "active": "Activo",
+      "archived": "Archivado"
+    },
+    "stats": {
+      "meetings": "Reuniones",
+      "preps": "Preparaciones",
+      "followups": "Follow-ups"
+    },
+    "sections": {
+      "meetings": "Reuniones",
+      "meetingsDesc": "Todas las reuniones vinculadas a este deal"
+    },
+    "actions": {
+      "archive": "Archivar deal",
+      "activate": "Activar deal",
+      "delete": "Eliminar deal",
+      "addMeeting": "Agregar reunión",
+      "scheduleFirst": "Programar primera reunión"
+    },
+    "links": {
+      "viewPrep": "Ver prep",
+      "createPrep": "Crear prep",
+      "viewFollowup": "Ver follow-up",
+      "createFollowup": "Crear follow-up"
+    },
+    "empty": {
+      "noMeetings": "Sin reuniones aún",
+      "noMeetingsDesc": "Programa tu primera reunión para este deal"
+    },
+    "confirm": {
+      "delete": "¿Estás seguro de que quieres eliminar este deal?"
+    },
+    "success": {
+      "created": "Deal creado exitosamente",
+      "archived": "Deal archivado",
+      "activated": "Deal activado",
+      "deleted": "Deal eliminado"
+    },
+    "errors": {
+      "nameRequired": "El nombre del deal es requerido",
+      "createFailed": "Error al crear el deal",
+      "updateFailed": "Error al actualizar el deal",
+      "deleteFailed": "Error al eliminar el deal",
+      "loadFailed": "Error al cargar el deal",
+      "notFound": "Deal no encontrado"
+    },
+    "backToProspect": "Volver al prospecto"
+  },
   "prospects": {
     "title": "Mis Prospectos",
     "subtitle": "Gestiona todos tus prospectos y su recorrido de ventas",

@@ -795,6 +795,70 @@
     },
     "comingSoon": "Bientôt disponible"
   },
+  "deals": {
+    "new": {
+      "title": "Créer un nouveau deal",
+      "for": "pour",
+      "create": "Créer le deal",
+      "info": "Les deals vous aident à organiser plusieurs réunions et activités pour la même opportunité."
+    },
+    "form": {
+      "name": "Nom du deal",
+      "namePlaceholder": "ex: Licence Enterprise 2025",
+      "nameHelp": "Donnez un nom clair et descriptif à votre deal",
+      "description": "Description (optionnel)",
+      "descriptionPlaceholder": "Contexte, notes ou informations utiles...",
+      "descriptionHelp": "Ajoutez du contexte"
+    },
+    "status": {
+      "active": "Actif",
+      "archived": "Archivé"
+    },
+    "stats": {
+      "meetings": "Réunions",
+      "preps": "Préparations",
+      "followups": "Follow-ups"
+    },
+    "sections": {
+      "meetings": "Réunions",
+      "meetingsDesc": "Toutes les réunions liées à ce deal"
+    },
+    "actions": {
+      "archive": "Archiver le deal",
+      "activate": "Activer le deal",
+      "delete": "Supprimer le deal",
+      "addMeeting": "Ajouter une réunion",
+      "scheduleFirst": "Planifier la première réunion"
+    },
+    "links": {
+      "viewPrep": "Voir la prep",
+      "createPrep": "Créer une prep",
+      "viewFollowup": "Voir le follow-up",
+      "createFollowup": "Créer un follow-up"
+    },
+    "empty": {
+      "noMeetings": "Pas encore de réunions",
+      "noMeetingsDesc": "Planifiez votre première réunion pour ce deal"
+    },
+    "confirm": {
+      "delete": "Êtes-vous sûr de vouloir supprimer ce deal?"
+    },
+    "success": {
+      "created": "Deal créé avec succès",
+      "archived": "Deal archivé",
+      "activated": "Deal activé",
+      "deleted": "Deal supprimé"
+    },
+    "errors": {
+      "nameRequired": "Le nom du deal est requis",
+      "createFailed": "Échec de la création du deal",
+      "updateFailed": "Échec de la mise à jour du deal",
+      "deleteFailed": "Échec de la suppression du deal",
+      "loadFailed": "Échec du chargement du deal",
+      "notFound": "Deal non trouvé"
+    },
+    "backToProspect": "Retour au prospect"
+  },
   "prospects": {
     "title": "Mes Prospects",
     "subtitle": "Gérez tous vos prospects et leur parcours commercial",

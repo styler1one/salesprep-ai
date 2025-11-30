@@ -807,6 +807,70 @@
     },
     "comingSoon": "Coming Soon"
   },
+  "deals": {
+    "new": {
+      "title": "Create New Deal",
+      "for": "for",
+      "create": "Create Deal",
+      "info": "Deals help you organize multiple meetings and activities for the same opportunity. You can create preparations and follow-ups linked to this deal."
+    },
+    "form": {
+      "name": "Deal Name",
+      "namePlaceholder": "e.g., Enterprise License 2025",
+      "nameHelp": "Give your deal a clear, descriptive name",
+      "description": "Description (optional)",
+      "descriptionPlaceholder": "Context, notes, or anything useful for this opportunity...",
+      "descriptionHelp": "Add any context that helps you track this opportunity"
+    },
+    "status": {
+      "active": "Active",
+      "archived": "Archived"
+    },
+    "stats": {
+      "meetings": "Meetings",
+      "preps": "Preparations",
+      "followups": "Follow-ups"
+    },
+    "sections": {
+      "meetings": "Meetings",
+      "meetingsDesc": "All meetings linked to this deal"
+    },
+    "actions": {
+      "archive": "Archive Deal",
+      "activate": "Activate Deal",
+      "delete": "Delete Deal",
+      "addMeeting": "Add Meeting",
+      "scheduleFirst": "Schedule First Meeting"
+    },
+    "links": {
+      "viewPrep": "View Prep",
+      "createPrep": "Create Prep",
+      "viewFollowup": "View Follow-up",
+      "createFollowup": "Create Follow-up"
+    },
+    "empty": {
+      "noMeetings": "No Meetings Yet",
+      "noMeetingsDesc": "Start by scheduling your first meeting for this deal"
+    },
+    "confirm": {
+      "delete": "Are you sure you want to delete this deal? All linked meetings will be unlinked."
+    },
+    "success": {
+      "created": "Deal created successfully",
+      "archived": "Deal archived",
+      "activated": "Deal activated",
+      "deleted": "Deal deleted"
+    },
+    "errors": {
+      "nameRequired": "Deal name is required",
+      "createFailed": "Failed to create deal",
+      "updateFailed": "Failed to update deal",
+      "deleteFailed": "Failed to delete deal",
+      "loadFailed": "Failed to load deal",
+      "notFound": "Deal not found"
+    },
+    "backToProspect": "Back to Prospect"
+  },
   "prospects": {
     "title": "My Prospects",
     "subtitle": "Manage all your prospects and their sales journey",
