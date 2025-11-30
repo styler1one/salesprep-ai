@@ -236,6 +236,7 @@ export interface SalesProfile {
 export interface CompanyProfile {
   id: string
   organization_id: string
+  company_name?: string
   interview_responses?: Record<string, string>
   narrative?: string
   is_complete: boolean
