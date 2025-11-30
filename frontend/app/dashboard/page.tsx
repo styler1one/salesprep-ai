@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
 import { DashboardLayout } from '@/components/layout'
 import { useTranslations, useLocale } from 'next-intl'
+import { api } from '@/lib/api'
 import type { User } from '@supabase/supabase-js'
 import type { SalesProfile, CompanyProfile, KBFile, ResearchBrief, MeetingPrep, Followup } from '@/types'
 
@@ -76,45 +77,25 @@ export default function DashboardPage() {
             setUser(user)
 
             if (user) {
-                const { data: { session } } = await supabase.auth.getSession()
-                const token = session?.access_token
+                try {
+                    // Fetch all data in parallel using centralized API client
+                    const [profileRes, companyRes, kbRes, researchRes, prepsRes, followupsRes] = await Promise.all([
+                        api.get<SalesProfile>('/api/v1/profile/sales'),
+                        api.get<CompanyProfile>('/api/v1/profile/company'),
+                        api.get<{ files: KBFile[] }>('/api/v1/knowledge-base/files'),
+                        api.get<{ briefs: ResearchBrief[] }>('/api/v1/research/briefs'),
+                        api.get<{ preps: MeetingPrep[] }>('/api/v1/prep/briefs'),
+                        api.get<Followup[]>('/api/v1/followup/list'),
+                    ])
 
-                if (token) {
-                    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-
-                    const fetchPromises = [
-                        fetch(`${apiUrl}/api/v1/profile/sales`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                        fetch(`${apiUrl}/api/v1/profile/company`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                        fetch(`${apiUrl}/api/v1/knowledge-base/files`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                        fetch(`${apiUrl}/api/v1/research/briefs`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                        fetch(`${apiUrl}/api/v1/prep/briefs`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                        fetch(`${apiUrl}/api/v1/followup/list`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                    ]
-
-                    try {
-                        const [profileRes, companyRes, kbRes, researchRes, prepsRes, followupsRes] = await Promise.all(fetchPromises)
-
-                        if (profileRes.ok) setProfile(await profileRes.json())
-                        if (companyRes.ok) setCompanyProfile(await companyRes.json())
-                        if (kbRes.ok) {
-                            const kbData = await kbRes.json()
-                            setKnowledgeBase(kbData.files || [])
-                        }
-                        if (researchRes.ok) {
-                            const researchData = await researchRes.json()
-                            setResearchBriefs(researchData.briefs || [])
-                        }
-                        if (prepsRes.ok) {
-                            const prepsData = await prepsRes.json()
-                            setMeetingPreps(prepsData.preps || [])
-                        }
-                        if (followupsRes.ok) {
-                            const followupsData = await followupsRes.json()
-                            setFollowups(followupsData || [])
-                        }
-                    } catch (error) {
-                        console.error('Failed to load data:', error)
-                    }
+                    if (!profileRes.error && profileRes.data) setProfile(profileRes.data)
+                    if (!companyRes.error && companyRes.data) setCompanyProfile(companyRes.data)
+                    if (!kbRes.error && kbRes.data) setKnowledgeBase(kbRes.data.files || [])
+                    if (!researchRes.error && researchRes.data) setResearchBriefs(researchRes.data.briefs || [])
+                    if (!prepsRes.error && prepsRes.data) setMeetingPreps(prepsRes.data.preps || [])
+                    if (!followupsRes.error && followupsRes.data) setFollowups(followupsRes.data || [])
+                } catch (error) {
+                    console.error('Failed to load data:', error)
                 }
             }
 

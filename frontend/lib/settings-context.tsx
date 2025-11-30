@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { api } from '@/lib/api'
 
 // ==========================================
 // Types
@@ -61,15 +62,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/api/v1/settings`, {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      })
+      const { data, error } = await api.get<UserSettings>('/api/v1/settings')
 
-      if (response.ok) {
-        const data = await response.json()
+      if (!error && data) {
         setSettings({
           app_language: data.app_language || defaultSettings.app_language,
           output_language: data.output_language || defaultSettings.output_language,
@@ -92,26 +87,18 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         throw new Error('Not authenticated')
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/api/v1/settings`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newSettings),
-      })
+      const { data, error } = await api.patch<UserSettings>('/api/v1/settings', newSettings)
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.detail || 'Failed to update settings')
+      if (error) {
+        throw new Error(error.message || 'Failed to update settings')
       }
 
-      const data = await response.json()
-      setSettings(prev => ({
-        ...prev,
-        ...data,
-      }))
+      if (data) {
+        setSettings(prev => ({
+          ...prev,
+          ...data,
+        }))
+      }
     } catch (error) {
       console.error('Failed to update settings:', error)
       throw error

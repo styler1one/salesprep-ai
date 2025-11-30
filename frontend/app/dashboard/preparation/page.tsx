@@ -16,6 +16,7 @@ import { ProspectAutocomplete } from '@/components/prospect-autocomplete'
 import { LanguageSelect } from '@/components/language-select'
 import { useTranslations } from 'next-intl'
 import { useSettings } from '@/lib/settings-context'
+import { api } from '@/lib/api'
 import type { User } from '@supabase/supabase-js'
 import type { ProspectContact } from '@/types'
 
@@ -97,13 +98,9 @@ export default function PreparationPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/api/v1/prep/briefs`, {
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
-      })
+      const { data, error } = await api.get<{ preps: MeetingPrep[] }>('/api/v1/prep/briefs')
 
-      if (response.ok) {
-        const data = await response.json()
+      if (!error && data) {
         setPreps(data.preps || [])
       }
     } catch (error) {
@@ -126,28 +123,23 @@ export default function PreparationPage() {
       if (!session) return
 
       setContactsLoading(true)
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
       
-      const prospectResponse = await fetch(
-        `${apiUrl}/api/v1/prospects/search?q=${encodeURIComponent(prospectName)}`,
-        { headers: { 'Authorization': `Bearer ${session.access_token}` } }
+      const { data: prospects, error: prospectError } = await api.get<Array<{ id: string; company_name: string }>>(
+        `/api/v1/prospects/search?q=${encodeURIComponent(prospectName)}`
       )
 
-      if (prospectResponse.ok) {
-        const prospects = await prospectResponse.json()
+      if (!prospectError && prospects) {
         const exactMatch = prospects.find(
-          (p: any) => p.company_name.toLowerCase() === prospectName.toLowerCase()
+          (p) => p.company_name.toLowerCase() === prospectName.toLowerCase()
         )
 
         if (exactMatch) {
-          const contactsResponse = await fetch(
-            `${apiUrl}/api/v1/prospects/${exactMatch.id}/contacts`,
-            { headers: { 'Authorization': `Bearer ${session.access_token}` } }
+          const { data: contactsData, error: contactsError } = await api.get<{ contacts: ProspectContact[] }>(
+            `/api/v1/prospects/${exactMatch.id}/contacts`
           )
 
-          if (contactsResponse.ok) {
-            const data = await contactsResponse.json()
-            setAvailableContacts(data.contacts || [])
+          if (!contactsError && contactsData) {
+            setAvailableContacts(contactsData.contacts || [])
           }
         } else {
           setAvailableContacts([])
@@ -180,23 +172,15 @@ export default function PreparationPage() {
         return
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/api/v1/prep/start`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          prospect_company_name: companyName,
-          meeting_type: meetingType,
-          custom_notes: customNotes || null,
-          contact_ids: selectedContactIds.length > 0 ? selectedContactIds : null,
-          language: outputLanguage
-        })
+      const { error } = await api.post('/api/v1/prep/start', {
+        prospect_company_name: companyName,
+        meeting_type: meetingType,
+        custom_notes: customNotes || null,
+        contact_ids: selectedContactIds.length > 0 ? selectedContactIds : null,
+        language: outputLanguage
       })
 
-      if (response.ok) {
+      if (!error) {
         toast({ title: 'Gestart', description: 'Voorbereiding wordt gegenereerd...' })
         setCompanyName('')
         setCustomNotes('')
@@ -206,8 +190,7 @@ export default function PreparationPage() {
         setShowAdvanced(false)
         loadPreps()
       } else {
-        const error = await response.json()
-        toast({ title: 'Fout', description: error.detail || 'Kon niet starten', variant: 'destructive' })
+        toast({ title: 'Fout', description: error.message || 'Kon niet starten', variant: 'destructive' })
       }
     } catch (error) {
       toast({ title: 'Fout', description: 'Kon niet starten', variant: 'destructive' })
@@ -228,13 +211,9 @@ export default function PreparationPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/api/v1/prep/${prepId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
-      })
+      const { error } = await api.delete(`/api/v1/prep/${prepId}`)
 
-      if (response.ok) {
+      if (!error) {
         toast({ title: 'Verwijderd' })
         loadPreps()
       }

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { api } from '@/lib/api'
 
 interface UsageMetric {
   used: number
@@ -79,32 +80,18 @@ export function BillingProvider({ children }: { children: React.ReactNode }) {
         return
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-
       // Fetch subscription and usage in parallel
-      const [subResponse, usageResponse] = await Promise.all([
-        fetch(`${apiUrl}/api/v1/billing/subscription`, {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-        }),
-        fetch(`${apiUrl}/api/v1/billing/usage`, {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-        }),
+      const [subResult, usageResult] = await Promise.all([
+        api.get<Subscription>('/api/v1/billing/subscription'),
+        api.get<Usage>('/api/v1/billing/usage'),
       ])
 
-      if (subResponse.ok) {
-        const subData = await subResponse.json()
-        setSubscription(subData)
+      if (!subResult.error && subResult.data) {
+        setSubscription(subResult.data)
       }
 
-      if (usageResponse.ok) {
-        const usageData = await usageResponse.json()
-        setUsage(usageData)
+      if (!usageResult.error && usageResult.data) {
+        setUsage(usageResult.data)
       }
 
     } catch (err) {
@@ -128,18 +115,13 @@ export function BillingProvider({ children }: { children: React.ReactNode }) {
         return { allowed: false, current: 0, limit: 0, upgrade_required: true }
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/api/v1/billing/check-limit`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ metric }),
-      })
+      const { data, error } = await api.post<{ allowed: boolean; current: number; limit: number; upgrade_required: boolean }>(
+        '/api/v1/billing/check-limit',
+        { metric }
+      )
 
-      if (response.ok) {
-        return await response.json()
+      if (!error && data) {
+        return data
       }
 
       return { allowed: false, current: 0, limit: 0, upgrade_required: true }
@@ -158,28 +140,21 @@ export function BillingProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Not authenticated')
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/api/v1/billing/checkout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
+      const { data, error } = await api.post<{ checkout_url: string }>(
+        '/api/v1/billing/checkout',
+        { 
           plan_id: planId,
           success_url: `${window.location.origin}/billing/success`,
           cancel_url: `${window.location.origin}/pricing`,
-        }),
-      })
+        }
+      )
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Checkout API error:', response.status, errorData)
-        throw new Error(errorData.detail || `Checkout failed: ${response.status}`)
+      if (error) {
+        console.error('Checkout API error:', error)
+        throw new Error(error.message || 'Checkout failed')
       }
 
-      const data = await response.json()
-      if (!data.checkout_url) {
+      if (!data?.checkout_url) {
         console.error('No checkout_url in response:', data)
         throw new Error('No checkout URL returned from server')
       }
@@ -199,23 +174,15 @@ export function BillingProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Not authenticated')
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/api/v1/billing/portal`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          return_url: `${window.location.origin}/dashboard/settings`,
-        }),
-      })
+      const { data, error } = await api.post<{ portal_url: string }>(
+        '/api/v1/billing/portal',
+        { return_url: `${window.location.origin}/dashboard/settings` }
+      )
 
-      if (!response.ok) {
+      if (error || !data?.portal_url) {
         throw new Error('Failed to create portal session')
       }
 
-      const data = await response.json()
       return data.portal_url
     } catch (err) {
       console.error('Error opening portal:', err)

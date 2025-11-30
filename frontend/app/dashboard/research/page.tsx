@@ -14,6 +14,7 @@ import { LanguageSelect } from '@/components/language-select'
 import { suggestLanguageFromCountry } from '@/lib/language-utils'
 import { useTranslations } from 'next-intl'
 import { useSettings } from '@/lib/settings-context'
+import { api } from '@/lib/api'
 import type { User } from '@supabase/supabase-js'
 import type { ResearchBrief, CompanyOption } from '@/types'
 
@@ -104,38 +105,26 @@ export default function ResearchPage() {
       setCompanyOptions([])
       setShowOptions(false)
       
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/api/v1/research/search-company`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          company_name: companyName,
-          country: country
-        })
-      })
+      const { data, error } = await api.post<{ options: CompanyOption[] }>(
+        '/api/v1/research/search-company',
+        { company_name: companyName, country }
+      )
       
-      if (response.ok) {
-        const data = await response.json()
+      if (!error && data?.options && data.options.length > 0) {
+        setCompanyOptions(data.options)
         
-        if (data.options && data.options.length > 0) {
-          setCompanyOptions(data.options)
-          
-          if (data.options.length === 1 && data.options[0].confidence >= 90) {
-            selectCompanyOption(data.options[0])
-          } else {
-            setShowOptions(true)
-          }
+        if (data.options.length === 1 && data.options[0].confidence >= 90) {
+          selectCompanyOption(data.options[0])
         } else {
-          setCompanyOptions([])
-          toast({
-            title: t('search.noResults'),
-            description: t('search.noResultsDesc', { company: companyName, country }),
-            variant: "destructive"
-          })
+          setShowOptions(true)
         }
+      } else {
+        setCompanyOptions([])
+        toast({
+          title: t('search.noResults'),
+          description: t('search.noResultsDesc', { company: companyName, country }),
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error('Company search failed:', error)
@@ -188,17 +177,9 @@ export default function ResearchPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/research/briefs`,
-        {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        }
-      )
+      const { data, error } = await api.get<{ briefs: ResearchBrief[] }>('/api/v1/research/briefs')
 
-      if (response.ok) {
-        const data = await response.json()
+      if (!error && data) {
         setBriefs(data.briefs || [])
       }
     } catch (error) {
@@ -225,29 +206,17 @@ export default function ResearchPage() {
         throw new Error('Not authenticated')
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      const response = await fetch(
-        `${apiUrl}/api/v1/research/start`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            company_name: companyName,
-            company_linkedin_url: linkedinUrl || null,
-            company_website_url: websiteUrl || null,
-            country: country || null,
-            city: city || null,
-            language: outputLanguage
-          })
-        }
-      )
+      const { error } = await api.post('/api/v1/research/start', {
+        company_name: companyName,
+        company_linkedin_url: linkedinUrl || null,
+        company_website_url: websiteUrl || null,
+        country: country || null,
+        city: city || null,
+        language: outputLanguage
+      })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.detail || 'Research failed')
+      if (error) {
+        throw new Error(error.message || 'Research failed')
       }
 
       // Clear form
@@ -286,17 +255,9 @@ export default function ResearchPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/research/${briefId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        }
-      )
+      const { error } = await api.delete(`/api/v1/research/${briefId}`)
 
-      if (response.ok) {
+      if (!error) {
         await fetchBriefs()
         toast({
           title: t('toast.deleted'),
