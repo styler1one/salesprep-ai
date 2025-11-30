@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { toast } from 'sonner'
+import { useToast } from '@/components/ui/use-toast'
 import { api } from '@/lib/api'
 import { Prospect } from '@/types'
 
@@ -26,6 +26,7 @@ export default function NewDealPage() {
   const prospectId = params.id as string
   const t = useTranslations('deals')
   const tCommon = useTranslations('common')
+  const { toast } = useToast()
   
   const supabase = createClientComponentClient()
   const [user, setUser] = useState<User | null>(null)
@@ -80,7 +81,7 @@ export default function NewDealPage() {
     e.preventDefault()
     
     if (!name.trim()) {
-      toast.error(t('errors.nameRequired'))
+      toast({ variant: "destructive", title: t('errors.nameRequired') })
       return
     }
     
@@ -89,7 +90,7 @@ export default function NewDealPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        toast.error(tCommon('errors.notLoggedIn'))
+        toast({ variant: "destructive", title: tCommon('errors.notLoggedIn') })
         return
       }
       
@@ -101,7 +102,7 @@ export default function NewDealPage() {
         .single()
       
       if (!orgMember) {
-        toast.error(tCommon('errors.noOrganization'))
+        toast({ variant: "destructive", title: tCommon('errors.noOrganization') })
         return
       }
       
@@ -121,16 +122,16 @@ export default function NewDealPage() {
       
       if (error) {
         console.error('Error creating deal:', error)
-        toast.error(t('errors.createFailed'))
+        toast({ variant: "destructive", title: t('errors.createFailed') })
         return
       }
       
-      toast.success(t('success.created'))
+      toast({ title: t('success.created') })
       router.push(`/dashboard/prospects/${prospectId}/deals/${data.id}`)
       
     } catch (error) {
       console.error('Error creating deal:', error)
-      toast.error(t('errors.createFailed'))
+      toast({ variant: "destructive", title: t('errors.createFailed') })
     } finally {
       setSaving(false)
     }

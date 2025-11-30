@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { toast } from 'sonner'
+import { useToast } from '@/components/ui/use-toast'
 import { api } from '@/lib/api'
 import { Prospect } from '@/types'
 
@@ -29,6 +29,7 @@ export default function ProspectsPage() {
   const router = useRouter()
   const t = useTranslations('prospects')
   const tCommon = useTranslations('common')
+  const { toast } = useToast()
   
   const supabase = createClientComponentClient()
   const [user, setUser] = useState<User | null>(null)
@@ -71,7 +72,7 @@ export default function ProspectsPage() {
             const { data, error } = await query.limit(50)
             
             if (error) {
-              toast.error(t('errors.loadFailed'))
+              toast({ variant: "destructive", title: t('errors.loadFailed') })
               console.error('Failed to load prospects:', error)
             } else {
               setProspects(data || [])
@@ -80,7 +81,7 @@ export default function ProspectsPage() {
         }
       } catch (error) {
         console.error('Error loading data:', error)
-        toast.error(t('errors.loadFailed'))
+        toast({ variant: "destructive", title: t('errors.loadFailed') })
       } finally {
         setLoading(false)
       }

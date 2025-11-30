@@ -28,7 +28,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { toast } from 'sonner'
+import { useToast } from '@/components/ui/use-toast'
 import { api } from '@/lib/api'
 import { 
   ProspectHub, 
@@ -44,6 +44,7 @@ export default function ProspectHubPage() {
   const prospectId = params.id as string
   const t = useTranslations('prospectHub')
   const tCommon = useTranslations('common')
+  const { toast } = useToast()
   
   const supabase = createClientComponentClient()
   const [user, setUser] = useState<User | null>(null)
@@ -73,7 +74,7 @@ export default function ProspectHubPage() {
             )
             
             if (error) {
-              toast.error(t('errors.loadFailed'))
+              toast({ variant: "destructive", title: t('errors.loadFailed') })
               console.error('Failed to load prospect hub:', error)
             } else {
               setHubData(data)
@@ -82,7 +83,7 @@ export default function ProspectHubPage() {
         }
       } catch (error) {
         console.error('Error loading data:', error)
-        toast.error(t('errors.loadFailed'))
+        toast({ variant: "destructive", title: t('errors.loadFailed') })
       } finally {
         setLoading(false)
       }

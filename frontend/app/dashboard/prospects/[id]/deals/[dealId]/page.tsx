@@ -33,7 +33,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { toast } from 'sonner'
+import { useToast } from '@/components/ui/use-toast'
 import { Deal, Meeting, MeetingWithLinks } from '@/types'
 
 export default function DealDetailPage() {
@@ -43,6 +43,7 @@ export default function DealDetailPage() {
   const dealId = params.dealId as string
   const t = useTranslations('deals')
   const tCommon = useTranslations('common')
+  const { toast } = useToast()
   
   const supabase = createClientComponentClient()
   const [user, setUser] = useState<User | null>(null)
@@ -67,7 +68,7 @@ export default function DealDetailPage() {
           
           if (dealError) {
             console.error('Error fetching deal:', dealError)
-            toast.error(t('errors.loadFailed'))
+            toast({ variant: "destructive", title: t('errors.loadFailed') })
             return
           }
           
@@ -123,7 +124,7 @@ export default function DealDetailPage() {
         }
       } catch (error) {
         console.error('Error loading deal:', error)
-        toast.error(t('errors.loadFailed'))
+        toast({ variant: "destructive", title: t('errors.loadFailed') })
       } finally {
         setLoading(false)
       }
@@ -144,10 +145,10 @@ export default function DealDetailPage() {
       if (error) throw error
       
       setDeal({ ...deal, is_active: !deal.is_active })
-      toast.success(deal.is_active ? t('success.archived') : t('success.activated'))
+      toast({ title: deal.is_active ? t('success.archived') : t('success.activated') })
     } catch (error) {
       console.error('Error updating deal:', error)
-      toast.error(t('errors.updateFailed'))
+      toast({ variant: "destructive", title: t('errors.updateFailed') })
     }
   }
   
@@ -162,11 +163,11 @@ export default function DealDetailPage() {
       
       if (error) throw error
       
-      toast.success(t('success.deleted'))
+      toast({ title: t('success.deleted') })
       router.push(`/dashboard/prospects/${prospectId}`)
     } catch (error) {
       console.error('Error deleting deal:', error)
-      toast.error(t('errors.deleteFailed'))
+      toast({ variant: "destructive", title: t('errors.deleteFailed') })
     }
   }
   
