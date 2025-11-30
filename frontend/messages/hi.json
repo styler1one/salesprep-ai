@@ -841,7 +841,23 @@
       "noMeetingsDesc": "इस डील के लिए अपनी पहली मीटिंग शेड्यूल करें"
     },
     "confirm": {
-      "delete": "क्या आप वाकई इस डील को हटाना चाहते हैं?"
+      "delete": "क्या आप वाकई इस डील को हटाना चाहते हैं?",
+      "deleteTitle": "डील हटाएं?",
+      "deleteDescription": "यह क्रिया पूर्ववत नहीं की जा सकती। इस डील से जुड़ी सभी मीटिंग्स अनलिंक हो जाएंगी।"
+    },
+    "meetingStatus": {
+      "scheduled": "निर्धारित",
+      "completed": "पूर्ण",
+      "cancelled": "रद्द",
+      "noShow": "उपस्थित नहीं"
+    },
+    "meetingTypes": {
+      "discovery": "खोज",
+      "demo": "डेमो",
+      "negotiation": "वार्ता",
+      "closing": "समापन",
+      "review": "समीक्षा",
+      "other": "अन्य"
     },
     "success": {
       "created": "डील सफलतापूर्वक बनाई गई",

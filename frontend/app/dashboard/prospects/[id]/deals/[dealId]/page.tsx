@@ -16,11 +16,11 @@ import {
   MoreHorizontal,
   Archive,
   Trash2,
-  Edit2,
   CheckCircle,
   Clock,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { Button } from '@/components/ui/button'
@@ -34,7 +34,20 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { useToast } from '@/components/ui/use-toast'
-import { Deal, Meeting, MeetingWithLinks } from '@/types'
+import { ConfirmDialog } from '@/components/confirm-dialog'
+import { Deal, MeetingWithLinks } from '@/types'
+import { formatDate } from '@/lib/date-utils'
+
+// Activity type icons mapping
+const ACTIVITY_ICONS = {
+  research: '🔍',
+  prep: '📋',
+  followup: '📝',
+  meeting: '📅',
+  deal_created: '🎯',
+  contact_added: '👤',
+  note: '📌'
+} as const
 
 export default function DealDetailPage() {
   const params = useParams()
@@ -50,6 +63,10 @@ export default function DealDetailPage() {
   const [loading, setLoading] = useState(true)
   const [deal, setDeal] = useState<Deal | null>(null)
   const [meetings, setMeetings] = useState<MeetingWithLinks[]>([])
+  
+  // Confirm dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   
   // Fetch deal and meetings
   useEffect(() => {
@@ -81,45 +98,53 @@ export default function DealDetailPage() {
             .eq('deal_id', dealId)
             .order('scheduled_date', { ascending: false })
           
-          if (meetingsData) {
-            // Enrich meetings with prep/followup info
-            const enrichedMeetings = await Promise.all(
-              meetingsData.map(async (meeting) => {
-                // Check for linked prep
-                const { data: prepData } = await supabase
-                  .from('meeting_preps')
-                  .select('id')
-                  .eq('meeting_id', meeting.id)
-                  .limit(1)
-                
-                // Check for linked followup
-                const { data: followupData } = await supabase
-                  .from('followups')
-                  .select('id')
-                  .eq('meeting_id', meeting.id)
-                  .limit(1)
-                
-                // Get contact names
-                let contactNames: string[] = []
-                if (meeting.contact_ids?.length) {
-                  const { data: contacts } = await supabase
-                    .from('prospect_contacts')
-                    .select('name')
-                    .in('id', meeting.contact_ids)
-                  contactNames = contacts?.map(c => c.name) || []
-                }
-                
-                return {
-                  ...meeting,
-                  has_prep: prepData && prepData.length > 0,
-                  prep_id: prepData?.[0]?.id,
-                  has_followup: followupData && followupData.length > 0,
-                  followup_id: followupData?.[0]?.id,
-                  contact_names: contactNames
-                } as MeetingWithLinks
-              })
-            )
+          if (meetingsData && meetingsData.length > 0) {
+            const meetingIds = meetingsData.map(m => m.id)
+            
+            // BATCH: Get all preps for these meetings
+            const { data: prepsData } = await supabase
+              .from('meeting_preps')
+              .select('id, meeting_id')
+              .in('meeting_id', meetingIds)
+            
+            const prepMap = new Map(prepsData?.map(p => [p.meeting_id, p.id]) || [])
+            
+            // BATCH: Get all followups for these meetings
+            const { data: followupsData } = await supabase
+              .from('followups')
+              .select('id, meeting_id')
+              .in('meeting_id', meetingIds)
+            
+            const followupMap = new Map(followupsData?.map(f => [f.meeting_id, f.id]) || [])
+            
+            // BATCH: Get all contacts
+            const allContactIds = meetingsData.flatMap(m => m.contact_ids || [])
+            let contactMap = new Map<string, string>()
+            
+            if (allContactIds.length > 0) {
+              const { data: contactsData } = await supabase
+                .from('prospect_contacts')
+                .select('id, name')
+                .in('id', [...new Set(allContactIds)])
+              
+              contactMap = new Map(contactsData?.map(c => [c.id, c.name]) || [])
+            }
+            
+            // Enrich meetings
+            const enrichedMeetings = meetingsData.map(meeting => ({
+              ...meeting,
+              has_prep: prepMap.has(meeting.id),
+              prep_id: prepMap.get(meeting.id),
+              has_followup: followupMap.has(meeting.id),
+              followup_id: followupMap.get(meeting.id),
+              contact_names: (meeting.contact_ids || [])
+                .map((id: string) => contactMap.get(id))
+                .filter(Boolean) as string[]
+            })) as MeetingWithLinks[]
+            
             setMeetings(enrichedMeetings)
+          } else {
+            setMeetings([])
           }
         }
       } catch (error) {
@@ -131,7 +156,7 @@ export default function DealDetailPage() {
     }
     
     loadData()
-  }, [dealId, supabase, t])
+  }, [dealId, supabase, t, toast])
   
   const handleArchive = async () => {
     if (!deal) return
@@ -153,8 +178,7 @@ export default function DealDetailPage() {
   }
   
   const handleDelete = async () => {
-    if (!confirm(t('confirm.delete'))) return
-    
+    setIsDeleting(true)
     try {
       const { error } = await supabase
         .from('deals')
@@ -168,17 +192,34 @@ export default function DealDetailPage() {
     } catch (error) {
       console.error('Error deleting deal:', error)
       toast({ variant: "destructive", title: t('errors.deleteFailed') })
+      setIsDeleting(false)
     }
   }
   
   const getMeetingStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
-        return <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><CheckCircle className="w-3 h-3 mr-1" />Completed</Badge>
+        return (
+          <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            {t('meetingStatus.completed')}
+          </Badge>
+        )
       case 'scheduled':
-        return <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"><Clock className="w-3 h-3 mr-1" />Scheduled</Badge>
+        return (
+          <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+            <Clock className="w-3 h-3 mr-1" />
+            {t('meetingStatus.scheduled')}
+          </Badge>
+        )
       case 'cancelled':
-        return <Badge variant="secondary">Cancelled</Badge>
+        return <Badge variant="secondary">{t('meetingStatus.cancelled')}</Badge>
+      case 'no_show':
+        return (
+          <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+            {t('meetingStatus.noShow')}
+          </Badge>
+        )
       default:
         return <Badge variant="outline">{status}</Badge>
     }
@@ -251,11 +292,23 @@ export default function DealDetailPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handleArchive}>
-                  <Archive className="w-4 h-4 mr-2" />
-                  {deal.is_active ? t('actions.archive') : t('actions.activate')}
+                  {deal.is_active ? (
+                    <>
+                      <Archive className="w-4 h-4 mr-2" />
+                      {t('actions.archive')}
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      {t('actions.activate')}
+                    </>
+                  )}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+                <DropdownMenuItem 
+                  onClick={() => setDeleteDialogOpen(true)} 
+                  className="text-red-600"
+                >
                   <Trash2 className="w-4 h-4 mr-2" />
                   {t('actions.delete')}
                 </DropdownMenuItem>
@@ -345,11 +398,13 @@ export default function DealDetailPage() {
                           {meeting.scheduled_date && (
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
-                              {new Date(meeting.scheduled_date).toLocaleDateString()}
+                              {formatDate(meeting.scheduled_date)}
                             </span>
                           )}
                           {meeting.meeting_type && (
-                            <Badge variant="outline">{meeting.meeting_type}</Badge>
+                            <Badge variant="outline">
+                              {t(`meetingTypes.${meeting.meeting_type}`, { defaultValue: meeting.meeting_type })}
+                            </Badge>
                           )}
                         </div>
                       </div>
@@ -412,8 +467,20 @@ export default function DealDetailPage() {
             )}
           </CardContent>
         </Card>
+        
+        {/* Confirm Delete Dialog */}
+        <ConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title={t('confirm.deleteTitle')}
+          description={t('confirm.deleteDescription')}
+          confirmLabel={t('actions.delete')}
+          cancelLabel={tCommon('cancel')}
+          variant="danger"
+          isLoading={isDeleting}
+          onConfirm={handleDelete}
+        />
       </div>
     </DashboardLayout>
   )
 }
-

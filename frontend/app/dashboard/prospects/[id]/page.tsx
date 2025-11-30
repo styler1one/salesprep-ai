@@ -37,6 +37,8 @@ import {
   ProspectContact,
   ResearchBrief 
 } from '@/types'
+import { formatDate, smartDate } from '@/lib/date-utils'
+import { getActivityIcon, getProspectStatusColor } from '@/lib/constants/activity'
 
 export default function ProspectHubPage() {
   const params = useParams()
@@ -290,7 +292,7 @@ export default function ProspectHubPage() {
                             {t('status.completed')}
                           </Badge>
                           <span className="text-xs text-slate-500">
-                            {research.completed_at && new Date(research.completed_at).toLocaleDateString()}
+                            {research.completed_at && formatDate(research.completed_at)}
                           </span>
                         </div>
                         <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-3">
@@ -497,25 +499,13 @@ function ContactCard({ contact }: { contact: ProspectContact }) {
 }
 
 function ActivityItem({ activity }: { activity: Activity }) {
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'research': return '🔍'
-      case 'prep': return '📋'
-      case 'followup': return '📝'
-      case 'meeting': return '📅'
-      case 'deal_created': return '🎯'
-      case 'contact_added': return '👤'
-      default: return activity.icon || '📌'
-    }
-  }
-  
   return (
     <div className="flex items-start gap-3">
-      <span className="text-lg">{getActivityIcon(activity.activity_type)}</span>
+      <span className="text-lg">{getActivityIcon(activity.activity_type, activity.icon)}</span>
       <div className="flex-1 min-w-0">
         <p className="text-sm text-slate-900 dark:text-white">{activity.title}</p>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          {new Date(activity.created_at).toLocaleDateString()}
+          {smartDate(activity.created_at)}
         </p>
       </div>
     </div>
@@ -717,7 +707,7 @@ function TimelineTabContent({
   
   // Group activities by date
   const groupedActivities = activities.reduce((groups, activity) => {
-    const date = new Date(activity.created_at).toLocaleDateString()
+    const date = formatDate(activity.created_at)
     if (!groups[date]) {
       groups[date] = []
     }
@@ -763,7 +753,7 @@ function TimelineTabContent({
                           </p>
                         )}
                         <p className="text-xs text-slate-400 mt-1">
-                          {new Date(activity.created_at).toLocaleTimeString()}
+                          {new Intl.DateTimeFormat('en', { hour: 'numeric', minute: '2-digit' }).format(new Date(activity.created_at))}
                         </p>
                       </div>
                     </div>

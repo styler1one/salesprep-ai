@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
@@ -17,7 +17,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/use-toast'
-import { api } from '@/lib/api'
 import { Prospect } from '@/types'
 
 export default function NewDealPage() {
@@ -30,6 +29,7 @@ export default function NewDealPage() {
   
   const supabase = createClientComponentClient()
   const [user, setUser] = useState<User | null>(null)
+  const [organizationId, setOrganizationId] = useState<string | null>(null)
   const [prospect, setProspect] = useState<Prospect | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -38,46 +38,55 @@ export default function NewDealPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   
-  // Fetch user and prospect
+  // Fetch user, org, and prospect in one effect
   useEffect(() => {
     async function loadData() {
       try {
         const { data: { user } } = await supabase.auth.getUser()
         setUser(user)
         
-        if (user) {
-          // Get organization ID
-          const { data: orgMember } = await supabase
-            .from('organization_members')
-            .select('organization_id')
-            .eq('user_id', user.id)
-            .single()
-          
-          if (orgMember) {
-            // Fetch prospect
-            const { data: prospectData } = await supabase
-              .from('prospects')
-              .select('*')
-              .eq('id', prospectId)
-              .eq('organization_id', orgMember.organization_id)
-              .single()
-            
-            if (prospectData) {
-              setProspect(prospectData)
-            }
-          }
+        if (!user) {
+          setLoading(false)
+          return
+        }
+        
+        // Get organization ID
+        const { data: orgMember } = await supabase
+          .from('organization_members')
+          .select('organization_id')
+          .eq('user_id', user.id)
+          .single()
+        
+        if (!orgMember) {
+          setLoading(false)
+          return
+        }
+        
+        setOrganizationId(orgMember.organization_id)
+        
+        // Fetch prospect
+        const { data: prospectData } = await supabase
+          .from('prospects')
+          .select('*')
+          .eq('id', prospectId)
+          .eq('organization_id', orgMember.organization_id)
+          .single()
+        
+        if (prospectData) {
+          setProspect(prospectData)
         }
       } catch (error) {
         console.error('Error loading data:', error)
+        toast({ variant: "destructive", title: t('errors.loadFailed') })
       } finally {
         setLoading(false)
       }
     }
     
     loadData()
-  }, [prospectId, supabase])
+  }, [prospectId, supabase, t, toast])
   
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!name.trim()) {
@@ -85,35 +94,22 @@ export default function NewDealPage() {
       return
     }
     
+    if (!user || !organizationId) {
+      toast({ variant: "destructive", title: tCommon('errors.notLoggedIn') })
+      return
+    }
+    
     setSaving(true)
     
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        toast({ variant: "destructive", title: tCommon('errors.notLoggedIn') })
-        return
-      }
-      
-      // Get organization ID
-      const { data: orgMember } = await supabase
-        .from('organization_members')
-        .select('organization_id')
-        .eq('user_id', user.id)
-        .single()
-      
-      if (!orgMember) {
-        toast({ variant: "destructive", title: tCommon('errors.noOrganization') })
-        return
-      }
-      
-      // Create deal
+      // Create deal using already loaded user and org
       const { data, error } = await supabase
         .from('deals')
         .insert({
           name: name.trim(),
           description: description.trim() || null,
           prospect_id: prospectId,
-          organization_id: orgMember.organization_id,
+          organization_id: organizationId,
           created_by: user.id,
           is_active: true
         })
@@ -135,7 +131,7 @@ export default function NewDealPage() {
     } finally {
       setSaving(false)
     }
-  }
+  }, [name, description, user, organizationId, prospectId, supabase, router, t, tCommon, toast])
   
   if (loading) {
     return (
@@ -246,4 +242,3 @@ export default function NewDealPage() {
     </DashboardLayout>
   )
 }
-

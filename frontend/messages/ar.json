@@ -841,7 +841,23 @@
       "noMeetingsDesc": "جدول أول اجتماع لهذه الصفقة"
     },
     "confirm": {
-      "delete": "هل أنت متأكد أنك تريد حذف هذه الصفقة؟"
+      "delete": "هل أنت متأكد أنك تريد حذف هذه الصفقة؟",
+      "deleteTitle": "حذف الصفقة؟",
+      "deleteDescription": "لا يمكن التراجع عن هذا الإجراء. سيتم فصل جميع الاجتماعات المرتبطة بهذه الصفقة."
+    },
+    "meetingStatus": {
+      "scheduled": "مجدول",
+      "completed": "مكتمل",
+      "cancelled": "ملغى",
+      "noShow": "لم يحضر"
+    },
+    "meetingTypes": {
+      "discovery": "اكتشاف",
+      "demo": "عرض توضيحي",
+      "negotiation": "مفاوضات",
+      "closing": "إغلاق",
+      "review": "مراجعة",
+      "other": "آخر"
     },
     "success": {
       "created": "تم إنشاء الصفقة بنجاح",

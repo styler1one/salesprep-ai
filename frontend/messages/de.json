@@ -847,7 +847,23 @@
       "noMeetingsDesc": "Planen Sie Ihr erstes Meeting für diesen Deal"
     },
     "confirm": {
-      "delete": "Möchten Sie diesen Deal wirklich löschen?"
+      "delete": "Möchten Sie diesen Deal wirklich löschen?",
+      "deleteTitle": "Deal löschen?",
+      "deleteDescription": "Diese Aktion kann nicht rückgängig gemacht werden. Alle mit diesem Deal verknüpften Meetings werden getrennt."
+    },
+    "meetingStatus": {
+      "scheduled": "Geplant",
+      "completed": "Abgeschlossen",
+      "cancelled": "Storniert",
+      "noShow": "Nicht erschienen"
+    },
+    "meetingTypes": {
+      "discovery": "Kennenlernen",
+      "demo": "Demo",
+      "negotiation": "Verhandlung",
+      "closing": "Abschluss",
+      "review": "Review",
+      "other": "Sonstiges"
     },
     "success": {
       "created": "Deal erfolgreich erstellt",

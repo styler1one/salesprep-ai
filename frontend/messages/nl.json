@@ -853,7 +853,23 @@
       "noMeetingsDesc": "Begin met het plannen van je eerste meeting voor deze deal"
     },
     "confirm": {
-      "delete": "Weet je zeker dat je deze deal wilt verwijderen? Alle gekoppelde meetings worden ontkoppeld."
+      "delete": "Weet je zeker dat je deze deal wilt verwijderen? Alle gekoppelde meetings worden ontkoppeld.",
+      "deleteTitle": "Deal verwijderen?",
+      "deleteDescription": "Deze actie kan niet ongedaan worden gemaakt. Alle meetings die aan deze deal zijn gekoppeld worden ontkoppeld."
+    },
+    "meetingStatus": {
+      "scheduled": "Gepland",
+      "completed": "Afgerond",
+      "cancelled": "Geannuleerd",
+      "noShow": "No-show"
+    },
+    "meetingTypes": {
+      "discovery": "Kennismaking",
+      "demo": "Demo",
+      "negotiation": "Onderhandeling",
+      "closing": "Afsluiting",
+      "review": "Review",
+      "other": "Anders"
     },
     "success": {
       "created": "Deal succesvol aangemaakt",

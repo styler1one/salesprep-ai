@@ -24,6 +24,8 @@ import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/components/ui/use-toast'
 import { api } from '@/lib/api'
 import { Prospect } from '@/types'
+import { getProspectStatusColor } from '@/lib/constants/activity'
+import { smartDate } from '@/lib/date-utils'
 
 export default function ProspectsPage() {
   const router = useRouter()
@@ -90,18 +92,7 @@ export default function ProspectsPage() {
     loadData()
   }, [supabase, searchQuery, statusFilter, t])
   
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'new': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-      case 'researching': return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-      case 'qualified': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-      case 'meeting_scheduled': return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
-      case 'proposal_sent': return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-      case 'won': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-      case 'lost': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-      default: return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
-    }
-  }
+  // Use centralized status colors from constants
   
   return (
     <DashboardLayout user={user}>
@@ -198,13 +189,11 @@ export default function ProspectsPage() {
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <Badge className={getStatusColor(prospect.status)}>
+                    <Badge className={getProspectStatusColor(prospect.status)}>
                       {t(`status.${prospect.status}`)}
                     </Badge>
                     <span className="text-xs text-slate-400">
-                      {prospect.last_activity_at && (
-                        new Date(prospect.last_activity_at).toLocaleDateString()
-                      )}
+                      {prospect.last_activity_at && smartDate(prospect.last_activity_at)}
                     </span>
                   </div>
                 </CardContent>

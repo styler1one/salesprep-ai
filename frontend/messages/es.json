@@ -841,7 +841,23 @@
       "noMeetingsDesc": "Programa tu primera reunión para este deal"
     },
     "confirm": {
-      "delete": "¿Estás seguro de que quieres eliminar este deal?"
+      "delete": "¿Estás seguro de que quieres eliminar este deal?",
+      "deleteTitle": "¿Eliminar deal?",
+      "deleteDescription": "Esta acción no se puede deshacer. Todas las reuniones vinculadas a este deal serán desvinculadas."
+    },
+    "meetingStatus": {
+      "scheduled": "Programado",
+      "completed": "Completado",
+      "cancelled": "Cancelado",
+      "noShow": "No asistió"
+    },
+    "meetingTypes": {
+      "discovery": "Descubrimiento",
+      "demo": "Demo",
+      "negotiation": "Negociación",
+      "closing": "Cierre",
+      "review": "Revisión",
+      "other": "Otro"
     },
     "success": {
       "created": "Deal creado exitosamente",
