@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import ReactMarkdown from 'react-markdown'
 import { useTranslations } from 'next-intl'
+import { api } from '@/lib/api'
 import type { User } from '@supabase/supabase-js'
 
 interface ResearchBrief {

@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { useTranslations } from 'next-intl'
+import { api } from '@/lib/api'
 import type { User } from '@supabase/supabase-js'
 
 interface Followup {
