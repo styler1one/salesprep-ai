@@ -173,7 +173,7 @@ export default function FollowupDetailPage() {
     if (!contactIds || contactIds.length === 0) return
     
     try {
-      const { data, error } = await api.get<{ contacts: LinkedContact[]; count: number }>(`/api/v1/contacts?ids=${contactIds.join(',')}`)
+      const { data, error } = await api.get<{ contacts: ProspectContact[]; count: number }>(`/api/v1/contacts?ids=${contactIds.join(',')}`)
 
       if (!error && data) {
         setLinkedContacts(data.contacts || [])
