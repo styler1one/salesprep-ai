@@ -154,10 +154,10 @@ export interface MeetingPrep {
   organization_id?: string
   prospect_id?: string
   research_id?: string
-  company_name: string
+  prospect_company_name: string  // This is the actual field name from API
   meeting_type: MeetingType
   meeting_date?: string
-  meeting_notes?: string
+  custom_notes?: string
   status: PrepStatus
   brief_content?: string
   error_message?: string
@@ -176,7 +176,8 @@ export interface Followup {
   organization_id?: string
   prospect_id?: string
   prep_id?: string
-  company_name: string
+  prospect_company_name?: string  // Company name from prospect
+  meeting_subject?: string        // Alternative display name
   status: FollowupStatus
   transcript?: string
   summary?: string
