@@ -9,6 +9,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Progress } from "@/components/ui/progress"
 import { Loader2, CheckCircle2, ArrowRight, Sparkles } from "lucide-react"
 import { useTranslations } from 'next-intl'
+import { LanguageSelector } from '@/components/language-selector'
+import { useLocale } from 'next-intl'
+import type { Locale } from '@/i18n/config'
 
 interface InterviewResponse {
   session_id: string
@@ -23,6 +26,7 @@ export default function OnboardingPage() {
   const router = useRouter()
   const t = useTranslations('onboarding')
   const tCommon = useTranslations('common')
+  const locale = useLocale() as Locale
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [currentQuestionId, setCurrentQuestionId] = useState<number | null>(null)
   const [currentQuestionText, setCurrentQuestionText] = useState<string>("")  
@@ -317,6 +321,11 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4">
+      {/* Language Selector */}
+      <div className="absolute top-4 right-4">
+        <LanguageSelector currentLocale={locale} />
+      </div>
+      
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">

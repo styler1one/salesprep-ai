@@ -702,7 +702,20 @@
     },
     "company": {
       "title": "Parlez-nous de votre entreprise",
-      "description": "Cela aide l'IA à comprendre vos produits et services"
+      "description": "Cela aide l'IA à comprendre vos produits et services",
+      "pageTitle": "Onboarding Profil Entreprise",
+      "pageDesc": "Aidez l'IA à comprendre votre entreprise",
+      "questionOf": "Question {current} sur {total}",
+      "generating": "Génération du Profil Entreprise...",
+      "generatingDesc": "L'IA analyse vos réponses et crée un profil d'entreprise structuré",
+      "generatingWait": "Cela peut prendre un moment...",
+      "couldNotLoad": "Impossible de charger l'interview",
+      "startInterview": "Démarrage de l'interview...",
+      "yourAnswer": "Votre réponse",
+      "answerPlaceholder": "Tapez votre réponse ici...",
+      "previous": "Précédent",
+      "requiredQuestion": "Question obligatoire - répondez aussi complètement que possible",
+      "optionalQuestion": "Question optionnelle - vous pouvez la passer"
     },
     "complete": {
       "title": "Vous êtes prêt !",

@@ -714,7 +714,20 @@
     },
     "company": {
       "title": "Vertel ons over je bedrijf",
-      "description": "Dit helpt de AI om je producten en diensten te begrijpen"
+      "description": "Dit helpt de AI om je producten en diensten te begrijpen",
+      "pageTitle": "Bedrijfsprofiel Onboarding",
+      "pageDesc": "Help de AI je bedrijf te begrijpen",
+      "questionOf": "Vraag {current} van {total}",
+      "generating": "Bedrijfsprofiel Genereren...",
+      "generatingDesc": "AI analyseert je antwoorden en maakt een gestructureerd bedrijfsprofiel",
+      "generatingWait": "Dit kan even duren...",
+      "couldNotLoad": "Kon interview niet laden",
+      "startInterview": "Interview starten...",
+      "yourAnswer": "Jouw antwoord",
+      "answerPlaceholder": "Typ hier je antwoord...",
+      "previous": "Vorige",
+      "requiredQuestion": "Verplichte vraag - beantwoord zo volledig mogelijk",
+      "optionalQuestion": "Optionele vraag - je kunt deze overslaan"
     },
     "complete": {
       "title": "Interview Voltooid!",

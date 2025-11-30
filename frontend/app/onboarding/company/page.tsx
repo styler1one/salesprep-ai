@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/use-toast'
+import { LanguageSelector } from '@/components/language-selector'
+import type { Locale } from '@/i18n/config'
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -30,6 +32,7 @@ export default function CompanyOnboardingPage() {
   const supabase = createClientComponentClient()
   const { toast } = useToast()
   const t = useTranslations('onboarding')
+  const locale = useLocale() as Locale
   
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -222,7 +225,7 @@ export default function CompanyOnboardingPage() {
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Interview starten...</p>
+          <p className="text-muted-foreground">{t('company.startInterview')}</p>
         </div>
       </div>
     )
@@ -233,13 +236,13 @@ export default function CompanyOnboardingPage() {
       <div className="flex h-screen items-center justify-center">
         <div className="text-center max-w-md px-4">
           <Sparkles className="h-12 w-12 text-primary mx-auto mb-4 animate-pulse" />
-          <h2 className="text-2xl font-bold mb-2">Bedrijfsprofiel Genereren...</h2>
+          <h2 className="text-2xl font-bold mb-2">{t('company.generating')}</h2>
           <p className="text-muted-foreground mb-4">
-            AI analyseert je antwoorden en maakt een gestructureerd bedrijfsprofiel
+            {t('company.generatingDesc')}
           </p>
           <div className="flex items-center justify-center gap-2">
             <Loader2 className="h-5 w-5 animate-spin" />
-            <span className="text-sm text-muted-foreground">Dit kan even duren...</span>
+            <span className="text-sm text-muted-foreground">{t('company.generatingWait')}</span>
           </div>
         </div>
       </div>
@@ -251,7 +254,7 @@ export default function CompanyOnboardingPage() {
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
           <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">Kon interview niet laden</p>
+          <p className="text-muted-foreground">{t('company.couldNotLoad')}</p>
           <Button 
             variant="outline" 
             onClick={() => router.push('/dashboard')}
@@ -266,6 +269,11 @@ export default function CompanyOnboardingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8 px-4">
+      {/* Language Selector */}
+      <div className="absolute top-4 right-4">
+        <LanguageSelector currentLocale={locale} />
+      </div>
+      
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -275,7 +283,7 @@ export default function CompanyOnboardingPage() {
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Terug
+            {t('back')}
           </Button>
           
           <div className="flex items-center gap-3 mb-4">
@@ -283,9 +291,9 @@ export default function CompanyOnboardingPage() {
               <Building2 className="h-8 w-8 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Bedrijfsprofiel Onboarding</h1>
+              <h1 className="text-2xl font-bold">{t('company.pageTitle')}</h1>
               <p className="text-muted-foreground">
-                Help de AI je bedrijf te begrijpen
+                {t('company.pageDesc')}
               </p>
             </div>
           </div>
@@ -293,7 +301,7 @@ export default function CompanyOnboardingPage() {
           {/* Progress */}
           <div className="mb-2 flex items-center justify-between text-sm">
             <span className="text-muted-foreground">
-              Vraag {interview.progress} van {interview.totalQuestions}
+              {t('company.questionOf', { current: interview.progress, total: interview.totalQuestions })}
             </span>
             <span className="font-medium">
               {Math.round((interview.progress / interview.totalQuestions) * 100)}%
@@ -315,13 +323,13 @@ export default function CompanyOnboardingPage() {
             </CardTitle>
             <CardDescription>
               {interview.progress <= 6 
-                ? 'Verplichte vraag - beantwoord zo volledig mogelijk'
-                : 'Optionele vraag - je kunt deze overslaan'}
+                ? t('company.requiredQuestion')
+                : t('company.optionalQuestion')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Textarea
-              placeholder="Typ je antwoord hier..."
+              placeholder={t('company.answerPlaceholder')}
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               rows={5}

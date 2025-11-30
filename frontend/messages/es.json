@@ -702,7 +702,20 @@
     },
     "company": {
       "title": "Cuéntanos sobre tu empresa",
-      "description": "Esto ayuda a la IA a entender tus productos y servicios"
+      "description": "Esto ayuda a la IA a entender tus productos y servicios",
+      "pageTitle": "Onboarding Perfil de Empresa",
+      "pageDesc": "Ayuda a la IA a entender tu empresa",
+      "questionOf": "Pregunta {current} de {total}",
+      "generating": "Generando Perfil de Empresa...",
+      "generatingDesc": "La IA está analizando tus respuestas y creando un perfil de empresa estructurado",
+      "generatingWait": "Esto puede tardar un momento...",
+      "couldNotLoad": "No se pudo cargar la entrevista",
+      "startInterview": "Iniciando entrevista...",
+      "yourAnswer": "Tu respuesta",
+      "answerPlaceholder": "Escribe tu respuesta aquí...",
+      "previous": "Anterior",
+      "requiredQuestion": "Pregunta obligatoria - responde lo más completamente posible",
+      "optionalQuestion": "Pregunta opcional - puedes omitirla"
     },
     "complete": {
       "title": "¡Todo listo!",

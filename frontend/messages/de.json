@@ -708,7 +708,20 @@
     },
     "company": {
       "title": "Erzähl uns von deinem Unternehmen",
-      "description": "Dies hilft der KI, deine Produkte und Dienstleistungen zu verstehen"
+      "description": "Dies hilft der KI, deine Produkte und Dienstleistungen zu verstehen",
+      "pageTitle": "Unternehmensprofil Onboarding",
+      "pageDesc": "Hilf der KI, dein Unternehmen zu verstehen",
+      "questionOf": "Frage {current} von {total}",
+      "generating": "Unternehmensprofil wird erstellt...",
+      "generatingDesc": "KI analysiert deine Antworten und erstellt ein strukturiertes Unternehmensprofil",
+      "generatingWait": "Das kann einen Moment dauern...",
+      "couldNotLoad": "Interview konnte nicht geladen werden",
+      "startInterview": "Interview starten...",
+      "yourAnswer": "Deine Antwort",
+      "answerPlaceholder": "Tippe hier deine Antwort...",
+      "previous": "Zurück",
+      "requiredQuestion": "Pflichtfrage - beantworte so vollständig wie möglich",
+      "optionalQuestion": "Optionale Frage - du kannst diese überspringen"
     },
     "complete": {
       "title": "Du bist startklar!",

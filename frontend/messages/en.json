@@ -714,7 +714,20 @@
     },
     "company": {
       "title": "Tell us about your company",
-      "description": "This helps the AI understand your products and services"
+      "description": "This helps the AI understand your products and services",
+      "pageTitle": "Company Profile Onboarding",
+      "pageDesc": "Help the AI understand your company",
+      "questionOf": "Question {current} of {total}",
+      "generating": "Generating Company Profile...",
+      "generatingDesc": "AI is analyzing your answers and creating a structured company profile",
+      "generatingWait": "This may take a moment...",
+      "couldNotLoad": "Could not load interview",
+      "startInterview": "Starting interview...",
+      "yourAnswer": "Your answer",
+      "answerPlaceholder": "Type your answer here...",
+      "previous": "Previous",
+      "requiredQuestion": "Required question - answer as completely as possible",
+      "optionalQuestion": "Optional question - you can skip this"
     },
     "complete": {
       "title": "Interview Complete!",
