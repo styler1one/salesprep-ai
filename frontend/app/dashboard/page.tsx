@@ -195,7 +195,7 @@ export default function DashboardPage() {
             if (!prospectMap.has(name)) {
                 prospectMap.set(name, {
                     id: followup.id,
-                    company_name: followup.prospect_company_name || followup.meeting_subject,
+                    company_name: followup.prospect_company_name || followup.meeting_subject || '',
                     hasResearch: false,
                     hasPrep: false,
                     hasFollowup: true,
