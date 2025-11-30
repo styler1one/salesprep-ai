@@ -10,9 +10,9 @@ import { Toaster } from '@/components/ui/toaster'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Textarea } from '@/components/ui/textarea'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import ReactMarkdown from 'react-markdown'
+import { MarkdownEditor } from '@/components/markdown-editor'
 import { useTranslations } from 'next-intl'
 import { api } from '@/lib/api'
 import type { User } from '@supabase/supabase-js'
@@ -518,11 +518,11 @@ export default function ResearchBriefPage() {
                 </div>
                 
                 {isEditing ? (
-                  <Textarea
+                  <MarkdownEditor
                     value={editedContent}
-                    onChange={(e) => setEditedContent(e.target.value)}
-                    className="min-h-[600px] font-mono text-sm dark:bg-slate-800 dark:border-slate-700"
+                    onChange={setEditedContent}
                     placeholder={t('brief.edit')}
+                    disabled={isSaving}
                   />
                 ) : (
                   <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:scroll-mt-20">
