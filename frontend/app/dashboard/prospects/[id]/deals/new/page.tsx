@@ -139,7 +139,7 @@ export default function NewDealPage() {
   
   if (loading) {
     return (
-      <DashboardLayout>
+      <DashboardLayout user={user}>
         <div className="flex items-center justify-center h-96">
           <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
         </div>
@@ -148,7 +148,7 @@ export default function NewDealPage() {
   }
   
   return (
-    <DashboardLayout>
+    <DashboardLayout user={user}>
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Back Button */}
         <Button 

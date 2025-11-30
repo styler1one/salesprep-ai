@@ -94,7 +94,7 @@ export default function ProspectHubPage() {
   
   if (loading) {
     return (
-      <DashboardLayout>
+      <DashboardLayout user={user}>
         <div className="flex items-center justify-center h-96">
           <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
         </div>
@@ -104,7 +104,7 @@ export default function ProspectHubPage() {
   
   if (!hubData) {
     return (
-      <DashboardLayout>
+      <DashboardLayout user={user}>
         <div className="flex flex-col items-center justify-center h-96">
           <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
           <h2 className="text-xl font-semibold mb-2">{t('errors.notFound')}</h2>
@@ -117,7 +117,7 @@ export default function ProspectHubPage() {
   const { prospect, research, contacts, deals, recent_activities, stats } = hubData
   
   return (
-    <DashboardLayout>
+    <DashboardLayout user={user}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between">
