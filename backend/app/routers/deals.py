@@ -17,7 +17,7 @@ from ..models.deals import (
     Activity, ActivityCreate,
     ProspectHub, ProspectHubSummary
 )
-from ..database import get_service_client, get_user_client
+from ..database import get_supabase_service, get_user_client
 
 router = APIRouter(prefix="/api/v1/deals", tags=["deals"])
 
@@ -36,7 +36,7 @@ async def list_deals(
 ):
     """List all deals, optionally filtered by prospect"""
     # This will need proper auth - for now using service client
-    supabase = get_service_client()
+    supabase = get_supabase_service()
     
     query = supabase.table("deal_summary").select("*")
     
@@ -55,7 +55,7 @@ async def list_deals(
 @router.get("/{deal_id}", response_model=DealWithStats)
 async def get_deal(deal_id: UUID):
     """Get a single deal with stats"""
-    supabase = get_service_client()
+    supabase = get_supabase_service()
     
     result = supabase.table("deal_summary").select("*").eq("deal_id", str(deal_id)).single().execute()
     
@@ -68,7 +68,7 @@ async def get_deal(deal_id: UUID):
 @router.post("", response_model=Deal, status_code=201)
 async def create_deal(deal: DealCreate, user_id: UUID, organization_id: UUID):
     """Create a new deal"""
-    supabase = get_service_client()
+    supabase = get_supabase_service()
     
     # Verify prospect belongs to organization
     prospect = supabase.table("prospects").select("id").eq("id", str(deal.prospect_id)).eq("organization_id", str(organization_id)).single().execute()
@@ -97,7 +97,7 @@ async def create_deal(deal: DealCreate, user_id: UUID, organization_id: UUID):
 @router.patch("/{deal_id}", response_model=Deal)
 async def update_deal(deal_id: UUID, deal: DealUpdate, organization_id: UUID):
     """Update a deal"""
-    supabase = get_service_client()
+    supabase = get_supabase_service()
     
     # Verify deal belongs to organization
     existing = supabase.table("deals").select("id").eq("id", str(deal_id)).eq("organization_id", str(organization_id)).single().execute()
@@ -120,7 +120,7 @@ async def update_deal(deal_id: UUID, deal: DealUpdate, organization_id: UUID):
 @router.delete("/{deal_id}", status_code=204)
 async def delete_deal(deal_id: UUID, organization_id: UUID):
     """Delete a deal"""
-    supabase = get_service_client()
+    supabase = get_supabase_service()
     
     # Verify deal belongs to organization
     existing = supabase.table("deals").select("id").eq("id", str(deal_id)).eq("organization_id", str(organization_id)).single().execute()
@@ -136,7 +136,7 @@ async def delete_deal(deal_id: UUID, organization_id: UUID):
 @router.post("/{deal_id}/archive", response_model=Deal)
 async def archive_deal(deal_id: UUID, organization_id: UUID):
     """Archive a deal (set is_active to false)"""
-    supabase = get_service_client()
+    supabase = get_supabase_service()
     
     result = supabase.table("deals").update({
         "is_active": False,
@@ -152,7 +152,7 @@ async def archive_deal(deal_id: UUID, organization_id: UUID):
 @router.post("/{deal_id}/activate", response_model=Deal)
 async def activate_deal(deal_id: UUID, organization_id: UUID):
     """Activate a deal (set is_active to true)"""
-    supabase = get_service_client()
+    supabase = get_supabase_service()
     
     result = supabase.table("deals").update({
         "is_active": True,
@@ -172,7 +172,7 @@ async def activate_deal(deal_id: UUID, organization_id: UUID):
 @router.get("/{deal_id}/meetings", response_model=List[MeetingWithLinks])
 async def list_deal_meetings(deal_id: UUID):
     """List all meetings for a deal"""
-    supabase = get_service_client()
+    supabase = get_supabase_service()
     
     # Get meetings
     meetings_result = supabase.table("meetings").select("*").eq("deal_id", str(deal_id)).order("scheduled_date", desc=True).execute()
@@ -220,7 +220,7 @@ async def list_meetings(
     offset: int = 0
 ):
     """List all meetings with optional filters"""
-    supabase = get_service_client()
+    supabase = get_supabase_service()
     
     query = supabase.table("meetings").select("*")
     
@@ -241,7 +241,7 @@ async def list_meetings(
 @meetings_router.get("/{meeting_id}", response_model=MeetingWithLinks)
 async def get_meeting(meeting_id: UUID):
     """Get a single meeting with linked prep/followup info"""
-    supabase = get_service_client()
+    supabase = get_supabase_service()
     
     result = supabase.table("meetings").select("*").eq("id", str(meeting_id)).single().execute()
     
@@ -275,7 +275,7 @@ async def get_meeting(meeting_id: UUID):
 @meetings_router.post("", response_model=Meeting, status_code=201)
 async def create_meeting(meeting: MeetingCreate, user_id: UUID, organization_id: UUID):
     """Create a new meeting"""
-    supabase = get_service_client()
+    supabase = get_supabase_service()
     
     # Verify prospect belongs to organization
     prospect = supabase.table("prospects").select("id").eq("id", str(meeting.prospect_id)).eq("organization_id", str(organization_id)).single().execute()
@@ -317,7 +317,7 @@ async def create_meeting(meeting: MeetingCreate, user_id: UUID, organization_id:
 @meetings_router.patch("/{meeting_id}", response_model=Meeting)
 async def update_meeting(meeting_id: UUID, meeting: MeetingUpdate, organization_id: UUID):
     """Update a meeting"""
-    supabase = get_service_client()
+    supabase = get_supabase_service()
     
     # Verify meeting belongs to organization
     existing = supabase.table("meetings").select("id, prospect_id").eq("id", str(meeting_id)).eq("organization_id", str(organization_id)).single().execute()
@@ -356,7 +356,7 @@ async def update_meeting(meeting_id: UUID, meeting: MeetingUpdate, organization_
 @meetings_router.delete("/{meeting_id}", status_code=204)
 async def delete_meeting(meeting_id: UUID, organization_id: UUID):
     """Delete a meeting"""
-    supabase = get_service_client()
+    supabase = get_supabase_service()
     
     # Verify meeting belongs to organization
     existing = supabase.table("meetings").select("id").eq("id", str(meeting_id)).eq("organization_id", str(organization_id)).single().execute()
@@ -379,7 +379,7 @@ hub_router = APIRouter(prefix="/api/v1/prospects", tags=["prospect-hub"])
 @hub_router.get("/{prospect_id}/hub", response_model=ProspectHub)
 async def get_prospect_hub(prospect_id: UUID, organization_id: UUID):
     """Get full Prospect Hub data"""
-    supabase = get_service_client()
+    supabase = get_supabase_service()
     
     # Get prospect
     prospect_result = supabase.table("prospects").select("*").eq("id", str(prospect_id)).eq("organization_id", str(organization_id)).single().execute()
@@ -445,7 +445,7 @@ async def get_prospect_timeline(
     offset: int = 0
 ):
     """Get prospect activity timeline"""
-    supabase = get_service_client()
+    supabase = get_supabase_service()
     
     query = supabase.table("prospect_activities").select("*").eq("prospect_id", str(prospect_id))
     
@@ -464,7 +464,7 @@ async def get_prospect_timeline(
 @hub_router.post("/{prospect_id}/activities", response_model=Activity, status_code=201)
 async def create_activity(prospect_id: UUID, activity: ActivityCreate, user_id: UUID, organization_id: UUID):
     """Manually create an activity log entry (e.g., a note)"""
-    supabase = get_service_client()
+    supabase = get_supabase_service()
     
     # Verify prospect belongs to organization
     prospect = supabase.table("prospects").select("id").eq("id", str(prospect_id)).eq("organization_id", str(organization_id)).single().execute()
