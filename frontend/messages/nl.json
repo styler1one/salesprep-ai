@@ -339,6 +339,7 @@
       "quickActions": "Snelle Acties",
       "researchBrief": "Research Brief",
       "linkedResearch": "Gekoppelde Research",
+      "linkedContact": "Gekoppeld Contact",
       "yourNotes": "Jouw Notities"
     },
     "nextStep": {
@@ -355,6 +356,7 @@
       "title": "Nieuwe Follow-up",
       "selectProspect": "Selecteer Prospect",
       "selectProspectPlaceholder": "Kies een bedrijf...",
+      "selectContact": "Selecteer Contactpersoon",
       "uploadAudio": "Audio Bestand",
       "uploadTranscript": "Transcript Bestand",
       "dragDrop": "Sleep bestand hierheen of klik om te uploaden",
@@ -399,16 +401,12 @@
       "duration": "Duur",
       "linkedResearch": "Gekoppelde Research",
       "linkedPreparation": "Gekoppelde Voorbereiding",
+      "linkedContact": "Gekoppeld Contact",
       "audioPlayer": "Audio",
       "nextProspect": "Volgende Prospect?",
       "nextProspectDesc": "Start een nieuwe research voor je volgende prospect.",
       "startNewResearch": "Nieuwe Research",
-      "speakers": "Sprekers",
-      "linkedResearch": "Gekoppelde Research",
-      "linkedPreparation": "Gekoppelde Voorbereiding",
-      "audioPlayer": "Audio Speler",
-      "nextProspect": "Volgende Prospect?",
-      "startNewResearch": "Start nieuwe research"
+      "speakers": "Sprekers"
     },
     "toast": {
       "started": "Follow-up gestart",

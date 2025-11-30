@@ -277,6 +277,7 @@ async def upload_audio(
     prospect_company_name: Optional[str] = Form(None),
     meeting_date: Optional[str] = Form(None),
     meeting_subject: Optional[str] = Form(None),
+    contact_ids: Optional[str] = Form(None),  # Comma-separated contact UUIDs
     include_coaching: bool = Form(False),  # opt-in coaching feedback
     language: str = Form("en"),  # i18n: output language (default: English)
     current_user: dict = Depends(get_current_user)
@@ -341,7 +342,12 @@ async def upload_audio(
                 company_name=prospect_company_name
             )
         
-        # Create followup record with prospect_id
+        # Parse contact_ids from comma-separated string
+        parsed_contact_ids = []
+        if contact_ids:
+            parsed_contact_ids = [cid.strip() for cid in contact_ids.split(",") if cid.strip()]
+        
+        # Create followup record with prospect_id and contact_ids
         followup_data = {
             "organization_id": organization_id,
             "user_id": user_id,
@@ -352,7 +358,8 @@ async def upload_audio(
             "meeting_subject": meeting_subject,
             "status": "uploading",
             "audio_filename": file.filename,
-            "include_coaching": include_coaching  # NEW: store coaching preference
+            "include_coaching": include_coaching,  # Store coaching preference
+            "contact_ids": parsed_contact_ids  # Store linked contacts
         }
         
         response = supabase.table("followups").insert(followup_data).execute()
@@ -535,7 +542,8 @@ async def upload_transcript(
     prospect_company_name: Optional[str] = Form(None),
     meeting_date: Optional[str] = Form(None),
     meeting_subject: Optional[str] = Form(None),
-    include_coaching: bool = Form(False),  # NEW: opt-in coaching feedback
+    contact_ids: Optional[str] = Form(None),  # Comma-separated contact UUIDs
+    include_coaching: bool = Form(False),  # opt-in coaching feedback
     language: str = Form("en"),  # i18n: output language (default: English)
     current_user: dict = Depends(get_current_user)
 ):
@@ -616,7 +624,12 @@ async def upload_transcript(
                 company_name=prospect_company_name
             )
         
-        # Create followup record with prospect_id
+        # Parse contact_ids from comma-separated string
+        parsed_contact_ids = []
+        if contact_ids:
+            parsed_contact_ids = [cid.strip() for cid in contact_ids.split(",") if cid.strip()]
+        
+        # Create followup record with prospect_id and contact_ids
         followup_data = {
             "organization_id": organization_id,
             "user_id": user_id,
@@ -627,7 +640,8 @@ async def upload_transcript(
             "meeting_subject": meeting_subject,
             "status": "summarizing",
             "audio_filename": file.filename,  # Store transcript filename
-            "include_coaching": include_coaching  # NEW: store coaching preference
+            "include_coaching": include_coaching,  # Store coaching preference
+            "contact_ids": parsed_contact_ids  # Store linked contacts
         }
         
         response = supabase.table("followups").insert(followup_data).execute()

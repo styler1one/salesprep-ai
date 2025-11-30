@@ -319,6 +319,7 @@
       "quickActions": "Actions Rapides",
       "researchBrief": "Brief de Recherche",
       "linkedResearch": "Recherche Liée",
+      "linkedContact": "Contact Lié",
       "yourNotes": "Vos Notes"
     },
     "brief": {
@@ -352,6 +353,7 @@
       "title": "Nouveau Suivi",
       "selectProspect": "Sélectionner Prospect",
       "selectProspectPlaceholder": "Choisir une entreprise...",
+      "selectContact": "Sélectionner Contact",
       "uploadAudio": "Fichier Audio",
       "uploadTranscript": "Fichier Transcription",
       "dragDrop": "Glisser le fichier ici ou cliquer pour télécharger",
@@ -397,6 +399,7 @@
       "speakers": "Intervenants",
       "linkedResearch": "Recherche Liée",
       "linkedPreparation": "Préparation Liée",
+      "linkedContact": "Contact Lié",
       "audioPlayer": "Lecteur Audio",
       "nextProspect": "Prochain Prospect ?",
       "nextProspectDesc": "Lancez une nouvelle recherche pour votre prochain prospect.",

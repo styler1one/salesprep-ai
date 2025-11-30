@@ -319,6 +319,7 @@
       "quickActions": "Schnellaktionen",
       "researchBrief": "Research Brief",
       "linkedResearch": "Verknüpfte Recherche",
+      "linkedContact": "Verknüpfter Kontakt",
       "yourNotes": "Deine Notizen"
     },
     "brief": {
@@ -352,6 +353,7 @@
       "title": "Neues Follow-up",
       "selectProspect": "Interessent auswählen",
       "selectProspectPlaceholder": "Wähle ein Unternehmen...",
+      "selectContact": "Kontaktperson auswählen",
       "uploadAudio": "Audio-Datei",
       "uploadTranscript": "Transkript-Datei",
       "dragDrop": "Datei hierher ziehen oder klicken zum Hochladen",
@@ -397,6 +399,7 @@
       "speakers": "Sprecher",
       "linkedResearch": "Verknüpfte Recherche",
       "linkedPreparation": "Verknüpfte Vorbereitung",
+      "linkedContact": "Verknüpfter Kontakt",
       "audioPlayer": "Audio-Player",
       "nextProspect": "Nächster Interessent?",
       "nextProspectDesc": "Starte eine neue Recherche für deinen nächsten Interessenten.",

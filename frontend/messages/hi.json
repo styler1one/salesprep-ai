@@ -319,6 +319,7 @@
       "quickActions": "त्वरित क्रियाएं",
       "researchBrief": "रिसर्च ब्रीफ",
       "linkedResearch": "लिंक्ड रिसर्च",
+      "linkedContact": "लिंक्ड संपर्क",
       "yourNotes": "आपके नोट्स"
     },
     "brief": {
@@ -352,6 +353,7 @@
       "title": "नया फॉलो-अप",
       "selectProspect": "प्रॉस्पेक्ट चुनें",
       "selectProspectPlaceholder": "एक कंपनी चुनें...",
+      "selectContact": "संपर्क चुनें",
       "uploadAudio": "ऑडियो फाइल",
       "uploadTranscript": "ट्रांसक्रिप्ट फाइल",
       "dragDrop": "फाइल यहां खींचें या अपलोड करने के लिए क्लिक करें",
@@ -397,6 +399,7 @@
       "speakers": "वक्ता",
       "linkedResearch": "लिंक्ड रिसर्च",
       "linkedPreparation": "लिंक्ड तैयारी",
+      "linkedContact": "लिंक्ड संपर्क",
       "audioPlayer": "ऑडियो प्लेयर",
       "nextProspect": "अगला प्रॉस्पेक्ट?",
       "nextProspectDesc": "अपने अगले प्रॉस्पेक्ट के लिए नई रिसर्च शुरू करें।",

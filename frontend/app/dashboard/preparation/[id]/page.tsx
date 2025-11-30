@@ -26,6 +26,7 @@ interface MeetingPrep {
   created_at: string
   completed_at?: string
   error_message?: string
+  contact_ids?: string[]
 }
 
 interface ProfileStatus {
@@ -37,6 +38,15 @@ interface ResearchBrief {
   id: string
   company_name: string
   completed_at: string
+}
+
+interface ProspectContact {
+  id: string
+  name: string
+  role?: string
+  linkedin_url?: string
+  communication_style?: string
+  decision_authority?: string
 }
 
 export default function PreparationDetailPage() {
@@ -52,6 +62,7 @@ export default function PreparationDetailPage() {
   const [prep, setPrep] = useState<MeetingPrep | null>(null)
   const [profileStatus, setProfileStatus] = useState<ProfileStatus>({ hasSalesProfile: false, hasCompanyProfile: false })
   const [researchBrief, setResearchBrief] = useState<ResearchBrief | null>(null)
+  const [linkedContacts, setLinkedContacts] = useState<ProspectContact[]>([])
 
   useEffect(() => {
     const getUser = async () => {
@@ -110,6 +121,11 @@ export default function PreparationDetailPage() {
         if (data.prospect_company_name) {
           fetchResearchBrief(data.prospect_company_name, session.access_token)
         }
+        
+        // Fetch linked contacts
+        if (data.contact_ids && data.contact_ids.length > 0) {
+          fetchLinkedContacts(data.contact_ids, session.access_token)
+        }
       } else {
         toast({
           variant: "destructive",
@@ -148,6 +164,24 @@ export default function PreparationDetailPage() {
       }
     } catch (error) {
       console.error('Failed to fetch research brief:', error)
+    }
+  }
+
+  const fetchLinkedContacts = async (contactIds: string[], token: string) => {
+    if (!contactIds || contactIds.length === 0) return
+    
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/api/v1/contacts?ids=${contactIds.join(',')}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+
+      if (response.ok) {
+        const contacts = await response.json()
+        setLinkedContacts(contacts)
+      }
+    } catch (error) {
+      console.error('Failed to fetch linked contacts:', error)
     }
   }
 
@@ -386,6 +420,39 @@ export default function PreparationDetailPage() {
                         <Icons.chevronRight className="h-4 w-4 text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </button>
+                  </div>
+                )}
+
+                {/* Linked Contacts */}
+                {linkedContacts.length > 0 && (
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                      <Icons.user className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                      {t('detail.linkedContact')}
+                    </h3>
+                    <div className="space-y-2">
+                      {linkedContacts.map((contact) => (
+                        <div
+                          key={contact.id}
+                          className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg"
+                        >
+                          <p className="font-medium text-sm text-purple-900 dark:text-purple-100">{contact.name}</p>
+                          {contact.role && (
+                            <p className="text-xs text-purple-600 dark:text-purple-400">{contact.role}</p>
+                          )}
+                          {contact.communication_style && (
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                              💬 {contact.communication_style}
+                            </p>
+                          )}
+                          {contact.decision_authority && (
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              🎯 {contact.decision_authority}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 

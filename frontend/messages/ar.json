@@ -319,6 +319,7 @@
       "quickActions": "إجراءات سريعة",
       "researchBrief": "ملخص البحث",
       "linkedResearch": "البحث المرتبط",
+      "linkedContact": "جهة الاتصال المرتبطة",
       "yourNotes": "ملاحظاتك"
     },
     "brief": {
@@ -352,6 +353,7 @@
       "title": "متابعة جديدة",
       "selectProspect": "اختر العميل المحتمل",
       "selectProspectPlaceholder": "اختر شركة...",
+      "selectContact": "اختر جهة الاتصال",
       "uploadAudio": "ملف صوتي",
       "uploadTranscript": "ملف النسخ",
       "dragDrop": "اسحب الملف هنا أو انقر للرفع",
@@ -397,6 +399,7 @@
       "speakers": "المتحدثون",
       "linkedResearch": "البحث المرتبط",
       "linkedPreparation": "التحضير المرتبط",
+      "linkedContact": "جهة الاتصال المرتبطة",
       "audioPlayer": "مشغل الصوت",
       "nextProspect": "العميل المحتمل التالي؟",
       "nextProspectDesc": "ابدأ بحثاً جديداً لعميلك المحتمل التالي.",

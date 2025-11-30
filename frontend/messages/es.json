@@ -319,6 +319,7 @@
       "quickActions": "Acciones Rápidas",
       "researchBrief": "Brief de Investigación",
       "linkedResearch": "Investigación Vinculada",
+      "linkedContact": "Contacto Vinculado",
       "yourNotes": "Tus Notas"
     },
     "brief": {
@@ -352,6 +353,7 @@
       "title": "Nuevo Seguimiento",
       "selectProspect": "Seleccionar Prospecto",
       "selectProspectPlaceholder": "Elige una empresa...",
+      "selectContact": "Seleccionar Contacto",
       "uploadAudio": "Archivo de Audio",
       "uploadTranscript": "Archivo de Transcripción",
       "dragDrop": "Arrastra el archivo aquí o haz clic para subir",
@@ -397,6 +399,7 @@
       "speakers": "Participantes",
       "linkedResearch": "Investigación Vinculada",
       "linkedPreparation": "Preparación Vinculada",
+      "linkedContact": "Contacto Vinculado",
       "audioPlayer": "Reproductor de Audio",
       "nextProspect": "¿Siguiente Prospecto?",
       "nextProspectDesc": "Inicia una nueva investigación para tu próximo prospecto.",

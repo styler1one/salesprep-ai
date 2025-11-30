@@ -339,6 +339,7 @@
       "quickActions": "Quick Actions",
       "researchBrief": "Research Brief",
       "linkedResearch": "Linked Research",
+      "linkedContact": "Linked Contact",
       "yourNotes": "Your Notes"
     },
     "nextStep": {
@@ -355,6 +356,7 @@
       "title": "New Follow-up",
       "selectProspect": "Select Prospect",
       "selectProspectPlaceholder": "Choose a company...",
+      "selectContact": "Select Contact Person",
       "uploadAudio": "Audio File",
       "uploadTranscript": "Transcript File",
       "dragDrop": "Drag file here or click to upload",
@@ -399,16 +401,12 @@
       "duration": "Duration",
       "linkedResearch": "Linked Research",
       "linkedPreparation": "Linked Preparation",
+      "linkedContact": "Linked Contact",
       "audioPlayer": "Audio",
       "nextProspect": "Next Prospect?",
       "nextProspectDesc": "Start new research for your next prospect.",
       "startNewResearch": "New Research",
-      "speakers": "Speakers",
-      "linkedResearch": "Linked Research",
-      "linkedPreparation": "Linked Preparation",
-      "audioPlayer": "Audio Player",
-      "nextProspect": "Next Prospect?",
-      "startNewResearch": "Start new research"
+      "speakers": "Speakers"
     },
     "toast": {
       "started": "Follow-up started",

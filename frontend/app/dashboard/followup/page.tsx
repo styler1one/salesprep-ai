@@ -28,6 +28,12 @@ interface Followup {
   completed_at: string | null
 }
 
+interface ProspectContact {
+  id: string
+  name: string
+  role?: string
+}
+
 export default function FollowupPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
@@ -53,12 +59,67 @@ export default function FollowupPage() {
   const [emailLanguage, setEmailLanguage] = useState('en')
   const [showAdvanced, setShowAdvanced] = useState(false)
   
+  // Contact selector state
+  const [availableContacts, setAvailableContacts] = useState<ProspectContact[]>([])
+  const [selectedContactIds, setSelectedContactIds] = useState<string[]>([])
+  const [loadingContacts, setLoadingContacts] = useState(false)
+  
   // Set language from settings on load
   useEffect(() => {
     if (settingsLoaded) {
       setEmailLanguage(settings.email_language)
     }
   }, [settingsLoaded, settings.email_language])
+  
+  // Fetch contacts when prospect company changes
+  useEffect(() => {
+    const fetchContacts = async () => {
+      if (!prospectCompany) {
+        setAvailableContacts([])
+        setSelectedContactIds([])
+        return
+      }
+      
+      setLoadingContacts(true)
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) return
+        
+        // First get the prospect ID from company name
+        const prospectRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/prospects?search=${encodeURIComponent(prospectCompany)}`,
+          { headers: { 'Authorization': `Bearer ${session.access_token}` } }
+        )
+        
+        if (prospectRes.ok) {
+          const prospects = await prospectRes.json()
+          const prospect = prospects.find((p: any) => 
+            p.company_name.toLowerCase() === prospectCompany.toLowerCase()
+          )
+          
+          if (prospect) {
+            // Fetch contacts for this prospect
+            const contactsRes = await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/api/v1/prospects/${prospect.id}/contacts`,
+              { headers: { 'Authorization': `Bearer ${session.access_token}` } }
+            )
+            
+            if (contactsRes.ok) {
+              const contacts = await contactsRes.json()
+              setAvailableContacts(contacts)
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching contacts:', error)
+      } finally {
+        setLoadingContacts(false)
+      }
+    }
+    
+    const debounce = setTimeout(fetchContacts, 500)
+    return () => clearTimeout(debounce)
+  }, [prospectCompany, supabase])
   
   const fetchFollowups = useCallback(async () => {
     try {
@@ -190,6 +251,7 @@ export default function FollowupPage() {
       if (prospectCompany) formData.append('prospect_company_name', prospectCompany)
       if (meetingSubject) formData.append('meeting_subject', meetingSubject)
       if (meetingDate) formData.append('meeting_date', meetingDate)
+      if (selectedContactIds.length > 0) formData.append('contact_ids', selectedContactIds.join(','))
       formData.append('include_coaching', includeCoaching.toString())
       formData.append('language', emailLanguage)
 
@@ -229,6 +291,8 @@ export default function FollowupPage() {
       setIncludeCoaching(false)
       setEmailLanguage(settings.email_language) // Reset to settings default
       setShowAdvanced(false)
+      setSelectedContactIds([])
+      setAvailableContacts([])
       
       fetchFollowups()
 
@@ -552,6 +616,45 @@ export default function FollowupPage() {
                       disabled={uploading}
                     />
                   </div>
+
+                  {/* Contact selector */}
+                  {availableContacts.length > 0 && (
+                    <div>
+                      <Label className="text-xs text-slate-700 dark:text-slate-300">{t('form.selectContact')}</Label>
+                      <div className="space-y-2 mt-2">
+                        {availableContacts.map((contact) => (
+                          <label
+                            key={contact.id}
+                            className="flex items-center gap-3 p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                          >
+                            <Checkbox
+                              checked={selectedContactIds.includes(contact.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedContactIds([...selectedContactIds, contact.id])
+                                } else {
+                                  setSelectedContactIds(selectedContactIds.filter(id => id !== contact.id))
+                                }
+                              }}
+                              disabled={uploading}
+                            />
+                            <div>
+                              <p className="text-sm font-medium text-slate-900 dark:text-white">{contact.name}</p>
+                              {contact.role && (
+                                <p className="text-xs text-slate-500 dark:text-slate-400">{contact.role}</p>
+                              )}
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {loadingContacts && prospectCompany && (
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                      <Icons.spinner className="h-3 w-3 animate-spin" />
+                      Loading contacts...
+                    </div>
+                  )}
 
                   {/* Advanced toggle */}
                   <button

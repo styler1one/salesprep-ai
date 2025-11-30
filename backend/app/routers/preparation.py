@@ -199,7 +199,7 @@ async def start_prep(
         research_response = research_response.limit(1).execute()
         research_brief_id = research_response.data[0]["id"] if research_response.data else None
         
-        # Create prep record with prospect_id
+        # Create prep record with prospect_id and contact_ids
         prep_data = {
             "organization_id": organization_id,
             "user_id": user_id,
@@ -208,7 +208,8 @@ async def start_prep(
             "meeting_type": request.meeting_type,
             "custom_notes": request.custom_notes,
             "status": "pending",
-            "research_brief_id": research_brief_id
+            "research_brief_id": research_brief_id,
+            "contact_ids": request.contact_ids or []  # Store linked contacts
         }
         
         response = supabase.table("meeting_preps").insert(prep_data).execute()
