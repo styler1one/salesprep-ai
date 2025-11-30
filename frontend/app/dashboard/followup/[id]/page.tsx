@@ -60,6 +60,7 @@ interface Followup {
     tips: string[]
   } | null
   full_summary_content: string | null
+  deal_id?: string
 }
 
 interface ProspectContact {
@@ -85,6 +86,13 @@ interface MeetingPrep {
   completed_at?: string
 }
 
+interface LinkedDeal {
+  id: string
+  name: string
+  prospect_id: string
+  is_active: boolean
+}
+
 export default function FollowupDetailPage() {
   const router = useRouter()
   const params = useParams()
@@ -104,6 +112,7 @@ export default function FollowupDetailPage() {
   const [researchBrief, setResearchBrief] = useState<ResearchBrief | null>(null)
   const [meetingPrep, setMeetingPrep] = useState<MeetingPrep | null>(null)
   const [linkedContacts, setLinkedContacts] = useState<ProspectContact[]>([])
+  const [linkedDeal, setLinkedDeal] = useState<LinkedDeal | null>(null)
   
   // Edit summary states
   const [isEditingSummary, setIsEditingSummary] = useState(false)
@@ -137,6 +146,11 @@ export default function FollowupDetailPage() {
         // Fetch linked contacts
         if (data.contact_ids && data.contact_ids.length > 0) {
           fetchLinkedContacts(data.contact_ids)
+        }
+        
+        // Fetch linked deal
+        if (data.deal_id) {
+          fetchLinkedDeal(data.deal_id)
         }
       } else {
         toast({ title: t('toast.failed'), variant: 'destructive' })
@@ -186,6 +200,22 @@ export default function FollowupDetailPage() {
       }
     } catch (error) {
       console.error('Failed to fetch linked contacts:', error)
+    }
+  }
+
+  const fetchLinkedDeal = async (dealId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('deals')
+        .select('id, name, prospect_id, is_active')
+        .eq('id', dealId)
+        .single()
+
+      if (!error && data) {
+        setLinkedDeal(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch linked deal:', error)
     }
   }
 
@@ -812,6 +842,30 @@ export default function FollowupDetailPage() {
                             </p>
                           </div>
                           <Icons.chevronRight className="h-4 w-4 text-green-600 dark:text-green-400 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Linked Deal */}
+                  {linkedDeal && (
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                      <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                        <Icons.target className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                        {t('detail.linkedDeal')}
+                      </h3>
+                      <button
+                        onClick={() => router.push(`/dashboard/prospects/${linkedDeal.prospect_id}/deals/${linkedDeal.id}`)}
+                        className="w-full p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors text-left group"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-sm text-indigo-900 dark:text-indigo-100">{linkedDeal.name}</p>
+                            <p className="text-xs text-indigo-600 dark:text-indigo-400">
+                              {linkedDeal.is_active ? '✅ Active' : '📁 Archived'}
+                            </p>
+                          </div>
+                          <Icons.chevronRight className="h-4 w-4 text-indigo-600 dark:text-indigo-400 group-hover:translate-x-1 transition-transform" />
                         </div>
                       </button>
                     </div>

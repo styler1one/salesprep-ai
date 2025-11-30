@@ -26,6 +26,7 @@ class PrepStartRequest(BaseModel):
     meeting_type: str = Field(..., pattern="^(discovery|demo|closing|follow_up|other)$")
     custom_notes: Optional[str] = None
     contact_ids: Optional[List[str]] = None  # Selected contact persons for this meeting
+    deal_id: Optional[str] = None  # Optional deal to link this prep to
     language: Optional[str] = "en"  # i18n: output language (default: English)
 
 
@@ -199,11 +200,12 @@ async def start_prep(
         research_response = research_response.limit(1).execute()
         research_brief_id = research_response.data[0]["id"] if research_response.data else None
         
-        # Create prep record with prospect_id and contact_ids
+        # Create prep record with prospect_id, deal_id and contact_ids
         prep_data = {
             "organization_id": organization_id,
             "user_id": user_id,
             "prospect_id": prospect_id,  # Link to prospect!
+            "deal_id": request.deal_id,  # Link to deal (optional)
             "prospect_company_name": request.prospect_company_name,
             "meeting_type": request.meeting_type,
             "custom_notes": request.custom_notes,

@@ -18,7 +18,7 @@ import { useTranslations } from 'next-intl'
 import { useSettings } from '@/lib/settings-context'
 import { api } from '@/lib/api'
 import type { User } from '@supabase/supabase-js'
-import type { ProspectContact } from '@/types'
+import type { ProspectContact, Deal } from '@/types'
 
 interface MeetingPrep {
   id: string
@@ -67,6 +67,11 @@ export default function PreparationPage() {
   const [availableContacts, setAvailableContacts] = useState<ProspectContact[]>([])
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([])
   const [contactsLoading, setContactsLoading] = useState(false)
+  
+  // Deal linking state
+  const [availableDeals, setAvailableDeals] = useState<Deal[]>([])
+  const [selectedDealId, setSelectedDealId] = useState<string>('')
+  const [dealsLoading, setDealsLoading] = useState(false)
 
   useEffect(() => {
     const getUser = async () => {
@@ -153,9 +158,58 @@ export default function PreparationPage() {
     }
   }
 
+  // Load deals when company name changes
+  const loadDealsForProspect = async (prospectName: string) => {
+    if (!prospectName || prospectName.length < 2) {
+      setAvailableDeals([])
+      setSelectedDealId('')
+      return
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      setDealsLoading(true)
+      
+      // Find the prospect first
+      const { data: prospects, error: prospectError } = await api.get<Array<{ id: string; company_name: string }>>(
+        `/api/v1/prospects/search?q=${encodeURIComponent(prospectName)}`
+      )
+
+      if (!prospectError && prospects) {
+        const exactMatch = prospects.find(
+          (p) => p.company_name.toLowerCase() === prospectName.toLowerCase()
+        )
+
+        if (exactMatch) {
+          // Get deals for this prospect
+          const { data: dealsData, error: dealsError } = await supabase
+            .from('deals')
+            .select('*')
+            .eq('prospect_id', exactMatch.id)
+            .eq('is_active', true)
+            .order('created_at', { ascending: false })
+
+          if (!dealsError && dealsData) {
+            setAvailableDeals(dealsData || [])
+          }
+        } else {
+          setAvailableDeals([])
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load deals:', error)
+      setAvailableDeals([])
+    } finally {
+      setDealsLoading(false)
+    }
+  }
+
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       loadContactsForProspect(companyName)
+      loadDealsForProspect(companyName)
     }, 500)
 
     return () => clearTimeout(timeoutId)
@@ -177,6 +231,7 @@ export default function PreparationPage() {
         meeting_type: meetingType,
         custom_notes: customNotes || null,
         contact_ids: selectedContactIds.length > 0 ? selectedContactIds : null,
+        deal_id: selectedDealId || null,
         language: outputLanguage
       })
 
@@ -187,6 +242,8 @@ export default function PreparationPage() {
         setOutputLanguage(settings.output_language) // Reset to settings default
         setSelectedContactIds([])
         setAvailableContacts([])
+        setSelectedDealId('')
+        setAvailableDeals([])
         setShowAdvanced(false)
         loadPreps()
       } else {
@@ -453,7 +510,29 @@ export default function PreparationPage() {
                     </div>
                   )}
 
-                  {contactsLoading && (
+                  {/* Deal Selector */}
+                  {availableDeals.length > 0 && (
+                    <div>
+                      <Label className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                        🎯 {t('form.selectDeal')}
+                      </Label>
+                      <Select value={selectedDealId} onValueChange={setSelectedDealId}>
+                        <SelectTrigger className="h-9 text-sm mt-1">
+                          <SelectValue placeholder={t('form.selectDealPlaceholder')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">— {t('form.noDeal')} —</SelectItem>
+                          {availableDeals.map((deal) => (
+                            <SelectItem key={deal.id} value={deal.id}>
+                              🎯 {deal.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {(contactsLoading || dealsLoading) && (
                     <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
                       <Icons.spinner className="h-3 w-3 animate-spin" />
                       {t('loading')}

@@ -16,7 +16,8 @@ import { LanguageSelect } from '@/components/language-select'
 import { useTranslations } from 'next-intl'
 import { useSettings } from '@/lib/settings-context'
 import type { User } from '@supabase/supabase-js'
-import type { ProspectContact } from '@/types'
+import type { ProspectContact, Deal } from '@/types'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface FollowupItem {
   id: string
@@ -60,6 +61,11 @@ export default function FollowupPage() {
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([])
   const [loadingContacts, setLoadingContacts] = useState(false)
   
+  // Deal selector state
+  const [availableDeals, setAvailableDeals] = useState<Deal[]>([])
+  const [selectedDealId, setSelectedDealId] = useState<string>('')
+  const [loadingDeals, setLoadingDeals] = useState(false)
+  
   // Set language from settings on load
   useEffect(() => {
     if (settingsLoaded) {
@@ -67,16 +73,19 @@ export default function FollowupPage() {
     }
   }, [settingsLoaded, settings.email_language])
   
-  // Fetch contacts when prospect company changes
+  // Fetch contacts and deals when prospect company changes
   useEffect(() => {
-    const fetchContacts = async () => {
+    const fetchContactsAndDeals = async () => {
       if (!prospectCompany) {
         setAvailableContacts([])
         setSelectedContactIds([])
+        setAvailableDeals([])
+        setSelectedDealId('')
         return
       }
       
       setLoadingContacts(true)
+      setLoadingDeals(true)
       try {
         const { data: { session } } = await supabase.auth.getSession()
         if (!session) return
@@ -105,16 +114,29 @@ export default function FollowupPage() {
               // API returns { contacts: [], count: number }
               setAvailableContacts(contactsData.contacts || [])
             }
+            
+            // Fetch deals for this prospect
+            const { data: dealsData, error: dealsError } = await supabase
+              .from('deals')
+              .select('*')
+              .eq('prospect_id', prospect.id)
+              .eq('is_active', true)
+              .order('created_at', { ascending: false })
+            
+            if (!dealsError && dealsData) {
+              setAvailableDeals(dealsData || [])
+            }
           }
         }
       } catch (error) {
-        console.error('Error fetching contacts:', error)
+        console.error('Error fetching contacts/deals:', error)
       } finally {
         setLoadingContacts(false)
+        setLoadingDeals(false)
       }
     }
     
-    const debounce = setTimeout(fetchContacts, 500)
+    const debounce = setTimeout(fetchContactsAndDeals, 500)
     return () => clearTimeout(debounce)
   }, [prospectCompany, supabase])
   
@@ -249,6 +271,7 @@ export default function FollowupPage() {
       if (meetingSubject) formData.append('meeting_subject', meetingSubject)
       if (meetingDate) formData.append('meeting_date', meetingDate)
       if (selectedContactIds.length > 0) formData.append('contact_ids', selectedContactIds.join(','))
+      if (selectedDealId) formData.append('deal_id', selectedDealId)
       formData.append('include_coaching', includeCoaching.toString())
       formData.append('language', emailLanguage)
 
@@ -290,6 +313,8 @@ export default function FollowupPage() {
       setShowAdvanced(false)
       setSelectedContactIds([])
       setAvailableContacts([])
+      setSelectedDealId('')
+      setAvailableDeals([])
       
       fetchFollowups()
 
@@ -650,6 +675,34 @@ export default function FollowupPage() {
                     <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                       <Icons.spinner className="h-3 w-3 animate-spin" />
                       Loading contacts...
+                    </div>
+                  )}
+
+                  {/* Deal selector */}
+                  {availableDeals.length > 0 && (
+                    <div>
+                      <Label className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                        🎯 {t('form.selectDeal')}
+                      </Label>
+                      <Select value={selectedDealId} onValueChange={setSelectedDealId} disabled={uploading}>
+                        <SelectTrigger className="h-9 text-sm mt-1">
+                          <SelectValue placeholder={t('form.selectDealPlaceholder')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">— {t('form.noDeal')} —</SelectItem>
+                          {availableDeals.map((deal) => (
+                            <SelectItem key={deal.id} value={deal.id}>
+                              🎯 {deal.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {loadingDeals && prospectCompany && (
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                      <Icons.spinner className="h-3 w-3 animate-spin" />
+                      Loading deals...
                     </div>
                   )}
 

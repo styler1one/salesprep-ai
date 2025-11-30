@@ -280,6 +280,7 @@ async def upload_audio(
     meeting_date: Optional[str] = Form(None),
     meeting_subject: Optional[str] = Form(None),
     contact_ids: Optional[str] = Form(None),  # Comma-separated contact UUIDs
+    deal_id: Optional[str] = Form(None),  # Optional deal to link this follow-up to
     include_coaching: bool = Form(False),  # opt-in coaching feedback
     language: str = Form("en"),  # i18n: output language (default: English)
     current_user: dict = Depends(get_current_user)
@@ -358,6 +359,7 @@ async def upload_audio(
             "prospect_company_name": prospect_company_name,
             "meeting_date": meeting_date,
             "meeting_subject": meeting_subject,
+            "deal_id": deal_id,  # Link to deal (optional)
             "status": "uploading",
             "audio_filename": file.filename,
             "include_coaching": include_coaching,  # Store coaching preference
@@ -545,6 +547,7 @@ async def upload_transcript(
     meeting_date: Optional[str] = Form(None),
     meeting_subject: Optional[str] = Form(None),
     contact_ids: Optional[str] = Form(None),  # Comma-separated contact UUIDs
+    deal_id: Optional[str] = Form(None),  # Optional deal to link this follow-up to
     include_coaching: bool = Form(False),  # opt-in coaching feedback
     language: str = Form("en"),  # i18n: output language (default: English)
     current_user: dict = Depends(get_current_user)
@@ -640,6 +643,7 @@ async def upload_transcript(
             "prospect_company_name": prospect_company_name,
             "meeting_date": meeting_date,
             "meeting_subject": meeting_subject,
+            "deal_id": deal_id,  # Link to deal (optional)
             "status": "summarizing",
             "audio_filename": file.filename,  # Store transcript filename
             "include_coaching": include_coaching,  # Store coaching preference
