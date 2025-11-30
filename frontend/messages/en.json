@@ -725,7 +725,17 @@
     "skip": "Skip",
     "next": "Next",
     "back": "Back",
-    "finish": "Finish"
+    "finish": "Finish",
+    "toast": {
+      "startError": "Error starting",
+      "startErrorDesc": "Could not start interview. Please try again.",
+      "saveError": "Error",
+      "saveErrorDesc": "Could not save answer",
+      "profileCreated": "Company profile created! 🎉",
+      "profileCreatedDesc": "Your company profile has been saved successfully.",
+      "createError": "Error",
+      "createErrorDesc": "Could not create profile. Please try again."
+    }
   },
   "language": {
     "outputLanguage": "Output Language",

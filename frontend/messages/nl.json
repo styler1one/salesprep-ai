@@ -725,7 +725,17 @@
     "skip": "Overslaan",
     "next": "Volgende",
     "back": "Terug",
-    "finish": "Afronden"
+    "finish": "Afronden",
+    "toast": {
+      "startError": "Fout bij starten",
+      "startErrorDesc": "Kon interview niet starten. Probeer het opnieuw.",
+      "saveError": "Fout",
+      "saveErrorDesc": "Kon antwoord niet opslaan",
+      "profileCreated": "Bedrijfsprofiel aangemaakt! 🎉",
+      "profileCreatedDesc": "Je bedrijfsprofiel is succesvol opgeslagen.",
+      "createError": "Fout",
+      "createErrorDesc": "Kon profiel niet aanmaken. Probeer het opnieuw."
+    }
   },
   "language": {
     "outputLanguage": "Output Taal",

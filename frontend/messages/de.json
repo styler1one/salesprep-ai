@@ -719,7 +719,17 @@
     "skip": "Überspringen",
     "next": "Weiter",
     "back": "Zurück",
-    "finish": "Abschließen"
+    "finish": "Abschließen",
+    "toast": {
+      "startError": "Fehler beim Starten",
+      "startErrorDesc": "Interview konnte nicht gestartet werden. Bitte versuche es erneut.",
+      "saveError": "Fehler",
+      "saveErrorDesc": "Antwort konnte nicht gespeichert werden",
+      "profileCreated": "Unternehmensprofil erstellt! 🎉",
+      "profileCreatedDesc": "Dein Unternehmensprofil wurde erfolgreich gespeichert.",
+      "createError": "Fehler",
+      "createErrorDesc": "Profil konnte nicht erstellt werden. Bitte versuche es erneut."
+    }
   },
   "language": {
     "outputLanguage": "Ausgabesprache",

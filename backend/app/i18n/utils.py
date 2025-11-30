@@ -67,7 +67,7 @@ def resolve_working_language(
     1. Explicit request parameter
     2. User's language override
     3. Organization default
-    4. System default (Dutch)
+    4. System default (English)
     
     Args:
         request_language: Language specified in API request
@@ -98,7 +98,7 @@ def resolve_client_language(
     1. Explicit email language parameter
     2. Prospect's preferred language
     3. User's working language
-    4. System default (Dutch)
+    4. System default (English)
     
     Args:
         email_language: Language specified for this email

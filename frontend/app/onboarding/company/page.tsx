@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
@@ -28,6 +29,7 @@ export default function CompanyOnboardingPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const { toast } = useToast()
+  const t = useTranslations('onboarding')
   
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -73,8 +75,8 @@ export default function CompanyOnboardingPage() {
       } catch (error) {
         console.error('Error starting interview:', error)
         toast({
-          title: 'Fout bij starten',
-          description: 'Kon interview niet starten. Probeer het opnieuw.',
+          title: t('toast.startError'),
+          description: t('toast.startErrorDesc'),
           variant: 'destructive'
         })
       } finally {
@@ -142,8 +144,8 @@ export default function CompanyOnboardingPage() {
     } catch (error) {
       console.error('Error submitting answer:', error)
       toast({
-        title: 'Fout',
-        description: 'Kon antwoord niet opslaan',
+        title: t('toast.saveError'),
+        description: t('toast.saveErrorDesc'),
         variant: 'destructive'
       })
     } finally {
@@ -181,8 +183,8 @@ export default function CompanyOnboardingPage() {
       }
 
       toast({
-        title: 'Bedrijfsprofiel aangemaakt! 🎉',
-        description: 'Je bedrijfsprofiel is succesvol opgeslagen.'
+        title: t('toast.profileCreated'),
+        description: t('toast.profileCreatedDesc')
       })
 
       // Redirect to company profile page
@@ -191,8 +193,8 @@ export default function CompanyOnboardingPage() {
     } catch (error: any) {
       console.error('Error completing interview:', error)
       toast({
-        title: 'Fout',
-        description: error.message || 'Kon profiel niet aanmaken. Probeer het opnieuw.',
+        title: t('toast.createError'),
+        description: error.message || t('toast.createErrorDesc'),
         variant: 'destructive'
       })
       setCompleted(false)

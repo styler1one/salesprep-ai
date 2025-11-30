@@ -295,8 +295,8 @@ export default function FollowupPage() {
 
     } catch (error: any) {
       toast({
-        title: 'Upload mislukt',
-        description: error.message,
+        title: t('toast.failed'),
+        description: error.message || t('toast.failedDesc'),
         variant: 'destructive'
       })
     } finally {

@@ -713,7 +713,17 @@
     "skip": "Passer",
     "next": "Suivant",
     "back": "Retour",
-    "finish": "Terminer"
+    "finish": "Terminer",
+    "toast": {
+      "startError": "Erreur de démarrage",
+      "startErrorDesc": "Impossible de démarrer l'interview. Veuillez réessayer.",
+      "saveError": "Erreur",
+      "saveErrorDesc": "Impossible d'enregistrer la réponse",
+      "profileCreated": "Profil d'entreprise créé ! 🎉",
+      "profileCreatedDesc": "Votre profil d'entreprise a été enregistré avec succès.",
+      "createError": "Erreur",
+      "createErrorDesc": "Impossible de créer le profil. Veuillez réessayer."
+    }
   },
   "language": {
     "outputLanguage": "Langue de sortie",

@@ -713,7 +713,17 @@
     "skip": "Saltar",
     "next": "Siguiente",
     "back": "Atrás",
-    "finish": "Finalizar"
+    "finish": "Finalizar",
+    "toast": {
+      "startError": "Error al iniciar",
+      "startErrorDesc": "No se pudo iniciar la entrevista. Por favor, inténtalo de nuevo.",
+      "saveError": "Error",
+      "saveErrorDesc": "No se pudo guardar la respuesta",
+      "profileCreated": "¡Perfil de empresa creado! 🎉",
+      "profileCreatedDesc": "Tu perfil de empresa se ha guardado correctamente.",
+      "createError": "Error",
+      "createErrorDesc": "No se pudo crear el perfil. Por favor, inténtalo de nuevo."
+    }
   },
   "language": {
     "outputLanguage": "Idioma de salida",
