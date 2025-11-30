@@ -65,6 +65,7 @@
     "back": "Terug",
     "next": "Volgende",
     "search": "Zoeken",
+    "select": "Selecteer:",
     "close": "Sluiten",
     "copy": "Kopieer",
     "copied": "Gekopieerd!",
@@ -226,6 +227,16 @@
       "saveFailed": "Kon niet opslaan",
       "saveFailedDesc": "Er is een fout opgetreden bij het opslaan van je wijzigingen"
     },
+    "detail": {
+      "discoveryQuestions": "Discovery Vragen",
+      "aiContext": "AI Context",
+      "knowledgeBaseActive": "Kennisbank Actief",
+      "documentsUsed": "{count} documenten gebruikt",
+      "contactsPanel": {
+        "noContacts": "Nog geen contacten",
+        "addForPreparation": "Voeg toe voor een gepersonaliseerde voorbereiding"
+      }
+    },
     "contacts": {
       "title": "Contactpersonen",
       "name": "Naam",
@@ -348,7 +359,18 @@
       "failed": "Voorbereiding mislukt",
       "failedDesc": "Kon de voorbereiding niet starten",
       "selectProspect": "Selecteer een prospect",
-      "selectContacts": "Selecteer contactpersonen"
+      "selectContacts": "Selecteer contactpersonen",
+      "deleted": "Verwijderd",
+      "deletedDesc": "Voorbereiding is verwijderd",
+      "deleteFailed": "Verwijderen mislukt",
+      "deleteFailedDesc": "Kon voorbereiding niet verwijderen",
+      "notLoggedIn": "Niet ingelogd",
+      "error": "Fout",
+      "loadFailed": "Kon niet laden",
+      "loadFailedDesc": "Er is een fout opgetreden"
+    },
+    "confirm": {
+      "delete": "Weet je zeker dat je deze voorbereiding wilt verwijderen?"
     },
     "detail": {
       "meetingContext": "Meeting Context",
@@ -405,6 +427,14 @@
     },
     "detail": {
       "summary": "Samenvatting",
+      "keyPoints": "Belangrijkste Punten",
+      "concerns": "Zorgen",
+      "nextSteps": "Vervolgstappen",
+      "crossSellUpsell": "Cross/Upsell",
+      "risks": "Risico's",
+      "doubts": "Twijfel",
+      "unspokenNeeds": "Onuitgesproken",
+      "tips": "Tips",
       "commercialSignals": "Commerciële Signalen",
       "observations": "Observaties & Signalen",
       "coachingFeedback": "Coaching Feedback",
@@ -439,7 +469,29 @@
       "failedDesc": "Kon de follow-up niet starten",
       "copied": "Gekopieerd!",
       "selectProspect": "Selecteer een prospect",
-      "selectFile": "Selecteer een bestand"
+      "selectFile": "Selecteer een bestand",
+      "invalidFileType": "Ongeldig bestandstype",
+      "invalidFileTypeDescAudio": "Upload een mp3, m4a, wav of webm bestand",
+      "invalidFileTypeDescTranscript": "Upload een txt, md, docx of srt bestand",
+      "fileTooLarge": "Bestand te groot",
+      "fileTooLargeDescAudio": "Maximum bestandsgrootte is 50MB",
+      "fileTooLargeDescTranscript": "Maximum bestandsgrootte is 10MB",
+      "noFileSelected": "Geen bestand geselecteerd",
+      "noFileSelectedDesc": "Selecteer eerst een bestand",
+      "notFound": "Follow-up niet gevonden",
+      "deleted": "Verwijderd",
+      "deletedDesc": "Follow-up is verwijderd",
+      "deleteFailed": "Verwijderen mislukt",
+      "deleteFailedDesc": "Kon follow-up niet verwijderen",
+      "uploadStarted": "Upload gestart",
+      "uploadStartedDesc": "Je bestand wordt verwerkt"
+    },
+    "confirm": {
+      "delete": "Weet je zeker dat je deze follow-up wilt verwijderen?"
+    },
+    "sections": {
+      "keyPoints": "Belangrijkste Punten",
+      "discoveryQuestions": "Discovery Vragen"
     }
   },
   "profile": {

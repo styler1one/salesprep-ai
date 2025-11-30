@@ -168,7 +168,7 @@ export default function PreparationPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
-        toast({ title: 'Fout', description: 'Niet ingelogd', variant: 'destructive' })
+        toast({ title: t('toast.failed'), description: t('toast.failedDesc'), variant: 'destructive' })
         return
       }
 
@@ -181,7 +181,7 @@ export default function PreparationPage() {
       })
 
       if (!error) {
-        toast({ title: 'Gestart', description: 'Voorbereiding wordt gegenereerd...' })
+        toast({ title: t('toast.started'), description: t('toast.startedDesc') })
         setCompanyName('')
         setCustomNotes('')
         setOutputLanguage(settings.output_language) // Reset to settings default
@@ -190,10 +190,10 @@ export default function PreparationPage() {
         setShowAdvanced(false)
         loadPreps()
       } else {
-        toast({ title: 'Fout', description: error.message || 'Kon niet starten', variant: 'destructive' })
+        toast({ title: t('toast.failed'), description: error.message || t('toast.failedDesc'), variant: 'destructive' })
       }
     } catch (error) {
-      toast({ title: 'Fout', description: 'Kon niet starten', variant: 'destructive' })
+      toast({ title: t('toast.failed'), description: t('toast.failedDesc'), variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -205,7 +205,7 @@ export default function PreparationPage() {
 
   const deletePrep = async (prepId: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!confirm('Weet je zeker dat je deze voorbereiding wilt verwijderen?')) return
+    if (!confirm(t('confirm.delete'))) return
 
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -214,11 +214,11 @@ export default function PreparationPage() {
       const { error } = await api.delete(`/api/v1/prep/${prepId}`)
 
       if (!error) {
-        toast({ title: 'Verwijderd' })
+        toast({ title: t('toast.deleted') })
         loadPreps()
       }
     } catch (error) {
-      toast({ title: 'Fout', description: 'Kon niet verwijderen', variant: 'destructive' })
+      toast({ title: t('toast.deleteFailed'), description: t('toast.deleteFailedDesc'), variant: 'destructive' })
     }
   }
 

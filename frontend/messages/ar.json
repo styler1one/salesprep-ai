@@ -65,6 +65,7 @@
     "back": "رجوع",
     "next": "التالي",
     "search": "بحث",
+    "select": "اختر:",
     "close": "إغلاق",
     "copy": "نسخ",
     "copied": "تم النسخ!",
@@ -226,6 +227,16 @@
       "saveFailed": "فشل الحفظ",
       "saveFailedDesc": "حدث خطأ أثناء حفظ تعديلاتك"
     },
+    "detail": {
+      "discoveryQuestions": "أسئلة الاكتشاف",
+      "aiContext": "سياق الذكاء الاصطناعي",
+      "knowledgeBaseActive": "قاعدة المعرفة نشطة",
+      "documentsUsed": "{count} مستندات مستخدمة",
+      "contactsPanel": {
+        "noContacts": "لا توجد جهات اتصال بعد",
+        "addForPreparation": "أضف للتحضير المخصص"
+      }
+    },
     "contacts": {
       "title": "جهات الاتصال",
       "add": "إضافة جهة اتصال",
@@ -353,7 +364,18 @@
       "failed": "فشل التحضير",
       "failedDesc": "تعذر بدء التحضير",
       "selectProspect": "اختر عميلاً محتملاً",
-      "selectContacts": "اختر جهات اتصال"
+      "selectContacts": "اختر جهات اتصال",
+      "deleted": "تم الحذف",
+      "deletedDesc": "تم حذف التحضير",
+      "deleteFailed": "فشل الحذف",
+      "deleteFailedDesc": "تعذر حذف التحضير",
+      "notLoggedIn": "غير مسجل الدخول",
+      "error": "خطأ",
+      "loadFailed": "تعذر التحميل",
+      "loadFailedDesc": "حدث خطأ"
+    },
+    "confirm": {
+      "delete": "هل أنت متأكد أنك تريد حذف هذا التحضير؟"
     },
     "nextStep": {
       "title": "بعد اجتماعك",
@@ -402,6 +424,14 @@
     },
     "detail": {
       "summary": "الملخص",
+      "keyPoints": "النقاط الرئيسية",
+      "concerns": "المخاوف",
+      "nextSteps": "الخطوات التالية",
+      "crossSellUpsell": "البيع المتقاطع/الإضافي",
+      "risks": "المخاطر",
+      "doubts": "الشكوك",
+      "unspokenNeeds": "الاحتياجات غير المعلنة",
+      "tips": "النصائح",
       "commercialSignals": "الإشارات التجارية",
       "observations": "الملاحظات والإشارات",
       "coachingFeedback": "ملاحظات التدريب",
@@ -436,7 +466,29 @@
       "failedDesc": "تعذر بدء المتابعة",
       "copied": "تم النسخ!",
       "selectProspect": "اختر عميلاً محتملاً",
-      "selectFile": "اختر ملفاً"
+      "selectFile": "اختر ملفاً",
+      "invalidFileType": "نوع ملف غير صالح",
+      "invalidFileTypeDescAudio": "ارفع ملف mp3 أو m4a أو wav أو webm",
+      "invalidFileTypeDescTranscript": "ارفع ملف txt أو md أو docx أو srt",
+      "fileTooLarge": "الملف كبير جداً",
+      "fileTooLargeDescAudio": "الحد الأقصى للحجم هو 50MB",
+      "fileTooLargeDescTranscript": "الحد الأقصى للحجم هو 10MB",
+      "noFileSelected": "لم يتم اختيار ملف",
+      "noFileSelectedDesc": "اختر ملفاً أولاً",
+      "notFound": "المتابعة غير موجودة",
+      "deleted": "تم الحذف",
+      "deletedDesc": "تم حذف المتابعة",
+      "deleteFailed": "فشل الحذف",
+      "deleteFailedDesc": "تعذر حذف المتابعة",
+      "uploadStarted": "بدأ الرفع",
+      "uploadStartedDesc": "جاري معالجة ملفك"
+    },
+    "confirm": {
+      "delete": "هل أنت متأكد أنك تريد حذف هذه المتابعة؟"
+    },
+    "sections": {
+      "keyPoints": "النقاط الرئيسية",
+      "discoveryQuestions": "أسئلة الاكتشاف"
     }
   },
   "profile": {

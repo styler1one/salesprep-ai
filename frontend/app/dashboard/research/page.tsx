@@ -24,6 +24,7 @@ export default function ResearchPage() {
   const { toast } = useToast()
   const t = useTranslations('research')
   const tLang = useTranslations('language')
+  const tCommon = useTranslations('common')
   const { settings, loaded: settingsLoaded } = useSettings()
   
   const [user, setUser] = useState<User | null>(null)
@@ -518,7 +519,7 @@ export default function ResearchPage() {
                   {/* Company Options */}
                   {showOptions && companyOptions.length > 0 && (
                     <div className="border border-blue-200 dark:border-blue-800 rounded-lg p-2 bg-blue-50 dark:bg-blue-900/30 space-y-2 max-h-48 overflow-y-auto">
-                      <p className="text-xs font-medium text-blue-800 dark:text-blue-200">Selecteer:</p>
+                      <p className="text-xs font-medium text-blue-800 dark:text-blue-200">{tCommon('select')}</p>
                       {companyOptions.map((option, index) => (
                         <button
                           key={index}

@@ -184,8 +184,8 @@ export default function FollowupPage() {
         const allowedTypes = ['audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/webm', 'audio/x-m4a']
         if (!allowedTypes.includes(file.type)) {
           toast({
-            title: 'Ongeldig bestandstype',
-            description: 'Upload een mp3, m4a, wav of webm bestand',
+            title: t('toast.invalidFileType'),
+            description: t('toast.invalidFileTypeDescAudio'),
             variant: 'destructive'
           })
           return
@@ -193,8 +193,8 @@ export default function FollowupPage() {
         
         if (file.size > 50 * 1024 * 1024) {
           toast({
-            title: 'Bestand te groot',
-            description: 'Maximum bestandsgrootte is 50MB',
+            title: t('toast.fileTooLarge'),
+            description: t('toast.fileTooLargeDescAudio'),
             variant: 'destructive'
           })
           return
@@ -203,8 +203,8 @@ export default function FollowupPage() {
         const allowedExts = ['txt', 'md', 'docx', 'srt']
         if (!allowedExts.includes(ext)) {
           toast({
-            title: 'Ongeldig bestandstype',
-            description: 'Upload een txt, md, docx of srt bestand',
+            title: t('toast.invalidFileType'),
+            description: t('toast.invalidFileTypeDescTranscript'),
             variant: 'destructive'
           })
           return
@@ -212,8 +212,8 @@ export default function FollowupPage() {
         
         if (file.size > 10 * 1024 * 1024) {
           toast({
-            title: 'Bestand te groot',
-            description: 'Maximum bestandsgrootte is 10MB',
+            title: t('toast.fileTooLarge'),
+            description: t('toast.fileTooLargeDescTranscript'),
             variant: 'destructive'
           })
           return
@@ -227,8 +227,8 @@ export default function FollowupPage() {
   const handleUpload = async () => {
     if (!selectedFile) {
       toast({
-        title: 'Geen bestand geselecteerd',
-        description: 'Selecteer eerst een bestand',
+        title: t('toast.noFileSelected'),
+        description: t('toast.noFileSelectedDesc'),
         variant: 'destructive'
       })
       return
@@ -276,8 +276,8 @@ export default function FollowupPage() {
       setUploadProgress(100)
 
       toast({
-        title: 'Upload gestart',
-        description: 'Wordt getranscribeerd en verwerkt...'
+        title: t('toast.uploadStarted'),
+        description: t('toast.uploadStartedDesc')
       })
 
       // Reset form
@@ -307,7 +307,7 @@ export default function FollowupPage() {
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!confirm('Weet je zeker dat je deze follow-up wilt verwijderen?')) return
+    if (!confirm(t('confirm.delete'))) return
 
     try {
       const { data: { session } } = await supabase.auth.getSession()

@@ -65,6 +65,7 @@
     "back": "Zurück",
     "next": "Weiter",
     "search": "Suchen",
+    "select": "Auswählen:",
     "close": "Schließen",
     "copy": "Kopieren",
     "copied": "Kopiert!",
@@ -226,6 +227,16 @@
       "saveFailed": "Speichern fehlgeschlagen",
       "saveFailedDesc": "Beim Speichern Ihrer Änderungen ist ein Fehler aufgetreten"
     },
+    "detail": {
+      "discoveryQuestions": "Discovery-Fragen",
+      "aiContext": "KI-Kontext",
+      "knowledgeBaseActive": "Wissensdatenbank Aktiv",
+      "documentsUsed": "{count} Dokumente verwendet",
+      "contactsPanel": {
+        "noContacts": "Noch keine Kontakte",
+        "addForPreparation": "Hinzufügen für personalisierte Vorbereitung"
+      }
+    },
     "contacts": {
       "title": "Kontaktpersonen",
       "add": "Kontakt hinzufügen",
@@ -353,7 +364,18 @@
       "failed": "Vorbereitung fehlgeschlagen",
       "failedDesc": "Konnte die Vorbereitung nicht starten",
       "selectProspect": "Wähle einen Interessenten",
-      "selectContacts": "Wähle Kontakte aus"
+      "selectContacts": "Wähle Kontakte aus",
+      "deleted": "Gelöscht",
+      "deletedDesc": "Vorbereitung wurde gelöscht",
+      "deleteFailed": "Löschen fehlgeschlagen",
+      "deleteFailedDesc": "Konnte Vorbereitung nicht löschen",
+      "notLoggedIn": "Nicht angemeldet",
+      "error": "Fehler",
+      "loadFailed": "Konnte nicht laden",
+      "loadFailedDesc": "Ein Fehler ist aufgetreten"
+    },
+    "confirm": {
+      "delete": "Bist du sicher, dass du diese Vorbereitung löschen möchtest?"
     },
     "nextStep": {
       "title": "Nach deinem Meeting",
@@ -402,6 +424,14 @@
     },
     "detail": {
       "summary": "Zusammenfassung",
+      "keyPoints": "Wichtigste Punkte",
+      "concerns": "Bedenken",
+      "nextSteps": "Nächste Schritte",
+      "crossSellUpsell": "Cross/Upsell",
+      "risks": "Risiken",
+      "doubts": "Zweifel",
+      "unspokenNeeds": "Unausgesprochene Bedürfnisse",
+      "tips": "Tipps",
       "commercialSignals": "Kommerzielle Signale",
       "observations": "Beobachtungen & Signale",
       "coachingFeedback": "Coaching-Feedback",
@@ -436,7 +466,29 @@
       "failedDesc": "Konnte das Follow-up nicht starten",
       "copied": "Kopiert!",
       "selectProspect": "Wähle einen Interessenten",
-      "selectFile": "Wähle eine Datei"
+      "selectFile": "Wähle eine Datei",
+      "invalidFileType": "Ungültiger Dateityp",
+      "invalidFileTypeDescAudio": "Lade eine mp3, m4a, wav oder webm Datei hoch",
+      "invalidFileTypeDescTranscript": "Lade eine txt, md, docx oder srt Datei hoch",
+      "fileTooLarge": "Datei zu groß",
+      "fileTooLargeDescAudio": "Maximale Dateigröße ist 50MB",
+      "fileTooLargeDescTranscript": "Maximale Dateigröße ist 10MB",
+      "noFileSelected": "Keine Datei ausgewählt",
+      "noFileSelectedDesc": "Wähle zuerst eine Datei aus",
+      "notFound": "Follow-up nicht gefunden",
+      "deleted": "Gelöscht",
+      "deletedDesc": "Follow-up wurde gelöscht",
+      "deleteFailed": "Löschen fehlgeschlagen",
+      "deleteFailedDesc": "Konnte Follow-up nicht löschen",
+      "uploadStarted": "Upload gestartet",
+      "uploadStartedDesc": "Deine Datei wird verarbeitet"
+    },
+    "confirm": {
+      "delete": "Bist du sicher, dass du dieses Follow-up löschen möchtest?"
+    },
+    "sections": {
+      "keyPoints": "Wichtigste Punkte",
+      "discoveryQuestions": "Discovery-Fragen"
     }
   },
   "profile": {

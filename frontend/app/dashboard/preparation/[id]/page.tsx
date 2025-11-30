@@ -128,8 +128,8 @@ export default function PreparationDetailPage() {
       } else {
         toast({
           variant: "destructive",
-          title: "Kon voorbereiding niet laden",
-          description: "Er is een fout opgetreden",
+          title: t('toast.failed'),
+          description: t('toast.failedDesc'),
         })
         router.push('/dashboard/preparation')
       }
@@ -137,8 +137,8 @@ export default function PreparationDetailPage() {
       console.error('Failed to fetch prep:', error)
       toast({
         variant: "destructive",
-        title: "Fout",
-        description: "Er is een fout opgetreden",
+        title: t('toast.failed'),
+        description: t('toast.failedDesc'),
       })
     } finally {
       setLoading(false)
@@ -397,7 +397,7 @@ export default function PreparationDetailPage() {
                     <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
                       <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
                         <Icons.message className="h-5 w-5 text-green-600 dark:text-green-400" />
-                        Discovery Vragen
+                        {t('detail.discoveryQuestions')}
                       </h3>
                       <div className="space-y-3">
                         {prep.questions.map((q, i) => (
@@ -414,9 +414,9 @@ export default function PreparationDetailPage() {
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-sm text-center">
                   <Icons.alertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
                   <h3 className="font-bold text-lg mb-2 text-slate-900 dark:text-white">{t('toast.failed')}</h3>
-                  <p className="text-slate-500 dark:text-slate-400 mb-4">{prep.error_message || 'Er is een fout opgetreden'}</p>
+                  <p className="text-slate-500 dark:text-slate-400 mb-4">{prep.error_message || t('toast.failedDesc')}</p>
                   <Button onClick={() => router.push('/dashboard/preparation')}>
-                    Probeer Opnieuw
+                    {tCommon('tryAgain')}
                   </Button>
                 </div>
               ) : (

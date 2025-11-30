@@ -139,7 +139,7 @@ export default function FollowupDetailPage() {
           fetchLinkedContacts(data.contact_ids)
         }
       } else {
-        toast({ title: 'Follow-up niet gevonden', variant: 'destructive' })
+        toast({ title: t('toast.failed'), variant: 'destructive' })
         router.push('/dashboard/followup')
       }
     } catch (error) {
@@ -204,7 +204,7 @@ export default function FollowupDetailPage() {
   const handleCopy = async (text: string, type: string) => {
     await navigator.clipboard.writeText(text)
     setCopied(type)
-    toast({ title: 'Gekopieerd!' })
+    toast({ title: t('toast.copied') })
     setTimeout(() => setCopied(null), 2000)
   }
 
@@ -426,7 +426,7 @@ export default function FollowupDetailPage() {
                     {followup.key_points?.length > 0 && (
                       <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
                         <h4 className="font-semibold text-sm text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-1">
-                          💡 Belangrijkste Punten
+                          💡 {t('detail.keyPoints')}
                         </h4>
                         <ul className="space-y-1">
                           {followup.key_points.map((point, i) => (
@@ -442,7 +442,7 @@ export default function FollowupDetailPage() {
                     {followup.concerns?.length > 0 && (
                       <div className="p-4 bg-amber-50 dark:bg-amber-900/30 rounded-lg">
                         <h4 className="font-semibold text-sm text-amber-800 dark:text-amber-200 mb-2 flex items-center gap-1">
-                          ⚠️ Bezwaren & Zorgen
+                          ⚠️ {t('detail.concerns')}
                         </h4>
                         <ul className="space-y-1">
                           {followup.concerns.map((concern, i) => (
@@ -458,7 +458,7 @@ export default function FollowupDetailPage() {
                     {followup.decisions?.length > 0 && (
                       <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
                         <h4 className="font-semibold text-sm text-green-800 dark:text-green-200 mb-2 flex items-center gap-1">
-                          ✅ Beslissingen
+                          ✅ {t('detail.decisions')}
                         </h4>
                         <ul className="space-y-1">
                           {followup.decisions.map((decision, i) => (
@@ -474,7 +474,7 @@ export default function FollowupDetailPage() {
                     {followup.next_steps?.length > 0 && (
                       <div className="p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
                         <h4 className="font-semibold text-sm text-purple-800 dark:text-purple-200 mb-2 flex items-center gap-1">
-                          ➡️ Vervolgstappen
+                          ➡️ {t('detail.nextSteps')}
                         </h4>
                         <ul className="space-y-1">
                           {followup.next_steps.map((step, i) => (
@@ -508,7 +508,7 @@ export default function FollowupDetailPage() {
                       )}
                       {followup.commercial_signals?.cross_sell && followup.commercial_signals.cross_sell.length > 0 && (
                         <div className="bg-white/60 dark:bg-slate-800/60 p-4 rounded-lg">
-                          <h4 className="font-semibold text-sm text-blue-700 dark:text-blue-400 mb-2">💡 Cross/Upsell</h4>
+                          <h4 className="font-semibold text-sm text-blue-700 dark:text-blue-400 mb-2">💡 {t('detail.crossSellUpsell')}</h4>
                           <ul className="space-y-1">
                             {followup.commercial_signals.cross_sell.map((s, i) => (
                               <li key={i} className="text-xs text-slate-700 dark:text-slate-300">{s}</li>
@@ -518,7 +518,7 @@ export default function FollowupDetailPage() {
                       )}
                       {followup.commercial_signals?.risks && followup.commercial_signals.risks.length > 0 && (
                         <div className="bg-red-50 dark:bg-red-900/30 p-4 rounded-lg">
-                          <h4 className="font-semibold text-sm text-red-700 dark:text-red-400 mb-2">⚠️ Risico's</h4>
+                          <h4 className="font-semibold text-sm text-red-700 dark:text-red-400 mb-2">⚠️ {t('detail.risks')}</h4>
                           <ul className="space-y-1">
                             {followup.commercial_signals.risks.map((s, i) => (
                               <li key={i} className="text-xs text-red-700 dark:text-red-400">{s}</li>
@@ -540,7 +540,7 @@ export default function FollowupDetailPage() {
                     <div className="grid gap-4 md:grid-cols-2">
                       {followup.observations?.doubts && followup.observations.doubts.length > 0 && (
                         <div className="bg-amber-50 dark:bg-amber-900/30 p-4 rounded-lg">
-                          <h4 className="font-semibold text-sm text-amber-700 dark:text-amber-400 mb-2">⚠️ Twijfel</h4>
+                          <h4 className="font-semibold text-sm text-amber-700 dark:text-amber-400 mb-2">⚠️ {t('detail.doubts')}</h4>
                           <ul className="space-y-1">
                             {followup.observations.doubts.map((d, i) => (
                               <li key={i} className="text-xs text-slate-700 dark:text-slate-300">{d}</li>
@@ -550,7 +550,7 @@ export default function FollowupDetailPage() {
                       )}
                       {followup.observations?.unspoken_needs && followup.observations.unspoken_needs.length > 0 && (
                         <div className="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-lg">
-                          <h4 className="font-semibold text-sm text-yellow-700 dark:text-yellow-400 mb-2">💡 Onuitgesproken</h4>
+                          <h4 className="font-semibold text-sm text-yellow-700 dark:text-yellow-400 mb-2">💡 {t('detail.unspokenNeeds')}</h4>
                           <ul className="space-y-1">
                             {followup.observations.unspoken_needs.map((n, i) => (
                               <li key={i} className="text-xs text-slate-700 dark:text-slate-300">{n}</li>
@@ -612,7 +612,7 @@ export default function FollowupDetailPage() {
                       )}
                       {followup.coaching_feedback?.tips && followup.coaching_feedback.tips.length > 0 && (
                         <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
-                          <h4 className="font-semibold text-sm text-blue-700 dark:text-blue-400 mb-2">💡 Tips</h4>
+                          <h4 className="font-semibold text-sm text-blue-700 dark:text-blue-400 mb-2">💡 {t('detail.tips')}</h4>
                           <ul className="space-y-1">
                             {followup.coaching_feedback.tips.map((t, i) => (
                               <li key={i} className="text-xs text-slate-700 dark:text-slate-300">{t}</li>
@@ -633,7 +633,7 @@ export default function FollowupDetailPage() {
                     </h2>
                     <Button variant="outline" size="sm" onClick={() => handleCopy(emailDraft, 'email')}>
                       <Icons.copy className="h-4 w-4 mr-1" />
-                      {copied === 'email' ? 'Gekopieerd!' : 'Kopieer'}
+                      {copied === 'email' ? t('toast.copied') : tCommon('copy')}
                     </Button>
                   </div>
                   

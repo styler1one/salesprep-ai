@@ -65,6 +65,7 @@
     "back": "वापस",
     "next": "आगे",
     "search": "खोजें",
+    "select": "चुनें:",
     "close": "बंद करें",
     "copy": "कॉपी करें",
     "copied": "कॉपी हो गया!",
@@ -226,6 +227,16 @@
       "saveFailed": "सहेजा नहीं जा सका",
       "saveFailedDesc": "आपके परिवर्तनों को सहेजते समय एक त्रुटि हुई"
     },
+    "detail": {
+      "discoveryQuestions": "डिस्कवरी प्रश्न",
+      "aiContext": "AI संदर्भ",
+      "knowledgeBaseActive": "ज्ञान आधार सक्रिय",
+      "documentsUsed": "{count} दस्तावेज़ उपयोग किए गए",
+      "contactsPanel": {
+        "noContacts": "अभी तक कोई संपर्क नहीं",
+        "addForPreparation": "व्यक्तिगत तैयारी के लिए जोड़ें"
+      }
+    },
     "contacts": {
       "title": "संपर्क व्यक्ति",
       "add": "संपर्क जोड़ें",
@@ -353,7 +364,18 @@
       "failed": "तैयारी विफल",
       "failedDesc": "तैयारी शुरू नहीं हो सकी",
       "selectProspect": "एक प्रॉस्पेक्ट चुनें",
-      "selectContacts": "संपर्क चुनें"
+      "selectContacts": "संपर्क चुनें",
+      "deleted": "हटा दिया गया",
+      "deletedDesc": "तैयारी हटा दी गई है",
+      "deleteFailed": "हटाने में विफल",
+      "deleteFailedDesc": "तैयारी हटाई नहीं जा सकी",
+      "notLoggedIn": "लॉग इन नहीं है",
+      "error": "त्रुटि",
+      "loadFailed": "लोड नहीं हो सका",
+      "loadFailedDesc": "एक त्रुटि हुई"
+    },
+    "confirm": {
+      "delete": "क्या आप वाकई इस तैयारी को हटाना चाहते हैं?"
     },
     "nextStep": {
       "title": "आपकी मीटिंग के बाद",
@@ -402,6 +424,14 @@
     },
     "detail": {
       "summary": "सारांश",
+      "keyPoints": "मुख्य बिंदु",
+      "concerns": "चिंताएं",
+      "nextSteps": "अगले कदम",
+      "crossSellUpsell": "क्रॉस/अपसेल",
+      "risks": "जोखिम",
+      "doubts": "संदेह",
+      "unspokenNeeds": "अनकही जरूरतें",
+      "tips": "सुझाव",
       "commercialSignals": "व्यावसायिक संकेत",
       "observations": "अवलोकन और संकेत",
       "coachingFeedback": "कोचिंग फीडबैक",
@@ -436,7 +466,29 @@
       "failedDesc": "फॉलो-अप शुरू नहीं हो सका",
       "copied": "कॉपी हो गया!",
       "selectProspect": "एक प्रॉस्पेक्ट चुनें",
-      "selectFile": "एक फाइल चुनें"
+      "selectFile": "एक फाइल चुनें",
+      "invalidFileType": "अमान्य फाइल प्रकार",
+      "invalidFileTypeDescAudio": "mp3, m4a, wav या webm फाइल अपलोड करें",
+      "invalidFileTypeDescTranscript": "txt, md, docx या srt फाइल अपलोड करें",
+      "fileTooLarge": "फाइल बहुत बड़ी है",
+      "fileTooLargeDescAudio": "अधिकतम फाइल साइज 50MB है",
+      "fileTooLargeDescTranscript": "अधिकतम फाइल साइज 10MB है",
+      "noFileSelected": "कोई फाइल चयनित नहीं",
+      "noFileSelectedDesc": "पहले एक फाइल चुनें",
+      "notFound": "फॉलो-अप नहीं मिला",
+      "deleted": "हटा दिया गया",
+      "deletedDesc": "फॉलो-अप हटा दिया गया है",
+      "deleteFailed": "हटाने में विफल",
+      "deleteFailedDesc": "फॉलो-अप हटाया नहीं जा सका",
+      "uploadStarted": "अपलोड शुरू",
+      "uploadStartedDesc": "आपकी फाइल प्रोसेस हो रही है"
+    },
+    "confirm": {
+      "delete": "क्या आप वाकई इस फॉलो-अप को हटाना चाहते हैं?"
+    },
+    "sections": {
+      "keyPoints": "मुख्य बिंदु",
+      "discoveryQuestions": "डिस्कवरी प्रश्न"
     }
   },
   "profile": {

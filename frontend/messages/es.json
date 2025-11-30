@@ -65,6 +65,7 @@
     "back": "Atrás",
     "next": "Siguiente",
     "search": "Buscar",
+    "select": "Seleccionar:",
     "close": "Cerrar",
     "copy": "Copiar",
     "copied": "¡Copiado!",
@@ -226,6 +227,16 @@
       "saveFailed": "Error al guardar",
       "saveFailedDesc": "Se produjo un error al guardar tus cambios"
     },
+    "detail": {
+      "discoveryQuestions": "Preguntas de Descubrimiento",
+      "aiContext": "Contexto IA",
+      "knowledgeBaseActive": "Base de Conocimiento Activa",
+      "documentsUsed": "{count} documentos utilizados",
+      "contactsPanel": {
+        "noContacts": "Sin contactos aún",
+        "addForPreparation": "Agregar para preparación personalizada"
+      }
+    },
     "contacts": {
       "title": "Contactos",
       "add": "Agregar Contacto",
@@ -353,7 +364,18 @@
       "failed": "Preparación fallida",
       "failedDesc": "No se pudo iniciar la preparación",
       "selectProspect": "Selecciona un prospecto",
-      "selectContacts": "Selecciona contactos"
+      "selectContacts": "Selecciona contactos",
+      "deleted": "Eliminado",
+      "deletedDesc": "La preparación ha sido eliminada",
+      "deleteFailed": "Error al eliminar",
+      "deleteFailedDesc": "No se pudo eliminar la preparación",
+      "notLoggedIn": "No conectado",
+      "error": "Error",
+      "loadFailed": "No se pudo cargar",
+      "loadFailedDesc": "Se produjo un error"
+    },
+    "confirm": {
+      "delete": "¿Estás seguro de que quieres eliminar esta preparación?"
     },
     "nextStep": {
       "title": "Después de tu Reunión",
@@ -402,6 +424,14 @@
     },
     "detail": {
       "summary": "Resumen",
+      "keyPoints": "Puntos Clave",
+      "concerns": "Preocupaciones",
+      "nextSteps": "Próximos Pasos",
+      "crossSellUpsell": "Cross/Upsell",
+      "risks": "Riesgos",
+      "doubts": "Dudas",
+      "unspokenNeeds": "Necesidades No Expresadas",
+      "tips": "Consejos",
       "commercialSignals": "Señales Comerciales",
       "observations": "Observaciones y Señales",
       "coachingFeedback": "Feedback de Coaching",
@@ -436,7 +466,29 @@
       "failedDesc": "No se pudo iniciar el seguimiento",
       "copied": "¡Copiado!",
       "selectProspect": "Selecciona un prospecto",
-      "selectFile": "Selecciona un archivo"
+      "selectFile": "Selecciona un archivo",
+      "invalidFileType": "Tipo de archivo inválido",
+      "invalidFileTypeDescAudio": "Sube un archivo mp3, m4a, wav o webm",
+      "invalidFileTypeDescTranscript": "Sube un archivo txt, md, docx o srt",
+      "fileTooLarge": "Archivo demasiado grande",
+      "fileTooLargeDescAudio": "El tamaño máximo es 50MB",
+      "fileTooLargeDescTranscript": "El tamaño máximo es 10MB",
+      "noFileSelected": "Ningún archivo seleccionado",
+      "noFileSelectedDesc": "Selecciona primero un archivo",
+      "notFound": "Seguimiento no encontrado",
+      "deleted": "Eliminado",
+      "deletedDesc": "El seguimiento ha sido eliminado",
+      "deleteFailed": "Error al eliminar",
+      "deleteFailedDesc": "No se pudo eliminar el seguimiento",
+      "uploadStarted": "Subida iniciada",
+      "uploadStartedDesc": "Tu archivo está siendo procesado"
+    },
+    "confirm": {
+      "delete": "¿Estás seguro de que quieres eliminar este seguimiento?"
+    },
+    "sections": {
+      "keyPoints": "Puntos Clave",
+      "discoveryQuestions": "Preguntas de Descubrimiento"
     }
   },
   "profile": {

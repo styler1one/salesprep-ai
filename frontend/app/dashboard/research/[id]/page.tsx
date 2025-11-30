@@ -702,7 +702,7 @@ export default function ResearchBriefPage() {
                       <Icons.user className="h-8 w-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
                       <p className="text-xs text-slate-500 dark:text-slate-400">{t('detail.contactsPanel.noContacts')}</p>
                       <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                        Voeg toe voor een gepersonaliseerde voorbereiding
+                        {t('detail.contactsPanel.addForPreparation')}
                       </p>
                     </div>
                   ) : (
@@ -920,7 +920,7 @@ export default function ResearchBriefPage() {
                     {selectedContact.questions_to_ask && selectedContact.questions_to_ask.length > 0 && (
                       <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
                         <h4 className="font-semibold text-blue-700 dark:text-blue-300 mb-2 text-sm">
-                          ❓ Discovery Vragen
+                          ❓ {t('detail.discoveryQuestions')}
                         </h4>
                         <ul className="space-y-2">
                           {selectedContact.questions_to_ask.map((q, i) => (
