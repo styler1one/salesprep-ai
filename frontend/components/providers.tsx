@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { SettingsProvider } from '@/lib/settings-context'
 import { BillingProvider } from '@/lib/billing-context'
 import { ErrorBoundary } from '@/components/error-boundary'
+import { ConfirmDialogProvider } from '@/components/confirm-dialog'
 import { Toaster } from '@/components/ui/toaster'
 
 interface ProvidersProps {
@@ -28,8 +29,10 @@ export function Providers({ children }: ProvidersProps) {
       <ErrorBoundary>
         <SettingsProvider>
           <BillingProvider>
-            {children}
-            <Toaster />
+            <ConfirmDialogProvider>
+              {children}
+              <Toaster />
+            </ConfirmDialogProvider>
           </BillingProvider>
         </SettingsProvider>
       </ErrorBoundary>
