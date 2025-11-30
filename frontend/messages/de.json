@@ -122,7 +122,22 @@
     "network": "Netzwerkfehler, bitte erneut versuchen",
     "unauthorized": "Nicht autorisiert",
     "notFound": "Nicht gefunden",
-    "validation": "Bitte überprüfen Sie Ihre Eingaben"
+    "validation": "Bitte überprüfen Sie Ihre Eingaben",
+    "timeout": "Zeitüberschreitung, bitte erneut versuchen",
+    "serverError": "Serverfehler, bitte später erneut versuchen",
+    "forbidden": "Sie haben keine Berechtigung für diese Aktion",
+    "fileTooLarge": "Datei ist zu groß (max {maxSize})",
+    "invalidFileType": "Ungültiger Dateityp",
+    "uploadFailed": "Upload fehlgeschlagen, bitte erneut versuchen",
+    "deleteFailed": "Löschen fehlgeschlagen, bitte erneut versuchen",
+    "saveFailed": "Änderungen konnten nicht gespeichert werden",
+    "loadFailed": "Daten konnten nicht geladen werden",
+    "sessionExpired": "Ihre Sitzung ist abgelaufen, bitte erneut anmelden",
+    "rateLimited": "Zu viele Anfragen, bitte warten",
+    "usageLimitReached": "Nutzungslimit erreicht. Upgraden Sie Ihren Plan um fortzufahren.",
+    "tryAgain": "Erneut versuchen",
+    "goBack": "Zurück",
+    "contactSupport": "Kontaktieren Sie den Support wenn dieses Problem weiterhin besteht"
   },
   "research": {
     "title": "Research Agent",

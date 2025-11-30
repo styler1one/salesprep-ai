@@ -122,7 +122,22 @@
     "network": "Error de red, inténtalo de nuevo",
     "unauthorized": "No autorizado",
     "notFound": "No encontrado",
-    "validation": "Por favor verifica tus datos"
+    "validation": "Por favor verifica tus datos",
+    "timeout": "Tiempo de espera agotado, inténtalo de nuevo",
+    "serverError": "Error del servidor, inténtalo más tarde",
+    "forbidden": "No tienes permiso para realizar esta acción",
+    "fileTooLarge": "El archivo es demasiado grande (máx {maxSize})",
+    "invalidFileType": "Tipo de archivo inválido",
+    "uploadFailed": "Error al subir, inténtalo de nuevo",
+    "deleteFailed": "Error al eliminar, inténtalo de nuevo",
+    "saveFailed": "No se pudieron guardar los cambios",
+    "loadFailed": "No se pudieron cargar los datos",
+    "sessionExpired": "Tu sesión ha expirado, inicia sesión de nuevo",
+    "rateLimited": "Demasiadas solicitudes, espera un momento",
+    "usageLimitReached": "Límite de uso alcanzado. Actualiza tu plan para continuar.",
+    "tryAgain": "Intentar de nuevo",
+    "goBack": "Volver",
+    "contactSupport": "Contacta al soporte si este problema persiste"
   },
   "research": {
     "title": "Agente de Investigación",

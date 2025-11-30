@@ -122,7 +122,22 @@
     "network": "Netwerkfout, probeer opnieuw",
     "unauthorized": "Niet geautoriseerd",
     "notFound": "Niet gevonden",
-    "validation": "Controleer de ingevoerde gegevens"
+    "validation": "Controleer de ingevoerde gegevens",
+    "timeout": "Verzoek time-out, probeer opnieuw",
+    "serverError": "Serverfout, probeer later opnieuw",
+    "forbidden": "Je hebt geen toestemming voor deze actie",
+    "fileTooLarge": "Bestand is te groot (max {maxSize})",
+    "invalidFileType": "Ongeldig bestandstype",
+    "uploadFailed": "Upload mislukt, probeer opnieuw",
+    "deleteFailed": "Verwijderen mislukt, probeer opnieuw",
+    "saveFailed": "Wijzigingen konden niet worden opgeslagen",
+    "loadFailed": "Data kon niet worden geladen",
+    "sessionExpired": "Je sessie is verlopen, log opnieuw in",
+    "rateLimited": "Te veel verzoeken, even wachten",
+    "usageLimitReached": "Gebruikslimiet bereikt. Upgrade je abonnement om door te gaan.",
+    "tryAgain": "Probeer opnieuw",
+    "goBack": "Ga terug",
+    "contactSupport": "Neem contact op met support als dit probleem aanhoudt"
   },
   "research": {
     "title": "Research Agent",

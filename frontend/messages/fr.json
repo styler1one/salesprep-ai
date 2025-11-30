@@ -122,7 +122,22 @@
     "network": "Erreur réseau, veuillez réessayer",
     "unauthorized": "Non autorisé",
     "notFound": "Non trouvé",
-    "validation": "Veuillez vérifier vos données"
+    "validation": "Veuillez vérifier vos données",
+    "timeout": "Délai dépassé, veuillez réessayer",
+    "serverError": "Erreur serveur, veuillez réessayer plus tard",
+    "forbidden": "Vous n'avez pas la permission d'effectuer cette action",
+    "fileTooLarge": "Fichier trop volumineux (max {maxSize})",
+    "invalidFileType": "Type de fichier invalide",
+    "uploadFailed": "Échec du téléchargement, veuillez réessayer",
+    "deleteFailed": "Échec de la suppression, veuillez réessayer",
+    "saveFailed": "Impossible d'enregistrer les modifications",
+    "loadFailed": "Impossible de charger les données",
+    "sessionExpired": "Votre session a expiré, veuillez vous reconnecter",
+    "rateLimited": "Trop de demandes, veuillez patienter",
+    "usageLimitReached": "Limite d'utilisation atteinte. Mettez à niveau votre plan pour continuer.",
+    "tryAgain": "Réessayer",
+    "goBack": "Retour",
+    "contactSupport": "Contactez le support si ce problème persiste"
   },
   "research": {
     "title": "Agent de Recherche",
