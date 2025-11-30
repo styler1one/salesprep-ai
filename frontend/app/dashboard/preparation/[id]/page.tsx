@@ -204,7 +204,7 @@ export default function PreparationDetailPage() {
     setIsSaving(true)
     try {
       const { data, error } = await api.patch<MeetingPrep>(
-        `/api/v1/preparation/${prep.id}`,
+        `/api/v1/prep/${prep.id}`,
         { brief_content: editedContent }
       )
       
