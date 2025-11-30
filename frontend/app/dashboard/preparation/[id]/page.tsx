@@ -433,25 +433,31 @@ export default function PreparationDetailPage() {
                     </h3>
                     <div className="space-y-2">
                       {linkedContacts.map((contact) => (
-                        <div
+                        <button
                           key={contact.id}
-                          className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg"
+                          onClick={() => researchBrief && router.push(`/dashboard/research/${researchBrief.id}#contacts`)}
+                          className="w-full p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors text-left group"
                         >
-                          <p className="font-medium text-sm text-purple-900 dark:text-purple-100">{contact.name}</p>
-                          {contact.role && (
-                            <p className="text-xs text-purple-600 dark:text-purple-400">{contact.role}</p>
-                          )}
-                          {contact.communication_style && (
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                              💬 {contact.communication_style}
-                            </p>
-                          )}
-                          {contact.decision_authority && (
-                            <p className="text-xs text-slate-500 dark:text-slate-400">
-                              🎯 {contact.decision_authority}
-                            </p>
-                          )}
-                        </div>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-sm text-purple-900 dark:text-purple-100">{contact.name}</p>
+                              {contact.role && (
+                                <p className="text-xs text-purple-600 dark:text-purple-400">{contact.role}</p>
+                              )}
+                              {contact.communication_style && (
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                  💬 {contact.communication_style}
+                                </p>
+                              )}
+                              {contact.decision_authority && (
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                  🎯 {contact.decision_authority}
+                                </p>
+                              )}
+                            </div>
+                            <Icons.chevronRight className="h-4 w-4 text-purple-600 dark:text-purple-400 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                        </button>
                       ))}
                     </div>
                   </div>
