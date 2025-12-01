@@ -168,30 +168,32 @@ async def get_suggestions(
     user_id = current_user["sub"]
     
     try:
-        # Get organization ID - use same logic as company_profile endpoint
+        # Get organization ID - use EXACT same logic as company_profile endpoint
         organization_id = current_user.get("organization_id")
         
         if not organization_id:
-            # Fallback: check organization_members
-            org_result = supabase.table("organization_members") \
-                .select("organization_id") \
-                .eq("user_id", user_id) \
+            # First fallback (same as company_profile): find "Personal - {email}" organization
+            email = current_user.get("email", "")
+            personal_org = supabase.table("organizations") \
+                .select("id") \
+                .eq("name", f"Personal - {email}") \
                 .execute()
             
-            if org_result.data:
-                organization_id = org_result.data[0]["organization_id"]
+            if personal_org.data:
+                organization_id = personal_org.data[0]["id"]
+                print(f"[COACH DEBUG] Found 'Personal - {email}' org: {organization_id}")
             else:
-                # Fallback: find "Personal - {email}" organization
-                email = current_user.get("email", "")
-                personal_org = supabase.table("organizations") \
-                    .select("id") \
-                    .eq("name", f"Personal - {email}") \
+                # Second fallback: check organization_members
+                org_result = supabase.table("organization_members") \
+                    .select("organization_id") \
+                    .eq("user_id", user_id) \
                     .execute()
                 
-                if personal_org.data:
-                    organization_id = personal_org.data[0]["id"]
+                if org_result.data:
+                    organization_id = org_result.data[0]["organization_id"]
+                    print(f"[COACH DEBUG] Found org from organization_members: {organization_id}")
         
-        print(f"[COACH DEBUG] Resolved organization_id: {organization_id}")
+        print(f"[COACH DEBUG] Final resolved organization_id: {organization_id}")
         
         # New user without organization - return onboarding suggestions
         if not organization_id:
