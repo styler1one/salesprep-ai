@@ -10,7 +10,8 @@ from typing import Optional, List
 from datetime import datetime, timedelta
 import logging
 
-from app.dependencies import get_current_user, get_supabase_service
+from app.deps import get_current_user
+from app.database import get_supabase_service
 from app.models.coach import (
     CoachSettings,
     CoachSettingsUpdate,
