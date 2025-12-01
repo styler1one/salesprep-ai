@@ -1241,6 +1241,79 @@
       "genericSignIn": "An error occurred during sign in.",
       "genericSignUp": "An error occurred during sign up."
     }
+  },
+  "coach": {
+    "name": "Luna",
+    "tagline": "Your AI Sales Coach",
+    
+    "widget": {
+      "expand": "Expand",
+      "collapse": "Collapse",
+      "close": "Close",
+      "settings": "Settings",
+      "hideForToday": "Hide for today",
+      "allCaughtUp": "All caught up!",
+      "greatWork": "Great work! Check back later for new suggestions."
+    },
+    
+    "sections": {
+      "priority": "Priority",
+      "suggestions": "Suggestions",
+      "progress": "Today's Progress",
+      "tip": "Tip of the Day"
+    },
+    
+    "actions": {
+      "doIt": "Do it",
+      "later": "Later",
+      "skip": "Skip",
+      "snooze1hour": "Snooze 1 hour",
+      "snoozeTonight": "Remind tonight",
+      "snoozeTomorrow": "Remind tomorrow"
+    },
+    
+    "suggestions": {
+      "addContacts": "Add contacts to {company}",
+      "createPrep": "Create meeting preparation",
+      "uploadFollowup": "Upload meeting recording",
+      "generateReport": "Generate customer report",
+      "reviewCoaching": "Review sales coaching feedback"
+    },
+    
+    "reasons": {
+      "meetingTomorrow": "Meeting tomorrow at {time}",
+      "meetingIn": "Meeting in {hours} hours",
+      "noContacts": "No contacts added yet",
+      "prepReady": "Preparation is ready",
+      "overdue": "{days} days since last activity"
+    },
+    
+    "tips": {
+      "contactsImprove": "Adding contacts before prep improves meeting outcomes by 40%",
+      "customerReports": "Customer reports increase follow-up response rates by 60%",
+      "prepTiming": "Best preps are created 1-2 days before the meeting"
+    },
+    
+    "stats": {
+      "research": "Research",
+      "preps": "Preps",
+      "followups": "Follow-ups",
+      "completed": "completed today"
+    },
+    
+    "settings": {
+      "title": "Coach Settings",
+      "enabled": "Enable AI Coach",
+      "inlineTips": "Show inline tips",
+      "completionModals": "Show completion suggestions",
+      "quietHours": "Quiet hours",
+      "frequency": "Notification frequency",
+      "frequencyOptions": {
+        "minimal": "Minimal",
+        "normal": "Normal",
+        "frequent": "Frequent"
+      }
+    }
   }
 }
 

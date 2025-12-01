@@ -2,6 +2,7 @@
 
 import { Sidebar } from './sidebar'
 import { Header } from './header'
+import { CoachProvider, CoachWidget } from '@/components/coach'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -10,19 +11,24 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, user }: DashboardLayoutProps) {
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
-      {/* Sidebar */}
-      <Sidebar />
+    <CoachProvider>
+      <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
+        {/* Sidebar */}
+        <Sidebar />
 
-      {/* Main Content */}
-      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
-        <Header user={user} />
+        {/* Main Content */}
+        <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+          <Header user={user} />
+          
+          <main className="flex-1 overflow-y-auto">
+            {children}
+          </main>
+        </div>
         
-        <main className="flex-1 overflow-y-auto">
-          {children}
-        </main>
+        {/* AI Sales Coach Widget */}
+        <CoachWidget />
       </div>
-    </div>
+    </CoachProvider>
   )
 }
 
