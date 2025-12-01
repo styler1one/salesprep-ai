@@ -13,6 +13,7 @@ import { MarkdownEditor } from '@/components/markdown-editor'
 import ReactMarkdown from 'react-markdown'
 import { exportAsMarkdown, exportAsPdf, exportAsDocx } from '@/lib/export-utils'
 import { useToast } from '@/components/ui/use-toast'
+import { useTranslations } from 'next-intl'
 import type { FollowupAction } from '@/types/followup-actions'
 import { getActionTypeInfo, isActionGenerating, isActionError } from '@/types/followup-actions'
 import { cn } from '@/lib/utils'
@@ -35,6 +36,8 @@ export function ActionPanel({
   onClose,
 }: ActionPanelProps) {
   const { toast } = useToast()
+  const t = useTranslations('followup.actions')
+  const tCommon = useTranslations('common')
   const [isEditing, setIsEditing] = useState(false)
   const [editedContent, setEditedContent] = useState(action.content || '')
   const [isSaving, setIsSaving] = useState(false)
@@ -51,9 +54,9 @@ export function ActionPanel({
     try {
       await onUpdate(action.id, editedContent)
       setIsEditing(false)
-      toast({ title: 'Changes saved' })
+      toast({ title: t('changesSaved') })
     } catch (error) {
-      toast({ title: 'Failed to save', variant: 'destructive' })
+      toast({ title: t('saveFailed'), variant: 'destructive' })
     } finally {
       setIsSaving(false)
     }
@@ -65,15 +68,15 @@ export function ActionPanel({
   }
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this action?')) return
+    if (!confirm(t('confirmDelete'))) return
     
     setIsDeleting(true)
     try {
       await onDelete(action.id)
       onClose()
-      toast({ title: 'Action deleted' })
+      toast({ title: t('actionDeleted') })
     } catch (error) {
-      toast({ title: 'Failed to delete', variant: 'destructive' })
+      toast({ title: t('deleteFailed'), variant: 'destructive' })
     } finally {
       setIsDeleting(false)
     }
@@ -84,9 +87,9 @@ export function ActionPanel({
     setIsExporting(true)
     try {
       await exportAsPdf(action.content, companyName, `${companyName} - ${actionInfo.label}`)
-      toast({ title: 'PDF downloaded' })
+      toast({ title: t('pdfDownloaded') })
     } catch (error) {
-      toast({ title: 'Export failed', variant: 'destructive' })
+      toast({ title: t('exportFailed'), variant: 'destructive' })
     } finally {
       setIsExporting(false)
     }
@@ -97,9 +100,9 @@ export function ActionPanel({
     setIsExporting(true)
     try {
       await exportAsDocx(action.content, companyName, `${companyName} - ${actionInfo.label}`)
-      toast({ title: 'Word document downloaded' })
+      toast({ title: t('docxDownloaded') })
     } catch (error) {
-      toast({ title: 'Export failed', variant: 'destructive' })
+      toast({ title: t('exportFailed'), variant: 'destructive' })
     } finally {
       setIsExporting(false)
     }
@@ -108,13 +111,13 @@ export function ActionPanel({
   const handleExportMd = () => {
     if (!action.content) return
     exportAsMarkdown(action.content, `${companyName}_${action.action_type}`)
-    toast({ title: 'Markdown downloaded' })
+    toast({ title: t('mdDownloaded') })
   }
 
   const handleCopy = () => {
     if (!action.content) return
     navigator.clipboard.writeText(action.content)
-    toast({ title: 'Copied to clipboard' })
+    toast({ title: t('copied') })
   }
 
   // Format relative time
@@ -124,12 +127,18 @@ export function ActionPanel({
     const diffMs = now.getTime() - date.getTime()
     const diffMins = Math.floor(diffMs / 60000)
     
-    if (diffMins < 1) return 'just now'
-    if (diffMins < 60) return `${diffMins} min ago`
+    if (diffMins < 1) return t('time.justNow')
+    if (diffMins < 60) return t('time.minAgo', { count: diffMins })
     const diffHours = Math.floor(diffMins / 60)
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+    if (diffHours < 24) {
+      return diffHours === 1 
+        ? t('time.hourAgo', { count: diffHours })
+        : t('time.hoursAgo', { count: diffHours })
+    }
     const diffDays = Math.floor(diffHours / 24)
-    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+    return diffDays === 1 
+      ? t('time.dayAgo', { count: diffDays })
+      : t('time.daysAgo', { count: diffDays })
   }
 
   return (
@@ -164,10 +173,10 @@ export function ActionPanel({
               ) : (
                 <Icons.check className="h-4 w-4 mr-2" />
               )}
-              Save
+              {tCommon('save')}
             </Button>
             <Button variant="outline" size="sm" onClick={handleCancel} disabled={isSaving}>
-              Cancel
+              {tCommon('cancel')}
             </Button>
           </>
         ) : (
@@ -175,12 +184,12 @@ export function ActionPanel({
             {!isBuiltInSummary && (
               <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} disabled={isGenerating}>
                 <Icons.edit className="h-4 w-4 mr-2" />
-                Edit
+                {tCommon('edit')}
               </Button>
             )}
             <Button variant="outline" size="sm" onClick={handleCopy} disabled={!action.content}>
               <Icons.copy className="h-4 w-4 mr-2" />
-              Copy
+              {tCommon('copy')}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -190,22 +199,22 @@ export function ActionPanel({
                   ) : (
                     <Icons.download className="h-4 w-4 mr-2" />
                   )}
-                  Export
+                  {t('export')}
                   <Icons.chevronDown className="h-3 w-3 ml-1" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuItem onClick={handleExportPdf}>
                   <Icons.fileText className="h-4 w-4 mr-2" />
-                  Download PDF
+                  {t('exportPdf')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleExportDocx}>
                   <Icons.fileText className="h-4 w-4 mr-2" />
-                  Download Word
+                  {t('exportDocx')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleExportMd}>
                   <Icons.fileText className="h-4 w-4 mr-2" />
-                  Download Markdown
+                  {t('exportMd')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -219,7 +228,7 @@ export function ActionPanel({
                   disabled={isGenerating}
                 >
                   <Icons.refresh className="h-4 w-4 mr-2" />
-                  Regenerate
+                  {t('regenerate')}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -245,9 +254,9 @@ export function ActionPanel({
         {isGenerating && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Icons.spinner className="h-8 w-8 text-amber-600 animate-spin mb-4" />
-            <p className="text-slate-600 dark:text-slate-400">Generating content...</p>
+            <p className="text-slate-600 dark:text-slate-400">{t('generatingContent')}</p>
             <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
-              This may take 10-30 seconds
+              {t('generatingTime')}
             </p>
           </div>
         )}
@@ -255,9 +264,9 @@ export function ActionPanel({
         {hasError && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Icons.alertCircle className="h-8 w-8 text-red-500 mb-4" />
-            <p className="text-red-600 dark:text-red-400">Generation failed</p>
+            <p className="text-red-600 dark:text-red-400">{t('generationFailed')}</p>
             <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
-              {action.metadata?.error || 'An error occurred. Please try regenerating.'}
+              {action.metadata?.error || t('generationFailedDesc')}
             </p>
             <Button 
               variant="outline" 
@@ -266,7 +275,7 @@ export function ActionPanel({
               className="mt-4"
             >
               <Icons.refresh className="h-4 w-4 mr-2" />
-              Try Again
+              {t('tryAgain')}
             </Button>
           </div>
         )}
@@ -308,7 +317,7 @@ export function ActionPanel({
 
         {!isGenerating && !hasError && !action.content && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <p className="text-slate-500 dark:text-slate-400">No content yet</p>
+            <p className="text-slate-500 dark:text-slate-400">{t('noContent')}</p>
           </div>
         )}
       </div>
@@ -317,7 +326,7 @@ export function ActionPanel({
       {action.metadata?.generated_with_context && action.metadata.generated_with_context.length > 0 && (
         <div className="px-6 py-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            <span className="font-medium">Context used:</span>{' '}
+            <span className="font-medium">{t('contextUsed')}:</span>{' '}
             {action.metadata.generated_with_context.join(', ')}
           </p>
         </div>

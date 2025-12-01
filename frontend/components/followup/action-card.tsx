@@ -1,8 +1,8 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 import type { ActionType, ActionTypeInfo, FollowupAction } from '@/types/followup-actions'
 import { isActionGenerating, isActionCompleted, isActionError } from '@/types/followup-actions'
 
@@ -23,6 +23,8 @@ export function ActionCard({
   disabled = false,
   isCurrentlyGenerating = false,
 }: ActionCardProps) {
+  const t = useTranslations('followup.actions')
+  
   // Show generating if we're actively generating OR if the action has generating status
   const isGenerating = isCurrentlyGenerating || (existingAction ? isActionGenerating(existingAction) : false)
   const isCompleted = existingAction ? isActionCompleted(existingAction) : false
@@ -62,27 +64,27 @@ export function ActionCard({
       {isCompleted && (
         <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
           <Icons.check className="h-3 w-3" />
-          Generated
+          {t('generated')}
         </span>
       )}
       
       {isGenerating && (
         <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
           <Icons.spinner className="h-3 w-3 animate-spin" />
-          Generating...
+          {t('generating')}
         </span>
       )}
       
       {hasError && (
         <span className="text-xs text-red-600 dark:text-red-400 flex items-center gap-1">
           <Icons.alertCircle className="h-3 w-3" />
-          Error
+          {t('error')}
         </span>
       )}
       
       {!isCompleted && !isGenerating && !hasError && (
         <span className="text-xs text-slate-500 dark:text-slate-400">
-          Click to generate
+          {t('clickToGenerate')}
         </span>
       )}
     </button>
