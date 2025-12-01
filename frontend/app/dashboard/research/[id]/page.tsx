@@ -11,10 +11,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import ReactMarkdown from 'react-markdown'
 import { MarkdownEditor } from '@/components/markdown-editor'
 import { useTranslations } from 'next-intl'
 import { api } from '@/lib/api'
+import { exportAsMarkdown, exportAsPdf, exportAsDocx } from '@/lib/export-utils'
 import type { User } from '@supabase/supabase-js'
 
 interface ResearchBrief {
@@ -78,6 +85,9 @@ export default function ResearchBriefPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [editedContent, setEditedContent] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  
+  // Export states
+  const [isExporting, setIsExporting] = useState(false)
 
   useEffect(() => {
     const getUser = async () => {
@@ -404,6 +414,58 @@ export default function ResearchBriefPage() {
     }
   }
 
+  // Export handlers
+  const handleExportMd = () => {
+    if (!brief) return
+    exportAsMarkdown(brief.brief_content, brief.company_name)
+    toast({
+      title: t('brief.copied'),
+      description: 'Markdown file downloaded',
+    })
+  }
+
+  const handleExportPdf = async () => {
+    if (!brief) return
+    setIsExporting(true)
+    try {
+      await exportAsPdf(brief.brief_content, brief.company_name, brief.company_name)
+      toast({
+        title: t('brief.copied'),
+        description: 'PDF file downloaded',
+      })
+    } catch (error) {
+      console.error('PDF export failed:', error)
+      toast({
+        variant: 'destructive',
+        title: t('brief.saveFailed'),
+        description: 'Failed to export PDF',
+      })
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const handleExportDocx = async () => {
+    if (!brief) return
+    setIsExporting(true)
+    try {
+      await exportAsDocx(brief.brief_content, brief.company_name, brief.company_name)
+      toast({
+        title: t('brief.copied'),
+        description: 'Word file downloaded',
+      })
+    } catch (error) {
+      console.error('DOCX export failed:', error)
+      toast({
+        variant: 'destructive',
+        title: t('brief.saveFailed'),
+        description: 'Failed to export Word document',
+      })
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   // Get badge for decision authority
   const getAuthorityBadge = (authority?: string) => {
     switch (authority) {
@@ -513,6 +575,33 @@ export default function ResearchBriefPage() {
                         <Icons.copy className="h-4 w-4 mr-2" />
                         {t('brief.copy')}
                       </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" disabled={isExporting}>
+                            {isExporting ? (
+                              <Icons.spinner className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                              <Icons.download className="h-4 w-4 mr-2" />
+                            )}
+                            {t('brief.export')}
+                            <Icons.chevronDown className="h-3 w-3 ml-1" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={handleExportPdf}>
+                            <Icons.fileText className="h-4 w-4 mr-2" />
+                            {t('brief.exportPdf')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleExportDocx}>
+                            <Icons.fileText className="h-4 w-4 mr-2" />
+                            {t('brief.exportDocx')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleExportMd}>
+                            <Icons.fileText className="h-4 w-4 mr-2" />
+                            {t('brief.exportMd')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </>
                   )}
                 </div>
