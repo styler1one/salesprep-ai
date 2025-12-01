@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
-from app.routers import users, knowledge_base, research, sales_profile, company_profile, context, preparation, followup, prospects, contacts, settings, billing, webhooks, deals
+from app.routers import users, knowledge_base, research, sales_profile, company_profile, context, preparation, followup, followup_actions, prospects, contacts, settings, billing, webhooks, deals
 
 load_dotenv()
 
@@ -32,6 +32,7 @@ app.include_router(company_profile.router)  # Already has prefix
 app.include_router(context.router)  # Already has prefix
 app.include_router(preparation.router, prefix="/api/v1/prep", tags=["preparation"])
 app.include_router(followup.router, prefix="/api/v1", tags=["followup"])
+app.include_router(followup_actions.router, prefix="/api/v1", tags=["followup-actions"])
 app.include_router(prospects.router, prefix="/api/v1", tags=["prospects"])
 app.include_router(contacts.router, prefix="/api/v1", tags=["contacts"])
 app.include_router(settings.router)  # Already has prefix
