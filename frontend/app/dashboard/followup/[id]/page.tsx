@@ -295,8 +295,15 @@ export default function FollowupDetailPage() {
             setSelectedAction(data)
           }
           
-          // If still generating, continue polling
-          if (data.metadata?.status === 'generating') {
+          // If generation completed (success or error), show the panel
+          if (data.metadata?.status === 'completed' || data.metadata?.status === 'error') {
+            setSelectedAction(data)
+            // Scroll to panel
+            setTimeout(() => {
+              document.getElementById('action-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }, 100)
+          } else if (data.metadata?.status === 'generating') {
+            // Still generating, continue polling
             setTimeout(poll, 2000)
           }
         }
@@ -357,6 +364,10 @@ export default function FollowupDetailPage() {
   // View action
   const handleViewAction = (action: FollowupAction) => {
     setSelectedAction(action)
+    // Scroll to panel after a short delay
+    setTimeout(() => {
+      document.getElementById('action-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 100)
   }
 
   useEffect(() => {
@@ -819,6 +830,7 @@ export default function FollowupDetailPage() {
 
                 {/* Selected Action Panel */}
                 {selectedAction && (
+                  <div id="action-panel">
                   <ActionPanel
                     action={selectedAction}
                     companyName={followup.prospect_company_name || 'Followup'}
@@ -827,6 +839,7 @@ export default function FollowupDetailPage() {
                     onRegenerate={handleRegenerateAction}
                     onClose={() => setSelectedAction(null)}
                   />
+                  </div>
                 )}
 
                 {/* Commercial Signals (Legacy) */}
