@@ -40,7 +40,7 @@ router = APIRouter(prefix="/api/v1/coach", tags=["coach"])
 async def get_settings(current_user: dict = Depends(get_current_user)):
     """Get the current user's coach settings."""
     supabase = get_supabase_service()
-    user_id = current_user["id"]
+    user_id = current_user["sub"]
     
     try:
         result = supabase.table("coach_settings") \
@@ -94,7 +94,7 @@ async def update_settings(
 ):
     """Update the current user's coach settings."""
     supabase = get_supabase_service()
-    user_id = current_user["id"]
+    user_id = current_user["sub"]
     
     try:
         # Get existing settings first
@@ -132,7 +132,7 @@ async def get_suggestions(
 ):
     """Get prioritized suggestions for the current user."""
     supabase = get_supabase_service()
-    user_id = current_user["id"]
+    user_id = current_user["sub"]
     
     try:
         # Get organization ID
@@ -265,7 +265,7 @@ async def record_suggestion_action(
 ):
     """Record user action on a suggestion (clicked, dismissed, snoozed)."""
     supabase = get_supabase_service()
-    user_id = current_user["id"]
+    user_id = current_user["sub"]
     
     try:
         # Verify ownership
@@ -334,7 +334,7 @@ async def record_event(
 ):
     """Record a behavior event for pattern learning."""
     supabase = get_supabase_service()
-    user_id = current_user["id"]
+    user_id = current_user["sub"]
     
     try:
         # Get organization ID
@@ -379,7 +379,7 @@ async def record_event(
 async def get_patterns(current_user: dict = Depends(get_current_user)):
     """Get learned patterns for the current user."""
     supabase = get_supabase_service()
-    user_id = current_user["id"]
+    user_id = current_user["sub"]
     
     try:
         result = supabase.table("coach_user_patterns") \
@@ -402,7 +402,7 @@ async def get_patterns(current_user: dict = Depends(get_current_user)):
 async def get_stats(current_user: dict = Depends(get_current_user)):
     """Get today's progress stats for the current user."""
     supabase = get_supabase_service()
-    user_id = current_user["id"]
+    user_id = current_user["sub"]
     
     try:
         # Get organization ID
@@ -499,7 +499,7 @@ async def get_inline_suggestions(
 ):
     """Get contextual inline suggestions for a specific page."""
     supabase = get_supabase_service()
-    user_id = current_user["id"]
+    user_id = current_user["sub"]
     
     try:
         # Check if user has inline tips enabled
