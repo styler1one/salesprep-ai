@@ -12,6 +12,7 @@ interface ActionCardProps {
   onGenerate: (type: ActionType) => void
   onView: (action: FollowupAction) => void
   disabled?: boolean
+  isCurrentlyGenerating?: boolean // True when this specific type is being generated
 }
 
 export function ActionCard({
@@ -20,8 +21,10 @@ export function ActionCard({
   onGenerate,
   onView,
   disabled = false,
+  isCurrentlyGenerating = false,
 }: ActionCardProps) {
-  const isGenerating = existingAction ? isActionGenerating(existingAction) : false
+  // Show generating if we're actively generating OR if the action has generating status
+  const isGenerating = isCurrentlyGenerating || (existingAction ? isActionGenerating(existingAction) : false)
   const isCompleted = existingAction ? isActionCompleted(existingAction) : false
   const hasError = existingAction ? isActionError(existingAction) : false
 
@@ -92,6 +95,7 @@ interface ActionsGridProps {
   onGenerate: (type: ActionType) => void
   onView: (action: FollowupAction) => void
   disabled?: boolean
+  generatingType?: ActionType | null // The type currently being generated
 }
 
 export function ActionsGrid({
@@ -100,6 +104,7 @@ export function ActionsGrid({
   onGenerate,
   onView,
   disabled = false,
+  generatingType = null,
 }: ActionsGridProps) {
   // Create a map of existing actions by type
   const actionsByType = new Map(
@@ -116,6 +121,7 @@ export function ActionsGrid({
           onGenerate={onGenerate}
           onView={onView}
           disabled={disabled}
+          isCurrentlyGenerating={generatingType === actionType.type}
         />
       ))}
     </div>

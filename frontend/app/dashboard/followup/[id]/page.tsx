@@ -115,8 +115,6 @@ export default function FollowupDetailPage() {
   const [user, setUser] = useState<User | null>(null)
   const [followup, setFollowup] = useState<Followup | null>(null)
   const [loading, setLoading] = useState(true)
-  const [emailDraft, setEmailDraft] = useState('')
-  const [regeneratingEmail, setRegeneratingEmail] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
   const [showTranscript, setShowTranscript] = useState(false)
   const [researchBrief, setResearchBrief] = useState<ResearchBrief | null>(null)
@@ -154,7 +152,6 @@ export default function FollowupDetailPage() {
 
       if (!error && data) {
         setFollowup(data)
-        setEmailDraft(data.email_draft || '')
         
         // Fetch related research and prep
         if (data.prospect_company_name) {
@@ -396,28 +393,6 @@ export default function FollowupDetailPage() {
     setTimeout(() => setCopied(null), 2000)
   }
 
-  const handleRegenerateEmail = async (tone: string) => {
-    setRegeneratingEmail(true)
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
-      const { data, error } = await api.post<{ email_draft: string }>(
-        `/api/v1/followup/${followupId}/regenerate-email`,
-        { tone }
-      )
-
-      if (!error && data) {
-        setEmailDraft(data.email_draft)
-        toast({ title: t('toast.copied') })
-      }
-    } catch (error) {
-      toast({ title: t('toast.failed'), variant: 'destructive' })
-    } finally {
-      setRegeneratingEmail(false)
-    }
-  }
-
   // Start editing the summary
   const handleStartEditSummary = () => {
     if (followup?.executive_summary) {
@@ -606,11 +581,6 @@ export default function FollowupDetailPage() {
     followup.observations.unspoken_needs?.length > 0 ||
     followup.observations.opportunities?.length > 0 ||
     followup.observations.red_flags?.length > 0
-  )
-  const hasCoaching = followup.include_coaching && followup.coaching_feedback && (
-    followup.coaching_feedback.strengths?.length > 0 ||
-    followup.coaching_feedback.improvements?.length > 0 ||
-    followup.coaching_feedback.tips?.length > 0
   )
 
   return (
@@ -825,6 +795,7 @@ export default function FollowupDetailPage() {
                     onGenerate={handleGenerateAction}
                     onView={handleViewAction}
                     disabled={!!generatingActionType}
+                    generatingType={generatingActionType}
                   />
                 </div>
 
@@ -935,100 +906,6 @@ export default function FollowupDetailPage() {
                     </div>
                   </div>
                 )}
-
-                {/* Coaching Feedback */}
-                {hasCoaching && (
-                  <div className="rounded-xl border-2 border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950 dark:to-teal-950 p-6 shadow-sm">
-                    <h2 className="font-bold text-lg flex items-center gap-2 mb-4 text-slate-900 dark:text-white">
-                      <Icons.sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                      📈 Coaching Feedback
-                    </h2>
-                    <div className="grid gap-4 md:grid-cols-3">
-                      {followup.coaching_feedback?.strengths && followup.coaching_feedback.strengths.length > 0 && (
-                        <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
-                          <h4 className="font-semibold text-sm text-green-700 dark:text-green-400 mb-2">✅ Goed</h4>
-                          <ul className="space-y-1">
-                            {followup.coaching_feedback.strengths.map((s, i) => (
-                              <li key={i} className="text-xs text-slate-700 dark:text-slate-300">{s}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {followup.coaching_feedback?.improvements && followup.coaching_feedback.improvements.length > 0 && (
-                        <div className="bg-orange-50 dark:bg-orange-900/30 p-4 rounded-lg">
-                          <h4 className="font-semibold text-sm text-orange-700 dark:text-orange-400 mb-2">🔧 Verbeter</h4>
-                          <ul className="space-y-1">
-                            {followup.coaching_feedback.improvements.map((item, idx) => (
-                              <li key={idx} className="text-xs text-slate-700 dark:text-slate-300">{item}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {followup.coaching_feedback?.tips && followup.coaching_feedback.tips.length > 0 && (
-                        <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
-                          <h4 className="font-semibold text-sm text-blue-700 dark:text-blue-400 mb-2">💡 {t('detail.tips')}</h4>
-                          <ul className="space-y-1">
-                            {followup.coaching_feedback.tips.map((t, i) => (
-                              <li key={i} className="text-xs text-slate-700 dark:text-slate-300">{t}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Follow-up Email */}
-                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="font-bold text-lg flex items-center gap-2 text-slate-900 dark:text-white">
-                      <Icons.mail className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                      Follow-up Email
-                    </h2>
-                    <Button variant="outline" size="sm" onClick={() => handleCopy(emailDraft, 'email')}>
-                      <Icons.copy className="h-4 w-4 mr-1" />
-                      {copied === 'email' ? t('toast.copied') : tCommon('copy')}
-                    </Button>
-                  </div>
-                  
-                  <Textarea
-                    value={emailDraft}
-                    onChange={(e) => setEmailDraft(e.target.value)}
-                    rows={10}
-                    className="font-mono text-sm mb-4 dark:bg-slate-800 dark:border-slate-700"
-                  />
-                  
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500 dark:text-slate-400">Toon:</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRegenerateEmail('professional')}
-                      disabled={regeneratingEmail}
-                      className="h-7 text-xs"
-                    >
-                      {regeneratingEmail ? <Icons.spinner className="h-3 w-3 animate-spin" /> : 'Professioneel'}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRegenerateEmail('casual')}
-                      disabled={regeneratingEmail}
-                      className="h-7 text-xs"
-                    >
-                      Informeel
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRegenerateEmail('formal')}
-                      disabled={regeneratingEmail}
-                      className="h-7 text-xs"
-                    >
-                      Formeel
-                    </Button>
-                  </div>
-                </div>
 
                 {/* Transcription (collapsible) */}
                 {followup.transcription_text && (

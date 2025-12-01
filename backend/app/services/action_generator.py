@@ -11,19 +11,9 @@ from anthropic import Anthropic
 
 from app.database import get_supabase_service
 from app.models.followup_actions import ActionType
+from app.i18n.utils import get_language_instruction
 
 logger = logging.getLogger(__name__)
-
-# Language names for prompts
-LANGUAGE_NAMES = {
-    "en": "English",
-    "nl": "Dutch (Nederlands)",
-    "de": "German (Deutsch)",
-    "fr": "French (Français)",
-    "es": "Spanish (Español)",
-    "hi": "Hindi (हिन्दी)",
-    "ar": "Arabic (العربية)",
-}
 
 
 class ActionGeneratorService:
@@ -122,9 +112,8 @@ class ActionGeneratorService:
     def _build_prompt(self, action_type: ActionType, context: Dict[str, Any], language: str) -> str:
         """Build the prompt for the specific action type"""
         
-        # Get language instruction
-        lang_name = LANGUAGE_NAMES.get(language, "English")
-        lang_instruction = f"Generate ALL content in {lang_name}. This is critical - do not use any other language."
+        # Get language instruction using the standard i18n utility
+        lang_instruction = get_language_instruction(language)
         
         # Build context section
         context_text = self._format_context(context)
