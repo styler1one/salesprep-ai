@@ -19,6 +19,9 @@ import { MarkdownEditor } from '@/components/markdown-editor'
 import { useTranslations } from 'next-intl'
 import { api } from '@/lib/api'
 import { exportAsMarkdown, exportAsPdf, exportAsDocx } from '@/lib/export-utils'
+import { ActionsGrid } from '@/components/followup/action-card'
+import { ActionPanel } from '@/components/followup/action-panel'
+import { ACTION_TYPES, type FollowupAction, type ActionType, type ActionsListResponse } from '@/types/followup-actions'
 import type { User } from '@supabase/supabase-js'
 
 interface Followup {
@@ -128,6 +131,11 @@ export default function FollowupDetailPage() {
   
   // Export states
   const [isExporting, setIsExporting] = useState(false)
+  
+  // Actions states
+  const [actions, setActions] = useState<FollowupAction[]>([])
+  const [selectedAction, setSelectedAction] = useState<FollowupAction | null>(null)
+  const [generatingActionType, setGeneratingActionType] = useState<ActionType | null>(null)
 
   useEffect(() => {
     const getUser = async () => {
@@ -229,6 +237,128 @@ export default function FollowupDetailPage() {
     }
   }
 
+  // Fetch actions for this followup
+  const fetchActions = useCallback(async () => {
+    try {
+      const { data, error } = await api.get<ActionsListResponse>(`/api/v1/followup/${followupId}/actions`)
+      if (!error && data) {
+        setActions(data.actions || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch actions:', error)
+    }
+  }, [followupId])
+
+  // Generate a new action
+  const handleGenerateAction = async (actionType: ActionType) => {
+    setGeneratingActionType(actionType)
+    try {
+      const { data, error } = await api.post<FollowupAction>(`/api/v1/followup/${followupId}/actions`, {
+        action_type: actionType,
+        regenerate: false,
+      })
+      
+      if (!error && data) {
+        // Add to actions list
+        setActions(prev => [...prev.filter(a => a.action_type !== actionType), data])
+        // Start polling for completion
+        pollActionStatus(data.id)
+      } else {
+        toast({ title: 'Failed to generate action', variant: 'destructive' })
+      }
+    } catch (error) {
+      console.error('Failed to generate action:', error)
+      toast({ title: 'Failed to generate action', variant: 'destructive' })
+    } finally {
+      setGeneratingActionType(null)
+    }
+  }
+
+  // Poll for action completion
+  const pollActionStatus = async (actionId: string) => {
+    const maxAttempts = 30 // 30 * 2s = 60s max
+    let attempts = 0
+    
+    const poll = async () => {
+      if (attempts >= maxAttempts) return
+      attempts++
+      
+      try {
+        const { data, error } = await api.get<FollowupAction>(`/api/v1/followup/${followupId}/actions/${actionId}`)
+        
+        if (!error && data) {
+          // Update action in list
+          setActions(prev => prev.map(a => a.id === actionId ? data : a))
+          
+          // Also update selected action if it's the same
+          if (selectedAction?.id === actionId) {
+            setSelectedAction(data)
+          }
+          
+          // If still generating, continue polling
+          if (data.metadata?.status === 'generating') {
+            setTimeout(poll, 2000)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to poll action status:', error)
+      }
+    }
+    
+    setTimeout(poll, 2000)
+  }
+
+  // Update action content (edit)
+  const handleUpdateAction = async (actionId: string, content: string) => {
+    const { data, error } = await api.patch<FollowupAction>(
+      `/api/v1/followup/${followupId}/actions/${actionId}`,
+      { content }
+    )
+    
+    if (!error && data) {
+      setActions(prev => prev.map(a => a.id === actionId ? data : a))
+      if (selectedAction?.id === actionId) {
+        setSelectedAction(data)
+      }
+    } else {
+      throw new Error('Failed to update action')
+    }
+  }
+
+  // Delete action
+  const handleDeleteAction = async (actionId: string) => {
+    const { error } = await api.delete(`/api/v1/followup/${followupId}/actions/${actionId}`)
+    
+    if (!error) {
+      setActions(prev => prev.filter(a => a.id !== actionId))
+      if (selectedAction?.id === actionId) {
+        setSelectedAction(null)
+      }
+    } else {
+      throw new Error('Failed to delete action')
+    }
+  }
+
+  // Regenerate action
+  const handleRegenerateAction = async (actionId: string) => {
+    const action = actions.find(a => a.id === actionId)
+    if (!action) return
+    
+    // Delete existing and regenerate
+    try {
+      await handleDeleteAction(actionId)
+      await handleGenerateAction(action.action_type)
+    } catch (error) {
+      console.error('Failed to regenerate action:', error)
+      toast({ title: 'Failed to regenerate', variant: 'destructive' })
+    }
+  }
+
+  // View action
+  const handleViewAction = (action: FollowupAction) => {
+    setSelectedAction(action)
+  }
+
   useEffect(() => {
     fetchFollowup()
     
@@ -240,6 +370,13 @@ export default function FollowupDetailPage() {
     
     return () => clearInterval(interval)
   }, [fetchFollowup, followup?.status])
+
+  // Fetch actions when followup is completed
+  useEffect(() => {
+    if (followup?.status === 'completed') {
+      fetchActions()
+    }
+  }, [followup?.status, fetchActions])
 
   const handleCopy = async (text: string, type: string) => {
     await navigator.clipboard.writeText(text)
@@ -657,7 +794,42 @@ export default function FollowupDetailPage() {
                   </div>
                 </div>
 
-                {/* Commercial Signals */}
+                {/* Actions Section */}
+                <div className="rounded-xl border-2 border-indigo-200 dark:border-indigo-800 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="font-bold text-lg flex items-center gap-2 text-slate-900 dark:text-white">
+                        <Icons.sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                        {t('actions.title')}
+                      </h2>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                        {t('actions.subtitle')}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <ActionsGrid
+                    actionTypes={ACTION_TYPES}
+                    existingActions={actions}
+                    onGenerate={handleGenerateAction}
+                    onView={handleViewAction}
+                    disabled={!!generatingActionType}
+                  />
+                </div>
+
+                {/* Selected Action Panel */}
+                {selectedAction && (
+                  <ActionPanel
+                    action={selectedAction}
+                    companyName={followup.prospect_company_name || 'Followup'}
+                    onUpdate={handleUpdateAction}
+                    onDelete={handleDeleteAction}
+                    onRegenerate={handleRegenerateAction}
+                    onClose={() => setSelectedAction(null)}
+                  />
+                )}
+
+                {/* Commercial Signals (Legacy) */}
                 {hasCommercialSignals && (
                   <div className="rounded-xl border-2 border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950 dark:to-yellow-950 p-6 shadow-sm">
                     <h2 className="font-bold text-lg flex items-center gap-2 mb-4 text-slate-900 dark:text-white">

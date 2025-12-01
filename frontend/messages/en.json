@@ -486,6 +486,52 @@
       "exportMd": "Download Markdown",
       "exporting": "Exporting..."
     },
+    "actions": {
+      "title": "Follow-up Actions",
+      "subtitle": "Generate targeted outputs from your meeting",
+      "generating": "Generating...",
+      "generated": "Generated",
+      "clickToGenerate": "Click to generate",
+      "error": "Error",
+      "regenerate": "Regenerate",
+      "delete": "Delete",
+      "confirmDelete": "Are you sure you want to delete this action?",
+      "noContent": "No content yet",
+      "generationFailed": "Generation failed",
+      "tryAgain": "Try Again",
+      "contextUsed": "Context used",
+      "wordsGenerated": "words",
+      "types": {
+        "customer_report": {
+          "label": "Customer Report",
+          "description": "Professional report to share with the customer"
+        },
+        "share_email": {
+          "label": "Share Email",
+          "description": "Ready-to-send email to share the report"
+        },
+        "commercial_analysis": {
+          "label": "Commercial Analysis",
+          "description": "Buying signals, risks, and deal assessment"
+        },
+        "sales_coaching": {
+          "label": "Sales Coaching",
+          "description": "Feedback on your sales performance"
+        },
+        "action_items": {
+          "label": "Action Items",
+          "description": "Structured tasks with owners and deadlines"
+        },
+        "internal_report": {
+          "label": "Internal Report",
+          "description": "Short summary for CRM or team"
+        },
+        "deal_update": {
+          "label": "Deal Update",
+          "description": "Suggested deal stage and probability"
+        }
+      }
+    },
     "toast": {
       "started": "Follow-up started",
       "startedDesc": "Your recording is being processed. This takes 2-5 minutes.",
