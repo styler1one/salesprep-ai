@@ -168,35 +168,53 @@ async def get_suggestions(
     user_id = current_user["sub"]
     
     try:
-        # Get organization ID - use EXACT same logic as company_profile endpoint
-        organization_id = current_user.get("organization_id")
+        # Collect ALL organization IDs the user belongs to
+        # This is needed because data may be spread across multiple orgs
+        organization_ids = []
+        primary_org_id = None
         
-        if not organization_id:
-            # First fallback (same as company_profile): find "Personal - {email}" organization
-            email = current_user.get("email", "")
-            personal_org = supabase.table("organizations") \
-                .select("id") \
-                .eq("name", f"Personal - {email}") \
-                .execute()
-            
-            if personal_org.data:
-                organization_id = personal_org.data[0]["id"]
-                print(f"[COACH DEBUG] Found 'Personal - {email}' org: {organization_id}")
-            else:
-                # Second fallback: check organization_members
-                org_result = supabase.table("organization_members") \
-                    .select("organization_id") \
-                    .eq("user_id", user_id) \
-                    .execute()
-                
-                if org_result.data:
-                    organization_id = org_result.data[0]["organization_id"]
-                    print(f"[COACH DEBUG] Found org from organization_members: {organization_id}")
+        # 1. Check JWT token
+        jwt_org_id = current_user.get("organization_id")
+        if jwt_org_id:
+            organization_ids.append(jwt_org_id)
+            primary_org_id = jwt_org_id
+            print(f"[COACH DEBUG] Found org from JWT: {jwt_org_id}")
         
-        print(f"[COACH DEBUG] Final resolved organization_id: {organization_id}")
+        # 2. Check "Personal - {email}" organization (for company profile)
+        email = current_user.get("email", "")
+        personal_org = supabase.table("organizations") \
+            .select("id") \
+            .eq("name", f"Personal - {email}") \
+            .execute()
+        
+        if personal_org.data:
+            personal_org_id = personal_org.data[0]["id"]
+            if personal_org_id not in organization_ids:
+                organization_ids.append(personal_org_id)
+            if not primary_org_id:
+                primary_org_id = personal_org_id
+            print(f"[COACH DEBUG] Found 'Personal - {email}' org: {personal_org_id}")
+        
+        # 3. Check organization_members (for research/preps/followups)
+        org_members_result = supabase.table("organization_members") \
+            .select("organization_id") \
+            .eq("user_id", user_id) \
+            .execute()
+        
+        if org_members_result.data:
+            for member in org_members_result.data:
+                member_org_id = member["organization_id"]
+                if member_org_id not in organization_ids:
+                    organization_ids.append(member_org_id)
+                    print(f"[COACH DEBUG] Found org from organization_members: {member_org_id}")
+                if not primary_org_id:
+                    primary_org_id = member_org_id
+        
+        print(f"[COACH DEBUG] All organization_ids: {organization_ids}")
+        print(f"[COACH DEBUG] Primary organization_id: {primary_org_id}")
         
         # New user without organization - return onboarding suggestions
-        if not organization_id:
+        if not primary_org_id or len(organization_ids) == 0:
             logger.info(f"User {user_id} has no organization - returning onboarding suggestions")
             # Return basic profile completion suggestions
             from app.models.coach import SuggestionType
@@ -227,10 +245,10 @@ async def get_suggestions(
                 has_priority=True,
             )
         
-        print(f"[COACH DEBUG] Building context for user {user_id} in org {organization_id}")
+        print(f"[COACH DEBUG] Building context for user {user_id} in orgs {organization_ids}")
         
-        # Build user context
-        context = await build_user_context(supabase, user_id, organization_id)
+        # Build user context - pass all organization IDs
+        context = await build_user_context(supabase, user_id, organization_ids)
         
         # Evaluate rules to get suggestions
         suggestions = rule_engine.evaluate_all(context)

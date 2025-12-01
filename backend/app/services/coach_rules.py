@@ -300,22 +300,29 @@ class CoachRuleEngine:
 async def build_user_context(
     supabase,
     user_id: str,
-    organization_id: str
+    organization_ids: list[str]
 ) -> UserContext:
     """
     Build the user context by gathering all relevant data.
     This is used by the rule engine to evaluate suggestions.
+    
+    Note: organization_ids is a list because data may be spread across
+    multiple organizations (e.g., "Personal - email" org for company profile,
+    organization_members org for research/preps).
     """
+    
+    # Use first org as primary for backward compatibility
+    primary_org_id = organization_ids[0] if organization_ids else ""
     
     context = UserContext(
         user_id=user_id,
-        organization_id=organization_id,
+        organization_id=primary_org_id,
         current_hour=datetime.now().hour,
         current_day_of_week=datetime.now().weekday(),
     )
     
     try:
-        # Check sales profile
+        # Check sales profile (user-based, not org-based)
         profile_result = supabase.table("sales_profiles") \
             .select("full_name") \
             .eq("user_id", user_id) \
@@ -327,30 +334,35 @@ async def build_user_context(
         )
         print(f"[COACH DEBUG] has_sales_profile = {context.has_sales_profile}")
         
-        # Check company profile (uses organization_id, not user_id)
-        company_result = supabase.table("company_profiles") \
-            .select("company_name") \
-            .eq("organization_id", organization_id) \
-            .execute()
-        print(f"[COACH DEBUG] Company profile for org {organization_id}: {company_result.data}")
-        context.has_company_profile = bool(
-            company_result.data and 
-            company_result.data[0].get("company_name")
-        )
+        # Check company profile - check ALL organizations
+        context.has_company_profile = False
+        for org_id in organization_ids:
+            company_result = supabase.table("company_profiles") \
+                .select("company_name") \
+                .eq("organization_id", org_id) \
+                .execute()
+            if company_result.data and company_result.data[0].get("company_name"):
+                print(f"[COACH DEBUG] Company profile found in org {org_id}: {company_result.data}")
+                context.has_company_profile = True
+                break
         print(f"[COACH DEBUG] has_company_profile = {context.has_company_profile}")
         
-        # Get completed research briefs
-        research_result = supabase.table("research_briefs") \
-            .select("id, company_name, prospect_id, status, completed_at") \
-            .eq("organization_id", organization_id) \
-            .eq("status", "completed") \
-            .execute()
+        # Get completed research briefs - check ALL organizations
+        all_research = []
+        for org_id in organization_ids:
+            research_result = supabase.table("research_briefs") \
+                .select("id, company_name, prospect_id, status, completed_at") \
+                .eq("organization_id", org_id) \
+                .eq("status", "completed") \
+                .execute()
+            if research_result.data:
+                all_research.extend(research_result.data)
         
-        if research_result.data:
-            context.research_briefs = research_result.data
+        if all_research:
+            context.research_briefs = all_research
             
             # For each research, check if it has contacts
-            for research in research_result.data:
+            for research in all_research:
                 prospect_id = research.get("prospect_id")
                 if prospect_id:
                     contacts_result = supabase.table("prospect_contacts") \
@@ -361,44 +373,54 @@ async def build_user_context(
                     if not contacts_result.data:
                         context.research_without_contacts.append(research)
         
-        # Get completed preps
-        preps_result = supabase.table("meeting_preps") \
-            .select("id, prospect_company_name, status, completed_at") \
-            .eq("organization_id", organization_id) \
-            .eq("status", "completed") \
-            .execute()
-        
-        if preps_result.data:
-            context.preps_completed = preps_result.data
+        # Get completed preps - check ALL organizations
+        all_preps = []
+        all_followups = []
+        for org_id in organization_ids:
+            preps_result = supabase.table("meeting_preps") \
+                .select("id, prospect_company_name, status, completed_at") \
+                .eq("organization_id", org_id) \
+                .eq("status", "completed") \
+                .execute()
+            if preps_result.data:
+                all_preps.extend(preps_result.data)
             
-            # Get follow-ups to check which preps have follow-ups
             followups_result = supabase.table("followups") \
                 .select("prospect_company_name") \
-                .eq("organization_id", organization_id) \
+                .eq("organization_id", org_id) \
                 .execute()
+            if followups_result.data:
+                all_followups.extend(followups_result.data)
+        
+        if all_preps:
+            context.preps_completed = all_preps
             
             followup_companies = {
                 f.get("prospect_company_name", "").lower() 
-                for f in (followups_result.data or [])
+                for f in all_followups
             }
             
-            for prep in preps_result.data:
+            for prep in all_preps:
                 company = prep.get("prospect_company_name", "").lower()
                 if company not in followup_companies:
                     context.preps_without_followup.append(prep)
         
-        # Get completed follow-ups
-        followups_result = supabase.table("followups") \
-            .select("id, prospect_company_name, status, completed_at") \
-            .eq("organization_id", organization_id) \
-            .eq("status", "completed") \
-            .execute()
+        # Get completed follow-ups - check ALL organizations
+        all_completed_followups = []
+        for org_id in organization_ids:
+            followups_result = supabase.table("followups") \
+                .select("id, prospect_company_name, status, completed_at") \
+                .eq("organization_id", org_id) \
+                .eq("status", "completed") \
+                .execute()
+            if followups_result.data:
+                all_completed_followups.extend(followups_result.data)
         
-        if followups_result.data:
-            context.followups_completed = followups_result.data
+        if all_completed_followups:
+            context.followups_completed = all_completed_followups
             
             # Check which follow-ups have generated actions
-            for followup in followups_result.data:
+            for followup in all_completed_followups:
                 actions_result = supabase.table("followup_actions") \
                     .select("id") \
                     .eq("followup_id", followup.get("id")) \
@@ -407,30 +429,30 @@ async def build_user_context(
                 if not actions_result.data:
                     context.followups_without_actions.append(followup)
         
-        # Get inactive prospects (no activity in 7+ days)
+        # Get inactive prospects (no activity in 7+ days) - check ALL organizations
         week_ago = (datetime.now() - timedelta(days=7)).isoformat()
         
-        # This is simplified - in production you'd join multiple tables
-        inactive_research = supabase.table("research_briefs") \
-            .select("id, company_name, completed_at") \
-            .eq("organization_id", organization_id) \
-            .eq("status", "completed") \
-            .lt("completed_at", week_ago) \
-            .execute()
-        
-        if inactive_research.data:
-            for research in inactive_research.data:
-                days_ago = (datetime.now() - datetime.fromisoformat(
-                    research.get("completed_at", datetime.now().isoformat()).replace("Z", "+00:00")
-                )).days
-                
-                if days_ago >= 7:
-                    context.inactive_prospects.append({
-                        "company_name": research.get("company_name"),
-                        "research_id": research.get("id"),
-                        "days_inactive": days_ago,
-                        "last_activity": research.get("completed_at"),
-                    })
+        for org_id in organization_ids:
+            inactive_research = supabase.table("research_briefs") \
+                .select("id, company_name, completed_at") \
+                .eq("organization_id", org_id) \
+                .eq("status", "completed") \
+                .lt("completed_at", week_ago) \
+                .execute()
+            
+            if inactive_research.data:
+                for research in inactive_research.data:
+                    days_ago = (datetime.now() - datetime.fromisoformat(
+                        research.get("completed_at", datetime.now().isoformat()).replace("Z", "+00:00")
+                    )).days
+                    
+                    if days_ago >= 7:
+                        context.inactive_prospects.append({
+                            "company_name": research.get("company_name"),
+                            "research_id": research.get("id"),
+                            "days_inactive": days_ago,
+                            "last_activity": research.get("completed_at"),
+                        })
         
         # Get learned patterns
         patterns_result = supabase.table("coach_user_patterns") \
