@@ -168,14 +168,33 @@ async def get_suggestions(
     user_id = current_user["sub"]
     
     try:
-        # Get organization ID
-        org_result = supabase.table("organization_members") \
-            .select("organization_id") \
-            .eq("user_id", user_id) \
-            .execute()
+        # Get organization ID - use same logic as company_profile endpoint
+        organization_id = current_user.get("organization_id")
+        
+        if not organization_id:
+            # Fallback: check organization_members
+            org_result = supabase.table("organization_members") \
+                .select("organization_id") \
+                .eq("user_id", user_id) \
+                .execute()
+            
+            if org_result.data:
+                organization_id = org_result.data[0]["organization_id"]
+            else:
+                # Fallback: find "Personal - {email}" organization
+                email = current_user.get("email", "")
+                personal_org = supabase.table("organizations") \
+                    .select("id") \
+                    .eq("name", f"Personal - {email}") \
+                    .execute()
+                
+                if personal_org.data:
+                    organization_id = personal_org.data[0]["id"]
+        
+        print(f"[COACH DEBUG] Resolved organization_id: {organization_id}")
         
         # New user without organization - return onboarding suggestions
-        if not org_result.data:
+        if not organization_id:
             logger.info(f"User {user_id} has no organization - returning onboarding suggestions")
             # Return basic profile completion suggestions
             from app.models.coach import SuggestionType
@@ -206,8 +225,7 @@ async def get_suggestions(
                 has_priority=True,
             )
         
-        organization_id = org_result.data[0]["organization_id"]
-        logger.info(f"Building context for user {user_id} in org {organization_id}")
+        print(f"[COACH DEBUG] Building context for user {user_id} in org {organization_id}")
         
         # Build user context
         context = await build_user_context(supabase, user_id, organization_id)
