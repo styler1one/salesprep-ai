@@ -61,6 +61,7 @@ async def get_settings(current_user: dict = Depends(get_current_user)):
         if not org_result.data:
             # Return default settings for users without organization
             return CoachSettings(
+                id=str(uuid.uuid4()),
                 user_id=user_id,
                 is_enabled=True,
                 show_inline_tips=True,
@@ -68,6 +69,8 @@ async def get_settings(current_user: dict = Depends(get_current_user)):
                 notification_frequency="normal",
                 widget_state="minimized",
                 dismissed_tip_ids=[],
+                created_at=datetime.now(),
+                updated_at=datetime.now(),
             )
         
         new_settings = {
