@@ -94,12 +94,9 @@ class ActionGeneratorService:
                 if research_result.data:
                     context["research_brief"] = research_result.data[0]
                     
-                    # Get contacts for this research
-                    research_id = research_result.data[0]["id"]
-                    # Get prospect_id from research
-                    prospect_result = supabase.table("prospects").select("id").eq("research_id", research_id).execute()
-                    if prospect_result.data:
-                        prospect_id = prospect_result.data[0]["id"]
+                    # Get contacts via prospect_id from research_brief
+                    prospect_id = research_result.data[0].get("prospect_id")
+                    if prospect_id:
                         contacts_result = supabase.table("prospect_contacts").select("*").eq("prospect_id", prospect_id).execute()
                         if contacts_result.data:
                             context["contacts"] = contacts_result.data
