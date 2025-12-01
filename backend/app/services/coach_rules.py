@@ -145,6 +145,13 @@ class CoachRuleEngine:
         """Evaluate all rules and return matching suggestions."""
         suggestions = []
         
+        logger.info(f"Evaluating rules for user {context.user_id}")
+        logger.info(f"  has_sales_profile: {context.has_sales_profile}")
+        logger.info(f"  has_company_profile: {context.has_company_profile}")
+        logger.info(f"  research_without_contacts: {len(context.research_without_contacts)}")
+        logger.info(f"  preps_without_followup: {len(context.preps_without_followup)}")
+        logger.info(f"  followups_without_actions: {len(context.followups_without_actions)}")
+        
         # Profile completeness rules
         if not context.has_sales_profile:
             suggestions.append(self._create_suggestion(
@@ -204,6 +211,10 @@ class CoachRuleEngine:
         
         # Sort by priority (highest first)
         suggestions.sort(key=lambda s: s.priority, reverse=True)
+        
+        logger.info(f"Generated {len(suggestions)} suggestions")
+        for s in suggestions[:5]:  # Log first 5
+            logger.info(f"  - {s.suggestion_type.value}: {s.title} (priority: {s.priority})")
         
         return suggestions
     
@@ -309,20 +320,24 @@ async def build_user_context(
             .select("full_name") \
             .eq("user_id", user_id) \
             .execute()
+        logger.info(f"Sales profile query result: {profile_result.data}")
         context.has_sales_profile = bool(
             profile_result.data and 
             profile_result.data[0].get("full_name")
         )
+        logger.info(f"has_sales_profile = {context.has_sales_profile}")
         
         # Check company profile
         company_result = supabase.table("company_profiles") \
             .select("company_name") \
             .eq("user_id", user_id) \
             .execute()
+        logger.info(f"Company profile query result: {company_result.data}")
         context.has_company_profile = bool(
             company_result.data and 
             company_result.data[0].get("company_name")
         )
+        logger.info(f"has_company_profile = {context.has_company_profile}")
         
         # Get completed research briefs
         research_result = supabase.table("research_briefs") \
