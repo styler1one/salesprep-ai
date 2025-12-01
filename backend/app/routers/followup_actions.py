@@ -11,7 +11,7 @@ import logging
 import uuid
 
 from app.deps import get_current_user
-from app.database import get_supabase_service, get_user_client
+from app.database import get_supabase_service
 from app.models.followup_actions import (
     ActionType,
     ACTION_TYPE_INFO,
@@ -59,7 +59,7 @@ async def list_followup_actions(
     """List all actions for a follow-up"""
     try:
         user_id = current_user.get("sub")
-        supabase = get_user_client(current_user)
+        supabase = get_supabase_service()
         
         # Verify user owns this followup
         followup_check = supabase.table("followups").select("id").eq("id", followup_id).eq("user_id", user_id).execute()
@@ -94,7 +94,7 @@ async def generate_action(
     """Generate a new action for a follow-up"""
     try:
         user_id = current_user.get("sub")
-        supabase = get_user_client(current_user)
+        supabase = get_supabase_service()
         
         # Verify user owns this followup and get org_id
         followup_result = supabase.table("followups").select("id, organization_id, transcription_text, executive_summary, prospect_company_name").eq("id", followup_id).eq("user_id", user_id).execute()
@@ -171,7 +171,7 @@ async def get_action(
     """Get a specific action"""
     try:
         user_id = current_user.get("sub")
-        supabase = get_user_client(current_user)
+        supabase = get_supabase_service()
         
         result = supabase.table("followup_actions").select("*").eq("id", action_id).eq("followup_id", followup_id).eq("user_id", user_id).execute()
         
@@ -198,7 +198,7 @@ async def update_action(
     """Update an action (edit content)"""
     try:
         user_id = current_user.get("sub")
-        supabase = get_user_client(current_user)
+        supabase = get_supabase_service()
         
         # Verify ownership
         existing = supabase.table("followup_actions").select("id").eq("id", action_id).eq("followup_id", followup_id).eq("user_id", user_id).execute()
@@ -240,7 +240,7 @@ async def delete_action(
     """Delete an action"""
     try:
         user_id = current_user.get("sub")
-        supabase = get_user_client(current_user)
+        supabase = get_supabase_service()
         
         # Verify ownership
         existing = supabase.table("followup_actions").select("id").eq("id", action_id).eq("followup_id", followup_id).eq("user_id", user_id).execute()
