@@ -271,7 +271,7 @@ async def get_suggestions(
             # Create a Suggestion record in the database (for tracking)
             suggestion_data = {
                 "user_id": user_id,
-                "organization_id": organization_id,
+                "organization_id": primary_org_id,
                 "suggestion_type": suggestion.suggestion_type.value,
                 "suggestion_data": {
                     "title": suggestion.title,
@@ -296,7 +296,7 @@ async def get_suggestions(
                 response_suggestions.append(Suggestion(
                     id=db_suggestion["id"],
                     user_id=user_id,
-                    organization_id=organization_id,
+                    organization_id=primary_org_id,
                     suggestion_type=suggestion.suggestion_type,
                     title=suggestion.title,
                     description=suggestion.description,
