@@ -9,9 +9,16 @@ import { Icons } from '@/components/icons'
 import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { MarkdownEditor } from '@/components/markdown-editor'
 import { useTranslations } from 'next-intl'
 import { api } from '@/lib/api'
+import { exportAsMarkdown, exportAsPdf, exportAsDocx } from '@/lib/export-utils'
 import type { User } from '@supabase/supabase-js'
 
 interface Followup {
@@ -118,6 +125,9 @@ export default function FollowupDetailPage() {
   const [isEditingSummary, setIsEditingSummary] = useState(false)
   const [editedSummary, setEditedSummary] = useState('')
   const [isSavingSummary, setIsSavingSummary] = useState(false)
+  
+  // Export states
+  const [isExporting, setIsExporting] = useState(false)
 
   useEffect(() => {
     const getUser = async () => {
@@ -315,6 +325,106 @@ export default function FollowupDetailPage() {
     }
   }
 
+  // Build export content from all followup data
+  const buildExportContent = () => {
+    if (!followup) return ''
+    
+    let content = `# Meeting Follow-up: ${followup.prospect_company_name || followup.meeting_subject || 'Meeting'}\n\n`
+    
+    if (followup.meeting_date) {
+      content += `**Date:** ${new Date(followup.meeting_date).toLocaleDateString()}\n\n`
+    }
+    
+    if (followup.executive_summary) {
+      content += `## Executive Summary\n\n${followup.executive_summary}\n\n`
+    }
+    
+    if (followup.key_points?.length > 0) {
+      content += `## Key Points\n\n${followup.key_points.map(p => `- ${p}`).join('\n')}\n\n`
+    }
+    
+    if (followup.decisions?.length > 0) {
+      content += `## Decisions\n\n${followup.decisions.map(d => `- ${d}`).join('\n')}\n\n`
+    }
+    
+    if (followup.next_steps?.length > 0) {
+      content += `## Next Steps\n\n${followup.next_steps.map(s => `- ${s}`).join('\n')}\n\n`
+    }
+    
+    if (followup.action_items?.length > 0) {
+      content += `## Action Items\n\n`
+      followup.action_items.forEach(item => {
+        content += `- **${item.task}** (${item.assignee || 'TBD'}${item.due_date ? `, due: ${item.due_date}` : ''})\n`
+      })
+      content += '\n'
+    }
+    
+    if (followup.concerns?.length > 0) {
+      content += `## Concerns\n\n${followup.concerns.map(c => `- ${c}`).join('\n')}\n\n`
+    }
+    
+    if (followup.email_draft) {
+      content += `## Follow-up Email Draft\n\n${followup.email_draft}\n`
+    }
+    
+    return content
+  }
+
+  // Export handlers
+  const handleExportMd = () => {
+    const content = buildExportContent()
+    if (!content) return
+    exportAsMarkdown(content, followup?.prospect_company_name || 'followup')
+    toast({
+      title: t('toast.copied'),
+      description: 'Markdown file downloaded',
+    })
+  }
+
+  const handleExportPdf = async () => {
+    const content = buildExportContent()
+    if (!content) return
+    setIsExporting(true)
+    try {
+      await exportAsPdf(content, followup?.prospect_company_name || 'followup', `${followup?.prospect_company_name || 'Meeting'} - Follow-up`)
+      toast({
+        title: t('toast.copied'),
+        description: 'PDF file downloaded',
+      })
+    } catch (error) {
+      console.error('PDF export failed:', error)
+      toast({
+        variant: 'destructive',
+        title: t('toast.failed'),
+        description: 'Failed to export PDF',
+      })
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const handleExportDocx = async () => {
+    const content = buildExportContent()
+    if (!content) return
+    setIsExporting(true)
+    try {
+      await exportAsDocx(content, followup?.prospect_company_name || 'followup', `${followup?.prospect_company_name || 'Meeting'} - Follow-up`)
+      toast({
+        title: t('toast.copied'),
+        description: 'Word file downloaded',
+      })
+    } catch (error) {
+      console.error('DOCX export failed:', error)
+      toast({
+        variant: 'destructive',
+        title: t('toast.failed'),
+        description: 'Failed to export Word document',
+      })
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const formatDuration = (seconds: number | null) => {
     if (!seconds) return '-'
     const mins = Math.floor(seconds / 60)
@@ -436,13 +546,42 @@ export default function FollowupDetailPage() {
                       <Icons.fileText className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                       {t('detail.summary')}
                     </h2>
-                    <Button variant="outline" size="sm" onClick={() => handleCopy(
-                      `${followup.executive_summary}\n\nBelangrijkste punten:\n${followup.key_points?.map(p => `• ${p}`).join('\n')}\n\nVervolgstappen:\n${followup.next_steps?.map(s => `• ${s}`).join('\n')}`,
-                      'summary'
-                    )}>
-                      <Icons.copy className="h-4 w-4 mr-1" />
-                      {copied === 'summary' ? t('toast.copied') : tCommon('copy')}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleCopy(
+                        `${followup.executive_summary}\n\nBelangrijkste punten:\n${followup.key_points?.map(p => `• ${p}`).join('\n')}\n\nVervolgstappen:\n${followup.next_steps?.map(s => `• ${s}`).join('\n')}`,
+                        'summary'
+                      )}>
+                        <Icons.copy className="h-4 w-4 mr-1" />
+                        {copied === 'summary' ? t('toast.copied') : tCommon('copy')}
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" disabled={isExporting}>
+                            {isExporting ? (
+                              <Icons.spinner className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                              <Icons.download className="h-4 w-4 mr-2" />
+                            )}
+                            {t('detail.export')}
+                            <Icons.chevronDown className="h-3 w-3 ml-1" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={handleExportPdf}>
+                            <Icons.fileText className="h-4 w-4 mr-2" />
+                            {t('detail.exportPdf')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleExportDocx}>
+                            <Icons.fileText className="h-4 w-4 mr-2" />
+                            {t('detail.exportDocx')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleExportMd}>
+                            <Icons.fileText className="h-4 w-4 mr-2" />
+                            {t('detail.exportMd')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                   
                   {followup.executive_summary && (

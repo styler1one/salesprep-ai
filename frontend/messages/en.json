@@ -479,7 +479,12 @@
       "saved": "Changes saved",
       "savedDesc": "Your edits have been saved successfully",
       "saveFailed": "Could not save",
-      "saveFailedDesc": "An error occurred while saving your changes"
+      "saveFailedDesc": "An error occurred while saving your changes",
+      "export": "Export",
+      "exportPdf": "Download PDF",
+      "exportDocx": "Download Word",
+      "exportMd": "Download Markdown",
+      "exporting": "Exporting..."
     },
     "toast": {
       "started": "Follow-up started",
