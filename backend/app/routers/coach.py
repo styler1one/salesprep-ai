@@ -139,13 +139,42 @@ async def get_suggestions(
         org_result = supabase.table("organization_members") \
             .select("organization_id") \
             .eq("user_id", user_id) \
-            .single() \
             .execute()
         
+        # New user without organization - return onboarding suggestions
         if not org_result.data:
-            raise HTTPException(status_code=400, detail="User has no organization")
+            logger.info(f"User {user_id} has no organization - returning onboarding suggestions")
+            # Return basic profile completion suggestions
+            from app.models.coach import SuggestionType
+            onboarding_suggestion = Suggestion(
+                id="onboarding-profile",
+                user_id=user_id,
+                organization_id="",
+                suggestion_type=SuggestionType.COMPLETE_PROFILE,
+                title="Complete your profile",
+                description="Set up your sales profile and company to get started with personalized AI assistance.",
+                reason="New account setup",
+                priority=95,
+                action_route="/onboarding",
+                action_label="Start Setup",
+                icon="🚀",
+                related_entity_type=None,
+                related_entity_id=None,
+                shown_at=datetime.now(),
+                expires_at=None,
+                action_taken=None,
+                action_taken_at=None,
+                snooze_until=None,
+                feedback_rating=None,
+            )
+            return SuggestionsResponse(
+                suggestions=[onboarding_suggestion],
+                count=1,
+                has_priority=True,
+            )
         
-        organization_id = org_result.data["organization_id"]
+        organization_id = org_result.data[0]["organization_id"]
+        logger.info(f"Building context for user {user_id} in org {organization_id}")
         
         # Build user context
         context = await build_user_context(supabase, user_id, organization_id)
