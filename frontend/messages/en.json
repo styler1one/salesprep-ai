@@ -502,6 +502,10 @@
       "contextUsed": "Context used",
       "wordsGenerated": "words",
       "types": {
+        "summary": {
+          "label": "Summary",
+          "description": "Meeting summary with key points and next steps"
+        },
         "customer_report": {
           "label": "Customer Report",
           "description": "Professional report to share with the customer"
