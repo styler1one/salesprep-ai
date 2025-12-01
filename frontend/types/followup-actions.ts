@@ -3,6 +3,7 @@
  */
 
 export type ActionType = 
+  | 'summary'  // Special: auto-generated from followup, not via API
   | 'customer_report'
   | 'share_email'
   | 'commercial_analysis'
@@ -67,6 +68,12 @@ export interface ActionTypesResponse {
 
 // Action type configuration for UI
 export const ACTION_TYPES: ActionTypeInfo[] = [
+  {
+    type: 'summary',
+    icon: '📋',
+    label: 'Summary',
+    description: 'Meeting summary with key points and next steps',
+  },
   {
     type: 'customer_report',
     icon: '📄',

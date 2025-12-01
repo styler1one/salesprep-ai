@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from '@/components/ui/button'
@@ -248,6 +248,18 @@ export default function FollowupDetailPage() {
 
   // Generate a new action
   const handleGenerateAction = async (actionType: ActionType) => {
+    // Summary is built-in, not generated via API
+    if (actionType === 'summary') {
+      const summaryAction = buildSummaryAction()
+      if (summaryAction) {
+        setSelectedAction(summaryAction)
+        setTimeout(() => {
+          document.getElementById('action-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 100)
+      }
+      return
+    }
+    
     setGeneratingActionType(actionType)
     try {
       const { data, error } = await api.post<FollowupAction>(`/api/v1/followup/${followupId}/actions`, {
@@ -314,6 +326,12 @@ export default function FollowupDetailPage() {
 
   // Update action content (edit)
   const handleUpdateAction = async (actionId: string, content: string) => {
+    // Summary is built-in and not editable via API
+    if (actionId === 'summary-builtin') {
+      toast({ title: 'Summary cannot be edited here', variant: 'destructive' })
+      return
+    }
+    
     const { data, error } = await api.patch<FollowupAction>(
       `/api/v1/followup/${followupId}/actions/${actionId}`,
       { content }
@@ -331,6 +349,12 @@ export default function FollowupDetailPage() {
 
   // Delete action
   const handleDeleteAction = async (actionId: string) => {
+    // Summary is built-in and cannot be deleted
+    if (actionId === 'summary-builtin') {
+      toast({ title: 'Summary cannot be deleted', variant: 'destructive' })
+      return
+    }
+    
     const { error } = await api.delete(`/api/v1/followup/${followupId}/actions/${actionId}`)
     
     if (!error) {
@@ -345,6 +369,12 @@ export default function FollowupDetailPage() {
 
   // Regenerate action
   const handleRegenerateAction = async (actionId: string) => {
+    // Summary is built-in and cannot be regenerated
+    if (actionId === 'summary-builtin') {
+      toast({ title: 'Summary cannot be regenerated', variant: 'destructive' })
+      return
+    }
+    
     const action = actions.find(a => a.id === actionId)
     if (!action) return
     
@@ -385,6 +415,63 @@ export default function FollowupDetailPage() {
       fetchActions()
     }
   }, [followup?.status, fetchActions])
+
+  // Build summary action from followup data (special handling - not from API)
+  const buildSummaryAction = useCallback((): FollowupAction | null => {
+    if (!followup?.executive_summary) return null
+    
+    // Build markdown content from followup data
+    let content = `## Summary\n\n${followup.executive_summary}\n\n`
+    
+    if (followup.key_points?.length) {
+      content += `## Key Points\n\n${followup.key_points.map(p => `- ${p}`).join('\n')}\n\n`
+    }
+    
+    if (followup.decisions?.length) {
+      content += `## Decisions\n\n${followup.decisions.map(d => `- ${d}`).join('\n')}\n\n`
+    }
+    
+    if (followup.next_steps?.length) {
+      content += `## Next Steps\n\n${followup.next_steps.map(s => `- ${s}`).join('\n')}\n\n`
+    }
+    
+    if (followup.concerns?.length) {
+      content += `## Concerns\n\n${followup.concerns.map(c => `- ${c}`).join('\n')}\n\n`
+    }
+    
+    if (followup.action_items?.length) {
+      content += `## Action Items\n\n`
+      content += followup.action_items.map(item => 
+        `- **${item.task}** (${item.assignee}${item.due_date ? `, ${item.due_date}` : ''})`
+      ).join('\n')
+    }
+    
+    return {
+      id: 'summary-builtin',
+      followup_id: followup.id,
+      action_type: 'summary',
+      content,
+      metadata: { status: 'completed' },
+      language: 'en',
+      created_at: followup.created_at,
+      updated_at: followup.completed_at || followup.created_at,
+      icon: '📋',
+      label: 'Summary',
+      description: 'Meeting summary with key points and next steps',
+      word_count: content.split(/\s+/).length,
+    }
+  }, [followup])
+
+  // Combine built-in summary with API actions
+  const allActions = useMemo(() => {
+    const summaryAction = buildSummaryAction()
+    if (summaryAction) {
+      // Filter out any API summary action (shouldn't exist, but just in case)
+      const apiActions = actions.filter(a => a.action_type !== 'summary')
+      return [summaryAction, ...apiActions]
+    }
+    return actions
+  }, [buildSummaryAction, actions])
 
   const handleCopy = async (text: string, type: string) => {
     await navigator.clipboard.writeText(text)
@@ -657,125 +744,7 @@ export default function FollowupDetailPage() {
               {/* Left Column - Main Content */}
               <div className="flex-1 min-w-0 space-y-6">
                 
-                {/* Executive Summary */}
-                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="font-bold text-lg flex items-center gap-2 text-slate-900 dark:text-white">
-                      <Icons.fileText className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                      {t('detail.summary')}
-                    </h2>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleCopy(
-                        `${followup.executive_summary}\n\nBelangrijkste punten:\n${followup.key_points?.map(p => `• ${p}`).join('\n')}\n\nVervolgstappen:\n${followup.next_steps?.map(s => `• ${s}`).join('\n')}`,
-                        'summary'
-                      )}>
-                        <Icons.copy className="h-4 w-4 mr-1" />
-                        {copied === 'summary' ? t('toast.copied') : tCommon('copy')}
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm" disabled={isExporting}>
-                            {isExporting ? (
-                              <Icons.spinner className="h-4 w-4 mr-2 animate-spin" />
-                            ) : (
-                              <Icons.download className="h-4 w-4 mr-2" />
-                            )}
-                            {t('detail.export')}
-                            <Icons.chevronDown className="h-3 w-3 ml-1" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={handleExportPdf}>
-                            <Icons.fileText className="h-4 w-4 mr-2" />
-                            {t('detail.exportPdf')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={handleExportDocx}>
-                            <Icons.fileText className="h-4 w-4 mr-2" />
-                            {t('detail.exportDocx')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={handleExportMd}>
-                            <Icons.fileText className="h-4 w-4 mr-2" />
-                            {t('detail.exportMd')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                  
-                  {followup.executive_summary && (
-                    <div className="bg-orange-50 dark:bg-orange-900/30 p-4 rounded-lg mb-4">
-                      <p className="text-sm text-slate-700 dark:text-slate-300">{followup.executive_summary}</p>
-                    </div>
-                  )}
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {/* Key Points */}
-                    {followup.key_points?.length > 0 && (
-                      <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                        <h4 className="font-semibold text-sm text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-1">
-                          💡 {t('detail.keyPoints')}
-                        </h4>
-                        <ul className="space-y-1">
-                          {followup.key_points.map((point, i) => (
-                            <li key={i} className="text-sm text-blue-700 dark:text-blue-300 flex items-start gap-2">
-                              <span>•</span>{point}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Concerns */}
-                    {followup.concerns?.length > 0 && (
-                      <div className="p-4 bg-amber-50 dark:bg-amber-900/30 rounded-lg">
-                        <h4 className="font-semibold text-sm text-amber-800 dark:text-amber-200 mb-2 flex items-center gap-1">
-                          ⚠️ {t('detail.concerns')}
-                        </h4>
-                        <ul className="space-y-1">
-                          {followup.concerns.map((concern, i) => (
-                            <li key={i} className="text-sm text-amber-700 dark:text-amber-300 flex items-start gap-2">
-                              <span>•</span>{concern}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Decisions */}
-                    {followup.decisions?.length > 0 && (
-                      <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                        <h4 className="font-semibold text-sm text-green-800 dark:text-green-200 mb-2 flex items-center gap-1">
-                          ✅ {t('detail.decisions')}
-                        </h4>
-                        <ul className="space-y-1">
-                          {followup.decisions.map((decision, i) => (
-                            <li key={i} className="text-sm text-green-700 dark:text-green-300 flex items-start gap-2">
-                              <span>•</span>{decision}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Next Steps */}
-                    {followup.next_steps?.length > 0 && (
-                      <div className="p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-                        <h4 className="font-semibold text-sm text-purple-800 dark:text-purple-200 mb-2 flex items-center gap-1">
-                          ➡️ {t('detail.nextSteps')}
-                        </h4>
-                        <ul className="space-y-1">
-                          {followup.next_steps.map((step, i) => (
-                            <li key={i} className="text-sm text-purple-700 dark:text-purple-300 flex items-start gap-2">
-                              <span>•</span>{step}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Actions Section */}
+                {/* Actions Section - NOW FIRST */}
                 <div className="rounded-xl border-2 border-indigo-200 dark:border-indigo-800 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 p-6 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <div>
@@ -791,7 +760,7 @@ export default function FollowupDetailPage() {
                   
                   <ActionsGrid
                     actionTypes={ACTION_TYPES}
-                    existingActions={actions}
+                    existingActions={allActions}
                     onGenerate={handleGenerateAction}
                     onView={handleViewAction}
                     disabled={!!generatingActionType}

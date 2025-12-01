@@ -44,6 +44,7 @@ export function ActionPanel({
   const actionInfo = getActionTypeInfo(action.action_type)
   const isGenerating = isActionGenerating(action)
   const hasError = isActionError(action)
+  const isBuiltInSummary = action.id === 'summary-builtin'
 
   const handleSave = async () => {
     setIsSaving(true)
@@ -171,10 +172,12 @@ export function ActionPanel({
           </>
         ) : (
           <>
-            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} disabled={isGenerating}>
-              <Icons.edit className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
+            {!isBuiltInSummary && (
+              <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} disabled={isGenerating}>
+                <Icons.edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={handleCopy} disabled={!action.content}>
               <Icons.copy className="h-4 w-4 mr-2" />
               Copy
@@ -207,28 +210,32 @@ export function ActionPanel({
               </DropdownMenuContent>
             </DropdownMenu>
             <div className="flex-1" />
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => onRegenerate(action.id)}
-              disabled={isGenerating}
-            >
-              <Icons.refresh className="h-4 w-4 mr-2" />
-              Regenerate
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-            >
-              {isDeleting ? (
-                <Icons.spinner className="h-4 w-4 animate-spin" />
-              ) : (
-                <Icons.trash className="h-4 w-4" />
-              )}
-            </Button>
+            {!isBuiltInSummary && (
+              <>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => onRegenerate(action.id)}
+                  disabled={isGenerating}
+                >
+                  <Icons.refresh className="h-4 w-4 mr-2" />
+                  Regenerate
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                >
+                  {isDeleting ? (
+                    <Icons.spinner className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Icons.trash className="h-4 w-4" />
+                  )}
+                </Button>
+              </>
+            )}
           </>
         )}
       </div>
