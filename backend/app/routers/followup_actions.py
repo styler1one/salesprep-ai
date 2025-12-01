@@ -118,11 +118,11 @@ async def generate_action(
         if existing.data and request.regenerate:
             supabase.table("followup_actions").delete().eq("id", existing.data[0]["id"]).execute()
         
-        # Get user's language preference
-        settings_result = supabase.table("user_settings").select("app_language").eq("user_id", user_id).execute()
+        # Get user's OUTPUT language preference (not app_language which is UI language)
+        settings_result = supabase.table("user_settings").select("default_output_language").eq("user_id", user_id).execute()
         language = "en"
         if settings_result.data:
-            language = settings_result.data[0].get("app_language", "en")
+            language = settings_result.data[0].get("default_output_language", "en")
         
         # Create action record with "generating" state
         action_id = str(uuid.uuid4())
