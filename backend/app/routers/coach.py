@@ -109,17 +109,38 @@ async def update_settings(
     user_id = current_user["sub"]
     
     try:
-        # Get existing settings first
-        existing = await get_settings(current_user)
+        # Check if settings exist
+        existing_result = supabase.table("coach_settings") \
+            .select("*") \
+            .eq("user_id", user_id) \
+            .execute()
         
         # Build update data (only non-None values)
         update_data = {k: v for k, v in updates.model_dump().items() if v is not None}
-        update_data["updated_at"] = datetime.now().isoformat()
         
-        result = supabase.table("coach_settings") \
-            .update(update_data) \
-            .eq("user_id", user_id) \
-            .execute()
+        if existing_result.data:
+            # Update existing settings
+            update_data["updated_at"] = datetime.now().isoformat()
+            result = supabase.table("coach_settings") \
+                .update(update_data) \
+                .eq("user_id", user_id) \
+                .execute()
+        else:
+            # Create new settings (upsert)
+            update_data["user_id"] = user_id
+            update_data["created_at"] = datetime.now().isoformat()
+            update_data["updated_at"] = datetime.now().isoformat()
+            # Set defaults for required fields if not provided
+            update_data.setdefault("is_enabled", True)
+            update_data.setdefault("show_inline_tips", True)
+            update_data.setdefault("show_completion_modals", True)
+            update_data.setdefault("notification_frequency", "normal")
+            update_data.setdefault("widget_state", "minimized")
+            update_data.setdefault("dismissed_tip_ids", [])
+            
+            result = supabase.table("coach_settings") \
+                .insert(update_data) \
+                .execute()
         
         if result.data:
             return CoachSettings(**result.data[0])
