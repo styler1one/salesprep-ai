@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Optional, List
 from datetime import datetime, timedelta
 import logging
+import uuid
 
 from app.deps import get_current_user
 from app.database import get_supabase_service
@@ -55,11 +56,19 @@ async def get_settings(current_user: dict = Depends(get_current_user)):
         org_result = supabase.table("organization_members") \
             .select("organization_id") \
             .eq("user_id", user_id) \
-            .single() \
             .execute()
         
         if not org_result.data:
-            raise HTTPException(status_code=400, detail="User has no organization")
+            # Return default settings for users without organization
+            return CoachSettings(
+                user_id=user_id,
+                is_enabled=True,
+                show_inline_tips=True,
+                show_completion_modals=True,
+                notification_frequency="normal",
+                widget_state="minimized",
+                dismissed_tip_ids=[],
+            )
         
         new_settings = {
             "user_id": user_id,
@@ -147,7 +156,7 @@ async def get_suggestions(
             # Return basic profile completion suggestions
             from app.models.coach import SuggestionType
             onboarding_suggestion = Suggestion(
-                id="onboarding-profile",
+                id=str(uuid.uuid4()),
                 user_id=user_id,
                 organization_id="",
                 suggestion_type=SuggestionType.COMPLETE_PROFILE,
@@ -302,14 +311,13 @@ async def record_suggestion_action(
         org_result = supabase.table("organization_members") \
             .select("organization_id") \
             .eq("user_id", user_id) \
-            .single() \
             .execute()
         
         if org_result.data:
             event_type = f"suggestion_{action_request.action.value}"
             supabase.table("coach_behavior_events").insert({
                 "user_id": user_id,
-                "organization_id": org_result.data["organization_id"],
+                "organization_id": org_result.data[0]["organization_id"],
                 "event_type": event_type,
                 "event_data": {"suggestion_id": suggestion_id},
             }).execute()
@@ -341,15 +349,15 @@ async def record_event(
         org_result = supabase.table("organization_members") \
             .select("organization_id") \
             .eq("user_id", user_id) \
-            .single() \
             .execute()
         
+        # Silently skip if user has no organization (new users)
         if not org_result.data:
-            raise HTTPException(status_code=400, detail="User has no organization")
+            return {"success": True, "event_id": None, "message": "Skipped - no organization"}
         
         event_data = {
             "user_id": user_id,
-            "organization_id": org_result.data["organization_id"],
+            "organization_id": org_result.data[0]["organization_id"],
             "event_type": event.event_type.value,
             "event_data": event.event_data,
             "page_context": event.page_context,
@@ -409,13 +417,17 @@ async def get_stats(current_user: dict = Depends(get_current_user)):
         org_result = supabase.table("organization_members") \
             .select("organization_id") \
             .eq("user_id", user_id) \
-            .single() \
             .execute()
         
+        # Return empty stats for users without organization
         if not org_result.data:
-            raise HTTPException(status_code=400, detail="User has no organization")
+            return CoachStatsResponse(
+                today=TodayStats(),
+                suggestions_pending=0,
+                patterns_learned=0,
+            )
         
-        organization_id = org_result.data["organization_id"]
+        organization_id = org_result.data[0]["organization_id"]
         today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
         
         stats = TodayStats()

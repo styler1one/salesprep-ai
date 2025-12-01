@@ -327,10 +327,10 @@ async def build_user_context(
         )
         logger.info(f"has_sales_profile = {context.has_sales_profile}")
         
-        # Check company profile
+        # Check company profile (uses organization_id, not user_id)
         company_result = supabase.table("company_profiles") \
             .select("company_name") \
-            .eq("user_id", user_id) \
+            .eq("organization_id", organization_id) \
             .execute()
         logger.info(f"Company profile query result: {company_result.data}")
         context.has_company_profile = bool(
