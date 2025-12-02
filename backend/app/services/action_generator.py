@@ -924,48 +924,125 @@ Generate the complete action item list now:"""
     
     def _prompt_internal_report(self, context_text: str, lang_instruction: str, context: Dict) -> str:
         """Prompt for internal report generation"""
-        return f"""You are an expert at writing concise internal sales reports.
+        company_name = context.get("followup", {}).get("prospect_company_name", "the customer")
+        deal = context.get("deal", {})
+        current_stage = deal.get("stage", "Unknown")
+        
+        return f"""You are writing an internal sales report for CRM notes and team updates.
+
+Write in clear, factual and highly scannable language.
+Assume the reader has 30 seconds and needs to understand what happened, what changed, and what matters next.
+
+Your tone should be concise, commercial and strategically sharp.
+Avoid narrative storytelling – prioritise clarity, signals and implications.
 
 {lang_instruction}
 
-Based on the following meeting context, create a short internal report suitable for CRM notes or team updates.
-
 {context_text}
 
-## Requirements:
+PURPOSE:
+Create a concise internal update that a sales manager or colleague can absorb quickly.
+Highlight the essential developments, commercial relevance, risks, momentum shifts and tactical next steps.
+Be honest about uncertainties or gaps in information.
 
-- **Length**: 150-200 words maximum
-- **Format**: Scannable, bullet points preferred
-- **Focus**: Key takeaways, decisions, next steps
+LENGTH GUIDELINE:
+- Light check-in → 100–150 words
+- Substantive meeting → 150–250 words
+- Complex stakeholder discussion → up to 300 words
 
-## Structure (use these exact headings):
+STRUCTURE:
 
-# Meeting Update: [Company Name]
+# Internal Update: {company_name}
 
-**Date**: [date]
-**Attendees**: [names]
-**Type**: [meeting type]
-
-## Key Takeaways
-- [Point 1]
-- [Point 2]
-- [Point 3]
-
-## Decisions Made
-- [Decision 1]
-
-## Next Steps
-- [ ] [Action 1] - [deadline]
-- [ ] [Action 2] - [deadline]
-
-## Deal Update
-- **Stage**: [current] → [recommended]
-- **Probability**: [X]%
-- **Blocker**: [if any]
+**Date**: [meeting date]
+**Attendees**: [names and roles if identifiable]
+**Meeting Type**: [discovery / demo / negotiation / check-in / multi-stakeholder / etc.]
 
 ---
 
-Generate the internal report now:"""
+## 📌 TL;DR (One Sentence)
+A single sentence capturing the real outcome, momentum and key implication for the deal.
+
+---
+
+## 🎯 Key Takeaways
+List 3–5 essential points in order of strategic importance.
+Include items such as: new information, validated assumptions, changed priorities, emerging risks, or opportunity expansion.
+
+- [Takeaway 1 – most impactful]
+- [Takeaway 2]
+- [Takeaway 3]
+- [Takeaway 4 if relevant]
+
+---
+
+## 👥 Stakeholder & Political Dynamics
+Capture not just roles but **stance, influence and behaviour**.
+
+| Person | Role | Influence Level | Stance | Notes |
+|--------|------|-----------------|--------|-------|
+[Supportive / Neutral / Resistant; decision-maker / influencer; political relationships if relevant]
+
+---
+
+## 📝 Decisions & Agreements
+- [Decision or agreement 1]
+- [Decision or agreement 2]
+If none: "No formal decisions – exploratory conversation."
+
+---
+
+## ➡️ Required Next Steps
+
+| Action | Owner | Deadline | Commercial Relevance |
+|--------|-------|----------|----------------------|
+[Link each item to its effect on momentum or risk mitigation.]
+
+---
+
+## 📊 Deal Status & Forecast Implications
+
+| Aspect | Current | Recommended | Rationale |
+|--------|---------|-------------|-----------|
+| Stage | {current_stage} | [stage if update needed] | [why] |
+| Probability | [X]% | [new probability if needed] | [evidence] |
+| Timeline | [current expectation] | [updated if discussed] | [reason] |
+
+Include a one-sentence note on whether forecast confidence should increase, remain stable or be reduced.
+
+---
+
+## 🚦 Momentum, Risks & Signals
+
+### Momentum
+Classify: 🟢 Forward / 🟡 Neutral-Stalled / 🔴 Backwards
+Explain why in one concise sentence.
+
+### Risks
+- 🔴 Critical risk: [if any]
+- 🟡 Emerging concern: [if relevant]
+
+### Positive Signals
+- 🟢 [Concrete evidence-based signal]
+
+If none: "No significant signals."
+
+---
+
+## 💬 Notable Quote (Optional)
+> "[A direct quote that captures the customer's intent, concern or direction]"
+
+---
+
+RULES:
+- Lead with what matters commercially.
+- Keep bullets short and informative.
+- Do not speculate without labelling it explicitly.
+- Exclude noise, minor admin or irrelevant content.
+- Write for a busy reader who needs clarity, not prose.
+- Prioritise momentum, risks and decision-driving information.
+
+Generate the complete internal report now:"""
     
     def _prompt_deal_update(self, context_text: str, lang_instruction: str, context: Dict) -> str:
         """Prompt for deal update suggestions"""
