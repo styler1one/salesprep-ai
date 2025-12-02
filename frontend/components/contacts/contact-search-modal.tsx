@@ -21,12 +21,14 @@ type ModalStep = 'search' | 'loading' | 'results' | 'confirm'
 
 interface Contact {
   id: string
+  prospect_id: string
   name: string
   role?: string
   linkedin_url?: string
   email?: string
   phone?: string
   is_primary: boolean
+  created_at: string
 }
 
 interface ContactSearchModalProps {
