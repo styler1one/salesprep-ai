@@ -106,7 +106,7 @@ export function ContactSearchModal({
       })
 
       if (error || data?.error) {
-        setError(error || data?.error || 'Search failed')
+        setError(error?.message || data?.error || 'Search failed')
         setStep('search')
         return
       }
@@ -177,7 +177,7 @@ export function ContactSearchModal({
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: error
+          description: error.message || 'Failed to add contact'
         })
         setIsAdding(false)
         return
