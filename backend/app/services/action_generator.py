@@ -221,62 +221,74 @@ class ActionGeneratorService:
     
     def _prompt_customer_report(self, context_text: str, lang_instruction: str, context: Dict) -> str:
         """Prompt for customer report generation"""
-        contact_name = "the customer"
-        contacts = context.get("contacts", [])
-        if contacts:
-            contact_name = contacts[0].get("name", "the customer")
-        
-        sales_name = context.get("sales_profile", {}).get("full_name", "the sales representative")
         company_name = context.get("followup", {}).get("prospect_company_name", "the company")
         
-        return f"""You are an expert at writing professional, customer-friendly meeting summaries.
+        return f"""You are creating a customer-facing meeting report.
 
 {lang_instruction}
 
-Based on the following context, create a comprehensive Customer Report that can be shared directly with the customer.
+Write in clear, strategic and warm language.
+Use a diplomatic and psychologically sharp tone.
+Always write from the customer's perspective.
+Never use salesy language.
+Never emphasize what the seller did.
+Focus on the client's context, goals and momentum.
+
+Purpose: The report must feel as if written by a senior consultant who deeply understands the customer's world and supports them in gaining clarity and moving toward confident decision making.
+
+Length: Adapt the total number of words to the depth and length of the actual conversation (typically 500-800 words for a 30-min meeting, 800-1200 for 60-min).
+Style: Flowing prose, no bullet point lists unless explicitly requested.
 
 {context_text}
 
-## Requirements for the Customer Report:
+STRUCTURE & INSTRUCTIONS:
 
-1. **Tone**: Professional yet warm, customer-centric (NOT salesy or pushy)
-2. **Length**: 400-600 words, flowing prose (not just bullet points)
-3. **Focus**: What matters to THEM, not what you want to sell
+# Customer Report – {company_name}
 
-## Structure (use these exact headings):
+## Introduction
+- Begin with a brief, warm and mature reflection on the conversation.
+- Acknowledge the customer's current situation and their ambitions.
+- Highlight the central thread of the discussion in a way that keeps their perspective at the center.
 
-# Meeting Summary: {company_name}
-
-[Personal opening addressing {contact_name} - reference something specific from the conversation]
+## Where the Organisation Stands Now
+- Describe the customer's context, challenges and priorities as they expressed them.
+- Keep it factual, empathetic and without judgement.
+- Subtly connect their current situation to what is strategically important for them going forward.
 
 ## What We Discussed
+- Capture the essence of the meeting in logically structured themes.
+- For each theme, articulate what it means for the customer.
+- Use compact paragraphs. Avoid long enumerations.
+- Include only information that genuinely helps the customer make progress.
 
-[2-3 paragraphs covering the main topics in flowing prose. Focus on their challenges, needs, and goals.]
+## Implications for the Customer
+- Explain what the discussed themes imply for their direction, choices or risks.
+- Highlight opportunities, dependencies and considerations.
+- Keep the tone advisory rather than directive. Diplomatic yet sharp.
 
-## Agreements & Decisions
+## Agreements and Next Steps
 
-[Any decisions made or agreements reached during the meeting]
+Use this exact table format:
 
-## Next Steps
+| Action | Owner | Timeline | Relevance for the Customer |
+|--------|-------|----------|----------------------------|
+| [action] | [owner] | [when] | [why this matters to them] |
 
-| Action | Owner | Timeline |
-|--------|-------|----------|
-[Table of concrete next steps with clear ownership]
-
-## Ideas for Collaboration
-
-[2-3 creative, forward-looking ideas based on what was discussed. Frame these as opportunities, not sales pitches.]
+## Forward View
+- Outline a possible path forward that logically builds on the customer's own goals.
+- Avoid pushiness. Be guiding, professional and constructive.
+- End with an inviting, open sentence that reinforces trust and partnership.
 
 ---
 
-Looking forward to our continued conversation.
+GENERAL RULES:
+- Always prioritise clarity over completeness.
+- Avoid internal jargon, technical noise or sales-heavy framing.
+- Maintain a confident, empathetic senior-consultant tone.
+- Position next steps as measures that strengthen the customer's progress, not your pipeline.
+- Reference specific moments or quotes from the conversation to show genuine understanding.
 
-Best regards,
-{sales_name}
-
----
-
-Generate the complete report now:"""
+Generate the complete Customer Report now:"""
     
     def _prompt_share_email(self, context_text: str, lang_instruction: str, context: Dict) -> str:
         """Prompt for share email generation"""
