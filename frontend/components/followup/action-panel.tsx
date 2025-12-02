@@ -302,12 +302,15 @@ export function ActionPanel({
                 li: ({ node, ...props }) => <li className="ml-4 text-slate-700 dark:text-slate-300" {...props} />,
                 strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900 dark:text-white" {...props} />,
                 table: ({ node, ...props }) => (
-                  <div className="overflow-x-auto my-4">
-                    <table className="min-w-full border-collapse border border-slate-200 dark:border-slate-700" {...props} />
+                  <div className="overflow-x-auto my-6 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700" {...props} />
                   </div>
                 ),
-                th: ({ node, ...props }) => <th className="border border-slate-200 dark:border-slate-700 px-3 py-2 bg-slate-50 dark:bg-slate-800 text-left font-semibold text-slate-900 dark:text-white" {...props} />,
-                td: ({ node, ...props }) => <td className="border border-slate-200 dark:border-slate-700 px-3 py-2 text-slate-700 dark:text-slate-300" {...props} />,
+                thead: ({ node, ...props }) => <thead className="bg-slate-50 dark:bg-slate-800" {...props} />,
+                tbody: ({ node, ...props }) => <tbody className="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900" {...props} />,
+                tr: ({ node, ...props }) => <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" {...props} />,
+                th: ({ node, ...props }) => <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider whitespace-nowrap" {...props} />,
+                td: ({ node, ...props }) => <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300" {...props} />,
               }}
             >
               {action.content}
