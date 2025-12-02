@@ -68,8 +68,8 @@ class RAGService:
             query_embedding = await get_embeddings_service().embed_text(query)
             
             # Query Pinecone with organization filter
-            results = get_vector_store().query(
-                vector=query_embedding,
+            matches = get_vector_store().query_vectors(
+                query_vector=query_embedding,
                 filter={"organization_id": organization_id},
                 top_k=top_k,
                 include_metadata=True
@@ -77,7 +77,7 @@ class RAGService:
             
             # Extract and format results
             kb_chunks = []
-            for match in results.matches:
+            for match in matches:
                 kb_chunks.append({
                     "text": match.metadata.get("text", ""),
                     "source": match.metadata.get("filename", "Unknown"),
@@ -112,7 +112,7 @@ class RAGService:
         try:
             # First try exact match (case-sensitive)
             response = self.supabase.table("research_briefs").select(
-                "id, company_name, brief_content, key_people, recent_news, created_at"
+                "id, company_name, brief_content, created_at"
             ).eq(
                 "organization_id", organization_id
             ).eq(
@@ -130,7 +130,7 @@ class RAGService:
             
             # Fallback: case-insensitive exact match
             response = self.supabase.table("research_briefs").select(
-                "id, company_name, brief_content, key_people, recent_news, created_at"
+                "id, company_name, brief_content, created_at"
             ).eq(
                 "organization_id", organization_id
             ).ilike(
@@ -222,16 +222,8 @@ class RAGService:
         formatted += f"**Company**: {research.get('company_name', 'Unknown')}\n\n"
         
         if research.get('brief_content'):
-            formatted += f"**Overview**: {research['brief_content'][:500]}...\n\n"
-        
-        if research.get('key_people'):
-            formatted += f"**Key People**: {research['key_people'][:300]}...\n\n"
-        
-        if research.get('recent_news'):
-            formatted += f"**Recent News**: {research['recent_news'][:300]}...\n\n"
-        
-        if research.get('brief_content'):
-            formatted += f"**Full Brief**: {research['brief_content'][:500]}...\n\n"
+            # Include more of the brief content since it contains all the research
+            formatted += f"**Research Brief**:\n{research['brief_content'][:2000]}...\n\n"
         
         return formatted
     

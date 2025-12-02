@@ -194,15 +194,9 @@ Value Propositions: {', '.join(company.get('value_propositions', [])[:3])}""")
         # 3. Research Data - Prospect intelligence
         if context.get("research"):
             research = context["research"]
+            # Use more of the brief_content since it contains all research data
             sections.append(f"""## PROSPECT RESEARCH ({context['prospect_company']}):
-**Company Overview:**
-{research.get('brief_content', 'No overview available')[:1500]}
-
-**Key People:**
-{research.get('key_people', 'No key people data')[:500]}
-
-**Recent News:**
-{research.get('recent_news', 'No recent news')[:500]}""")
+{research.get('brief_content', 'No research available')[:3000]}""")
         
         # 4. Meeting Prep Context - What was prepared
         if context.get("meeting_preps") and focus in ["followup", "general"]:
@@ -478,10 +472,10 @@ Value Propositions: {', '.join(company.get('value_propositions', [])[:3])}""")
         # Research (25 points)
         if context.get("research"):
             score += 15
-            if context["research"].get("key_people"):
-                score += 5
-            if context["research"].get("recent_news"):
-                score += 5
+            # Additional points if research has substantial content
+            brief_content = context["research"].get("brief_content", "")
+            if len(brief_content) > 2000:
+                score += 10  # Rich research content
         
         # Meeting preps (20 points)
         if context.get("meeting_preps"):
