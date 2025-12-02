@@ -175,16 +175,23 @@ export default function SettingsPage() {
     if (!coach) return
     setCoachToggling(true)
     try {
-      await coach.updateSettings({ is_enabled: enabled })
-      // Force a page reload to ensure state is clean
-      if (enabled) {
-        // If enabling, also refresh suggestions
-        await coach.refreshSuggestions()
+      // Update settings via API
+      const { error } = await api.patch('/api/v1/coach/settings', { 
+        is_enabled: enabled,
+        widget_state: enabled ? 'minimized' : 'hidden'
+      })
+      
+      if (error) {
+        throw new Error(error.message || 'Failed to update settings')
       }
+      
       toast({
         title: enabled ? t('coach.enabled') : t('coach.disabled'),
         description: enabled ? t('coach.enabledDesc') : t('coach.disabledDesc'),
       })
+      
+      // Reload page to ensure clean state
+      window.location.reload()
     } catch (error) {
       console.error('Failed to toggle coach:', error)
       toast({

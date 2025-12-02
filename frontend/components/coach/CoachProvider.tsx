@@ -248,6 +248,15 @@ export function CoachProvider({ children }: CoachProviderProps) {
   // CONTEXT VALUE
   // ==========================================================================
   
+  // Debug logging
+  console.log('[CoachProvider] Current state:', {
+    isEnabled,
+    isLoading,
+    widgetState,
+    suggestionsCount: suggestions.length,
+    settings: settings ? { is_enabled: settings.is_enabled, widget_state: settings.widget_state } : null
+  })
+
   const value: CoachContextValue = {
     isEnabled,
     isLoading,
