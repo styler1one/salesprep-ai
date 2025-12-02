@@ -532,49 +532,195 @@ Generate the complete Commercial Analysis now:"""
     
     def _prompt_sales_coaching(self, context_text: str, lang_instruction: str, context: Dict) -> str:
         """Prompt for sales coaching generation"""
-        return f"""You are an expert sales coach who provides constructive feedback to help salespeople improve.
+        company_name = context.get("followup", {}).get("prospect_company_name", "the company")
+        
+        # Build sales profile context for personalized coaching
+        sales_profile = context.get("sales_profile", {})
+        sales_profile_context = self._build_sales_profile_context(sales_profile)
+        
+        return f"""You are a senior sales mentor providing developmental feedback on a sales conversation.
+
+Write in warm, supportive and psychologically intelligent language.
+Be honest but never harsh.
+Your tone should combine encouragement with strategic challenge.
+Always ground feedback in specific, observable evidence from the conversation.
+Your goal is growth, not critique.
+Celebrate what works. Illuminate what could be sharper.
+Help the salesperson see their own performance clearly and confidently.
 
 {lang_instruction}
 
-Based on the following meeting transcript and context, provide detailed coaching feedback.
+Purpose:
+Provide actionable, evidence-based coaching that strengthens the salesperson's confidence, precision and deal influence.
+Highlight patterns that serve them and patterns that limit them.
+Frame every recommendation in a way that feels achievable and motivating.
+
+Consider the salesperson's profile when giving feedback:
+{sales_profile_context}
 
 {context_text}
 
-## Requirements:
+STRUCTURE & INSTRUCTIONS:
 
-Be specific with examples from the transcript. Be constructive, not harsh.
+# Sales Coaching – {company_name} Meeting
 
-## Structure (use these exact headings):
+## Performance Snapshot
 
-# Sales Coaching Feedback
+**Overall Score**: X/10
 
-## ⭐ Overall Score: [X]/10
+Give a quick, fair overall view of how effectively the salesperson guided the conversation.
 
-[1-2 sentences explaining the score]
+| Dimension | Score | Quick Assessment |
+|-----------|-------|------------------|
+| Rapport Building | /10 | [one line] |
+| Discovery & Questioning | /10 | [one line] |
+| Active Listening | /10 | [one line] |
+| Value Articulation | /10 | [one line] |
+| Objection Handling | /10 | [one line] |
+| Conversation Control | /10 | [one line] |
+| Next Step Commitment | /10 | [one line] |
 
-## ✅ What You Did Well
-[3-4 specific things done well, with quotes from the transcript as examples]
-
-## 🔧 Areas for Improvement
-[2-3 specific improvements needed]
-- [Improvement 1]
-  - **Example from call**: "[quote]"
-  - **Better approach**: [suggestion]
-
-## 💡 Missed Opportunities
-[2-3 moments where a different approach could have been more effective]
-- At "[quote]", you could have [suggestion]
-
-## 📚 Techniques to Practice
-[2-3 specific sales techniques relevant to this situation]
-- **[Technique Name]**: [Brief explanation and when to use it]
-
-## 🎯 Focus for Next Meeting
-[One specific thing to focus on improving in the next conversation]
+**In one sentence**: Summarise the dominant performance pattern.
 
 ---
 
-Generate the coaching feedback now:"""
+## Strengths to Amplify
+
+Identify 2-3 strengths. For each:
+
+- **What you did**: Describe the behaviour clearly.
+- **The moment**: Include an exact quote or timestamp.
+- **Why it worked**: Explain the impact on the prospect's trust, clarity or engagement.
+- **How this supports deal momentum**: Link it to commercial outcomes.
+- **Keep doing this because**: Reinforce the long-term value of the behaviour.
+
+---
+
+## Growth Opportunities
+
+Identify 2-3 opportunities for improvement, each structured as follows:
+
+### Opportunity: [Name the specific skill]
+
+- **The moment**: Provide a concrete quote or interaction.
+- **What happened**: Objective description, no judgement.
+- **Impact on the prospect**: What they likely felt or inferred.
+- **Alternative approach**: Offer a rewritten version of what could have been said.
+- **Guiding principle**: The underlying skill or mental model to strengthen.
+- **Commercial relevance**: Why sharpening this matters for closing future deals.
+
+---
+
+## Patterns Observed
+
+Highlight recurring behavioural tendencies.
+
+### Serving You Well
+- [Pattern]: [Evidence + explanation]
+
+### Holding You Back
+- [Pattern]: [Evidence + what shifts would improve impact]
+
+---
+
+## Missed Buying Signals or Opportunities
+
+Identify moments the salesperson did not fully leverage.
+
+| Moment | What Was Said | Missed Opportunity | Suggested Question or Move | Why It Matters |
+|--------|---------------|--------------------|-----------------------------|----------------|
+| [context] | "[quote]" | [what was missed] | "[suggestion]" | [importance] |
+
+---
+
+## Objection Handling Review
+
+If relevant, analyse how objections were handled:
+
+- What the objection really meant
+- How the salesperson responded
+- A sharper alternative response
+- The psychological effect on the prospect
+
+---
+
+## Technique Spotlight
+
+Recommend **one technique** that would have meaningfully elevated the conversation.
+
+**Technique**: [Name]
+**What it is**: Brief explanation.
+**When to use it**: Situational trigger.
+**How it would have helped here**: Directly connect to the meeting.
+**Practice exercise**: One realistic exercise the salesperson can repeat.
+
+---
+
+## Your Focus for Next Time
+
+Define the single most impactful improvement area.
+
+**Focus Area**: [One behavioural priority]
+**Why it matters**: Clear explanation tied to growth and commercial success.
+**Micro-commitment**: One small, specific behaviour to try in the next conversation.
+
+---
+
+## Encouragement
+
+Close with 2-3 sentences of genuine encouragement:
+- Reference a real moment that shows potential.
+- Reinforce belief in their capability.
+- Leave them feeling motivated, not judged.
+
+---
+
+RULES:
+- Be specific. Generic coaching is not helpful.
+- Quote exact lines from the transcript.
+- Keep the balance: roughly 50 percent affirmation, 50 percent challenge.
+- Describe behaviours, not personality traits.
+- Never shame. Always empower.
+- Make every recommendation actionable and realistic.
+- Write as a mentor who genuinely wants this salesperson to grow and succeed.
+
+Generate the complete Sales Coaching feedback now:"""
+    
+    def _build_sales_profile_context(self, sales_profile: Dict) -> str:
+        """Build context string from sales profile for personalized coaching"""
+        if not sales_profile:
+            return "No sales profile available - provide general coaching."
+        
+        parts = []
+        
+        name = sales_profile.get("full_name")
+        if name:
+            parts.append(f"- Name: {name}")
+        
+        experience = sales_profile.get("years_experience")
+        if experience:
+            parts.append(f"- Experience: {experience} years in sales")
+        
+        style = sales_profile.get("selling_style")
+        if style:
+            parts.append(f"- Selling style: {style}")
+        
+        comm_style = sales_profile.get("communication_style")
+        if comm_style:
+            parts.append(f"- Communication style: {comm_style}")
+        
+        strengths = sales_profile.get("strengths")
+        if strengths:
+            parts.append(f"- Known strengths: {strengths}")
+        
+        development = sales_profile.get("development_areas")
+        if development:
+            parts.append(f"- Development areas: {development}")
+        
+        if parts:
+            return "\n".join(parts)
+        else:
+            return "Limited profile information - provide balanced coaching."
     
     def _prompt_action_items(self, context_text: str, lang_instruction: str, context: Dict) -> str:
         """Prompt for action items extraction"""
