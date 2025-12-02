@@ -338,8 +338,25 @@ class ResearchOrchestrator:
 {kb_texts}
 """
         
+        # Build KB references section for the prompt
+        kb_references = ""
+        if kb_chunks:
+            kb_references = chr(10).join([f"| {chunk['source']} | [Relevance] |" for chunk in kb_chunks])
+        else:
+            kb_references = "| — | — |"
+        
         # Use Claude to merge the data - with seller context and language instruction
-        merge_prompt = f"""You are a sales research assistant creating a prospect brief. {lang_instruction}
+        merge_prompt = f"""You are a senior sales intelligence analyst preparing a strategic prospect brief.
+
+Write in clear, sharp and commercially relevant language.
+
+Your tone should reflect strategic insight, market awareness and sales acumen.
+
+Every insight must be grounded in the provided source data, never invented.
+
+Your goal:
+Give the sales professional a full understanding of the prospect's world and the commercial fit in **5 minutes of reading**.
+Provide intelligence, not data dumps.
 
 {seller_section}
 {kb_section}
@@ -348,61 +365,254 @@ I have collected information about {company_name} from multiple sources:
 
 {chr(10).join(source_data)}
 
-Create a structured research brief with these sections:
+---
+
+Generate a research brief with EXACTLY this structure:
 
 # Research Brief: {company_name}
-{f"Location: {city}, {country}" if city and country else ""}
+{f"📍 {city}, {country}" if city and country else ""}
 
-## 1. COMPANY OVERVIEW
-- Industry and sector
-- Company size (employees, revenue if known)
-- Headquarters
-- Founded
-- Official registration (Chamber of Commerce if available)
+---
 
-## 2. BUSINESS MODEL
-- Products and services
-- Target market
-- Customer types
+## 📋 In One Sentence
 
-## 3. RECENT DEVELOPMENTS
-- Latest news (past 30 days)
-- Growth or funding
-- Product launches
-- Important changes
+A precise sentence explaining:
+- who this company is
+- what makes them commercially relevant
+- why this might be the right time to engage
 
-## 4. KEY PEOPLE
-- Leadership and management
-- Decision makers (CEO, CFO, CTO, etc.)
-- LinkedIn profiles if found
+Focus on relevance and opportunity, not generic descriptions.
 
-## 5. MARKET POSITION
-- Competitors
-- Market share
-- Differentiating factors
+---
 
-## 6. SALES STRATEGY
-{"This is crucial - base this on what YOU sell:" if seller_context and seller_context.get("has_context") else ""}
+## 📊 At a Glance
 
-### Potential Pain Points
-- What problems does this company have that are relevant to your solution?
-{"- Focus on problems that " + ", ".join(seller_context.get("products_services", [])[:3]) + " can solve" if seller_context and seller_context.get("products_services") else ""}
+| Aspect | Assessment |
+|--------|------------|
+| **Opportunity Fit** | 🟢 High / 🟡 Medium / 🔴 Low — [based on the seller's offerings] |
+| **Timing** | 🟢 NOW / 🟡 Nurture / 🔴 No Focus — [based on evidence] |
+| **Company Stage** | Startup / Scale-up / SMB / Enterprise |
+| **Industry Match** | 🟢 Core / 🟡 Adjacent / 🔴 Outside Target |
+| **Primary Risk** | [The main commercial or structural obstacle] |
+
+This gives the rep a one-screen strategic snapshot.
+
+---
+
+## 🏢 Company Profile
+
+| Element | Details |
+|---------|---------|
+| **Industry** | [Sector + sub-sector] |
+| **Size** | [Employees, revenue if verified] |
+| **Headquarters** | [Location] |
+| **Founded** | [Year] |
+| **Website** | [URL] |
+| **Company ID** | [Chamber of Commerce / registration number if available] |
+
+**What This Means Commercially**
+One concise sentence linking their profile to the seller's potential relevance.
+
+---
+
+## 💼 Business Model
+
+### What They Do
+A tight 2–3 sentence explanation.
+
+### Revenue Model
+
+| Stream | Description |
+|--------|-------------|
+| [Stream 1] | [How it works] |
+| [Stream 2] | [How it works] |
+
+### Customers & Segments
+- **Market Type**: [B2B / B2C / Mixed]
+- **Customer Types**: [Enterprise / SMB / Consumer]
+- **Industries Served**: [Key verticals]
+
+### Their Value Proposition
+- [What they promise]
+- [How they differentiate]
+
+**Commercial Insight**
+What their model suggests about priorities, constraints or buying behaviour.
+
+---
+
+## 📰 Recent Developments (Last 90 Days)
+
+### News & Signals
+
+| Date | Development | Type |
+|------|-------------|------|
+| [Date] | [Update] | 📈 Growth / 💰 Funding / 👥 Leadership / 🚀 Product / 🤝 Partnership |
+| ... | ... | ... |
+
+### What These Signals Suggest
+Interpret clearly:
+- What are they prioritising?
+- What pressure are they under?
+- Where might they invest next?
+- What might be changing internally?
+
+Make this **evidence-led**, not speculative.
+
+---
+
+## 👥 Key People
+
+### Leadership Team
+
+| Name | Role | Background | LinkedIn |
+|------|------|------------|----------|
+| [Name] | [Title] | [Relevant highlights] | [URL] |
+
+### Likely Decision Structure
+Based on company size, industry and signals:
+- **Decision Style**: [Top-down / Consensus / Committee / Pragmatic]
+- **Economic Buyer**: [Role controlling budget]
+- **Technical Evaluator**: [Role validating solution]
+- **Potential Champion**: [Role most aligned with our value]
+
+**Implication**
+One sentence on how to navigate this structure strategically.
+
+---
+
+## 🎯 Market Position
+
+### Competitive Landscape
+
+| Competitor | Positioning | Notes |
+|------------|-------------|-------|
+| [Competitor] | [Summary] | [Why relevant] |
+
+### Differentiation
+What makes {company_name} stand out:
+- [Point 1]
+- [Point 2]
+
+### Market Trajectory
+- **Stage**: [Growing / Stable / Declining / Pivoting]
+- **Evidence**: [Signals justifying assessment]
+
+---
+
+## ⚡ Why This Company Now
+
+### Trigger Events
+
+| Event | Type | Opportunity Signal |
+|-------|------|--------------------|
+| [Event] | 💰 Funding / 🚀 Product / 👥 Leadership | [Why this matters commercially] |
+
+### Timing Analysis
+- **Urgency**: 🟢 High / 🟡 Medium / 🔴 Low
+- **Window**: [Is this time-sensitive?]
+- **Budget Cycle Clues**: [If any]
+
+### External Pressures
+Factors shaping their decisions:
+- [Industry trend]
+- [Regulatory shift]
+- [Competitive challenge]
+
+---
+
+## 🎯 Sales Opportunity
+
+### Pain Points We Can Solve
+
+| Pain Point | Evidence | How We Help |
+|------------|----------|-------------|
+| [Pain] | [Signal or indicator] | [Relevant value proposition] |
+
+Focus on pains that align *directly* with what you sell.
+
+### Entry Strategy
+
+**Primary Entry Angle**
+- [Which role/team to target first and why]
+
+**Rationale**
+Tie directly to research signals.
+
+**Alternative Angle**
+- [If primary path is blocked]
 
 ### Relevant Use Cases
-- Concrete applications of your solution at this company
-{"- Think of: " + ", ".join(seller_context.get("value_propositions", [])[:2]) if seller_context and seller_context.get("value_propositions") else ""}
+List 2–3 concrete use cases tied to their world, not generic examples:
+- [Use case 1]
+- [Use case 2]
 
-### Conversation Openers
-- 3-5 specific opening lines for this prospect
-- Reference their recent news or specific situation
+---
 
-### Discovery Questions
-- 5-7 smart questions to uncover needs
-- Questions that make your solution relevant
+## ⚠️ Risks & Red Flags
 
-{"### Relevant References" + chr(10) + "Based on your knowledge base, which case studies or success stories are relevant for this prospect?" if kb_chunks else ""}
+### Competitive Threats
+- [Existing vendor footprint]
+- [Signs of strong competitor presence]
 
-Be factual and concise. Prioritize official data (Chamber of Commerce) over web results."""
+### Fit Concerns
+- [Size or complexity mismatch]
+- [Potential misalignment]
+
+### Research Red Flags
+- [Signals that require validation]
+
+---
+
+## ❓ Questions to Validate in First Contact
+
+1. [Question confirming their current situation]
+2. [Question exploring implied challenge]
+3. [Question about their priorities/timeline]
+4. [Question about decision dynamics]
+5. [Question about success criteria]
+
+These are *validation questions*, not discovery questions.
+
+---
+
+## 📚 Relevant References
+
+{"From your knowledge base:" if kb_chunks else "No matches found in your knowledge base."}
+
+| Document | Relevance |
+|----------|-----------|
+{kb_references}
+
+---
+
+## 📊 Research Confidence & Gaps
+
+| Source | Status | Notes |
+|--------|--------|-------|
+| Claude Web Search | {"✅" if sources.get("claude", {{}}).get("success") else "❌"} | [Quality] |
+| Google Search | {"✅" if sources.get("gemini", {{}}).get("success") else "❌"} | [Quality] |
+| Chamber of Commerce | {"✅" if sources.get("kvk", {{}}).get("success") else "N/A" if not sources.get("kvk") else "❌"} | [If applicable] |
+| Website Scrape | {"✅" if sources.get("website", {{}}).get("success") else "N/A" if not sources.get("website") else "❌"} | [If used] |
+| Knowledge Base | {"✅ " + str(len(kb_chunks)) + " matches" if kb_chunks else "❌ No matches"} | [Matches found] |
+
+### Information Gaps
+List what could not be verified and must be confirmed in conversation.
+
+---
+
+RULES:
+- Be precise, commercially relevant and context-aware.
+- Anchor all insights in real evidence; never guess.
+- Write for a senior sales professional who needs intelligence, not volume.
+- Keep the brief under 1200 words (excluding tables).
+- This is **company intelligence**, not meeting preparation.
+- If something is unclear, label it as "Unverified" rather than speculating.
+- Prioritize official sources (Chamber of Commerce, company website) over inferred data.
+
+{lang_instruction}
+
+Generate the complete research brief now:"""
 
         try:
             response = self.claude.client.messages.create(
