@@ -15,7 +15,7 @@ python-docx==1.1.0
 markdown==3.5.1
 voyageai==0.2.3
 anthropic>=0.40.0  # Updated for httpx 0.28+ compatibility
-pinecone-client==3.0.0
+pinecone-client>=3.1.0  # Updated for Python 3.13 compatibility
 tiktoken==0.5.2
 python-multipart==0.0.6
 
