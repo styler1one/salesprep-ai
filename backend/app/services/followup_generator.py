@@ -205,8 +205,8 @@ If there are no action items, return an empty array: []
         lang_instruction = get_language_instruction(language)
 
         prompt = """You are creating a high-level meeting summary designed to be read in under 60 seconds.
-Write in clear, concise and strategically sharp English.
-Your style should be factual, scannable and composed – not interpretive or emotional.
+Write in a clear, concise and strategically sharp style.
+Your tone should be factual, scannable and composed – not interpretive or emotional.
 This summary gives the essentials. Deeper analysis lives in separate reports.
 
 """
