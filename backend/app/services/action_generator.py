@@ -804,48 +804,123 @@ Generate the complete Sales Coaching feedback now:"""
     
     def _prompt_action_items(self, context_text: str, lang_instruction: str, context: Dict) -> str:
         """Prompt for action items extraction"""
-        return f"""You are an expert at extracting clear, actionable tasks from meeting conversations.
+        company_name = context.get("followup", {}).get("prospect_company_name", "the customer")
+        
+        return f"""You are extracting action items from a sales conversation.
+
+Write in clear, direct and strategic language.
+Be thorough but pragmatic.
+Focus on actions that actually move the deal forward.
+
+Your goal is not to document everything but to identify the tasks that influence:
+- momentum
+- clarity
+- stakeholder alignment
+- risk reduction
+- decision making
+
+Distinguish sharply between:
+- **Explicit commitments** – said verbatim
+- **Implicit expectations** – not said, but commercially or politically necessary
 
 {lang_instruction}
 
-Based on the following meeting context, extract all action items.
-
 {context_text}
 
-## Requirements:
+PURPOSE:
+Create a precise, actionable task list that the salesperson can immediately execute.
+Every action must be concrete, owned by someone, and tied to a realistic timeframe.
+Always explain *why* the action matters when not obvious.
 
-- Extract explicit AND implicit action items
-- Assign clear ownership
-- Suggest deadlines based on urgency discussed
-- Prioritize items
+IDENTIFYING ACTION ITEMS:
 
-## Structure (use these exact headings):
+**Explicit items** – directly stated commitments:
+- "I will send you X by Friday."
+- "Please share the case study with us."
+- "Let's schedule a follow-up next week."
 
-# Action Items
+**Implicit items** – required to unlock progress:
+- A concern was raised → action to address it.
+- A stakeholder was mentioned → action to involve or inform them.
+- A gap in clarity emerged → action to resolve it.
+- Momentum risk detected → action to stabilise.
+- Buying signal surfaced → action to expand on it.
+- Objection appeared → action to prepare or counter it for next time.
+- Political dynamic inferred → action to secure alignment.
 
-## Your Tasks (Sales Rep)
-| # | Task | Deadline | Priority |
-|---|------|----------|----------|
-[List tasks for the sales rep with 🔴 High, 🟡 Medium, 🟢 Low priority]
+STRUCTURE:
 
-## Customer Tasks
-| # | Task | Deadline | How to Follow Up |
-|---|------|----------|------------------|
-[List tasks the customer committed to, with follow-up strategy]
+# Action Items – {company_name}
 
-## Shared / Collaborative
-| # | Task | Deadline | Owner |
-|---|------|----------|-------|
-[Tasks requiring both parties]
+## 🎯 Quick Wins (Do Today or Tomorrow)
 
-## Summary
-- Total items: [X]
-- High priority: [X]
-- Next follow-up date: [suggested date]
+| Task | Why It Matters | Time Needed |
+|------|----------------|-------------|
+[List small, high-impact steps that stabilise momentum or remove friction immediately.
+Each task must be specific and start with a verb.]
 
 ---
 
-Generate the action items now:"""
+## 📋 Your Tasks (Sales Rep)
+
+| # | Task | Deadline | Priority | Context / Evidence |
+|---|------|----------|----------|---------------------|
+[Include explicit promises, implicit responsibilities, and proactive actions that change deal trajectory.
+Priority scale: 🔴 High (deal-critical), 🟡 Medium (important), 🟢 Low (optional).]
+
+---
+
+## 👤 Customer Tasks
+
+| # | Task | Expected By | Follow-up Strategy | Why It Matters |
+|---|------|-------------|-------------------|----------------|
+[Tasks the customer committed to or needs to do to move forward.
+Include a light-touch, respectful follow-up strategy that fits their communication style.]
+
+---
+
+## 🤝 Shared Tasks / Next Meeting Preparation
+
+| # | Task or Topic | Owner | Target Date | Purpose |
+|---|---------------|-------|-------------|---------|
+[Items that require coordination, joint preparation, or alignment before the next interaction.]
+
+---
+
+## ⏳ Waiting On / Blockers
+
+| Item | Waiting For | Impact if Delayed | Recommended Nudge Date |
+|------|-------------|-------------------|-------------------------|
+[Capture anything that could stall or derail momentum.
+Be explicit about potential impact and how to gently re-activate stalled items.]
+
+---
+
+## 📊 Summary Metrics
+
+| Metric | Count |
+|--------|-------|
+| Total action items | X |
+| High priority actions | X |
+| Quick wins | X |
+| Customer-owned items | X |
+| Blocked items | X |
+
+**Recommended next touchpoint**: [Suggested date + reason based on momentum]
+**Key risk if follow-up slips**: [One sentence explaining what could deteriorate]
+
+---
+
+RULES:
+- Every task starts with a verb.
+- Every item must be tied to a real piece of evidence from the conversation.
+- If something is uncertain, flag it rather than guessing.
+- If a section has no items, write "None identified".
+- Remove noise. Keep only commercially meaningful actions.
+- Prioritise tasks that influence the deal, not administrative housekeeping.
+- Maintain a professional, calm and strategic tone.
+
+Generate the complete action item list now:"""
     
     def _prompt_internal_report(self, context_text: str, lang_instruction: str, context: Dict) -> str:
         """Prompt for internal report generation"""
