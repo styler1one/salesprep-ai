@@ -114,7 +114,7 @@ export function CoachSettings({
                 id="inline-tips"
                 checked={settings?.show_inline_tips ?? true}
                 onCheckedChange={handleInlineTipsChange}
-                disabled={loading || !settings?.is_enabled}
+                disabled={isLoading || !settings?.is_enabled}
               />
             </div>
             
@@ -132,7 +132,7 @@ export function CoachSettings({
                 id="completion-modals"
                 checked={settings?.show_completion_modals ?? true}
                 onCheckedChange={handleCompletionModalsChange}
-                disabled={loading || !settings?.is_enabled}
+                disabled={isLoading || !settings?.is_enabled}
               />
             </div>
           </div>
@@ -146,7 +146,7 @@ export function CoachSettings({
               <Select
                 value={settings?.notification_frequency ?? 'normal'}
                 onValueChange={handleFrequencyChange}
-                disabled={loading || !settings?.is_enabled}
+                disabled={isLoading || !settings?.is_enabled}
               >
                 <SelectTrigger id="frequency" className="w-full">
                   <SelectValue />
