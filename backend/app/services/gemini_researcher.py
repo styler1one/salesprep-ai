@@ -77,49 +77,121 @@ Target market: {seller_context.get('target_market', 'not specified')}
 Specifically search for information relevant to selling the above products to {company_name}.
 """
         
-        # Build prompt for Gemini
-        prompt = f"""
-You are a business research assistant with access to Google Search. {lang_instruction}
+        # Build commercial timing section if seller context available
+        commercial_timing_section = ""
+        if seller_context and seller_context.get("has_context"):
+            products_list = ", ".join(seller_context.get('products_services', [])[:3])
+            commercial_timing_section = f"""
+## 7. COMMERCIAL TIMING SIGNALS
 
-Research the following company and provide comprehensive information:
+Based on the news and signals found, assess:
+- **Urgency indicators**: Why might NOW be a good/bad time?
+- **Budget signals**: Any signs of investment or cost-cutting?
+- **Pain point evidence**: What challenges are they publicly discussing?
+- **Relevance to {products_list}**: Any mentions related to what you sell?
+"""
+        
+        # Build prompt for Gemini
+        prompt = f"""You are a business research analyst with access to Google Search. {lang_instruction}
+
+Your task: Find current market intelligence and news about {company_name}.
 
 {search_query}
 {seller_section}
 
-Search for and provide:
+Focus your searches on:
+1. Recent news articles and press coverage
+2. Industry publications and analyst reports
+3. Social media and LinkedIn updates
+4. Job postings and hiring patterns
+5. Regulatory filings and public records
 
-1. COMPANY OVERVIEW
-   - Industry and sector
-   - Company size (employees, revenue if known)
-   - Headquarters location
-   - Founding date
-   - Website
+---
 
-2. BUSINESS MODEL
-   - Main products or services
-   - Target market (B2B, B2C, etc.)
-   - Key value propositions
+Provide research findings in these sections:
 
-3. RECENT NEWS (Last 30 days)
-   - Latest announcements
-   - Product launches
-   - Funding or financial news
-   - Leadership changes
-   - Partnerships
+## 1. COMPANY SNAPSHOT
+- **Full Legal Name**: [As registered]
+- **Industry**: [Sector]
+- **Size**: [Employees / Revenue]
+- **Location**: [HQ]
+- **Website**: [URL]
 
-4. KEY PEOPLE
-   - CEO and leadership team
-   - Notable team members
-   - LinkedIn profiles
+## 2. BUSINESS OVERVIEW
+### What They Do
+[Brief description of core business]
 
-5. MARKET POSITION
-   - Main competitors
-   - Market share (if available)
-   - Unique differentiating factors
+### Market & Customers
+- Target market type
+- Key customer segments
+- Industries served
 
-{"6. SALES OPPORTUNITIES" + chr(10) + "   - Specific problems that " + company_name + " has that are relevant for " + ", ".join(seller_context.get('products_services', [])[:3]) + chr(10) + "   - Departments or roles most relevant" + chr(10) + "   - Timing factors or trigger events" if seller_context and seller_context.get("has_context") else ""}
+## 3. NEWS & DEVELOPMENTS (Last 90 Days)
 
-Provide factual, verified information from reliable sources. If information is not available, state that clearly.
+Search Google News specifically for recent coverage:
+
+### Recent Headlines
+| Date | Headline | Source | URL |
+|------|----------|--------|-----|
+| [Date] | [Title] | [Publication] | [URL] |
+
+### Event Categories
+Categorize findings as:
+- 💰 **Funding/Financial**: [Any investment, revenue, or financial news]
+- 📈 **Growth**: [Expansion, new markets, scaling]
+- 👥 **People**: [Hiring sprees, leadership changes, layoffs]
+- 🚀 **Product**: [Launches, updates, pivots]
+- 🤝 **Partnerships**: [Strategic deals, integrations]
+- ⚠️ **Challenges**: [Setbacks, competition, issues]
+
+## 4. HIRING SIGNALS
+
+Search job boards and LinkedIn for:
+- Current open positions
+- Departments that are hiring
+- Seniority levels being recruited
+- New roles that signal strategic shifts
+
+### Active Job Postings
+| Role | Department | Level | What It Signals |
+|------|------------|-------|-----------------|
+| [Title] | [Dept] | [Jr/Sr/Exec] | [Strategic implication] |
+
+## 5. MARKET & COMPETITIVE CONTEXT
+
+### Industry Trends
+Search for trends affecting their sector:
+- [Trend 1 and its impact]
+- [Trend 2 and its impact]
+
+### Competitor Mentions
+- Who are they compared to in articles?
+- What competitive dynamics are mentioned?
+
+### Regulatory Environment
+- Any regulatory changes affecting their industry?
+- Compliance requirements they must address?
+
+## 6. SOCIAL & PUBLIC SIGNALS
+
+### LinkedIn Activity
+- Company page updates
+- Employee count changes
+- Content themes they post about
+
+### Sentiment Indicators
+- How are they perceived in the market?
+- Any reputation issues or praise?
+{commercial_timing_section}
+---
+
+RULES:
+- Focus on RECENT information (prioritize last 90 days)
+- Always include source URLs for news items
+- Note publication dates for all news
+- If no recent news found, state that clearly
+- Look for signals, not just facts
+- Be thorough in news search - multiple queries if needed
 """
         
         try:

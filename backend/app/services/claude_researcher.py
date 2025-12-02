@@ -66,59 +66,146 @@ Our target market: {seller_context.get('target_market', 'not specified')}
 Focus your research on information relevant to selling these products/services to {company_name}.
 """
         
-        # Build prompt for Claude
-        prompt = f"""You are a sales research assistant with access to web search. {lang_instruction}
+        # Build seller context for sales opportunity section
+        sales_opportunity_section = ""
+        if seller_context and seller_context.get("has_context"):
+            products_list = ", ".join(seller_context.get('products_services', [])[:3])
+            sales_opportunity_section = f"""
+## 7. SALES OPPORTUNITY SIGNALS
 
-Research the following company:
+### Potential Pain Points
+Based on their situation, what problems might {company_name} have that {products_list} can address?
+
+### Entry Point Indicators
+- Which departments are most likely to have budget?
+- Who would be the ideal first contact?
+- What would make NOW the right time to reach out?
+"""
+        
+        # Build prompt for Claude
+        prompt = f"""You are a senior sales intelligence analyst with access to web search. {lang_instruction}
+
+Your task: Gather comprehensive, commercially relevant intelligence about {company_name}.
 
 {search_context}
 {seller_section}
 
-Use web search to gather current information. Search for:
-1. Company website and official sources
-2. LinkedIn company profile
-3. Recent news and press releases
-4. Business databases
-5. Industry reports
+Use web search to find current, verified information. Prioritize:
+1. Official company website and About pages
+2. LinkedIn company profile and employee pages
+3. Press releases and official announcements
+4. Business registries and databases
+5. Industry analyst reports
+
+---
 
 Provide a structured research report with these sections:
 
-## COMPANY OVERVIEW
-- Industry and sector
-- Company size (employees, revenue if known)
-- Headquarters location
-- Founding date
-- Website URL
+## 1. COMPANY PROFILE
+| Element | Details |
+|---------|---------|
+| **Industry** | [Sector and sub-sector] |
+| **Size** | [Employee count, revenue if available] |
+| **Headquarters** | [City, Country] |
+| **Founded** | [Year] |
+| **Website** | [URL] |
+| **Company Registration** | [Chamber of Commerce / Company ID if found] |
+| **Ownership** | [Private / Public / PE-backed / Family-owned] |
 
-## BUSINESS MODEL
-- Main products or services
-- Target market and customers
-- Business model (B2B, B2C, SaaS, etc.)
-- Key value propositions
+## 2. BUSINESS MODEL
+### What They Do
+[2-3 sentences describing core business]
 
-## RECENT DEVELOPMENTS (Last 30 days)
-- Latest news and announcements
-- Product launches or updates
-- Funding or financial news
-- Leadership changes
+### Revenue Streams
+- [How they make money - subscription, services, products, etc.]
+
+### Customer Profile
+- **Market Type**: [B2B / B2C / Both]
+- **Customer Segments**: [Enterprise / SMB / Consumer]
+- **Key Verticals**: [Industries they serve]
+
+### Value Proposition
+- [What they promise customers]
+- [How they differentiate from alternatives]
+
+## 3. LEADERSHIP & DECISION STRUCTURE
+
+### Key Executives
+| Name | Title | Background | LinkedIn URL |
+|------|-------|------------|--------------|
+| [Name] | [Title] | [Relevant experience] | [Full LinkedIn URL] |
+
+Search specifically for:
+- CEO, CFO, CTO, COO, CMO
+- VP/Director of relevant departments
+- Recent executive hires or departures
+
+### Decision-Making Indicators
+Based on company size and structure, note:
+- Likely decision style (top-down, consensus, committee)
+- Departments with buying authority
+- Reporting structure clues
+
+## 4. RECENT DEVELOPMENTS (Last 90 Days)
+
+### Trigger Events
+Search for and categorize:
+
+| Date | Event | Type | Source |
+|------|-------|------|--------|
+| [Date] | [What happened] | 💰 Funding / 📈 Growth / 👥 Hiring / 🚀 Product / 🤝 Partnership / ⚠️ Challenge | [Source] |
+
+Look specifically for:
+- Funding rounds or financial news
+- Major product launches or pivots
+- Leadership changes (new hires, departures)
+- Office expansions or relocations
 - Strategic partnerships or acquisitions
+- Layoffs, restructuring, or challenges
 
-## KEY PEOPLE
-- CEO and founder(s)
-- Leadership team
-- Notable advisors or board members
-- LinkedIn profiles (if available)
+### What These Events Signal
+[Interpret what the developments suggest about their priorities and challenges]
 
-## MARKET POSITION
-- Main competitors
-- Market share or position
-- Growth trajectory
-- Unique differentiating factors
-- Awards or recognition
+## 5. COMPETITIVE LANDSCAPE
 
-{"## SALES RELEVANCE" + chr(10) + "- What are specific pain points of " + company_name + " that our solution (" + ", ".join(seller_context.get('products_services', [])[:3]) + ") can address?" + chr(10) + "- Which departments or roles at " + company_name + " are most relevant?" + chr(10) + "- What trigger events or timing factors are there?" if seller_context and seller_context.get("has_context") else "## SALES TALKING POINTS" + chr(10) + "- Potential pain points" + chr(10) + "- Relevant use cases" + chr(10) + "- Conversation openers"}
+### Main Competitors
+| Competitor | Their Position | How They Differ |
+|------------|----------------|-----------------|
+| [Competitor] | [Market position] | [Key difference] |
 
-Be thorough but concise. Focus on factual, verifiable information. If information is not available, state that clearly."""
+### Current Vendor Footprint
+Search for mentions of:
+- Technology vendors they use
+- Consulting firms they work with
+- Partners or integrations mentioned
+
+### Market Position
+- **Trajectory**: [Growing / Stable / Declining / Pivoting]
+- **Evidence**: [Signals supporting this]
+
+## 6. TIMING & COMMERCIAL SIGNALS
+
+### Budget Cycle Clues
+- Fiscal year end (if public or mentioned)
+- Planning periods
+- Known budget cycles in their industry
+
+### External Pressures
+Search for industry-specific factors:
+- Regulatory changes affecting them
+- Industry trends they must respond to
+- Competitive threats they face
+- Economic factors impacting their sector
+{sales_opportunity_section}
+---
+
+RULES:
+- Be factual and evidence-based
+- Include source URLs where possible
+- If information is not found, state "Not found" rather than guessing
+- Prioritize recent information (last 90 days) for developments
+- Always include full LinkedIn URLs when found
+- Focus on commercially relevant intelligence, not general company descriptions"""
 
         try:
             # Call Claude with web search enabled
