@@ -110,6 +110,9 @@ async def update_settings(
     supabase = get_supabase_service()
     user_id = current_user["sub"]
     
+    # Debug: log what we received
+    print(f"[COACH DEBUG] PATCH settings received: {updates.model_dump()}")
+    
     try:
         # Check if settings exist
         existing_result = supabase.table("coach_settings") \
@@ -119,6 +122,7 @@ async def update_settings(
         
         # Build update data (only non-None values)
         update_data = {k: v for k, v in updates.model_dump().items() if v is not None}
+        print(f"[COACH DEBUG] Update data to apply: {update_data}")
         
         if existing_result.data:
             # Update existing settings
@@ -145,6 +149,7 @@ async def update_settings(
                 .execute()
         
         if result.data:
+            print(f"[COACH DEBUG] Settings after update: {result.data[0]}")
             return CoachSettings(**result.data[0])
         
         raise HTTPException(status_code=500, detail="Failed to update settings")
