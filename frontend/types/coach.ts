@@ -205,6 +205,10 @@ export interface CoachContextValue {
   clickSuggestion: (id: string) => Promise<void>
   trackEvent: (type: EventType, data?: Record<string, unknown>) => Promise<void>
   updateSettings: (updates: CoachSettingsUpdate) => Promise<void>
+  
+  // Inline Tips
+  dismissTipId: (tipId: string) => Promise<void>
+  isDismissed: (tipId: string) => boolean
 }
 
 

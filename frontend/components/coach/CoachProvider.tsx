@@ -141,6 +141,22 @@ export function CoachProvider({ children }: CoachProviderProps) {
     }
   }, [])
   
+  // Inline tip dismissal
+  const dismissTipId = useCallback(async (tipId: string) => {
+    if (!settings) return
+    
+    const currentDismissed = settings.dismissed_tip_ids || []
+    if (currentDismissed.includes(tipId)) return
+    
+    const newDismissed = [...currentDismissed, tipId]
+    await updateSettings({ dismissed_tip_ids: newDismissed })
+  }, [settings, updateSettings])
+  
+  const isDismissed = useCallback((tipId: string): boolean => {
+    const dismissed = settings?.dismissed_tip_ids || []
+    return dismissed.includes(tipId)
+  }, [settings])
+  
   const trackEvent = useCallback(async (type: EventType, data?: Record<string, unknown>) => {
     try {
       const event: BehaviorEventCreate = {
@@ -232,6 +248,8 @@ export function CoachProvider({ children }: CoachProviderProps) {
     clickSuggestion,
     trackEvent,
     updateSettings,
+    dismissTipId,
+    isDismissed,
   }
   
   return (
