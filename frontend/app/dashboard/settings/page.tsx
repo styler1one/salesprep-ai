@@ -32,7 +32,6 @@ import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { useBilling } from '@/lib/billing-context'
 import { UsageMeter } from '@/components/usage-meter'
-import { useCoachOptional } from '@/components/coach/CoachProvider'
 import { api } from '@/lib/api'
 import type { User } from '@supabase/supabase-js'
 
@@ -48,7 +47,6 @@ export default function SettingsPage() {
   
   const { settings, updateSettings, loading: settingsLoading, loaded: settingsLoaded } = useSettings()
   const { subscription, usage, loading: billingLoading, createCheckoutSession, openBillingPortal } = useBilling()
-  const coach = useCoachOptional()
   
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
@@ -56,6 +54,25 @@ export default function SettingsPage() {
   const [billingActionLoading, setBillingActionLoading] = useState(false)
   const [coachResetting, setCoachResetting] = useState(false)
   const [coachToggling, setCoachToggling] = useState(false)
+  const [coachEnabled, setCoachEnabled] = useState<boolean | null>(null)
+  const [coachSettingsLoading, setCoachSettingsLoading] = useState(true)
+  
+  // Fetch coach settings directly (independent of CoachProvider)
+  useEffect(() => {
+    const fetchCoachSettings = async () => {
+      try {
+        const { data, error } = await api.get<{ is_enabled: boolean }>('/api/v1/coach/settings')
+        if (!error && data) {
+          setCoachEnabled(data.is_enabled)
+        }
+      } catch (err) {
+        console.error('Failed to fetch coach settings:', err)
+      } finally {
+        setCoachSettingsLoading(false)
+      }
+    }
+    fetchCoachSettings()
+  }, [])
   
   // Local state for form
   const [appLanguage, setAppLanguage] = useState('en')
@@ -172,28 +189,27 @@ export default function SettingsPage() {
 
   // Coach handlers
   const handleCoachToggle = async (enabled: boolean) => {
-    console.log('[Settings] handleCoachToggle called with:', enabled)
-    console.log('[Settings] Current coach.settings.is_enabled:', coach?.settings?.is_enabled)
-    
     setCoachToggling(true)
     try {
-      // Update settings via API directly (works even if coach context isn't ready)
+      // Update settings via API directly
       const { error } = await api.patch('/api/v1/coach/settings', { 
         is_enabled: enabled,
         widget_state: enabled ? 'minimized' : 'hidden'
       })
-      console.log('[Settings] PATCH response error:', error)
       
       if (error) {
         throw new Error(error.message || 'Failed to update settings')
       }
+      
+      // Update local state immediately
+      setCoachEnabled(enabled)
       
       toast({
         title: enabled ? t('coach.enabled') : t('coach.disabled'),
         description: enabled ? t('coach.enabledDesc') : t('coach.disabledDesc'),
       })
       
-      // Reload page to ensure clean state
+      // Reload page to ensure coach widget updates
       window.location.reload()
     } catch (error) {
       console.error('Failed to toggle coach:', error)
@@ -400,14 +416,14 @@ export default function SettingsPage() {
                     {t('coach.enableDesc')}
                   </p>
                 </div>
-{coach?.settings ? (
+{coachSettingsLoading ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+                ) : (
                   <Switch
-                    checked={coach.settings.is_enabled}
+                    checked={coachEnabled ?? true}
                     onCheckedChange={handleCoachToggle}
                     disabled={coachToggling}
                   />
-                ) : (
-                  <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
                 )}
               </div>
 
