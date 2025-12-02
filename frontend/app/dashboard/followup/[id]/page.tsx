@@ -246,7 +246,7 @@ export default function FollowupDetailPage() {
     }
   }, [followupId])
 
-  // Generate a new action
+  // Generate a new action - fire and forget, like research does
   const handleGenerateAction = async (actionType: ActionType) => {
     // Summary is built-in, not generated via API
     if (actionType === 'summary') {
@@ -268,66 +268,25 @@ export default function FollowupDetailPage() {
       })
       
       if (!error && data) {
-        // Add to actions list
+        // Add to actions list with generating status
         setActions(prev => [...prev.filter(a => a.action_type !== actionType), data])
-        // Start polling for completion
-        pollActionStatus(data.id)
+        
+        // Refresh actions list after delays (like research does)
+        // This avoids continuous polling which seems to block the UI
+        setTimeout(() => fetchActions(), 5000)
+        setTimeout(() => fetchActions(), 15000)
+        setTimeout(() => fetchActions(), 30000)
+        setTimeout(() => fetchActions(), 45000)
+        setTimeout(() => fetchActions(), 60000)
       } else {
-        toast({ title: 'Failed to generate action', variant: 'destructive' })
+        toast({ title: t('actions.generationFailed'), variant: 'destructive' })
       }
     } catch (error) {
       console.error('Failed to generate action:', error)
-      toast({ title: 'Failed to generate action', variant: 'destructive' })
+      toast({ title: t('actions.generationFailed'), variant: 'destructive' })
     } finally {
       setGeneratingActionType(null)
     }
-  }
-
-  // Poll for action completion
-  const pollActionStatus = async (actionId: string) => {
-    const maxAttempts = 30 // 30 * 2s = 60s max
-    let attempts = 0
-    
-    const poll = async () => {
-      if (attempts >= maxAttempts) return
-      attempts++
-      
-      try {
-        const { data, error } = await api.get<FollowupAction>(`/api/v1/followup/${followupId}/actions/${actionId}`)
-        
-        if (!error && data) {
-          // Update action in list
-          setActions(prev => prev.map(a => a.id === actionId ? data : a))
-          
-          // Also update selected action if it's the same
-          if (selectedAction?.id === actionId) {
-            setSelectedAction(data)
-          }
-          
-          // If generation completed (success or error), show toast notification
-          if (data.metadata?.status === 'completed') {
-            const actionInfo = ACTION_TYPES.find(a => a.type === data.action_type)
-            toast({
-              title: t('actions.generated'),
-              description: `${actionInfo?.label || data.action_type} ${t('actions.readyToView')}`,
-            })
-          } else if (data.metadata?.status === 'error') {
-            toast({
-              title: t('actions.generationFailed'),
-              description: data.metadata?.error || t('actions.tryAgain'),
-              variant: 'destructive',
-            })
-          } else if (data.metadata?.status === 'generating') {
-            // Still generating, continue polling
-            setTimeout(poll, 2000)
-          }
-        }
-      } catch (error) {
-        console.error('Failed to poll action status:', error)
-      }
-    }
-    
-    setTimeout(poll, 2000)
   }
 
   // Update action content (edit)
