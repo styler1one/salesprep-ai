@@ -47,7 +47,12 @@ export function CoachExpanded() {
   const progressPercent = Math.min(100, (todayTotal / dailyGoal) * 100)
   
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 w-96 max-h-[80vh] overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+    <div 
+      className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 w-[calc(100vw-2rem)] sm:w-96 max-w-96 max-h-[85vh] sm:max-h-[80vh] overflow-hidden animate-in slide-in-from-bottom-4 duration-300"
+      role="dialog"
+      aria-label={t('name')}
+      aria-modal="true"
+    >
       {/* Header */}
       <div className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">

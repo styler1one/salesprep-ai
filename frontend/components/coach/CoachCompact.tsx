@@ -89,7 +89,11 @@ export function CoachCompact() {
   }
   
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-4 w-80 animate-in slide-in-from-bottom-4 duration-300">
+    <div 
+      className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-4 w-[calc(100vw-2rem)] sm:w-80 max-w-80 animate-in slide-in-from-bottom-4 duration-300"
+      role="dialog"
+      aria-label={t('name')}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
