@@ -629,3 +629,144 @@ async def get_inline_suggestions(
         logger.error(f"Error getting inline suggestions: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# =============================================================================
+# AI INSIGHTS ENDPOINTS
+# =============================================================================
+
+@router.get("/insights/tip")
+async def get_tip_of_day(current_user: dict = Depends(get_current_user)):
+    """Get the personalized tip of the day."""
+    from app.services.coach_insights import CoachInsightsService, get_user_activity_context
+    
+    supabase = get_supabase_service()
+    user_id = current_user["sub"]
+    
+    try:
+        # Get organization IDs
+        email = current_user.get("email", "")
+        organization_ids = []
+        
+        personal_org = supabase.table("organizations") \
+            .select("id") \
+            .eq("name", f"Personal - {email}") \
+            .execute()
+        if personal_org.data:
+            organization_ids.append(personal_org.data[0]["id"])
+        
+        org_members = supabase.table("organization_members") \
+            .select("organization_id") \
+            .eq("user_id", user_id) \
+            .execute()
+        for member in (org_members.data or []):
+            if member["organization_id"] not in organization_ids:
+                organization_ids.append(member["organization_id"])
+        
+        # Get user activity context
+        context = await get_user_activity_context(supabase, user_id, organization_ids)
+        
+        # Generate tip
+        insights_service = CoachInsightsService(supabase)
+        tip = await insights_service.generate_tip_of_day(user_id, context)
+        
+        return tip
+        
+    except Exception as e:
+        logger.error(f"Error getting tip of day: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/insights/patterns")
+async def get_success_patterns(current_user: dict = Depends(get_current_user)):
+    """Get success pattern analysis for the organization."""
+    from app.services.coach_insights import CoachInsightsService
+    
+    supabase = get_supabase_service()
+    user_id = current_user["sub"]
+    
+    try:
+        # Get primary organization ID
+        email = current_user.get("email", "")
+        organization_id = None
+        
+        personal_org = supabase.table("organizations") \
+            .select("id") \
+            .eq("name", f"Personal - {email}") \
+            .execute()
+        if personal_org.data:
+            organization_id = personal_org.data[0]["id"]
+        
+        if not organization_id:
+            org_members = supabase.table("organization_members") \
+                .select("organization_id") \
+                .eq("user_id", user_id) \
+                .execute()
+            if org_members.data:
+                organization_id = org_members.data[0]["organization_id"]
+        
+        if not organization_id:
+            return {"patterns": {}, "score": 0, "recommendations": []}
+        
+        # Analyze patterns
+        insights_service = CoachInsightsService(supabase)
+        patterns = await insights_service.analyze_success_patterns(organization_id)
+        
+        return {
+            "patterns": {
+                "contacts": patterns.get("contacts_analysis", {}),
+                "timing": patterns.get("timing_analysis", {}),
+                "actions": patterns.get("action_analysis", {}),
+            },
+            "score": patterns.get("overall_score", 0),
+            "recommendations": patterns.get("recommendations", []),
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting success patterns: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/insights/predictions")
+async def get_predictions(current_user: dict = Depends(get_current_user)):
+    """Get predictive suggestions based on patterns and timing."""
+    from app.services.coach_insights import CoachInsightsService
+    
+    supabase = get_supabase_service()
+    user_id = current_user["sub"]
+    
+    try:
+        # Get organization IDs
+        email = current_user.get("email", "")
+        organization_ids = []
+        
+        personal_org = supabase.table("organizations") \
+            .select("id") \
+            .eq("name", f"Personal - {email}") \
+            .execute()
+        if personal_org.data:
+            organization_ids.append(personal_org.data[0]["id"])
+        
+        org_members = supabase.table("organization_members") \
+            .select("organization_id") \
+            .eq("user_id", user_id) \
+            .execute()
+        for member in (org_members.data or []):
+            if member["organization_id"] not in organization_ids:
+                organization_ids.append(member["organization_id"])
+        
+        if not organization_ids:
+            return {"predictions": [], "count": 0}
+        
+        # Get predictions
+        insights_service = CoachInsightsService(supabase)
+        predictions = await insights_service.get_predictive_suggestions(
+            user_id, 
+            organization_ids
+        )
+        
+        return {"predictions": predictions, "count": len(predictions)}
+        
+    except Exception as e:
+        logger.error(f"Error getting predictions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
