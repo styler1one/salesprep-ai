@@ -24,6 +24,7 @@ import {
     PanelLeftClose,
     PanelLeftOpen,
     ChevronDown,
+    ChevronUp,
     ChevronRight,
     LogOut,
     Settings,
@@ -52,6 +53,8 @@ import {
     HelpCircle,
     Inbox,
     FolderOpen,
+    Maximize2,
+    Minimize2,
 } from 'lucide-react'
 
 // Custom Google Icon (official colors)
@@ -112,6 +115,7 @@ export const Icons = {
     panelLeftClose: PanelLeftClose,
     panelLeftOpen: PanelLeftOpen,
     chevronDown: ChevronDown,
+    chevronUp: ChevronUp,
     chevronRight: ChevronRight,
     logOut: LogOut,
     settings: Settings,
@@ -140,6 +144,8 @@ export const Icons = {
     alertTriangle: AlertTriangle,
     inbox: Inbox,
     folderOpen: FolderOpen,
+    maximize: Maximize2,
+    minimize: Minimize2,
     google: GoogleIcon,
     microsoft: MicrosoftIcon,
 }

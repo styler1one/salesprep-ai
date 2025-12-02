@@ -46,14 +46,15 @@ export function CoachCompact() {
             <span className="font-semibold text-slate-900 dark:text-white">{t('name')}</span>
           </div>
           <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-              onClick={() => setWidgetState('expanded')}
-            >
-              <Icons.chevronDown className="h-4 w-4" />
-            </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => setWidgetState('expanded')}
+            title={t('widget.expand')}
+          >
+            <Icons.maximize className="h-4 w-4" />
+          </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -107,8 +108,9 @@ export function CoachCompact() {
             className="h-8 w-8 p-0"
             onClick={() => setWidgetState('expanded')}
             aria-label={t('widget.expand')}
+            title={t('widget.expand')}
           >
-            <Icons.chevronDown className="h-4 w-4" />
+            <Icons.maximize className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
