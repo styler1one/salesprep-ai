@@ -150,20 +150,12 @@ export default function FollowupDetailPage() {
       if (!error && data) {
         setFollowup(data)
         
-        // Fetch related research and prep
-        if (data.prospect_company_name) {
-          fetchRelatedData(data.prospect_company_name)
-        }
-        
-        // Fetch linked contacts
-        if (data.contact_ids && data.contact_ids.length > 0) {
-          fetchLinkedContacts(data.contact_ids)
-        }
-        
-        // Fetch linked deal
-        if (data.deal_id) {
-          fetchLinkedDeal(data.deal_id)
-        }
+        // Fetch related data in PARALLEL (research, prep, contacts, deal)
+        await Promise.all([
+          data.prospect_company_name && fetchRelatedData(data.prospect_company_name),
+          data.contact_ids?.length > 0 && fetchLinkedContacts(data.contact_ids),
+          data.deal_id && fetchLinkedDeal(data.deal_id)
+        ].filter(Boolean))
       } else {
         toast({ title: t('toast.failed'), variant: 'destructive' })
         router.push('/dashboard/followup')
