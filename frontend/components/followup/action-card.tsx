@@ -53,7 +53,7 @@ export function ActionCard({
         isGenerating && 'border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-900/20',
         hasError && 'border-red-300 dark:border-red-700 bg-red-50/50 dark:bg-red-900/20',
         !isCompleted && !isGenerating && !hasError && 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900',
-        disabled && 'opacity-50 cursor-not-allowed',
+        isClickDisabled && 'opacity-50 cursor-not-allowed',
       )}
     >
       {/* Icon */}
