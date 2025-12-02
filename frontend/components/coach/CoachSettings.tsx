@@ -35,7 +35,7 @@ export function CoachSettings({
   onOpenChange 
 }: CoachSettingsProps) {
   const t = useTranslations('coach.settings')
-  const { settings, updateSettings, loading } = useCoach()
+  const { settings, updateSettings, isLoading } = useCoach()
   const [internalOpen, setInternalOpen] = useState(false)
   
   const open = controlledOpen ?? internalOpen
@@ -95,7 +95,7 @@ export function CoachSettings({
               id="coach-enabled"
               checked={settings?.is_enabled ?? true}
               onCheckedChange={handleEnabledChange}
-              disabled={loading}
+              disabled={isLoading}
             />
           </div>
           
