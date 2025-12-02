@@ -50,7 +50,9 @@ async def get_settings(current_user: dict = Depends(get_current_user)):
             .execute()
         
         if result.data:
-            return CoachSettings(**result.data[0])
+            settings_data = result.data[0]
+            print(f"[COACH DEBUG] Settings for user {user_id}: is_enabled={settings_data.get('is_enabled')}, widget_state={settings_data.get('widget_state')}")
+            return CoachSettings(**settings_data)
         
         # Create default settings if not exist
         org_result = supabase.table("organization_members") \

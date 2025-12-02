@@ -199,17 +199,21 @@ export default function SettingsPage() {
   const handleCoachReset = async () => {
     setCoachResetting(true)
     try {
-      const { error } = await api.post('/api/v1/coach/suggestions/reset', {})
-      if (!error) {
-        toast({
-          title: t('coach.reset'),
-          description: t('coach.resetDesc'),
-        })
-        // Refresh the page to reset all coach state
-        window.location.reload()
-      } else {
-        throw new Error(error.message)
-      }
+      // First reset snoozed suggestions
+      await api.post('/api/v1/coach/suggestions/reset', {})
+      
+      // Then force enable the coach
+      await api.patch('/api/v1/coach/settings', {
+        is_enabled: true,
+        widget_state: 'minimized'
+      })
+      
+      toast({
+        title: t('coach.reset'),
+        description: t('coach.resetDesc'),
+      })
+      // Refresh the page to reset all coach state
+      window.location.reload()
     } catch (error) {
       console.error('Failed to reset coach:', error)
       toast({
