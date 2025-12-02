@@ -172,6 +172,9 @@ export default function SettingsPage() {
 
   // Coach handlers
   const handleCoachToggle = async (enabled: boolean) => {
+    console.log('[Settings] handleCoachToggle called with:', enabled)
+    console.log('[Settings] Current coach.settings.is_enabled:', coach?.settings?.is_enabled)
+    
     setCoachToggling(true)
     try {
       // Update settings via API directly (works even if coach context isn't ready)
@@ -179,6 +182,7 @@ export default function SettingsPage() {
         is_enabled: enabled,
         widget_state: enabled ? 'minimized' : 'hidden'
       })
+      console.log('[Settings] PATCH response error:', error)
       
       if (error) {
         throw new Error(error.message || 'Failed to update settings')
@@ -396,11 +400,15 @@ export default function SettingsPage() {
                     {t('coach.enableDesc')}
                   </p>
                 </div>
-                <Switch
-                  checked={coach?.settings?.is_enabled ?? true}
-                  onCheckedChange={handleCoachToggle}
-                  disabled={coachToggling || coach?.isLoading}
-                />
+{coach?.settings ? (
+                  <Switch
+                    checked={coach.settings.is_enabled}
+                    onCheckedChange={handleCoachToggle}
+                    disabled={coachToggling}
+                  />
+                ) : (
+                  <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+                )}
               </div>
 
               {/* Reset Snoozed Suggestions */}
