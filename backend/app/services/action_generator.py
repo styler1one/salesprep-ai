@@ -131,8 +131,6 @@ class ActionGeneratorService:
             return self._prompt_action_items(context_text, lang_instruction, context)
         elif action_type == ActionType.INTERNAL_REPORT:
             return self._prompt_internal_report(context_text, lang_instruction, context)
-        elif action_type == ActionType.DEAL_UPDATE:
-            return self._prompt_deal_update(context_text, lang_instruction, context)
         else:
             raise ValueError(f"Unknown action type: {action_type}")
     
@@ -1043,59 +1041,6 @@ RULES:
 - Prioritise momentum, risks and decision-driving information.
 
 Generate the complete internal report now:"""
-    
-    def _prompt_deal_update(self, context_text: str, lang_instruction: str, context: Dict) -> str:
-        """Prompt for deal update suggestions"""
-        current_deal = context.get("deal", {})
-        current_stage = current_deal.get("stage", "Unknown")
-        
-        return f"""You are an expert at assessing sales deal progress and recommending pipeline updates.
-
-{lang_instruction}
-
-Based on the following meeting context, provide deal update recommendations.
-
-{context_text}
-
-Current Deal Stage: {current_stage}
-
-## Requirements:
-
-Analyze the meeting to determine if the deal should be updated.
-
-## Structure (use these exact headings):
-
-# Deal Update Recommendation
-
-## Current Status
-- **Current Stage**: {current_stage}
-- **Meeting Outcome**: [Positive/Neutral/Negative]
-
-## Recommended Changes
-
-### Stage Update
-- **Recommended Stage**: [stage name]
-- **Reasoning**: [Why this stage is appropriate based on the meeting]
-
-### Probability Update
-- **Current Probability**: [X]%
-- **Recommended Probability**: [Y]%
-- **Change Reasoning**: [What happened to change the probability]
-
-### Deal Value
-- **Should value be updated?**: [Yes/No]
-- **Reasoning**: [If yes, explain based on what was discussed]
-
-## Key Indicators
-- 🟢 Positive signals: [list]
-- 🔴 Risk factors: [list]
-
-## Critical Next Action
-[The one thing that must happen to advance this deal]
-
----
-
-Generate the deal update now:"""
     
     async def _generate_with_claude(self, prompt: str) -> str:
         """Call Claude API to generate content"""

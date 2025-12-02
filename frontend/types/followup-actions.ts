@@ -10,7 +10,6 @@ export type ActionType =
   | 'sales_coaching'
   | 'action_items'
   | 'internal_report'
-  | 'deal_update'
 
 export interface FollowupAction {
   id: string
@@ -109,12 +108,6 @@ export const ACTION_TYPES: ActionTypeInfo[] = [
     icon: '📝',
     label: 'Internal Report',
     description: 'Short summary for CRM or team',
-  },
-  {
-    type: 'deal_update',
-    icon: '🎯',
-    label: 'Deal Update',
-    description: 'Suggested deal stage and probability',
   },
 ]
 

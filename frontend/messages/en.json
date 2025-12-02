@@ -553,10 +553,6 @@
         "internal_report": {
           "label": "Internal Report",
           "description": "Short summary for CRM or team"
-        },
-        "deal_update": {
-          "label": "Deal Update",
-          "description": "Suggested deal stage and probability"
         }
       }
     },

@@ -18,7 +18,6 @@ class ActionType(str, Enum):
     SALES_COACHING = "sales_coaching"
     ACTION_ITEMS = "action_items"
     INTERNAL_REPORT = "internal_report"
-    DEAL_UPDATE = "deal_update"
 
 
 # Action type metadata for UI
