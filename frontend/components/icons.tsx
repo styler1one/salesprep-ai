@@ -55,6 +55,7 @@ import {
     FolderOpen,
     Maximize2,
     Minimize2,
+    Link2,
 } from 'lucide-react'
 
 // Custom Google Icon (official colors)
@@ -146,6 +147,7 @@ export const Icons = {
     folderOpen: FolderOpen,
     maximize: Maximize2,
     minimize: Minimize2,
+    link: Link2,
     google: GoogleIcon,
     microsoft: MicrosoftIcon,
 }
