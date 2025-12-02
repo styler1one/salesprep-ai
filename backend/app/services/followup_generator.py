@@ -194,225 +194,169 @@ If there are no action items, return an empty array: []
         self,
         transcription: str,
         prospect_context: Optional[Dict[str, Any]] = None,
-        include_coaching: bool = False,
+        include_coaching: bool = False,  # Deprecated: coaching is now a separate action
         language: str = DEFAULT_LANGUAGE,
         meeting_prep_context: Optional[str] = None,
         profile_context: Optional[str] = None,
         prospect_company: Optional[str] = None
     ) -> str:
-        """Build the summary generation prompt with full context"""
+        """Build the summary generation prompt - concise overview that invites deeper exploration"""
         
-        prompt = """You are an expert sales analyst analyzing a meeting transcription.
-You have access to extensive context about the sales rep, the company, the prospect, and preparation.
-Use this context to create an in-depth, personalized analysis.
+        lang_instruction = get_language_instruction(language)
+
+        prompt = """You are creating a high-level meeting summary designed to be read in under 60 seconds.
+Write in clear, concise and strategically sharp English.
+Your style should be factual, scannable and composed – not interpretive or emotional.
+This summary gives the essentials. Deeper analysis lives in separate reports.
 
 """
-        
-        # Use new unified context if available
+
+        # Build unified context
         if prospect_context:
-            # Prospect company name
             company_name = prospect_context.get("prospect_company", prospect_company or "Unknown")
             prompt += f"## PROSPECT COMPANY: {company_name}\n\n"
             
-            # Sales Profile with narrative
-            if prospect_context.get("sales_profile"):
-                sales = prospect_context["sales_profile"]
+            # Sales Profile
+            sales = prospect_context.get("sales_profile")
+            if sales:
                 if sales.get("sales_narrative"):
-                    prompt += f"""## ABOUT YOU (THE SALES REP):
-{sales['sales_narrative'][:1000]}
-
-"""
-                else:
-                    prompt += f"""## ABOUT YOU:
-- Name: {sales.get('full_name', 'N/A')}
-- Style: {sales.get('sales_methodology', 'N/A')}
-
-"""
+                    prompt += f"## ABOUT YOU (SALES REP)\n{sales['sales_narrative'][:800]}\n\n"
             
-            # Company Profile with narrative
-            if prospect_context.get("company_profile"):
-                company = prospect_context["company_profile"]
-                if company.get("company_narrative"):
-                    prompt += f"""## YOUR COMPANY:
-{company['company_narrative'][:1000]}
-
-"""
+            # Company Profile
+            company = prospect_context.get("company_profile")
+            if company and company.get("company_narrative"):
+                prompt += f"## YOUR COMPANY\n{company['company_narrative'][:800]}\n\n"
             
-            # Research data - IMPORTANT for context
-            if prospect_context.get("research"):
-                research = prospect_context["research"]
-                prompt += f"""## RESEARCH ON THE PROSPECT:
-**Company Information:**
-{research.get('brief_content', research.get('company_data', 'Not available'))[:1500]}
-
-**Key People:**
-{research.get('key_people', 'Not available')[:500]}
-
-**Recent News:**
-{research.get('recent_news', 'Not available')[:500]}
-
-"""
+            # Research
+            research = prospect_context.get("research")
+            if research:
+                data = research.get("brief_content") or research.get("company_data") or "Not available"
+                prompt += f"## RESEARCH SUMMARY\n{data[:800]}\n\n"
             
-            # Meeting Prep - what was prepared
-            if prospect_context.get("meeting_preps"):
-                prep = prospect_context["meeting_preps"][0]
-                questions = prep.get("questions", [])
-                questions_text = "\n".join([f"- {q}" for q in questions[:10]]) if questions else "No questions prepared"
-                
-                prompt += f"""## MEETING PREPARATION:
-**Meeting type:** {prep.get('meeting_type', 'N/A')}
-
-**Talking Points you wanted to discuss:**
-{prep.get('talking_points', 'Not available')[:500]}
-
-**Questions you wanted to ask:**
-{questions_text}
-
-**Strategy:**
-{prep.get('strategy', 'Not available')[:500]}
-
-Analyze whether these points were discussed and questions answered.
-
-"""
+            # Meeting Prep
+            preps = prospect_context.get("meeting_preps")
+            if preps:
+                prep = preps[0]
+                prompt += f"## MEETING PREPARATION\n"
+                prompt += f"**Meeting type:** {prep.get('meeting_type','N/A')}\n"
+                prompt += f"**Key objectives:** {prep.get('talking_points','N/A')[:400]}\n\n"
             
-            # Previous followups
-            if prospect_context.get("previous_followups"):
-                prev = prospect_context["previous_followups"][0]
-                prompt += f"""## PREVIOUS MEETING WITH THIS PROSPECT:
-**Summary:** {prev.get('executive_summary', 'N/A')[:500]}
+            # Previous meeting summary
+            prev = prospect_context.get("previous_followups")
+            if prev:
+                prompt += f"## PREVIOUS MEETING SUMMARY\n{prev[0].get('executive_summary','N/A')[:300]}\n\n"
 
-**Open action items from last time:**
-{chr(10).join(['- ' + item.get('task', '') for item in prev.get('action_items', [])[:5]])}
-
-Check if these action items were followed up.
-
-"""
-            
-            # KB chunks - case studies etc
-            if prospect_context.get("kb_chunks"):
-                kb_text = "\n".join([
-                    f"- {chunk.get('source', 'Doc')}: {chunk.get('text', '')[:150]}..."
-                    for chunk in prospect_context["kb_chunks"][:3]
-                ])
-                prompt += f"""## RELEVANT COMPANY INFORMATION (Case studies/products):
-{kb_text}
-
-"""
         else:
-            # Legacy fallback - use old params
+            # Fallback legacy support
             if prospect_company:
-                prompt += f"PROSPECT COMPANY: {prospect_company}\n\n"
-            
+                prompt += f"## PROSPECT COMPANY: {prospect_company}\n\n"
             if meeting_prep_context:
-                prompt += f"""MEETING PREP CONTEXT (goals and preparation):
-{meeting_prep_context}
-
-"""
-            
+                prompt += f"## PREPARATION CONTEXT\n{meeting_prep_context[:500]}\n\n"
             if profile_context:
-                prompt += f"""SALES PROFILE CONTEXT:
-{profile_context}
+                prompt += f"## SALES PROFILE\n{profile_context[:500]}\n\n"
 
-"""
-        
-        prompt += f"""## MEETING TRANSCRIPTION:
-{transcription[:12000]}
+        # Transcription
+        prompt += f"## MEETING TRANSCRIPTION\n{transcription[:12000]}\n\n---\n"
+
+        # Summary instructions
+        prompt += f"""
+Generate a structured, factual summary with EXACTLY the following sections.
+Do not analyse or interpret beyond what was explicitly said. Keep everything concise.
+
+# Meeting Summary
+
+## 📋 In One Sentence
+A single precise sentence that captures what this meeting was about and its outcome or significance.  
+Make it specific and grounded in what actually happened.
 
 ---
 
-Generate a structured summary with EXACTLY these sections:
+## 🎯 What Happened (3–5 sentences)
+Provide a short narrative covering:
+- The purpose and structure of the conversation
+- The main topics discussed
+- The tone, engagement level and overall dynamic
+- Any shifts in clarity, interest or direction
 
-## Executive Summary
-[2-3 sentences capturing the essence of the meeting, refer to the context you have]
+Keep it crisp and factual.
 
-## Key Discussion Points
-- [Main topics discussed as bullet points]
+---
 
-## Client Concerns
-- [Objections, concerns or questions from the client - compare with research insights]
+## ✅ Agreements & Decisions
+| What Was Agreed | Details |
+|-----------------|---------|
+[List explicit agreements or commitments only.]
 
-## Decisions Made
-- [Decisions made during the meeting]
+If no agreements:  
+**"No formal decisions – exploratory conversation."**
 
-## Next Steps
-- [Agreed follow-up steps]
+---
 
-## Prep Evaluation
-- [Which prepared points were discussed? Which questions answered?]
-- [What wasn't covered but is still relevant?]
+## ➡️ Next Steps
+| Action | Owner | Timing |
+|--------|-------|--------|
+[List only clearly confirmed next steps with owners and timelines.]
 
-## 💰 Commercial Signals
+If none were agreed:  
+**"No specific next steps confirmed – follow-up required."**
 
-### Buying Signals (BANT)
-- **Budget**: [Are there indications of available budget? What was said?]
-- **Authority**: [Is this person the decision maker? Who else needs to decide?]
-- **Need**: [How urgent is the need? Urgency score 1-10]
-- **Timeline**: [Was a desired implementation date mentioned?]
+---
 
-### Cross-sell & Upsell Opportunities
-- [Other products/services relevant based on the conversation]
-- [Opportunities to expand scope]
+## 💡 Noteworthy Moments
+Highlight 2–3 moments that stood out:
+- A revealing quote
+- A moment of clarity, tension or enthusiasm
+- A shift in priorities or focus
 
-### Deal Risks
-- [Objections raised]
-- [Competitors mentioned]
-- [Doubts or delay signals]
+Keep these short and intriguing – use them as entry points for deeper analyses.
 
-## 🔎 Observations & Signals
+---
 
-### ⚠️ Doubt Detected
-- [Where did the client hesitate? On which topic?]
-- [Which questions were avoided or vaguely answered?]
+## 📊 At a Glance
+| Aspect | Assessment |
+|--------|------------|
+| **Meeting Dynamic** | 🟢 Constructive / 🟡 Neutral / 🔴 Difficult |
+| **Client Engagement** | High / Medium / Low – [one-line reason] |
+| **Commercial Signals** | 🟢 Clear interest / 🟡 Mixed / 🔴 None / ⚪ Unclear |
+| **Follow-Up Urgency** | 🔴 <24h / 🟡 This week / 🟢 Low – [reason] |
 
-### 💡 Unspoken Needs
-- [What wasn't said but probably matters?]
-- [Underlying problems you observed]
+---
 
-### 🎯 Follow-up Opportunities
-- [Workshop, demo, pilot possibilities]
-- [Other stakeholders to involve]
+## 🔍 Explore Further
+Recommend follow-up reports available in the system:
 
-### 🚩 Red Flags
-- [Signs of disinterest or resistance]
-- [Things that cause concern]
+- **📄 Customer Report** – external-facing summary  
+- **💰 Commercial Analysis** – deal strength, risks, buying signals  
+- **📈 Sales Coaching** – behavioural performance feedback  
+- **✅ Action Items** – complete task list  
+- **📝 Internal Report** – CRM-ready update  
+- **✉️ Share Email** – ready-to-send follow-up
 
-## Sales Insights
-- [Summary insights for sales follow-up]
-- [How does this fit with what you found in research?]
-- [Recommendations for next steps based on all context]
+---
+
+RULES:
+- Keep the entire summary under 400 words (excluding tables).
+- Quote the client directly where valuable.
+- Do not interpret beyond the transcript – label unclear elements as "Unclear from conversation".
+- Prioritise clarity, brevity and momentum-relevant details.
+- No fluff, no filler, no generic phrasing.
+- Use a clean, senior-consultant tone.
+- If multiple speakers are unclear, focus on the client's statements over the sales rep's.
+
+{lang_instruction}
+
+Generate the meeting summary now:
 """
-
-        # Add coaching section if requested
-        if include_coaching:
-            prompt += """
-
-## 📈 Coaching Feedback
-
-### ✅ What Went Well
-- [Effective conversation techniques the seller used]
-- [Strong skills demonstrated]
-- [Good questions asked]
-
-### 🔧 Areas for Improvement
-- [Missed opportunities in the conversation]
-- [Questions not asked but relevant]
-- [Moments where deeper probing could have been done]
-
-### 💡 Tips for Next Time
-- [Concrete, actionable suggestions for improvement]
-- [Focus on 1-2 specific improvement areas]
-"""
-
-        lang_instruction = get_language_instruction(language)
-        prompt += f"""
-
-{lang_instruction} Focus on actionable insights and use the full context available.
-Be honest but constructive in your analysis."""
 
         return prompt
     
     def _parse_summary_response(self, content: str) -> Dict[str, Any]:
-        """Parse the summary response into structured sections"""
+        """Parse the summary response into structured sections.
+        
+        The new summary format is designed for markdown display.
+        We extract key fields for backwards compatibility while storing
+        the full content for rendering.
+        """
         
         sections = {
             "executive_summary": "",
@@ -421,150 +365,112 @@ Be honest but constructive in your analysis."""
             "decisions": [],
             "next_steps": [],
             "sales_insights": [],
-            # NEW: Enhanced sections
+            "noteworthy_moments": [],
+            "at_a_glance": {},
+            # Legacy fields (kept for backwards compatibility)
             "commercial_signals": {},
             "observations": {},
             "coaching_feedback": {},
-            "full_content": content  # Store full markdown for display
+            # Full markdown content for display
+            "full_content": content
         }
         
         current_section = None
         current_content = []
         
-        # Parse commercial signals
-        commercial_signals = {
-            "koopsignalen": [],
-            "cross_sell": [],
-            "risks": []
-        }
-        
-        # Parse observations
-        observations = {
-            "doubts": [],
-            "unspoken_needs": [],
-            "opportunities": [],
-            "red_flags": []
-        }
-        
-        # Parse coaching
-        coaching_feedback = {
-            "strengths": [],
-            "improvements": [],
-            "tips": []
-        }
-        
-        in_commercial = False
-        in_observations = False
-        in_coaching = False
-        commercial_subsection = None
-        observations_subsection = None
-        coaching_subsection = None
-        
         for line in content.split("\n"):
             line_stripped = line.strip()
             
-            # Check for main section headers
-            if "## Executive Summary" in line or "## Samenvatting" in line:
+            # New format sections
+            if "## 📋 In One Sentence" in line or "In One Sentence" in line:
                 current_section = "executive_summary"
                 current_content = []
-                in_commercial = False
-                in_observations = False
-                in_coaching = False
+            elif "## 🎯 What Happened" in line or "What Happened" in line:
+                # Save previous section
+                if current_section == "executive_summary" and current_content:
+                    sections["executive_summary"] = " ".join(current_content).strip()
+                current_section = "what_happened"
+                current_content = []
+            elif "## ✅ Agreements" in line or "Agreements & Decisions" in line:
+                if current_section == "what_happened" and current_content:
+                    sections["key_points"] = current_content
+                current_section = "decisions"
+                current_content = []
+            elif "## ➡️ Next Steps" in line or "Next Steps" in line:
+                current_section = "next_steps"
+                current_content = []
+            elif "## 💡 Noteworthy" in line or "Noteworthy Moments" in line:
+                current_section = "noteworthy_moments"
+                current_content = []
+            elif "## 📊 At a Glance" in line or "At a Glance" in line:
+                current_section = "at_a_glance"
+                current_content = []
+            elif "## 🔍 Explore Further" in line or "Explore Further" in line:
+                current_section = None  # Stop parsing, this is the footer
+            
+            # Legacy format support (for old summaries)
+            elif "## Executive Summary" in line or "## Samenvatting" in line:
+                current_section = "executive_summary"
+                current_content = []
             elif "## Key Discussion" in line or "## Belangrijkste" in line:
-                if current_section == "executive_summary":
+                if current_section == "executive_summary" and current_content:
                     sections["executive_summary"] = " ".join(current_content).strip()
                 current_section = "key_points"
                 current_content = []
-            elif "## Client Concerns" in line or "## Bezwaren" in line or "## Zorgen" in line:
+            elif "## Client Concerns" in line or "## Bezwaren" in line:
                 current_section = "concerns"
             elif "## Decisions" in line or "## Beslissingen" in line:
                 current_section = "decisions"
             elif "## Next Steps" in line or "## Vervolgstappen" in line:
                 current_section = "next_steps"
-            elif "## 💰 Commerciële Signalen" in line or "## Commerciële Signalen" in line:
-                in_commercial = True
-                in_observations = False
-                in_coaching = False
-                current_section = None
-            elif "## 🔎 Observaties" in line or "## Observaties" in line:
-                in_commercial = False
-                in_observations = True
-                in_coaching = False
-                current_section = None
-            elif "## 📈 Coaching" in line or "## Coaching Feedback" in line:
-                in_commercial = False
-                in_observations = False
-                in_coaching = True
-                current_section = None
-            elif "## Sales Insights" in line or "## Sales" in line:
+            elif "## Sales Insights" in line:
                 current_section = "sales_insights"
-                in_commercial = False
-                in_observations = False
-                in_coaching = False
             
-            # Parse commercial subsections
-            elif in_commercial:
-                if "### Koopsignalen" in line or "**Budget**" in line_stripped:
-                    commercial_subsection = "koopsignalen"
-                elif "### Cross-sell" in line or "### Upsell" in line:
-                    commercial_subsection = "cross_sell"
-                elif "### Deal Risico" in line or "### Risico" in line:
-                    commercial_subsection = "risks"
-                elif line_stripped.startswith("-") and commercial_subsection:
-                    item = line_stripped.lstrip("- ").strip()
-                    if item:
-                        commercial_signals[commercial_subsection].append(item)
-                elif line_stripped.startswith("**") and commercial_subsection == "koopsignalen":
-                    commercial_signals["koopsignalen"].append(line_stripped)
-            
-            # Parse observations subsections
-            elif in_observations:
-                if "### ⚠️ Twijfel" in line or "### Twijfel" in line:
-                    observations_subsection = "doubts"
-                elif "### 💡 Onuitgesproken" in line or "### Onuitgesproken" in line:
-                    observations_subsection = "unspoken_needs"
-                elif "### 🎯 Vervolg" in line or "### Kansen" in line:
-                    observations_subsection = "opportunities"
-                elif "### 🚩 Rode" in line or "### Rode Vlaggen" in line:
-                    observations_subsection = "red_flags"
-                elif line_stripped.startswith("-") and observations_subsection:
-                    item = line_stripped.lstrip("- ").strip()
-                    if item:
-                        observations[observations_subsection].append(item)
-            
-            # Parse coaching subsections
-            elif in_coaching:
-                if "### ✅ Wat Ging Goed" in line or "### Wat Ging Goed" in line:
-                    coaching_subsection = "strengths"
-                elif "### 🔧 Verbeterpunten" in line or "### Verbeterpunten" in line:
-                    coaching_subsection = "improvements"
-                elif "### 💡 Tips" in line or "### Tips" in line:
-                    coaching_subsection = "tips"
-                elif line_stripped.startswith("-") and coaching_subsection:
-                    item = line_stripped.lstrip("- ").strip()
-                    if item:
-                        coaching_feedback[coaching_subsection].append(item)
-            
-            # Regular section parsing
-            elif line_stripped:
+            # Content parsing
+            elif line_stripped and current_section:
                 if current_section == "executive_summary":
-                    current_content.append(line_stripped)
-                elif current_section and line_stripped.startswith("-"):
-                    item = line_stripped.lstrip("- ").strip()
-                    if item:
-                        sections[current_section].append(item)
-                elif current_section and current_section != "executive_summary":
-                    if line_stripped and not line_stripped.startswith("#"):
-                        sections[current_section].append(line_stripped)
+                    # Collect lines for executive summary
+                    if not line_stripped.startswith("#") and not line_stripped.startswith("---"):
+                        current_content.append(line_stripped)
+                elif current_section == "what_happened":
+                    # Collect narrative lines
+                    if not line_stripped.startswith("#") and not line_stripped.startswith("---"):
+                        current_content.append(line_stripped)
+                elif current_section in ["decisions", "next_steps", "noteworthy_moments"]:
+                    # Parse bullet points and table rows
+                    if line_stripped.startswith("-"):
+                        item = line_stripped.lstrip("- ").strip()
+                        if item:
+                            sections[current_section].append(item)
+                    elif line_stripped.startswith("|") and not line_stripped.startswith("|-"):
+                        # Table row - extract content
+                        cells = [c.strip() for c in line_stripped.split("|")[1:-1]]
+                        if cells and not cells[0].startswith("-"):
+                            sections[current_section].append(" | ".join(cells))
+                elif current_section == "at_a_glance":
+                    # Parse At a Glance table
+                    if line_stripped.startswith("|") and "**" in line_stripped:
+                        cells = [c.strip() for c in line_stripped.split("|")[1:-1]]
+                        if len(cells) >= 2:
+                            key = cells[0].replace("**", "").strip().lower().replace(" ", "_")
+                            value = cells[1].strip()
+                            sections["at_a_glance"][key] = value
+                elif current_section == "key_points":
+                    if line_stripped.startswith("-"):
+                        item = line_stripped.lstrip("- ").strip()
+                        if item:
+                            sections["key_points"].append(item)
+                elif current_section in ["concerns", "sales_insights"]:
+                    if line_stripped.startswith("-"):
+                        item = line_stripped.lstrip("- ").strip()
+                        if item:
+                            sections[current_section].append(item)
         
-        # Handle last section if executive_summary
+        # Handle last section
         if current_section == "executive_summary" and current_content:
             sections["executive_summary"] = " ".join(current_content).strip()
-        
-        # Add parsed enhanced sections
-        sections["commercial_signals"] = commercial_signals
-        sections["observations"] = observations
-        sections["coaching_feedback"] = coaching_feedback
+        elif current_section == "what_happened" and current_content:
+            sections["key_points"] = current_content
         
         return sections
     
