@@ -250,7 +250,6 @@
       "notFound": "Not found",
       "add": "Add Contact",
       "addShort": "Add",
-      "name": "Name",
       "namePlaceholder": "e.g. John Smith",
       "role": "Role/Title",
       "rolePlaceholder": "e.g. Sales Director",
@@ -265,10 +264,8 @@
       "analyzed": "Analyzed",
       "primary": "Primary",
       "viewAnalysis": "View analysis",
-      "found": "Person found",
       "foundDesc": "{role} on LinkedIn",
       "foundProfile": "LinkedIn profile found",
-      "notFound": "Not found",
       "notFoundDesc": "Could not find a LinkedIn profile. Enter manually.",
       "searchFailed": "Search failed",
       "searchFailedDesc": "An error occurred while searching",
@@ -276,7 +273,38 @@
       "addedDesc": "AI analysis started...",
       "analysisComplete": "Analysis complete",
       "analysisCompleteDesc": "{name} has been analyzed",
-      "addFailed": "Could not add contact"
+      "addFailed": "Could not add contact",
+      "search": {
+        "title": "Search Contact",
+        "subtitle": "Search for a contact at {company}",
+        "nameLabel": "Name",
+        "namePlaceholder": "Enter contact name",
+        "roleLabel": "Role (optional)",
+        "rolePlaceholder": "e.g., CFO, Sales Director",
+        "searchButton": "Search LinkedIn Profile",
+        "skipSearch": "Add manually without search",
+        "resultsTitle": "Found Profiles",
+        "resultsSubtitle": "Results for \"{name}\" at {company}",
+        "noResults": "No matching profiles found",
+        "addManually": "Add manually",
+        "confirmTitle": "Confirm Contact",
+        "selectedProfile": "Selected profile",
+        "extraInfo": "Additional information (optional)",
+        "emailLabel": "Email",
+        "phoneLabel": "Phone",
+        "primaryContact": "This is the primary contact",
+        "addAndAnalyze": "Add & Analyze",
+        "confidence": {
+          "high": "High confidence",
+          "medium": "Medium confidence",
+          "low": "Low confidence"
+        },
+        "matchReason": {
+          "exact": "Name + Company + Role exact match",
+          "partial": "Name match, different details",
+          "nameOnly": "Name match only"
+        }
+      }
     },
     "context": {
       "title": "AI Context",

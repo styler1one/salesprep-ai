@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
 import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import {
@@ -23,6 +21,7 @@ import { MarkdownEditor } from '@/components/markdown-editor'
 import { useTranslations } from 'next-intl'
 import { api } from '@/lib/api'
 import { exportAsMarkdown, exportAsPdf, exportAsDocx } from '@/lib/export-utils'
+import { ContactSearchModal } from '@/components/contacts'
 import type { User } from '@supabase/supabase-js'
 
 interface ResearchBrief {
@@ -73,13 +72,9 @@ export default function ResearchBriefPage() {
   
   // Contact states
   const [contacts, setContacts] = useState<Contact[]>([])
-  const [showAddContact, setShowAddContact] = useState(false)
-  const [addingContact, setAddingContact] = useState(false)
-  const [newContact, setNewContact] = useState({ name: '', role: '', linkedin_url: '' })
+  const [showContactSearchModal, setShowContactSearchModal] = useState(false)
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
   const [contactsLoading, setContactsLoading] = useState(false)
-  const [lookingUpContact, setLookingUpContact] = useState(false)
-  const [lookupResult, setLookupResult] = useState<{ found: boolean; confidence?: number } | null>(null)
   const [analyzingContactIds, setAnalyzingContactIds] = useState<Set<string>>(new Set())
   
   // Edit brief states
@@ -178,153 +173,43 @@ export default function ResearchBriefPage() {
     }
   }, [brief, fetchContacts])
 
-  // Lookup contact online (LinkedIn + role)
-  const handleLookupContact = async () => {
-    if (!newContact.name.trim() || !brief?.company_name) {
-      toast({
-        variant: "destructive",
-        title: t('contacts.name'),
-        description: t('contacts.namePlaceholder'),
-      })
-      return
-    }
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
-      setLookingUpContact(true)
-      setLookupResult(null)
-
-      const { data, error } = await api.post<{ found: boolean; confidence: number; role?: string; linkedin_url?: string }>(
-        '/api/v1/contacts/lookup',
-        { name: newContact.name, company_name: brief.company_name }
-      )
-
-      if (!error && data) {
-        setLookupResult({ found: data.found, confidence: data.confidence })
-        
-        if (data.found) {
-          setNewContact(prev => ({
-            ...prev,
-            role: data.role || prev.role,
-            linkedin_url: data.linkedin_url || prev.linkedin_url
-          }))
-          
-          toast({
-            title: t('contacts.found'),
-            description: data.role ? t('contacts.foundDesc', { role: data.role }) : t('contacts.foundProfile'),
-          })
-        } else {
-          toast({
-            variant: "destructive",
-            title: t('contacts.notFound'),
-            description: t('contacts.notFoundDesc'),
-          })
-        }
-      } else {
-        toast({
-          variant: "destructive",
-          title: t('contacts.searchFailed'),
-          description: t('contacts.searchFailedDesc'),
+  // Handle contact added from modal
+  const handleContactAdded = (contact: Contact) => {
+    setContacts(prev => [...prev, contact])
+    setAnalyzingContactIds(prev => new Set([...prev, contact.id]))
+    
+    // Smart polling for analysis completion
+    const pollForAnalysis = async (contactId: string, attempts: number) => {
+      if (attempts > 12) {
+        setAnalyzingContactIds(prev => {
+          const next = new Set(prev)
+          next.delete(contactId)
+          return next
         })
+        return
       }
-    } catch (error) {
-      console.error('Lookup failed:', error)
-      toast({
-        variant: "destructive",
-        title: t('contacts.searchFailed'),
-        description: t('contacts.searchFailedDesc'),
-      })
-    } finally {
-      setLookingUpContact(false)
-    }
-  }
-
-  // Add a new contact
-  const handleAddContact = async () => {
-    if (!newContact.name.trim()) {
-      toast({
-        variant: "destructive",
-        title: t('contacts.name'),
-        description: t('contacts.namePlaceholder'),
-      })
-      return
-    }
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
-      setAddingContact(true)
-      const { data, error } = await api.post<Contact>(
-        `/api/v1/research/${params.id}/contacts`,
-        {
-          name: newContact.name,
-          role: newContact.role || null,
-          linkedin_url: newContact.linkedin_url || null
-        }
-      )
-
-      if (!error && data) {
-        setContacts(prev => [...prev, data])
-        setAnalyzingContactIds(prev => new Set([...prev, data.id]))
-        setNewContact({ name: '', role: '', linkedin_url: '' })
-        setLookupResult(null)
-        setShowAddContact(false)
-        toast({
-          title: t('contacts.added'),
-          description: t('contacts.addedDesc'),
+      
+      await fetchContacts()
+      
+      const updatedContact = contacts.find(c => c.id === contactId)
+      if (updatedContact?.analyzed_at) {
+        setAnalyzingContactIds(prev => {
+          const next = new Set(prev)
+          next.delete(contactId)
+          return next
         })
-        
-        // Smart polling for analysis completion
-        const pollForAnalysis = async (contactId: string, attempts: number) => {
-          if (attempts > 12) {
-            setAnalyzingContactIds(prev => {
-              const next = new Set(prev)
-              next.delete(contactId)
-              return next
-            })
-            return
-          }
-          
-          await fetchContacts()
-          
-          const contact = contacts.find(c => c.id === contactId)
-          if (contact?.analyzed_at) {
-            setAnalyzingContactIds(prev => {
-              const next = new Set(prev)
-              next.delete(contactId)
-              return next
-            })
-            toast({
-              title: t('contacts.analysisComplete'),
-              description: t('contacts.analysisCompleteDesc', { name: contact.name }),
-            })
-            return
-          }
-          
-          setTimeout(() => pollForAnalysis(contactId, attempts + 1), 5000)
-        }
-        
-        setTimeout(() => pollForAnalysis(data.id, 0), 3000)
-      } else {
         toast({
-          variant: "destructive",
-          title: t('contacts.searchFailed'),
-          description: error?.message || t('contacts.addFailed'),
+          title: t('contacts.analysisComplete'),
+          description: t('contacts.analysisCompleteDesc', { name: updatedContact.name }),
         })
+        return
       }
-    } catch (error) {
-      console.error('Failed to add contact:', error)
-      toast({
-        variant: "destructive",
-        title: t('contacts.searchFailed'),
-        description: t('contacts.searchFailedDesc'),
-      })
-    } finally {
-      setAddingContact(false)
+      
+      setTimeout(() => pollForAnalysis(contactId, attempts + 1), 5000)
     }
+    
+    // Start polling for analysis
+    setTimeout(() => pollForAnalysis(contact.id, 0), 3000)
   }
 
   // Delete a contact
@@ -702,96 +587,16 @@ export default function ResearchBriefPage() {
                       <Icons.user className="h-4 w-4" />
                       {t('contacts.title')}
                     </h3>
-                    {!showAddContact && (
-                      <Button 
-                        size="sm" 
-                        variant="ghost"
-                        className="h-7 text-xs"
-                        onClick={() => setShowAddContact(true)}
-                      >
-                        <Icons.plus className="h-3 w-3 mr-1" />
-                        {tCommon('add')}
-                      </Button>
-                    )}
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      className="h-7 text-xs"
+                      onClick={() => setShowContactSearchModal(true)}
+                    >
+                      <Icons.plus className="h-3 w-3 mr-1" />
+                      {tCommon('add')}
+                    </Button>
                   </div>
-
-                  {/* Add Contact Form (Compact) */}
-                  {showAddContact && (
-                    <div className="mb-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                      <div className="space-y-3">
-                        <div>
-                          <Label htmlFor="contact-name" className="text-xs text-slate-700 dark:text-slate-300">{t('contacts.name')} *</Label>
-                          <div className="flex gap-1 mt-1">
-                            <Input
-                              id="contact-name"
-                              placeholder="Jan de Vries"
-                              value={newContact.name}
-                              onChange={(e) => {
-                                setNewContact(prev => ({ ...prev, name: e.target.value }))
-                                setLookupResult(null)
-                              }}
-                              className="h-8 text-sm"
-                            />
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              className="h-8 px-2"
-                              onClick={handleLookupContact}
-                              disabled={lookingUpContact || !newContact.name.trim()}
-                            >
-                              {lookingUpContact ? (
-                                <Icons.spinner className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <Icons.search className="h-3 w-3" />
-                              )}
-                            </Button>
-                          </div>
-                          {lookupResult && (
-                            <p className={`text-xs mt-1 ${lookupResult.found ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
-                              {lookupResult.found ? `✓ ${t('contacts.found')}` : `⚠ ${t('contacts.notFound')}`}
-                            </p>
-                          )}
-                        </div>
-                        <div>
-                          <Label htmlFor="contact-role" className="text-xs text-slate-700 dark:text-slate-300">{t('detail.contactsPanel.role')}</Label>
-                          <Input
-                            id="contact-role"
-                            placeholder="CTO"
-                            value={newContact.role}
-                            onChange={(e) => setNewContact(prev => ({ ...prev, role: e.target.value }))}
-                            className="h-8 text-sm mt-1"
-                          />
-                        </div>
-                        <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
-                            className="h-7 text-xs flex-1"
-                            onClick={handleAddContact} 
-                            disabled={addingContact || !newContact.name.trim()}
-                          >
-                            {addingContact ? (
-                              <Icons.spinner className="h-3 w-3 animate-spin mr-1" />
-                            ) : (
-                              <Icons.plus className="h-3 w-3 mr-1" />
-                            )}
-                            Toevoegen
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            className="h-7 text-xs"
-                            onClick={() => {
-                              setShowAddContact(false)
-                              setNewContact({ name: '', role: '', linkedin_url: '' })
-                              setLookupResult(null)
-                            }}
-                          >
-                            Annuleer
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
                   {/* Contacts List (Compact) */}
                   {contactsLoading ? (
@@ -907,7 +712,7 @@ export default function ResearchBriefPage() {
                     </p>
                     <Button 
                       className="w-full bg-amber-600 hover:bg-amber-700"
-                      onClick={() => setShowAddContact(true)}
+                      onClick={() => setShowContactSearchModal(true)}
                     >
                       <Icons.userPlus className="h-4 w-4 mr-2" />
                       {t('nextStep.addContact.button')}
@@ -948,7 +753,7 @@ export default function ResearchBriefPage() {
             {contacts.length === 0 ? (
               <Button 
                 className="rounded-full h-14 w-14 shadow-lg bg-amber-600 hover:bg-amber-700"
-                onClick={() => setShowAddContact(true)}
+                onClick={() => setShowContactSearchModal(true)}
               >
                 <Icons.userPlus className="h-6 w-6" />
               </Button>
@@ -1038,6 +843,17 @@ export default function ResearchBriefPage() {
           </div>
         )}
       
+        {/* Contact Search Modal */}
+        {brief && (
+          <ContactSearchModal
+            isOpen={showContactSearchModal}
+            onClose={() => setShowContactSearchModal(false)}
+            companyName={brief.company_name}
+            researchId={params.id as string}
+            onContactAdded={handleContactAdded}
+          />
+        )}
+
         <Toaster />
       </>
     </DashboardLayout>

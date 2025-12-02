@@ -23,6 +23,7 @@ from pydantic import BaseModel
 from app.deps import get_current_user
 from app.database import get_supabase_service
 from app.services.contact_analyzer import get_contact_analyzer
+from app.services.contact_search import get_contact_search_service, ContactMatch as ContactMatchModel
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +91,34 @@ class ContactLookupResponse(BaseModel):
     headline: Optional[str] = None
     found: bool = False
     confidence: Optional[str] = None  # "high", "medium", "low"
+
+
+class ContactSearchRequest(BaseModel):
+    """Request model for searching contact profiles."""
+    name: str
+    role: Optional[str] = None
+    company_name: Optional[str] = None
+    company_linkedin_url: Optional[str] = None
+
+
+class ContactMatch(BaseModel):
+    """A potential LinkedIn match for a contact."""
+    name: str
+    title: Optional[str] = None
+    company: Optional[str] = None
+    location: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    headline: Optional[str] = None
+    confidence: float = 0.5
+    match_reason: str = "Name match"
+
+
+class ContactSearchResponse(BaseModel):
+    """Response model for contact search."""
+    matches: List[ContactMatch] = []
+    search_query_used: str = ""
+    search_source: str = "claude"
+    error: Optional[str] = None
 
 
 # ==================== Helper Functions ====================
@@ -375,6 +404,8 @@ async def lookup_contact(
     
     Uses Gemini with Google Search to find the person's LinkedIn profile
     and current job title at the specified company.
+    
+    Note: For multiple matches, use /contacts/search instead.
     """
     logger.info(f"Looking up contact: {request.name} at {request.company_name}")
     
@@ -391,6 +422,54 @@ async def lookup_contact(
         headline=result.get("headline"),
         found=result.get("found", False),
         confidence=result.get("confidence", "low")
+    )
+
+
+@router.post("/contacts/search", response_model=ContactSearchResponse)
+async def search_contact_profiles(
+    request: ContactSearchRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Search for LinkedIn profiles matching a contact person.
+    
+    Returns up to 5 possible matches with confidence scores.
+    User can then select the correct profile before adding the contact.
+    
+    This is the recommended approach for adding contacts as it ensures
+    the correct person is identified before analysis.
+    """
+    logger.info(f"Searching contacts: {request.name} at {request.company_name}")
+    
+    search_service = get_contact_search_service()
+    
+    result = await search_service.search_contact(
+        name=request.name,
+        role=request.role,
+        company_name=request.company_name,
+        company_linkedin_url=request.company_linkedin_url
+    )
+    
+    # Convert internal models to response models
+    matches = [
+        ContactMatch(
+            name=m.name,
+            title=m.title,
+            company=m.company,
+            location=m.location,
+            linkedin_url=m.linkedin_url,
+            headline=m.headline,
+            confidence=m.confidence,
+            match_reason=m.match_reason
+        )
+        for m in result.matches
+    ]
+    
+    return ContactSearchResponse(
+        matches=matches,
+        search_query_used=result.search_query_used,
+        search_source=result.search_source,
+        error=result.error
     )
 
 
