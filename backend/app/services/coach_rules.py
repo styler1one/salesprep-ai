@@ -145,13 +145,6 @@ class CoachRuleEngine:
         """Evaluate all rules and return matching suggestions."""
         suggestions = []
         
-        print(f"[COACH DEBUG] Evaluating rules for user {context.user_id}")
-        print(f"[COACH DEBUG]   has_sales_profile: {context.has_sales_profile}")
-        print(f"[COACH DEBUG]   has_company_profile: {context.has_company_profile}")
-        print(f"[COACH DEBUG]   research_without_contacts: {len(context.research_without_contacts)}")
-        print(f"[COACH DEBUG]   preps_without_followup: {len(context.preps_without_followup)}")
-        print(f"[COACH DEBUG]   followups_without_actions: {len(context.followups_without_actions)}")
-        
         # Profile completeness rules
         if not context.has_sales_profile:
             suggestions.append(self._create_suggestion(
@@ -211,10 +204,6 @@ class CoachRuleEngine:
         
         # Sort by priority (highest first)
         suggestions.sort(key=lambda s: s.priority, reverse=True)
-        
-        print(f"[COACH DEBUG] Generated {len(suggestions)} suggestions")
-        for s in suggestions[:5]:  # Log first 5
-            print(f"[COACH DEBUG]   - {s.suggestion_type.value}: {s.title} (priority: {s.priority})")
         
         return suggestions
     
@@ -327,12 +316,10 @@ async def build_user_context(
             .select("full_name") \
             .eq("user_id", user_id) \
             .execute()
-        print(f"[COACH DEBUG] Sales profile for user {user_id}: {profile_result.data}")
         context.has_sales_profile = bool(
             profile_result.data and 
             profile_result.data[0].get("full_name")
         )
-        print(f"[COACH DEBUG] has_sales_profile = {context.has_sales_profile}")
         
         # Check company profile - check ALL organizations
         context.has_company_profile = False
@@ -342,10 +329,8 @@ async def build_user_context(
                 .eq("organization_id", org_id) \
                 .execute()
             if company_result.data and company_result.data[0].get("company_name"):
-                print(f"[COACH DEBUG] Company profile found in org {org_id}: {company_result.data}")
                 context.has_company_profile = True
                 break
-        print(f"[COACH DEBUG] has_company_profile = {context.has_company_profile}")
         
         # Get completed research briefs - check ALL organizations
         all_research = []

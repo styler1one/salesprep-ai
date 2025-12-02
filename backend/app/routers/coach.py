@@ -51,7 +51,6 @@ async def get_settings(current_user: dict = Depends(get_current_user)):
         
         if result.data:
             settings_data = result.data[0]
-            print(f"[COACH DEBUG] Settings for user {user_id}: is_enabled={settings_data.get('is_enabled')}, widget_state={settings_data.get('widget_state')}")
             return CoachSettings(**settings_data)
         
         # Create default settings if not exist
@@ -111,7 +110,6 @@ async def update_settings(
     user_id = current_user["sub"]
     
     # Debug: log what we received
-    print(f"[COACH DEBUG] PATCH settings received: {updates.model_dump()}")
     
     try:
         # Check if settings exist
@@ -122,7 +120,6 @@ async def update_settings(
         
         # Build update data (only non-None values)
         update_data = {k: v for k, v in updates.model_dump().items() if v is not None}
-        print(f"[COACH DEBUG] Update data to apply: {update_data}")
         
         if existing_result.data:
             # Update existing settings
@@ -149,7 +146,6 @@ async def update_settings(
                 .execute()
         
         if result.data:
-            print(f"[COACH DEBUG] Settings after update: {result.data[0]}")
             return CoachSettings(**result.data[0])
         
         raise HTTPException(status_code=500, detail="Failed to update settings")
@@ -185,7 +181,6 @@ async def get_suggestions(
         if jwt_org_id:
             organization_ids.append(jwt_org_id)
             primary_org_id = jwt_org_id
-            print(f"[COACH DEBUG] Found org from JWT: {jwt_org_id}")
         
         # 2. Check "Personal - {email}" organization (for company profile)
         email = current_user.get("email", "")
@@ -200,7 +195,6 @@ async def get_suggestions(
                 organization_ids.append(personal_org_id)
             if not primary_org_id:
                 primary_org_id = personal_org_id
-            print(f"[COACH DEBUG] Found 'Personal - {email}' org: {personal_org_id}")
         
         # 3. Check organization_members (for research/preps/followups)
         org_members_result = supabase.table("organization_members") \
@@ -213,12 +207,8 @@ async def get_suggestions(
                 member_org_id = member["organization_id"]
                 if member_org_id not in organization_ids:
                     organization_ids.append(member_org_id)
-                    print(f"[COACH DEBUG] Found org from organization_members: {member_org_id}")
                 if not primary_org_id:
                     primary_org_id = member_org_id
-        
-        print(f"[COACH DEBUG] All organization_ids: {organization_ids}")
-        print(f"[COACH DEBUG] Primary organization_id: {primary_org_id}")
         
         # New user without organization - return onboarding suggestions
         if not primary_org_id or len(organization_ids) == 0:
@@ -252,7 +242,6 @@ async def get_suggestions(
                 has_priority=True,
             )
         
-        print(f"[COACH DEBUG] Building context for user {user_id} in orgs {organization_ids}")
         
         # First, check for existing suggestions (snoozed or pending)
         now = datetime.now()
@@ -283,11 +272,8 @@ async def get_suggestions(
                         stype = s.get("suggestion_type", "")
                         entity_id = s.get("related_entity_id", "")
                         snoozed_keys.add(f"{stype}:{entity_id}")
-                        print(f"[COACH DEBUG] Snoozed until {snooze_until_naive}: {stype}:{entity_id}")
                 except Exception as e:
-                    print(f"[COACH DEBUG] Error parsing snooze_until: {e}")
-        
-        print(f"[COACH DEBUG] Active snoozed keys: {snoozed_keys}")
+                    logger.warning(f"Error parsing snooze_until: {e}")
         
         # Build user context - pass all organization IDs
         context = await build_user_context(supabase, user_id, organization_ids)
@@ -302,7 +288,6 @@ async def get_suggestions(
                 s for s in suggestions
                 if f"{s.suggestion_type.value}:{s.related_entity_id or ''}" not in snoozed_keys
             ]
-            print(f"[COACH DEBUG] Filtered {original_count - len(suggestions)} snoozed suggestions")
         
         # Apply pattern-based adjustments
         if context.patterns:
