@@ -153,7 +153,7 @@ export default function FollowupDetailPage() {
         // Fetch related data in PARALLEL (research, prep, contacts, deal)
         await Promise.all([
           data.prospect_company_name && fetchRelatedData(data.prospect_company_name),
-          data.contact_ids?.length > 0 && fetchLinkedContacts(data.contact_ids),
+          data.contact_ids && data.contact_ids.length > 0 && fetchLinkedContacts(data.contact_ids),
           data.deal_id && fetchLinkedDeal(data.deal_id)
         ].filter(Boolean))
       } else {
