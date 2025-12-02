@@ -30,10 +30,14 @@ export function ActionCard({
   const isCompleted = existingAction ? isActionCompleted(existingAction) : false
   const hasError = existingAction ? isActionError(existingAction) : false
 
+  // Completed cards are always clickable to view content
+  // Only disable if: we're generating AND this card is not completed
+  const isClickDisabled = isGenerating || (disabled && !isCompleted)
+
   const handleClick = () => {
     if (isCompleted && existingAction) {
       onView(existingAction)
-    } else if (!isGenerating) {
+    } else if (!isGenerating && !disabled) {
       onGenerate(actionType.type)
     }
   }
@@ -41,7 +45,7 @@ export function ActionCard({
   return (
     <button
       onClick={handleClick}
-      disabled={disabled || isGenerating}
+      disabled={isClickDisabled}
       className={cn(
         'flex flex-col items-center p-4 rounded-xl border-2 transition-all text-center min-h-[120px]',
         'hover:shadow-md hover:scale-[1.02]',

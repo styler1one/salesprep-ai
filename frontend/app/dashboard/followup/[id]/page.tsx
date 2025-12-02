@@ -304,13 +304,19 @@ export default function FollowupDetailPage() {
             setSelectedAction(data)
           }
           
-          // If generation completed (success or error), show the panel
-          if (data.metadata?.status === 'completed' || data.metadata?.status === 'error') {
-            setSelectedAction(data)
-            // Scroll to panel
-            setTimeout(() => {
-              document.getElementById('action-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            }, 100)
+          // If generation completed (success or error), show toast notification
+          if (data.metadata?.status === 'completed') {
+            const actionInfo = ACTION_TYPES.find(a => a.type === data.action_type)
+            toast({
+              title: t('actions.generated'),
+              description: `${actionInfo?.label || data.action_type} ${t('actions.readyToView')}`,
+            })
+          } else if (data.metadata?.status === 'error') {
+            toast({
+              title: t('actions.generationFailed'),
+              description: data.metadata?.error || t('actions.tryAgain'),
+              variant: 'destructive',
+            })
           } else if (data.metadata?.status === 'generating') {
             // Still generating, continue polling
             setTimeout(poll, 2000)

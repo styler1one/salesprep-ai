@@ -491,6 +491,7 @@
       "subtitle": "Generate targeted outputs from your meeting",
       "generating": "Generating...",
       "generated": "Generated",
+      "readyToView": "is ready to view",
       "clickToGenerate": "Click to generate",
       "error": "Error",
       "regenerate": "Regenerate",
