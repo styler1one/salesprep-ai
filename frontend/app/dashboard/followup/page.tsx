@@ -175,6 +175,7 @@ export default function FollowupPage() {
   
   const fetchFollowups = useCallback(async () => {
     try {
+      // Get session for fetch (this endpoint uses raw fetch, not api client)
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
 

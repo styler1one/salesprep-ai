@@ -176,9 +176,7 @@ export default function ResearchPage() {
 
   const fetchBriefs = useCallback(async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
+      // Note: api client handles authentication automatically
       const { data, error } = await api.get<{ briefs: ResearchBrief[] }>('/api/v1/research/briefs')
 
       if (!error && data) {
@@ -254,9 +252,7 @@ export default function ResearchPage() {
   const handleDeleteBrief = async (briefId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
+      // Note: api client handles authentication automatically
       const { error } = await api.delete(`/api/v1/research/${briefId}`)
 
       if (!error) {

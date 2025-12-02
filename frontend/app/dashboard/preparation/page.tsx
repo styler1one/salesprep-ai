@@ -100,9 +100,7 @@ export default function PreparationPage() {
 
   const loadPreps = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
+      // Note: api client handles authentication automatically
       const { data, error } = await api.get<{ preps: MeetingPrep[] }>('/api/v1/prep/briefs')
 
       if (!error && data) {
@@ -274,9 +272,7 @@ export default function PreparationPage() {
     if (!confirm(t('confirm.delete'))) return
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
+      // Note: api client handles authentication automatically
       const { error } = await api.delete(`/api/v1/prep/${prepId}`)
 
       if (!error) {

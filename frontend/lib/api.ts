@@ -12,6 +12,16 @@ import type { ApiError } from '@/types'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
+// Singleton Supabase client to avoid creating multiple instances
+let supabaseClient: ReturnType<typeof createClientComponentClient> | null = null
+
+function getSupabaseClient() {
+  if (!supabaseClient) {
+    supabaseClient = createClientComponentClient()
+  }
+  return supabaseClient
+}
+
 interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown
 }
@@ -39,9 +49,10 @@ export class ApiClientError extends Error {
 
 /**
  * Get the current access token from Supabase.
+ * Uses a singleton client to avoid creating multiple instances.
  */
 async function getAccessToken(): Promise<string | null> {
-  const supabase = createClientComponentClient()
+  const supabase = getSupabaseClient()
   const { data: { session } } = await supabase.auth.getSession()
   return session?.access_token || null
 }

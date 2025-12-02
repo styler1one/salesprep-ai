@@ -145,9 +145,7 @@ export default function FollowupDetailPage() {
 
   const fetchFollowup = useCallback(async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
+      // Note: api client handles authentication automatically
       const { data, error } = await api.get<Followup>(`/api/v1/followup/${followupId}`)
 
       if (!error && data) {
