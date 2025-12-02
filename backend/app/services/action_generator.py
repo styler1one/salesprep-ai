@@ -222,6 +222,22 @@ class ActionGeneratorService:
     def _prompt_customer_report(self, context_text: str, lang_instruction: str, context: Dict) -> str:
         """Prompt for customer report generation"""
         company_name = context.get("followup", {}).get("prospect_company_name", "the company")
+        meeting_date = context.get("followup", {}).get("meeting_date", "Unknown date")
+        meeting_subject = context.get("followup", {}).get("meeting_subject", "Meeting")
+        
+        # Get sales rep info
+        sales_profile = context.get("sales_profile", {})
+        sales_name = sales_profile.get("full_name", "Sales Representative")
+        sales_email = sales_profile.get("email", "")
+        sales_phone = sales_profile.get("phone", "")
+        sales_title = sales_profile.get("job_title", "")
+        
+        # Get seller company info
+        seller_company = context.get("company_profile", {}).get("company_name", "")
+        
+        # Get attendees from contacts
+        contacts = context.get("contacts", [])
+        attendee_names = [c.get("name", "") for c in contacts if c.get("name")]
         
         return f"""You are creating a customer-facing meeting report.
 
@@ -244,6 +260,13 @@ Style: Flowing prose, no bullet point lists unless explicitly requested.
 STRUCTURE & INSTRUCTIONS:
 
 # Customer Report – {company_name}
+
+**Date:** {meeting_date}
+**Subject:** {meeting_subject}
+**Attendees:** {', '.join(attendee_names) if attendee_names else '[List the attendees from the transcript]'}
+**Location:** [Extract from context or write "Virtual meeting" if online]
+
+---
 
 ## Introduction
 - Begin with a brief, warm and mature reflection on the conversation.
@@ -278,6 +301,16 @@ Use this exact table format:
 - Outline a possible path forward that logically builds on the customer's own goals.
 - Avoid pushiness. Be guiding, professional and constructive.
 - End with an inviting, open sentence that reinforces trust and partnership.
+
+---
+
+**Report prepared by:**
+{sales_name}{f', {sales_title}' if sales_title else ''}
+{seller_company}
+{f'Email: {sales_email}' if sales_email else ''}
+{f'Phone: {sales_phone}' if sales_phone else ''}
+
+**Report date:** [Today's date]
 
 ---
 
