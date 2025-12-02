@@ -1,7 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { api } from '@/lib/api'
 
 interface UsageMetric {
@@ -66,21 +65,14 @@ export function BillingProvider({ children }: { children: React.ReactNode }) {
   const [usage, setUsage] = useState<Usage | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const hasLoadedRef = useRef(false)
 
   const fetchBillingData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
 
-      const supabase = createClientComponentClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (!session?.access_token) {
-        setLoading(false)
-        return
-      }
-
-      // Fetch subscription and usage in parallel
+      // Fetch subscription and usage in parallel - api client handles auth
       const [subResult, usageResult] = await Promise.all([
         api.get<Subscription>('/api/v1/billing/subscription'),
         api.get<Usage>('/api/v1/billing/usage'),
@@ -102,19 +94,16 @@ export function BillingProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  // Load only once on mount
   useEffect(() => {
+    if (hasLoadedRef.current) return
+    hasLoadedRef.current = true
     fetchBillingData()
   }, [fetchBillingData])
 
   const checkLimit = async (metric: string) => {
     try {
-      const supabase = createClientComponentClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (!session?.access_token) {
-        return { allowed: false, current: 0, limit: 0, upgrade_required: true }
-      }
-
+      // api client handles auth
       const { data, error } = await api.post<{ allowed: boolean; current: number; limit: number; upgrade_required: boolean }>(
         '/api/v1/billing/check-limit',
         { metric }
@@ -133,13 +122,7 @@ export function BillingProvider({ children }: { children: React.ReactNode }) {
 
   const createCheckoutSession = async (planId: string): Promise<string> => {
     try {
-      const supabase = createClientComponentClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (!session?.access_token) {
-        throw new Error('Not authenticated')
-      }
-
+      // api client handles auth
       const { data, error } = await api.post<{ checkout_url: string }>(
         '/api/v1/billing/checkout',
         { 
@@ -167,13 +150,7 @@ export function BillingProvider({ children }: { children: React.ReactNode }) {
 
   const openBillingPortal = async (): Promise<string> => {
     try {
-      const supabase = createClientComponentClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (!session?.access_token) {
-        throw new Error('Not authenticated')
-      }
-
+      // api client handles auth
       const { data, error } = await api.post<{ portal_url: string }>(
         '/api/v1/billing/portal',
         { return_url: `${window.location.origin}/dashboard/settings` }

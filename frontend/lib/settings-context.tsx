@@ -1,7 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
 import { api } from '@/lib/api'
 
 // ==========================================
@@ -50,18 +49,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<UserSettings>(defaultSettings)
   const [loading, setLoading] = useState(true)
   const [loaded, setLoaded] = useState(false)
-  const supabase = createClientComponentClient()
+  const hasLoadedRef = useRef(false)
 
-  // Load settings from API
+  // Load settings from API - no session check needed, api client handles auth
   const loadSettings = useCallback(async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        setLoading(false)
-        setLoaded(true)
-        return
-      }
-
       const { data, error } = await api.get<UserSettings>('/api/v1/settings')
 
       if (!error && data) {
@@ -77,16 +69,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setLoading(false)
       setLoaded(true)
     }
-  }, [supabase])
+  }, [])
 
-  // Update settings via API
+  // Update settings via API - no session check needed, api client handles auth
   const updateSettings = useCallback(async (newSettings: Partial<UserSettings>) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        throw new Error('Not authenticated')
-      }
-
       const { data, error } = await api.patch<UserSettings>('/api/v1/settings', newSettings)
 
       if (error) {
@@ -103,26 +90,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       console.error('Failed to update settings:', error)
       throw error
     }
-  }, [supabase])
+  }, [])
 
-  // Load settings on mount and auth state change
+  // Load settings only once on mount
   useEffect(() => {
+    if (hasLoadedRef.current) return
+    hasLoadedRef.current = true
     loadSettings()
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') {
-        loadSettings()
-      } else if (event === 'SIGNED_OUT') {
-        setSettings(defaultSettings)
-        setLoaded(false)
-      }
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [loadSettings, supabase.auth])
+  }, [loadSettings])
 
   return (
     <SettingsContext.Provider value={{ settings, updateSettings, loading, loaded }}>

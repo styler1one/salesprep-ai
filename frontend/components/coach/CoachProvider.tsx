@@ -219,45 +219,56 @@ export function CoachProvider({ children }: CoachProviderProps) {
   
   // Track if initial load has happened
   const hasLoadedRef = useRef(false)
+  const hasLoadedSuggestionsRef = useRef(false)
   
-  // Initial load - run only ONCE on mount
+  // Step 1: Fetch settings FIRST (only once)
   useEffect(() => {
     if (hasLoadedRef.current) return
     hasLoadedRef.current = true
     
     setIsLoading(true)
-    
-    // Run all fetches in parallel without blocking
-    Promise.all([
-      fetchSettings(),
-      fetchSuggestions(),
-      fetchStats(),
-    ]).finally(() => {
+    fetchSettings().finally(() => {
       setIsLoading(false)
     })
-  }, [fetchSettings, fetchSuggestions, fetchStats])
+  }, [fetchSettings])
   
-  // Track page views - only when pathname changes
+  // Step 2: Only fetch suggestions/stats if coach is enabled
+  useEffect(() => {
+    // Wait for settings to load first
+    if (settings === null) return
+    // Only run once
+    if (hasLoadedSuggestionsRef.current) return
+    // Skip if disabled
+    if (settings.is_enabled === false) return
+    
+    hasLoadedSuggestionsRef.current = true
+    fetchSuggestions()
+    fetchStats()
+  }, [settings, fetchSuggestions, fetchStats])
+  
+  // Track page views - only when pathname changes AND coach is enabled
   const lastTrackedPathRef = useRef<string | null>(null)
   
   useEffect(() => {
-    // Only track if pathname changed and we have settings loaded
-    if (pathname && pathname !== lastTrackedPathRef.current && settings?.is_enabled !== false) {
+    // Skip if disabled or settings not loaded
+    if (!settings || settings.is_enabled === false) return
+    // Only track if pathname changed
+    if (pathname && pathname !== lastTrackedPathRef.current) {
       lastTrackedPathRef.current = pathname
       trackEvent('page_view', { page: pathname })
     }
-  }, [pathname, settings?.is_enabled, trackEvent])
+  }, [pathname, settings, trackEvent])
   
   // Refresh suggestions periodically (every 5 minutes) - only if enabled
   useEffect(() => {
-    if (settings?.is_enabled === false) return
+    if (!settings || settings.is_enabled === false) return
     
     const interval = setInterval(() => {
       fetchSuggestions()
     }, 5 * 60 * 1000)
     
     return () => clearInterval(interval)
-  }, [settings?.is_enabled, fetchSuggestions])
+  }, [settings, fetchSuggestions])
   
   // ==========================================================================
   // CONTEXT VALUE
