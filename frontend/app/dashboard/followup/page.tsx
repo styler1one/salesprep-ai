@@ -175,21 +175,10 @@ export default function FollowupPage() {
   
   const fetchFollowups = useCallback(async () => {
     try {
-      // Get session for fetch (this endpoint uses raw fetch, not api client)
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/followup/list`,
-        {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        }
-      )
-
-      if (response.ok) {
-        const data = await response.json()
+      // Use api client for consistent auth handling
+      const { data, error } = await api.get<FollowupItem[]>('/api/v1/followup/list')
+      
+      if (!error && data) {
         setFollowups(data)
       }
     } catch (error) {
@@ -197,7 +186,7 @@ export default function FollowupPage() {
     } finally {
       setLoading(false)
     }
-  }, [supabase])
+  }, [])
 
   const followupsRef = useRef<FollowupItem[]>([])
   followupsRef.current = followups
@@ -217,7 +206,7 @@ export default function FollowupPage() {
       setProspectCompany(followupFor)
       sessionStorage.removeItem('followupForCompany')
     }
-  }, [fetchFollowups, supabase])
+  }, [fetchFollowups])
 
   useEffect(() => {
     const interval = setInterval(() => {

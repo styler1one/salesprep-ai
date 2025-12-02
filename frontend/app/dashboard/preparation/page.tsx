@@ -73,13 +73,15 @@ export default function PreparationPage() {
   const [selectedDealId, setSelectedDealId] = useState<string>('')
   const [dealsLoading, setDealsLoading] = useState(false)
 
+  // Get user for display (non-blocking)
   useEffect(() => {
-    // Get user for display purposes (non-blocking)
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
     })
-    
-    // Fetch data immediately
+  }, [supabase])
+  
+  // Initial load
+  useEffect(() => {
     loadPreps()
 
     // Check for pre-selected company from Research page
@@ -88,16 +90,19 @@ export default function PreparationPage() {
       setCompanyName(prepareFor)
       sessionStorage.removeItem('prepareForCompany')
     }
-
-    // Poll for status updates
-    const interval = setInterval(() => {
-      if (preps.some(p => p.status === 'pending' || p.status === 'generating')) {
+  }, [])
+  
+  // Poll for status updates
+  useEffect(() => {
+    const hasProcessingPreps = preps.some(p => p.status === 'pending' || p.status === 'generating')
+    
+    if (hasProcessingPreps) {
+      const interval = setInterval(() => {
         loadPreps()
-      }
-    }, 5000)
-
-    return () => clearInterval(interval)
-  }, [supabase])
+      }, 5000)
+      return () => clearInterval(interval)
+    }
+  }, [preps])
 
   const loadPreps = async () => {
     try {

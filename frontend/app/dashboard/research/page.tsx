@@ -180,7 +180,7 @@ export default function ResearchPage() {
     } catch (error) {
       console.error('Failed to fetch briefs:', error)
     }
-  }, [supabase])
+  }, [])
 
   // Fetch briefs on mount
   useEffect(() => {

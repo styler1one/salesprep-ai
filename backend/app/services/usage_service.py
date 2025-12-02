@@ -35,17 +35,17 @@ class UsageService:
             # Get current period (start of month)
             period_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             
-            # Get usage record
+            # Get usage record - use maybe_single to handle 0 rows gracefully
             usage_response = self.supabase.table("usage_records").select("*").eq(
                 "organization_id", organization_id
             ).eq(
                 "period_start", period_start.isoformat()
-            ).single().execute()
+            ).maybe_single().execute()
             
-            # Get subscription for limits
+            # Get subscription for limits - use maybe_single to handle 0 rows gracefully
             sub_response = self.supabase.table("organization_subscriptions").select(
                 "plan_id, subscription_plans(features)"
-            ).eq("organization_id", organization_id).single().execute()
+            ).eq("organization_id", organization_id).maybe_single().execute()
             
             # Default usage if no record
             usage = usage_response.data if usage_response.data else {
@@ -292,7 +292,7 @@ class UsageService:
                 "organization_id", organization_id
             ).eq(
                 "period_start", period_start.isoformat()
-            ).single().execute()
+            ).maybe_single().execute()
             
             if existing.data:
                 # Update existing record
@@ -352,7 +352,7 @@ class UsageService:
                 "organization_id", organization_id
             ).eq(
                 "period_start", period_start.isoformat()
-            ).single().execute()
+            ).maybe_single().execute()
             
             if existing.data:
                 current_value = existing.data.get(column, 0)
