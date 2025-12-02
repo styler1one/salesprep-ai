@@ -235,15 +235,15 @@ class ResearchOrchestrator:
             
             query_embedding = await embeddings.embed_text(query)
             
-            results = vector_store.query(
-                vector=query_embedding,
+            matches = vector_store.query_vectors(
+                query_vector=query_embedding,
                 filter={"organization_id": organization_id},
                 top_k=max_chunks,
                 include_metadata=True
             )
             
             chunks = []
-            for match in results.matches:
+            for match in matches:
                 if match.score > 0.5:  # Only include relevant chunks
                     chunks.append({
                         "text": match.metadata.get("text", "")[:500],
