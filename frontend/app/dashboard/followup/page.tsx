@@ -74,7 +74,7 @@ export default function FollowupPage() {
     }
   }, [settingsLoaded, settings.email_language])
   
-  // Fetch contacts and deals when prospect company changes
+  // Fetch contacts and deals when prospect company changes (optimized: single search, parallel fetch)
   useEffect(() => {
     const fetchContactsAndDeals = async () => {
       if (!prospectCompany) {
@@ -89,71 +89,44 @@ export default function FollowupPage() {
       setLoadingDeals(true)
       
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) {
-          setLoadingContacts(false)
-          setLoadingDeals(false)
-          return
-        }
-        
-        // First get the prospect ID from company name using search endpoint
-        const prospectRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/prospects/search?q=${encodeURIComponent(prospectCompany)}&limit=5`,
-          { headers: { 'Authorization': `Bearer ${session.access_token}` } }
+        // Single prospect search using api client
+        const { data: prospects, error: prospectError } = await api.get<Array<{ id: string; company_name: string }>>(
+          `/api/v1/prospects/search?q=${encodeURIComponent(prospectCompany)}&limit=5`
         )
         
-        if (!prospectRes.ok) {
-          setLoadingContacts(false)
-          setLoadingDeals(false)
+        if (prospectError || !prospects || !Array.isArray(prospects)) {
+          setAvailableContacts([])
+          setAvailableDeals([])
           return
         }
         
-        const prospects = await prospectRes.json()
-        
-        // Make sure prospects is an array
-        if (!Array.isArray(prospects)) {
-          setLoadingContacts(false)
-          setLoadingDeals(false)
-          return
-        }
-        
-        const prospect = prospects.find((p: any) => 
+        const prospect = prospects.find((p) => 
           p.company_name?.toLowerCase() === prospectCompany.toLowerCase()
         )
         
         if (prospect) {
-          // Fetch contacts for this prospect
-          try {
-            const contactsRes = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/api/v1/prospects/${prospect.id}/contacts`,
-              { headers: { 'Authorization': `Bearer ${session.access_token}` } }
-            )
-            
-            if (contactsRes.ok) {
-              const contactsData = await contactsRes.json()
-              // API returns { contacts: [], count: number }
-              setAvailableContacts(contactsData.contacts || [])
-            }
-          } catch (e) {
-            console.error('Error fetching contacts:', e)
-          }
-          
-          // Fetch deals for this prospect
-          try {
-            const { data: dealsData, error: dealsError } = await supabase
+          // Fetch contacts AND deals in PARALLEL
+          const [contactsResult, dealsResult] = await Promise.all([
+            api.get<{ contacts: ProspectContact[] }>(`/api/v1/prospects/${prospect.id}/contacts`),
+            supabase
               .from('deals')
               .select('*')
               .eq('prospect_id', prospect.id)
               .eq('is_active', true)
               .order('created_at', { ascending: false })
-            
-            if (!dealsError && dealsData) {
-              setAvailableDeals(dealsData || [])
-            } else {
-              setAvailableDeals([])
-            }
-          } catch (e) {
-            console.error('Error fetching deals:', e)
+          ])
+
+          // Set contacts
+          if (!contactsResult.error && contactsResult.data) {
+            setAvailableContacts(contactsResult.data.contacts || [])
+          } else {
+            setAvailableContacts([])
+          }
+
+          // Set deals
+          if (!dealsResult.error && dealsResult.data) {
+            setAvailableDeals(dealsResult.data || [])
+          } else {
             setAvailableDeals([])
           }
         } else {
@@ -193,13 +166,11 @@ export default function FollowupPage() {
   followupsRef.current = followups
 
   useEffect(() => {
-    // Get user for display purposes (non-blocking)
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
-    })
-    
-    // Fetch data immediately
-    fetchFollowups()
+    // Load user and followups in parallel
+    Promise.all([
+      supabase.auth.getUser().then(({ data: { user } }) => setUser(user)),
+      fetchFollowups()
+    ])
 
     // Check for pre-selected company from Preparation page
     const followupFor = sessionStorage.getItem('followupForCompany')
@@ -360,22 +331,13 @@ export default function FollowupPage() {
     if (!confirm(t('confirm.delete'))) return
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
+      const { error } = await api.delete(`/api/v1/followup/${id}`)
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/followup/${id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        }
-      )
-
-      if (response.ok) {
+      if (!error) {
         toast({ title: t('toast.deleted') })
         fetchFollowups()
+      } else {
+        throw new Error('Delete failed')
       }
     } catch (error) {
       toast({
