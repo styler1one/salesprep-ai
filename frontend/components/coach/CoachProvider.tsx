@@ -221,18 +221,26 @@ export function CoachProvider({ children }: CoachProviderProps) {
   const hasLoadedRef = useRef(false)
   const hasLoadedSuggestionsRef = useRef(false)
   
-  // Step 1: Fetch settings FIRST (only once)
+  // Delay coach loading to let main page content load first
+  // This improves perceived performance - users see their data faster
   useEffect(() => {
     if (hasLoadedRef.current) return
     hasLoadedRef.current = true
     
-    setIsLoading(true)
-    fetchSettings().finally(() => {
-      setIsLoading(false)
-    })
+    // Wait 1 second before loading coach data
+    // This gives the main page time to load first
+    const timer = setTimeout(() => {
+      setIsLoading(true)
+      fetchSettings().finally(() => {
+        setIsLoading(false)
+      })
+    }, 1000)
+    
+    return () => clearTimeout(timer)
   }, [fetchSettings])
   
   // Step 2: Only fetch suggestions/stats if coach is enabled
+  // Additional 500ms delay after settings load
   useEffect(() => {
     // Wait for settings to load first
     if (settings === null) return
@@ -242,11 +250,18 @@ export function CoachProvider({ children }: CoachProviderProps) {
     if (settings.is_enabled === false) return
     
     hasLoadedSuggestionsRef.current = true
-    fetchSuggestions()
-    fetchStats()
+    
+    // Small delay to let other page operations complete
+    const timer = setTimeout(() => {
+      fetchSuggestions()
+      fetchStats()
+    }, 500)
+    
+    return () => clearTimeout(timer)
   }, [settings, fetchSuggestions, fetchStats])
   
   // Track page views - only when pathname changes AND coach is enabled
+  // Delay tracking to not interfere with page load
   const lastTrackedPathRef = useRef<string | null>(null)
   
   useEffect(() => {
@@ -255,7 +270,11 @@ export function CoachProvider({ children }: CoachProviderProps) {
     // Only track if pathname changed
     if (pathname && pathname !== lastTrackedPathRef.current) {
       lastTrackedPathRef.current = pathname
-      trackEvent('page_view', { page: pathname })
+      // Delay tracking to not interfere with page load
+      const timer = setTimeout(() => {
+        trackEvent('page_view', { page: pathname })
+      }, 2000)
+      return () => clearTimeout(timer)
     }
   }, [pathname, settings, trackEvent])
   
