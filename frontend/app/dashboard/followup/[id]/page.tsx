@@ -133,8 +133,7 @@ export default function FollowupDetailPage() {
   // Actions states
   const [actions, setActions] = useState<FollowupAction[]>([])
   const [selectedAction, setSelectedAction] = useState<FollowupAction | null>(null)
-  // Note: We don't track generating state anymore - it's fire-and-forget
-  // The action card shows "generating" status based on action.content being empty
+  const [generatingActionType, setGeneratingActionType] = useState<ActionType | null>(null)
 
   useEffect(() => {
     // Get user for display purposes (non-blocking)
@@ -247,9 +246,23 @@ export default function FollowupDetailPage() {
     }
   }, [followupId])
 
-  // Generate a new action - completely fire-and-forget
-  // No polling, no blocking - user can refresh manually or click card to check
-  const handleGenerateAction = (actionType: ActionType) => {
+  // Auto-refresh for generating actions (same pattern as Research page)
+  useEffect(() => {
+    const hasGeneratingActions = actions.some(a => 
+      !a.content && a.metadata?.status !== 'error'
+    )
+
+    if (hasGeneratingActions || generatingActionType) {
+      const interval = setInterval(() => {
+        fetchActions()
+      }, 5000)
+
+      return () => clearInterval(interval)
+    }
+  }, [actions, generatingActionType, fetchActions])
+
+  // Generate a new action - same pattern as Research page
+  const handleGenerateAction = async (actionType: ActionType) => {
     // Summary is built-in, not generated via API
     if (actionType === 'summary') {
       const summaryAction = buildSummaryAction()
@@ -259,31 +272,39 @@ export default function FollowupDetailPage() {
       return
     }
     
-    // Show immediate feedback
-    toast({ 
-      title: t('actions.generating'),
-      description: t('actions.generatingDesc', { actionType: ACTION_TYPES.find(a => a.type === actionType)?.label || actionType }),
-    })
+    // Set generating state for UI feedback
+    setGeneratingActionType(actionType)
     
-    // Fire and forget - POST request, no await, no blocking
-    api.post<FollowupAction>(`/api/v1/followup/${followupId}/actions`, {
-      action_type: actionType,
-      regenerate: false,
-    }).then(({ data, error }) => {
+    try {
+      const { data, error } = await api.post<FollowupAction>(`/api/v1/followup/${followupId}/actions`, {
+        action_type: actionType,
+        regenerate: false,
+      })
+      
       if (error) {
-        console.error('Generation failed:', error)
-        toast({ title: t('actions.generationFailed'), variant: 'destructive' })
-        return
+        throw new Error(error.message || 'Generation failed')
       }
       
       if (data) {
         // Add the new action (with pending status initially)
         setActions(prev => [...prev.filter(a => a.action_type !== actionType), data])
       }
-    }).catch(error => {
+      
+      // Show feedback
+      toast({ 
+        title: t('actions.generating'),
+        description: t('actions.generatingDesc', { actionType: ACTION_TYPES.find(a => a.type === actionType)?.label || actionType }),
+      })
+      
+      // Refresh to get updated content (non-blocking, runs in background)
+      await fetchActions()
+      
+    } catch (error) {
       console.error('Failed to generate action:', error)
       toast({ title: t('actions.generationFailed'), variant: 'destructive' })
-    })
+    } finally {
+      setGeneratingActionType(null)
+    }
   }
 
   // Update action content (edit)
@@ -330,8 +351,7 @@ export default function FollowupDetailPage() {
   }
 
   // Regenerate action - same pattern as Research page
-  // Regenerate action - fire and forget, no blocking
-  const handleRegenerateAction = (actionId: string) => {
+  const handleRegenerateAction = async (actionId: string) => {
     // Summary is built-in and cannot be regenerated
     if (actionId === 'summary-builtin') {
       toast({ title: 'Summary cannot be regenerated', variant: 'destructive' })
@@ -341,22 +361,23 @@ export default function FollowupDetailPage() {
     const action = actions.find(a => a.id === actionId)
     if (!action) return
     
-    // Update local state immediately for responsive UI
-    setActions(prev => prev.filter(a => a.id !== actionId))
-    if (selectedAction?.id === actionId) {
-      setSelectedAction(null)
+    try {
+      // Delete the existing action
+      await api.delete(`/api/v1/followup/${followupId}/actions/${actionId}`)
+      
+      // Update local state
+      setActions(prev => prev.filter(a => a.id !== actionId))
+      if (selectedAction?.id === actionId) {
+        setSelectedAction(null)
+      }
+      
+      // Now generate new one
+      await handleGenerateAction(action.action_type)
+      
+    } catch (error) {
+      console.error('Failed to regenerate action:', error)
+      toast({ title: t('actions.generationFailed'), variant: 'destructive' })
     }
-    
-    // Delete then generate - fire and forget
-    api.delete(`/api/v1/followup/${followupId}/actions/${actionId}`)
-      .then(() => {
-        // Generate new one (also fire-and-forget)
-        handleGenerateAction(action.action_type)
-      })
-      .catch(error => {
-        console.error('Failed to regenerate action:', error)
-        toast({ title: t('actions.generationFailed'), variant: 'destructive' })
-      })
   }
 
   // View action
@@ -727,14 +748,6 @@ export default function FollowupDetailPage() {
                         {t('actions.subtitle')}
                       </p>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => fetchActions()}
-                      title="Refresh actions"
-                    >
-                      <Icons.refresh className="h-4 w-4" />
-                    </Button>
                   </div>
                   
                   <ActionsGrid
@@ -742,8 +755,8 @@ export default function FollowupDetailPage() {
                     existingActions={allActions}
                     onGenerate={handleGenerateAction}
                     onView={handleViewAction}
-                    disabled={false}
-                    generatingType={null}
+                    disabled={!!generatingActionType}
+                    generatingType={generatingActionType}
                   />
                 </div>
 
