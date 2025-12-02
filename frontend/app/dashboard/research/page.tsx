@@ -57,17 +57,19 @@ export default function ResearchPage() {
   const [selectedCompany, setSelectedCompany] = useState<CompanyOption | null>(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
 
+  // Fetch data immediately on mount - don't wait for getUser
+  // The api client handles authentication via getSession() which is faster
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+    // Get user for display purposes (non-blocking)
+    supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
-      if (user) {
-        fetchBriefs()
-      }
+    })
+    
+    // Fetch data immediately
+    fetchBriefs().finally(() => {
       setLoading(false)
-    }
-    getUser()
-  }, [supabase])
+    })
+  }, [supabase, fetchBriefs])
 
   // Auto-suggest language when country changes (only if settings not loaded yet)
   // If user has settings, we respect those. Country suggestion is just a fallback.

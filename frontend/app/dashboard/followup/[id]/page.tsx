@@ -136,11 +136,10 @@ export default function FollowupDetailPage() {
   const [generatingActionType, setGeneratingActionType] = useState<ActionType | null>(null)
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+    // Get user for display purposes (non-blocking)
+    supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
-    }
-    getUser()
+    })
   }, [supabase])
 
   const fetchFollowup = useCallback(async () => {

@@ -203,11 +203,12 @@ export default function FollowupPage() {
   followupsRef.current = followups
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+    // Get user for display purposes (non-blocking)
+    supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
-    }
-    getUser()
+    })
+    
+    // Fetch data immediately
     fetchFollowups()
 
     // Check for pre-selected company from Preparation page

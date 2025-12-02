@@ -215,15 +215,18 @@ export function CoachProvider({ children }: CoachProviderProps) {
   // EFFECTS
   // ==========================================================================
   
-  // Initial load
+  // Initial load - all in parallel, non-blocking
   useEffect(() => {
-    const init = async () => {
-      setIsLoading(true)
-      await fetchSettings()
-      await Promise.all([fetchSuggestions(), fetchStats()])
+    setIsLoading(true)
+    
+    // Run all fetches in parallel without blocking
+    Promise.all([
+      fetchSettings(),
+      fetchSuggestions(),
+      fetchStats(),
+    ]).finally(() => {
       setIsLoading(false)
-    }
-    init()
+    })
   }, [fetchSettings, fetchSuggestions, fetchStats])
   
   // Track page views

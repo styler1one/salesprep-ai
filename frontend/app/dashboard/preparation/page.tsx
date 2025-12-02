@@ -74,11 +74,12 @@ export default function PreparationPage() {
   const [dealsLoading, setDealsLoading] = useState(false)
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+    // Get user for display purposes (non-blocking)
+    supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
-    }
-    getUser()
+    })
+    
+    // Fetch data immediately
     loadPreps()
 
     // Check for pre-selected company from Research page
