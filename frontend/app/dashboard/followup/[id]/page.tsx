@@ -373,7 +373,7 @@ export default function FollowupDetailPage() {
     }
   }
 
-  // Regenerate action
+  // Regenerate action - fire and forget, don't block UI
   const handleRegenerateAction = async (actionId: string) => {
     // Summary is built-in and cannot be regenerated
     if (actionId === 'summary-builtin') {
@@ -384,13 +384,22 @@ export default function FollowupDetailPage() {
     const action = actions.find(a => a.id === actionId)
     if (!action) return
     
-    // Delete existing and regenerate
     try {
+      // Delete the existing action
       await handleDeleteAction(actionId)
-      await handleGenerateAction(action.action_type)
+      
+      // Start regeneration but DON'T await - let it run in background
+      // This ensures the UI is not blocked
+      handleGenerateAction(action.action_type).catch(error => {
+        console.error('Failed to generate action:', error)
+        toast({ title: t('actions.generationFailed'), variant: 'destructive' })
+      })
+      
+      // Show immediate feedback
+      toast({ title: t('actions.regenerating') })
     } catch (error) {
       console.error('Failed to regenerate action:', error)
-      toast({ title: 'Failed to regenerate', variant: 'destructive' })
+      toast({ title: t('actions.generationFailed'), variant: 'destructive' })
     }
   }
 
