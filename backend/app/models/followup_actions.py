@@ -64,13 +64,6 @@ ACTION_TYPE_INFO = {
         "description_en": "Short summary for CRM or team",
         "description_nl": "Korte samenvatting voor CRM of team",
     },
-    ActionType.DEAL_UPDATE: {
-        "icon": "🎯",
-        "label_en": "Deal Update",
-        "label_nl": "Deal Update",
-        "description_en": "Suggested deal stage and probability",
-        "description_nl": "Voorgestelde deal-fase en kans",
-    },
 }
 
 
