@@ -246,47 +246,31 @@ export default function FollowupDetailPage() {
     }
   }, [followupId])
 
-  // Generate a new action - fire and forget, like research does
-  const handleGenerateAction = async (actionType: ActionType) => {
+  // Generate a new action - completely fire and forget
+  const handleGenerateAction = (actionType: ActionType) => {
     // Summary is built-in, not generated via API
     if (actionType === 'summary') {
       const summaryAction = buildSummaryAction()
       if (summaryAction) {
         setSelectedAction(summaryAction)
-        setTimeout(() => {
-          document.getElementById('action-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }, 100)
       }
       return
     }
     
-    setGeneratingActionType(actionType)
-    try {
-      const { data, error } = await api.post<FollowupAction>(`/api/v1/followup/${followupId}/actions`, {
-        action_type: actionType,
-        regenerate: false,
-      })
-      
+    // Fire and forget - don't await, don't block
+    api.post<FollowupAction>(`/api/v1/followup/${followupId}/actions`, {
+      action_type: actionType,
+      regenerate: false,
+    }).then(({ data, error }) => {
       if (!error && data) {
-        // Add to actions list with generating status
         setActions(prev => [...prev.filter(a => a.action_type !== actionType), data])
-        
-        // Refresh actions list after delays (like research does)
-        // This avoids continuous polling which seems to block the UI
-        setTimeout(() => fetchActions(), 5000)
-        setTimeout(() => fetchActions(), 15000)
-        setTimeout(() => fetchActions(), 30000)
-        setTimeout(() => fetchActions(), 45000)
-        setTimeout(() => fetchActions(), 60000)
-      } else {
-        toast({ title: t('actions.generationFailed'), variant: 'destructive' })
       }
-    } catch (error) {
+    }).catch(error => {
       console.error('Failed to generate action:', error)
-      toast({ title: t('actions.generationFailed'), variant: 'destructive' })
-    } finally {
-      setGeneratingActionType(null)
-    }
+    })
+    
+    // Show immediate feedback
+    toast({ title: t('actions.regenerating') })
   }
 
   // Update action content (edit)
@@ -332,8 +316,8 @@ export default function FollowupDetailPage() {
     }
   }
 
-  // Regenerate action - fire and forget, don't block UI
-  const handleRegenerateAction = async (actionId: string) => {
+  // Regenerate action - completely fire and forget
+  const handleRegenerateAction = (actionId: string) => {
     // Summary is built-in and cannot be regenerated
     if (actionId === 'summary-builtin') {
       toast({ title: 'Summary cannot be regenerated', variant: 'destructive' })
@@ -343,23 +327,23 @@ export default function FollowupDetailPage() {
     const action = actions.find(a => a.id === actionId)
     if (!action) return
     
-    try {
-      // Delete the existing action
-      await handleDeleteAction(actionId)
-      
-      // Start regeneration but DON'T await - let it run in background
-      // This ensures the UI is not blocked
-      handleGenerateAction(action.action_type).catch(error => {
-        console.error('Failed to generate action:', error)
+    // Fire and forget - delete then generate
+    api.delete(`/api/v1/followup/${followupId}/actions/${actionId}`)
+      .then(() => {
+        setActions(prev => prev.filter(a => a.id !== actionId))
+        if (selectedAction?.id === actionId) {
+          setSelectedAction(null)
+        }
+        // Now generate new one
+        handleGenerateAction(action.action_type)
+      })
+      .catch(error => {
+        console.error('Failed to regenerate action:', error)
         toast({ title: t('actions.generationFailed'), variant: 'destructive' })
       })
-      
-      // Show immediate feedback
-      toast({ title: t('actions.regenerating') })
-    } catch (error) {
-      console.error('Failed to regenerate action:', error)
-      toast({ title: t('actions.generationFailed'), variant: 'destructive' })
-    }
+    
+    // Show immediate feedback
+    toast({ title: t('actions.regenerating') })
   }
 
   // View action
