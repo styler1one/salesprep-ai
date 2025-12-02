@@ -397,9 +397,9 @@ export default function SettingsPage() {
                   </p>
                 </div>
                 <Switch
-                  checked={coach?.isEnabled ?? true}
+                  checked={coach?.settings?.is_enabled ?? true}
                   onCheckedChange={handleCoachToggle}
-                  disabled={coachToggling}
+                  disabled={coachToggling || coach?.isLoading}
                 />
               </div>
 
