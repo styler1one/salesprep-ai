@@ -176,6 +176,11 @@ export default function SettingsPage() {
     setCoachToggling(true)
     try {
       await coach.updateSettings({ is_enabled: enabled })
+      // Force a page reload to ensure state is clean
+      if (enabled) {
+        // If enabling, also refresh suggestions
+        await coach.refreshSuggestions()
+      }
       toast({
         title: enabled ? t('coach.enabled') : t('coach.disabled'),
         description: enabled ? t('coach.enabledDesc') : t('coach.disabledDesc'),
@@ -196,14 +201,12 @@ export default function SettingsPage() {
     try {
       const { error } = await api.post('/api/v1/coach/suggestions/reset', {})
       if (!error) {
-        // Refresh suggestions
-        if (coach) {
-          await coach.refreshSuggestions()
-        }
         toast({
           title: t('coach.reset'),
           description: t('coach.resetDesc'),
         })
+        // Refresh the page to reset all coach state
+        window.location.reload()
       } else {
         throw new Error(error.message)
       }
