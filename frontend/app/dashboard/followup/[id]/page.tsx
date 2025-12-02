@@ -402,32 +402,40 @@ export default function FollowupDetailPage() {
 
   // Build summary action from followup data (special handling - not from API)
   const buildSummaryAction = useCallback((): FollowupAction | null => {
-    if (!followup?.executive_summary) return null
+    // Prefer full_summary_content (new format) over parsed fields (legacy)
+    if (!followup?.full_summary_content && !followup?.executive_summary) return null
     
-    // Build markdown content from followup data
-    let content = `## Summary\n\n${followup.executive_summary}\n\n`
+    let content: string
     
-    if (followup.key_points?.length) {
-      content += `## Key Points\n\n${followup.key_points.map(p => `- ${p}`).join('\n')}\n\n`
-    }
-    
-    if (followup.decisions?.length) {
-      content += `## Decisions\n\n${followup.decisions.map(d => `- ${d}`).join('\n')}\n\n`
-    }
-    
-    if (followup.next_steps?.length) {
-      content += `## Next Steps\n\n${followup.next_steps.map(s => `- ${s}`).join('\n')}\n\n`
-    }
-    
-    if (followup.concerns?.length) {
-      content += `## Concerns\n\n${followup.concerns.map(c => `- ${c}`).join('\n')}\n\n`
-    }
-    
-    if (followup.action_items?.length) {
-      content += `## Action Items\n\n`
-      content += followup.action_items.map(item => 
-        `- **${item.task}** (${item.assignee}${item.due_date ? `, ${item.due_date}` : ''})`
-      ).join('\n')
+    if (followup.full_summary_content) {
+      // New format: use the full markdown content directly
+      content = followup.full_summary_content
+    } else {
+      // Legacy fallback: build from parsed fields
+      content = `## Summary\n\n${followup.executive_summary}\n\n`
+      
+      if (followup.key_points?.length) {
+        content += `## Key Points\n\n${followup.key_points.map(p => `- ${p}`).join('\n')}\n\n`
+      }
+      
+      if (followup.decisions?.length) {
+        content += `## Decisions\n\n${followup.decisions.map(d => `- ${d}`).join('\n')}\n\n`
+      }
+      
+      if (followup.next_steps?.length) {
+        content += `## Next Steps\n\n${followup.next_steps.map(s => `- ${s}`).join('\n')}\n\n`
+      }
+      
+      if (followup.concerns?.length) {
+        content += `## Concerns\n\n${followup.concerns.map(c => `- ${c}`).join('\n')}\n\n`
+      }
+      
+      if (followup.action_items?.length) {
+        content += `## Action Items\n\n`
+        content += followup.action_items.map(item => 
+          `- **${item.task}** (${item.assignee}${item.due_date ? `, ${item.due_date}` : ''})`
+        ).join('\n')
+      }
     }
     
     return {
