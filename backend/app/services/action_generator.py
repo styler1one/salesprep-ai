@@ -367,45 +367,168 @@ Generate the email now:"""
     
     def _prompt_commercial_analysis(self, context_text: str, lang_instruction: str, context: Dict) -> str:
         """Prompt for commercial analysis generation"""
-        return f"""You are an expert sales analyst who identifies buying signals, risks, and opportunities.
+        company_name = context.get("followup", {}).get("prospect_company_name", "the company")
+        
+        return f"""You are a seasoned commercial strategist analyzing a sales conversation.
+
+Write in clear, direct and strategic language.
+Be honest, pragmatic and psychologically sharp.
+Your analysis is for internal use only.
+It should reveal what is really going on in this deal.
+Not the optimistic version, but the evidence-based one.
 
 {lang_instruction}
 
-Based on the following meeting context, provide a detailed commercial analysis.
+Purpose: Provide actionable commercial intelligence that clarifies the true state of this opportunity, the political dynamics inside the customer organisation, and what the sales team should do next.
+
+Every insight must be supported by concrete evidence from the conversation.
 
 {context_text}
 
-## Requirements:
+STRUCTURE & INSTRUCTIONS:
 
-Analyze the transcript and context to identify:
+# Commercial Analysis – {company_name}
 
-## Structure (use these exact headings):
+## Executive Summary
+In 2-3 sentences, summarise the real situation:
+Is this opportunity viable, fragile or misaligned?
+What single factor will determine whether this deal moves forward or stalls?
 
-# Commercial Analysis
-
-## 🟢 Buying Signals
-[List specific quotes or behaviors that indicate interest. Be specific with evidence from the transcript.]
-
-## 🟡 Objections & Concerns
-[List any hesitations, concerns, or objections expressed. Include how to address each.]
-
-## 💡 Cross-sell / Upsell Opportunities
-[Based on their needs, what additional products or services might be relevant?]
-
-## 🔴 Risks & Red Flags
-[Any warning signs: competitors mentioned, budget concerns, timeline issues, decision-maker absence]
-
-## 📊 Deal Assessment
-
-- **Win Probability**: [X]% 
-- **Reasoning**: [2-3 sentences explaining the probability]
-- **Recommended Pipeline Stage**: [stage name]
-- **Critical Next Action**: [What must happen to move this forward]
-- **Key Blocker**: [Main obstacle if any]
+## Momentum Assessment
+Describe the current momentum of the deal.
+Classify as: 🟢 Forward Momentum, 🟡 Neutral / Stalled, 🔴 Regressive.
+Explain *why*, using evidence and behavioural signals from the prospect.
 
 ---
 
-Generate the analysis now:"""
+## BANT Analysis
+
+Analyse each dimension using the structure below. Always separate:
+- What the customer *explicitly said*
+- What we *infer*
+- What is still *unknown*
+
+### Budget
+- **Evidence**: [Direct quotes or statements]
+- **Assessment**: 🟢 Confirmed / 🟡 Unclear / 🔴 Concern
+- **Interpretation**: [What this means for deal viability]
+- **Unknowns**: [What remains unverified]
+
+### Authority
+- **Decision Makers Identified**: [Names and roles]
+- **Decision Process**: [How decisions are made, formal vs informal]
+- **Assessment**: 🟢 Full access / 🟡 Partial access / 🔴 Missing key personas
+- **Political Dynamics**: [Who influences whom]
+- **Gap**: [Who we still need access to]
+
+### Need
+- **Stated Needs**: [Verbatim customer statements]
+- **Underlying Drivers**: [Motivations, pain, pressure, risk avoidance]
+- **Urgency Level**: 🔴 Urgent / 🟡 Important / 🟢 Nice-to-have
+- **Strategic Fit**: [How well our solution aligns to their core goals]
+
+### Timeline
+- **Stated Timeline**: [Any explicit deadlines]
+- **Trigger Events**: [Renewals, compliance deadlines, growth plans]
+- **Assessment**: 🟢 Clear / 🟡 Vague / 🔴 No urgency
+- **Implications**: [What accelerates or delays this deal]
+
+---
+
+## Buying Signals & Interest Indicators
+List only signals grounded in evidence, not hope.
+
+| Signal | Quote / Evidence | Strength |
+|--------|------------------|----------|
+| [type] | "[exact quote]" | 🟢 / 🟡 / 🔴 |
+
+---
+
+## Objections & Concerns
+Identify both explicit and implicit objections.
+
+| Concern | Quote / Evidence | Recommended Approach |
+|---------|------------------|----------------------|
+| [concern] | "[quote]" | [How to neutralise or reframe] |
+
+---
+
+## Competitive Landscape
+- **Competitors Mentioned**: [Names or "None mentioned"]
+- **Prospect's Comparison Criteria**: [What matters to them]
+- **Our Position**: [Where we stand based on evidence]
+- **Differentiation Angle**: [The sharpest lever we can use]
+
+---
+
+## Risk Assessment
+Provide a sober view of actual deal risks.
+
+| Risk | Probability | Impact | Mitigation Strategy |
+|------|-------------|--------|---------------------|
+| [risk] | High/Med/Low | High/Med/Low | [action] |
+
+---
+
+## Deal Health Score
+Score each dimension 1-5 based strictly on evidence.
+
+| Dimension | Score | Evidence |
+|-----------|-------|----------|
+| Need Fit | /5 | [why] |
+| Stakeholder Access | /5 | [why] |
+| Budget Alignment | /5 | [why] |
+| Timeline Clarity | /5 | [why] |
+| Competitive Position | /5 | [why] |
+
+**Overall Deal Score**: X/25 → Strong / Moderate / At Risk
+
+---
+
+## Information Gaps
+Consolidate all unknowns from the analysis above:
+
+| Area | What We Don't Know | How to Find Out | Priority |
+|------|-------------------|-----------------|----------|
+| [BANT area] | [the unknown] | [discovery action] | 🔴 / 🟡 / 🟢 |
+
+---
+
+## Win Probability & Strategic Recommendation
+
+- **Win Probability**: X%
+- **Confidence Level**: High / Medium / Low
+- **Reasoning**: In 2-3 sentences: what drives this probability? What could change it?
+
+### Overall Strategy Guidance
+Provide one sharp paragraph:
+Should we push forward, nurture, requalify, escalate internally, or deprioritise?
+Base this advice strictly on evidence, political dynamics and deal momentum.
+
+---
+
+## Recommended Actions
+
+### Immediate (This Week)
+The 1-3 most critical actions that influence deal momentum.
+
+### Before Next Meeting
+Information we need, stakeholders to involve, preparation needed.
+
+### Deal Strategy
+A concise advisory paragraph outlining the strategic playbook for this opportunity.
+
+---
+
+RULES:
+- Every insight must be evidence-based.
+- Distinguish facts from interpretation.
+- Flag assumptions explicitly.
+- Be concise but deep.
+- Prioritise clarity over completeness.
+- Deliver commercial intelligence that can change action, not just document reality.
+
+Generate the complete Commercial Analysis now:"""
     
     def _prompt_sales_coaching(self, context_text: str, lang_instruction: str, context: Dict) -> str:
         """Prompt for sales coaching generation"""
