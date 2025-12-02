@@ -296,7 +296,7 @@ export default function FollowupDetailPage() {
       // Show feedback
       toast({ 
         title: t('actions.generating'),
-        description: t('actions.generatingDesc', { actionType: ACTION_TYPES.find(a => a.id === actionType)?.label || actionType }),
+        description: t('actions.generatingDesc', { actionType: ACTION_TYPES.find(a => a.type === actionType)?.label || actionType }),
       })
       
       // Refresh to get updated content (non-blocking, runs in background)
