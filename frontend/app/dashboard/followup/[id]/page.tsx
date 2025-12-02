@@ -235,18 +235,21 @@ export default function FollowupDetailPage() {
   }
 
   // Fetch actions for this followup
-  const fetchActions = useCallback(async () => {
+  const fetchActions = useCallback(async (): Promise<FollowupAction[] | null> => {
     try {
       const { data, error } = await api.get<ActionsListResponse>(`/api/v1/followup/${followupId}/actions`)
       if (!error && data) {
         setActions(data.actions || [])
+        return data.actions || []
       }
+      return null
     } catch (error) {
       console.error('Failed to fetch actions:', error)
+      return null
     }
   }, [followupId])
 
-  // Generate a new action - completely fire and forget
+  // Generate a new action - non-blocking with UI feedback
   const handleGenerateAction = (actionType: ActionType) => {
     // Summary is built-in, not generated via API
     if (actionType === 'summary') {
@@ -257,20 +260,52 @@ export default function FollowupDetailPage() {
       return
     }
     
-    // Fire and forget - don't await, don't block
+    // Set generating state for UI feedback
+    setGeneratingActionType(actionType)
+    
+    // Show immediate feedback
+    toast({ 
+      title: t('actions.generating'),
+      description: t('actions.generatingDesc', { actionType: ACTION_TYPES.find(a => a.id === actionType)?.label || actionType }),
+    })
+    
+    // Fire and forget - don't block
     api.post<FollowupAction>(`/api/v1/followup/${followupId}/actions`, {
       action_type: actionType,
       regenerate: false,
     }).then(({ data, error }) => {
       if (!error && data) {
+        // Add the new action (with pending status initially)
         setActions(prev => [...prev.filter(a => a.action_type !== actionType), data])
+        
+        // Schedule refreshes to get the completed content
+        // These run independently and don't block anything
+        const refreshTimer = setInterval(() => {
+          fetchActions().then(updatedActions => {
+            const thisAction = updatedActions?.find((a: FollowupAction) => a.action_type === actionType)
+            if (thisAction?.content) {
+              // Content is ready, stop refreshing
+              clearInterval(refreshTimer)
+              setGeneratingActionType(null)
+              toast({ title: t('actions.readyToView') })
+            }
+          })
+        }, 5000)
+        
+        // Safety: stop after 2 minutes max
+        setTimeout(() => {
+          clearInterval(refreshTimer)
+          setGeneratingActionType(null)
+        }, 120000)
+      } else {
+        setGeneratingActionType(null)
+        toast({ title: t('actions.generationFailed'), variant: 'destructive' })
       }
     }).catch(error => {
       console.error('Failed to generate action:', error)
+      setGeneratingActionType(null)
+      toast({ title: t('actions.generationFailed'), variant: 'destructive' })
     })
-    
-    // Show immediate feedback
-    toast({ title: t('actions.regenerating') })
   }
 
   // Update action content (edit)
@@ -316,7 +351,7 @@ export default function FollowupDetailPage() {
     }
   }
 
-  // Regenerate action - completely fire and forget
+  // Regenerate action - non-blocking
   const handleRegenerateAction = (actionId: string) => {
     // Summary is built-in and cannot be regenerated
     if (actionId === 'summary-builtin') {
@@ -327,23 +362,23 @@ export default function FollowupDetailPage() {
     const action = actions.find(a => a.id === actionId)
     if (!action) return
     
-    // Fire and forget - delete then generate
+    // Show immediate feedback
+    toast({ title: t('actions.regenerating') })
+    
+    // Delete then generate - don't block
     api.delete(`/api/v1/followup/${followupId}/actions/${actionId}`)
       .then(() => {
         setActions(prev => prev.filter(a => a.id !== actionId))
         if (selectedAction?.id === actionId) {
           setSelectedAction(null)
         }
-        // Now generate new one
+        // Now generate new one (this handles its own state)
         handleGenerateAction(action.action_type)
       })
       .catch(error => {
         console.error('Failed to regenerate action:', error)
         toast({ title: t('actions.generationFailed'), variant: 'destructive' })
       })
-    
-    // Show immediate feedback
-    toast({ title: t('actions.regenerating') })
   }
 
   // View action
