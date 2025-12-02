@@ -85,7 +85,18 @@ export function CoachProvider({ children }: CoachProviderProps) {
     try {
       const { data, error } = await api.get<SuggestionsResponse>('/api/v1/coach/suggestions?limit=10')
       if (!error && data) {
-        setSuggestions(data.suggestions)
+        // Filter out snoozed suggestions on client side as well
+        const now = new Date()
+        const activeSuggestions = data.suggestions.filter(s => {
+          if (s.snooze_until) {
+            const snoozeUntil = new Date(s.snooze_until)
+            if (snoozeUntil > now) {
+              return false // Still snoozed
+            }
+          }
+          return true
+        })
+        setSuggestions(activeSuggestions)
       }
     } catch (err) {
       console.error('Failed to fetch suggestions:', err)
@@ -122,6 +133,9 @@ export function CoachProvider({ children }: CoachProviderProps) {
   
   const snoozeSuggestion = useCallback(async (id: string, until: Date) => {
     try {
+      // Immediately remove from local state for responsive UI
+      setSuggestions(prev => prev.filter(s => s.id !== id))
+      
       await api.post(`/api/v1/coach/suggestions/${id}/action`, {
         action: 'snoozed',
         snooze_until: until.toISOString(),

@@ -247,11 +247,55 @@ async def get_suggestions(
         
         print(f"[COACH DEBUG] Building context for user {user_id} in orgs {organization_ids}")
         
+        # First, check for existing suggestions (snoozed or pending)
+        now = datetime.now()
+        existing_result = supabase.table("coach_suggestions") \
+            .select("*") \
+            .eq("user_id", user_id) \
+            .is_("action_taken", "null") \
+            .execute()
+        
+        # Also get snoozed suggestions that haven't expired
+        snoozed_result = supabase.table("coach_suggestions") \
+            .select("*") \
+            .eq("user_id", user_id) \
+            .eq("action_taken", "snoozed") \
+            .execute()
+        
+        # Collect snoozed suggestion types and entity IDs that are still active
+        snoozed_keys = set()
+        for s in (snoozed_result.data or []):
+            snooze_until_str = s.get("snooze_until")
+            if snooze_until_str:
+                try:
+                    snooze_until = datetime.fromisoformat(snooze_until_str.replace("Z", "+00:00"))
+                    # Make both datetimes timezone-naive for comparison
+                    snooze_until_naive = snooze_until.replace(tzinfo=None)
+                    if snooze_until_naive > now:
+                        # Still snoozed - add to blocked set
+                        stype = s.get("suggestion_type", "")
+                        entity_id = s.get("related_entity_id", "")
+                        snoozed_keys.add(f"{stype}:{entity_id}")
+                        print(f"[COACH DEBUG] Snoozed until {snooze_until_naive}: {stype}:{entity_id}")
+                except Exception as e:
+                    print(f"[COACH DEBUG] Error parsing snooze_until: {e}")
+        
+        print(f"[COACH DEBUG] Active snoozed keys: {snoozed_keys}")
+        
         # Build user context - pass all organization IDs
         context = await build_user_context(supabase, user_id, organization_ids)
         
         # Evaluate rules to get suggestions
         suggestions = rule_engine.evaluate_all(context)
+        
+        # Filter out snoozed suggestions
+        if snoozed_keys:
+            original_count = len(suggestions)
+            suggestions = [
+                s for s in suggestions
+                if f"{s.suggestion_type.value}:{s.related_entity_id or ''}" not in snoozed_keys
+            ]
+            print(f"[COACH DEBUG] Filtered {original_count - len(suggestions)} snoozed suggestions")
         
         # Apply pattern-based adjustments
         if context.patterns:
@@ -268,52 +312,76 @@ async def get_suggestions(
         # Convert to response format
         response_suggestions = []
         for i, suggestion in enumerate(suggestions):
-            # Create a Suggestion record in the database (for tracking)
-            suggestion_data = {
-                "user_id": user_id,
-                "organization_id": primary_org_id,
-                "suggestion_type": suggestion.suggestion_type.value,
-                "suggestion_data": {
-                    "title": suggestion.title,
-                    "description": suggestion.description,
-                    "reason": suggestion.reason,
-                    "action_route": suggestion.action_route,
-                    "action_label": suggestion.action_label,
-                    "icon": suggestion.icon,
-                },
-                "priority": suggestion.priority,
-                "related_entity_type": suggestion.related_entity_type.value if suggestion.related_entity_type else None,
-                "related_entity_id": suggestion.related_entity_id,
-                "shown_at": datetime.now().isoformat(),
-            }
+            # Check if we already have a pending suggestion for this type/entity
+            existing_key = f"{suggestion.suggestion_type.value}:{suggestion.related_entity_id or ''}"
+            existing = None
+            for e in (existing_result.data or []):
+                e_key = f"{e.get('suggestion_type', '')}:{e.get('related_entity_id', '') or ''}"
+                if e_key == existing_key:
+                    existing = e
+                    break
             
-            insert_result = supabase.table("coach_suggestions") \
-                .insert(suggestion_data) \
-                .execute()
-            
-            if insert_result.data:
+            if existing:
+                # Use existing suggestion
+                db_suggestion = existing
+            else:
+                # Create a Suggestion record in the database (for tracking)
+                suggestion_data = {
+                    "user_id": user_id,
+                    "organization_id": primary_org_id,
+                    "suggestion_type": suggestion.suggestion_type.value,
+                    "suggestion_data": {
+                        "title": suggestion.title,
+                        "description": suggestion.description,
+                        "reason": suggestion.reason,
+                        "action_route": suggestion.action_route,
+                        "action_label": suggestion.action_label,
+                        "icon": suggestion.icon,
+                    },
+                    "priority": suggestion.priority,
+                    "related_entity_type": suggestion.related_entity_type.value if suggestion.related_entity_type else None,
+                    "related_entity_id": suggestion.related_entity_id,
+                    "shown_at": datetime.now().isoformat(),
+                }
+                
+                insert_result = supabase.table("coach_suggestions") \
+                    .insert(suggestion_data) \
+                    .execute()
+                
+                if not insert_result.data:
+                    continue
+                    
                 db_suggestion = insert_result.data[0]
-                response_suggestions.append(Suggestion(
-                    id=db_suggestion["id"],
-                    user_id=user_id,
-                    organization_id=primary_org_id,
-                    suggestion_type=suggestion.suggestion_type,
-                    title=suggestion.title,
-                    description=suggestion.description,
-                    reason=suggestion.reason,
-                    priority=suggestion.priority,
-                    action_route=suggestion.action_route,
-                    action_label=suggestion.action_label,
-                    icon=suggestion.icon,
-                    related_entity_type=suggestion.related_entity_type,
-                    related_entity_id=suggestion.related_entity_id,
-                    shown_at=datetime.fromisoformat(db_suggestion["shown_at"]),
-                    expires_at=None,
-                    action_taken=None,
-                    action_taken_at=None,
-                    snooze_until=None,
-                    feedback_rating=None,
-                ))
+            
+            # Parse snooze_until if present
+            snooze_until_val = None
+            if db_suggestion.get("snooze_until"):
+                try:
+                    snooze_until_val = datetime.fromisoformat(db_suggestion["snooze_until"].replace("Z", "+00:00"))
+                except:
+                    pass
+            
+            response_suggestions.append(Suggestion(
+                id=db_suggestion["id"],
+                user_id=user_id,
+                organization_id=primary_org_id,
+                suggestion_type=suggestion.suggestion_type,
+                title=suggestion.title,
+                description=suggestion.description,
+                reason=suggestion.reason,
+                priority=suggestion.priority,
+                action_route=suggestion.action_route,
+                action_label=suggestion.action_label,
+                icon=suggestion.icon,
+                related_entity_type=suggestion.related_entity_type,
+                related_entity_id=suggestion.related_entity_id,
+                shown_at=datetime.fromisoformat(db_suggestion["shown_at"].replace("Z", "+00:00")) if db_suggestion.get("shown_at") else datetime.now(),
+                expires_at=None,
+                action_taken=db_suggestion.get("action_taken"),
+                action_taken_at=datetime.fromisoformat(db_suggestion["action_taken_at"].replace("Z", "+00:00")) if db_suggestion.get("action_taken_at") else None,
+                snooze_until=snooze_until_val,
+                feedback_rating=db_suggestion.get("feedback_rating"),
+            ))
         
         return SuggestionsResponse(
             suggestions=response_suggestions,
