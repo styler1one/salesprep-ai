@@ -73,16 +73,13 @@ export default function PreparationPage() {
   const [selectedDealId, setSelectedDealId] = useState<string>('')
   const [dealsLoading, setDealsLoading] = useState(false)
 
-  // Get user for display (non-blocking)
+  // Get user for display (non-blocking) and load preps in parallel
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
-    })
-  }, [supabase])
-  
-  // Initial load
-  useEffect(() => {
-    loadPreps()
+    // Load user and preps in parallel
+    Promise.all([
+      supabase.auth.getUser().then(({ data: { user } }) => setUser(user)),
+      loadPreps()
+    ])
 
     // Check for pre-selected company from Research page
     const prepareFor = sessionStorage.getItem('prepareForCompany')
@@ -119,110 +116,77 @@ export default function PreparationPage() {
     }
   }
 
-  // Load contacts when company name changes
-  const loadContactsForProspect = async (prospectName: string) => {
+  // Load contacts AND deals together when company name changes (single prospect search)
+  const loadContactsAndDealsForProspect = async (prospectName: string) => {
     if (!prospectName || prospectName.length < 2) {
       setAvailableContacts([])
       setSelectedContactIds([])
-      return
-    }
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
-      setContactsLoading(true)
-      
-      const { data: prospects, error: prospectError } = await api.get<Array<{ id: string; company_name: string }>>(
-        `/api/v1/prospects/search?q=${encodeURIComponent(prospectName)}`
-      )
-
-      if (!prospectError && prospects) {
-        const exactMatch = prospects.find(
-          (p) => p.company_name.toLowerCase() === prospectName.toLowerCase()
-        )
-
-        if (exactMatch) {
-          const { data: contactsData, error: contactsError } = await api.get<{ contacts: ProspectContact[] }>(
-            `/api/v1/prospects/${exactMatch.id}/contacts`
-          )
-
-          if (!contactsError && contactsData) {
-            setAvailableContacts(contactsData.contacts || [])
-          }
-        } else {
-          setAvailableContacts([])
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load contacts:', error)
-      setAvailableContacts([])
-    } finally {
-      setContactsLoading(false)
-    }
-  }
-
-  // Load deals when company name changes
-  const loadDealsForProspect = async (prospectName: string) => {
-    if (!prospectName || prospectName.length < 2) {
       setAvailableDeals([])
       setSelectedDealId('')
       return
     }
 
+    setContactsLoading(true)
     setDealsLoading(true)
     
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        setDealsLoading(false)
-        return
-      }
-      
-      // Find the prospect first
+      // Single prospect search for both contacts and deals
       const { data: prospects, error: prospectError } = await api.get<Array<{ id: string; company_name: string }>>(
         `/api/v1/prospects/search?q=${encodeURIComponent(prospectName)}`
       )
 
-      if (prospectError || !prospects || !Array.isArray(prospects)) {
+      if (prospectError || !prospects) {
+        setAvailableContacts([])
         setAvailableDeals([])
-        setDealsLoading(false)
         return
       }
 
       const exactMatch = prospects.find(
-        (p) => p.company_name?.toLowerCase() === prospectName.toLowerCase()
+        (p) => p.company_name.toLowerCase() === prospectName.toLowerCase()
       )
 
       if (exactMatch) {
-        // Get deals for this prospect
-        const { data: dealsData, error: dealsError } = await supabase
-          .from('deals')
-          .select('*')
-          .eq('prospect_id', exactMatch.id)
-          .eq('is_active', true)
-          .order('created_at', { ascending: false })
+        // Fetch contacts and deals in PARALLEL
+        const [contactsResult, dealsResult] = await Promise.all([
+          api.get<{ contacts: ProspectContact[] }>(`/api/v1/prospects/${exactMatch.id}/contacts`),
+          supabase
+            .from('deals')
+            .select('*')
+            .eq('prospect_id', exactMatch.id)
+            .eq('is_active', true)
+            .order('created_at', { ascending: false })
+        ])
 
-        if (!dealsError && dealsData) {
-          setAvailableDeals(dealsData || [])
+        // Set contacts
+        if (!contactsResult.error && contactsResult.data) {
+          setAvailableContacts(contactsResult.data.contacts || [])
+        } else {
+          setAvailableContacts([])
+        }
+
+        // Set deals
+        if (!dealsResult.error && dealsResult.data) {
+          setAvailableDeals(dealsResult.data || [])
         } else {
           setAvailableDeals([])
         }
       } else {
+        setAvailableContacts([])
         setAvailableDeals([])
       }
     } catch (error) {
-      console.error('Failed to load deals:', error)
+      console.error('Failed to load contacts/deals:', error)
+      setAvailableContacts([])
       setAvailableDeals([])
     } finally {
+      setContactsLoading(false)
       setDealsLoading(false)
     }
   }
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      loadContactsForProspect(companyName)
-      loadDealsForProspect(companyName)
+      loadContactsAndDealsForProspect(companyName)
     }, 500)
 
     return () => clearTimeout(timeoutId)
