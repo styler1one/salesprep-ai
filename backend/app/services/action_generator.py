@@ -325,45 +325,125 @@ Generate the complete Customer Report now:"""
     
     def _prompt_share_email(self, context_text: str, lang_instruction: str, context: Dict) -> str:
         """Prompt for share email generation"""
-        contact_name = "there"
+        # Get primary contact
         contacts = context.get("contacts", [])
-        if contacts:
-            contact_name = contacts[0].get("name", "there")
+        contact_name = contacts[0].get("name", "there") if contacts else "there"
         
-        return f"""You are an expert at writing professional follow-up emails.
+        # Get sales rep info for signature
+        sales_profile = context.get("sales_profile", {})
+        rep_name = sales_profile.get("full_name", "")
+        rep_title = sales_profile.get("job_title", "")
+        rep_email = sales_profile.get("email", "")
+        rep_phone = sales_profile.get("phone", "")
+        
+        # Get company info
+        company_profile = context.get("company_profile", {})
+        company_name = company_profile.get("company_name", "")
+        
+        # Get prospect company
+        followup = context.get("followup", {})
+        prospect_company = followup.get("prospect_company_name", "your organisation")
+        
+        # Build signature (only include non-empty fields)
+        signature_parts = []
+        if rep_name:
+            signature_parts.append(rep_name)
+        if rep_title:
+            signature_parts.append(rep_title)
+        if company_name:
+            signature_parts.append(company_name)
+        if rep_email:
+            signature_parts.append(rep_email)
+        if rep_phone:
+            signature_parts.append(rep_phone)
+        signature = "\n".join(signature_parts) if signature_parts else "[Your signature]"
+        
+        return f"""You are writing a short follow-up email to share a meeting summary with a customer.
+
+Write as if you are the salesperson who just had the conversation.
+Write in clear, warm and professional language.
+Use a human, personal tone. Never sound templated, robotic or salesy.
+Always write from the customer's perspective and focus on what is relevant for them.
 
 {lang_instruction}
 
-Based on the following context, create a short email to share the meeting summary with the customer.
-
 {context_text}
 
-## Requirements:
+PURPOSE:
+Send the customer a thoughtful follow-up email together with the meeting summary (Customer Report).
+Reinforce the connection built in the conversation.
+Subtly echo the value discussed without pushing.
+Confirm next steps in a natural and low-pressure way.
 
-1. **Length**: 100-150 words maximum
-2. **Tone**: Warm, professional, not salesy
-3. **Purpose**: Share the meeting summary and confirm next steps
+LENGTH:
+Keep the email concise and scannable.
+Adapt the length to the conversation:
+- Simple meeting with one clear next step → ~80-100 words
+- Multiple topics discussed → ~120-150 words
+- Complex next steps or several action items → up to ~180 words
 
-## Structure:
+Never exceed 200 words for the email body (excluding signature).
+Shorter is almost always better for email.
 
-Subject: [Meeting summary - date]
+STRUCTURE & INSTRUCTIONS:
 
-Hi {contact_name},
+**Subject line**
+Create a subject line that:
+- Refers to a concrete topic, outcome or theme from the meeting.
+- Feels personal, not generic.
+- Example patterns:
+  - "Our conversation on [topic] at {prospect_company}"
+  - "[topic] – as discussed"
+  - "{prospect_company} · next steps on [topic]"
 
-[1-2 sentences thanking them for the meeting and a personal touch]
+**Greeting**
+Use: "Hi {contact_name},".
 
-[1 sentence mentioning you're attaching/sharing the summary]
+**Opening (1–2 sentences)**
+- Do NOT use generic phrases like "I hope this email finds you well" or "Per our conversation".
+- Acknowledge the conversation in a way that reflects their situation or focus.
+- You may thank them, but keep it natural and specific, not formulaic.
+- Reference ONE specific moment, topic or insight from the meeting that mattered to them.
 
-[1 sentence highlighting the most important next step]
+**The summary (1–2 sentences)**
+- Mention that you are sharing the meeting summary.
+- Frame it as useful for them, for example to align internally or keep an overview of decisions and next steps.
+- Example pattern:
+  - "I have captured the main points and agreements in a short summary so you can easily share this with your colleagues."
 
-[Call to action - confirm the next meeting or ask if they have questions]
+**Value echo (1 sentence, optional)**
+- If appropriate, briefly restate one key insight or benefit that connects to their priorities.
+- Keep it subtle and customer-centric, not feature-driven.
 
-Best regards,
-[Name]
+**Next steps (1–2 sentences)**
+- Confirm the agreed next step clearly and concretely.
+- If there is a follow-up meeting, mention date and time if known.
+- If there are action items, refer to them briefly.
+- Use a soft call to action, such as:
+  - asking for confirmation
+  - inviting questions or additions
+  - checking if the proposed next step still fits.
 
----
+**Closing**
+- End with a warm, genuine closing that fits a senior, professional tone.
+- Avoid overly formal or stiff wording.
+- Example patterns:
+  - "Looking forward to hearing your thoughts."
+  - "Happy to adjust if something has shifted on your side."
 
-Generate the email now:"""
+**Signature**
+Use exactly this signature:
+
+{signature}
+
+RULES:
+- Sound human, not corporate.
+- Reference at least one specific topic or moment from the conversation.
+- Avoid hype or salesy phrases like "game-changing", "exciting opportunity" or similar.
+- Do not use placeholder brackets like [topic] in the final email.
+- The email should make the recipient feel understood and supported in moving forward.
+
+Generate the complete email now:"""
     
     def _prompt_commercial_analysis(self, context_text: str, lang_instruction: str, context: Dict) -> str:
         """Prompt for commercial analysis generation"""
