@@ -196,7 +196,7 @@ Value Propositions: {', '.join(company.get('value_propositions', [])[:3])}""")
             research = context["research"]
             sections.append(f"""## PROSPECT RESEARCH ({context['prospect_company']}):
 **Company Overview:**
-{research.get('brief_content', research.get('company_data', 'No overview available'))[:1500]}
+{research.get('brief_content', 'No overview available')[:1500]}
 
 **Key People:**
 {research.get('key_people', 'No key people data')[:500]}
@@ -438,15 +438,15 @@ Value Propositions: {', '.join(company.get('value_propositions', [])[:3])}""")
             query = f"{prospect_company} case study success story product solution"
             query_embedding = await embeddings.embed_text(query)
             
-            results = vector_store.query(
-                vector=query_embedding,
+            matches = vector_store.query_vectors(
+                query_vector=query_embedding,
                 filter={"organization_id": organization_id},
                 top_k=max_chunks,
                 include_metadata=True
             )
             
             chunks = []
-            for match in results.matches:
+            for match in matches:
                 chunks.append({
                     "text": match.metadata.get("text", ""),
                     "source": match.metadata.get("filename", "Unknown"),

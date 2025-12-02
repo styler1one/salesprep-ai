@@ -112,7 +112,7 @@ class RAGService:
         try:
             # First try exact match (case-sensitive)
             response = self.supabase.table("research_briefs").select(
-                "id, company_name, brief_content, company_data, key_people, recent_news, created_at"
+                "id, company_name, brief_content, key_people, recent_news, created_at"
             ).eq(
                 "organization_id", organization_id
             ).eq(
@@ -130,7 +130,7 @@ class RAGService:
             
             # Fallback: case-insensitive exact match
             response = self.supabase.table("research_briefs").select(
-                "id, company_name, brief_content, company_data, key_people, recent_news, created_at"
+                "id, company_name, brief_content, key_people, recent_news, created_at"
             ).eq(
                 "organization_id", organization_id
             ).ilike(
@@ -221,8 +221,8 @@ class RAGService:
         formatted = f"## Prospect Intelligence (from Research):\n\n"
         formatted += f"**Company**: {research.get('company_name', 'Unknown')}\n\n"
         
-        if research.get('company_data'):
-            formatted += f"**Overview**: {research['company_data'][:500]}...\n\n"
+        if research.get('brief_content'):
+            formatted += f"**Overview**: {research['brief_content'][:500]}...\n\n"
         
         if research.get('key_people'):
             formatted += f"**Key People**: {research['key_people'][:300]}...\n\n"

@@ -139,7 +139,7 @@ class ContextService:
         try:
             # Get KB file count
             response = self.client.table("knowledge_base_files")\
-                .select("id, file_name, status", count="exact")\
+                .select("id, filename, status", count="exact")\
                 .eq("organization_id", organization_id)\
                 .eq("status", "completed")\
                 .execute()

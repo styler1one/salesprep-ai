@@ -230,7 +230,7 @@ This summary gives the essentials. Deeper analysis lives in separate reports.
             # Research
             research = prospect_context.get("research")
             if research:
-                data = research.get("brief_content") or research.get("company_data") or "Not available"
+                data = research.get("brief_content") or "Not available"
                 prompt += f"## RESEARCH SUMMARY\n{data[:800]}\n\n"
             
             # Meeting Prep
