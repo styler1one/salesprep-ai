@@ -345,6 +345,13 @@ class ResearchOrchestrator:
         else:
             kb_references = "| — | — |"
         
+        # Pre-calculate source status for the Research Confidence table
+        claude_status = "✅" if sources.get("claude", {}).get("success") else "❌"
+        gemini_status = "✅" if sources.get("gemini", {}).get("success") else "❌"
+        kvk_status = "✅" if sources.get("kvk", {}).get("success") else ("N/A" if "kvk" not in sources else "❌")
+        website_status = "✅" if sources.get("website", {}).get("success") else ("N/A" if "website" not in sources else "❌")
+        kb_status = f"✅ {len(kb_chunks)} matches" if kb_chunks else "❌ No matches"
+        
         # Use Claude to merge the data - with seller context and language instruction
         merge_prompt = f"""You are a senior sales intelligence analyst preparing a strategic prospect brief.
 
@@ -590,11 +597,11 @@ These are *validation questions*, not discovery questions.
 
 | Source | Status | Notes |
 |--------|--------|-------|
-| Claude Web Search | {"✅" if sources.get("claude", {{}}).get("success") else "❌"} | [Quality] |
-| Google Search | {"✅" if sources.get("gemini", {{}}).get("success") else "❌"} | [Quality] |
-| Chamber of Commerce | {"✅" if sources.get("kvk", {{}}).get("success") else "N/A" if not sources.get("kvk") else "❌"} | [If applicable] |
-| Website Scrape | {"✅" if sources.get("website", {{}}).get("success") else "N/A" if not sources.get("website") else "❌"} | [If used] |
-| Knowledge Base | {"✅ " + str(len(kb_chunks)) + " matches" if kb_chunks else "❌ No matches"} | [Matches found] |
+| Claude Web Search | {claude_status} | [Quality] |
+| Google Search | {gemini_status} | [Quality] |
+| Chamber of Commerce | {kvk_status} | [If applicable] |
+| Website Scrape | {website_status} | [If used] |
+| Knowledge Base | {kb_status} | [Matches found] |
 
 ### Information Gaps
 List what could not be verified and must be confirmed in conversation.
