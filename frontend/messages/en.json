@@ -891,7 +891,23 @@
       "account": "Account",
       "subscription": "Subscription",
       "integrations": "Integrations",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "coach": "AI Coach"
+    },
+    "coach": {
+      "title": "AI Coach (Luna)",
+      "description": "Configure your AI sales coach assistant",
+      "enableLabel": "Enable AI Coach",
+      "enableDesc": "Show the floating coach widget on dashboard pages",
+      "resetLabel": "Reset Snoozed Suggestions",
+      "resetHint": "Bring back suggestions you've snoozed",
+      "resetButton": "Reset",
+      "enabled": "Coach Enabled",
+      "enabledDesc": "The AI Coach is now active and will provide suggestions",
+      "disabled": "Coach Disabled",
+      "disabledDesc": "The AI Coach widget is now hidden",
+      "reset": "Suggestions Reset",
+      "resetDesc": "All snoozed suggestions are now visible again"
     },
     "subscription": {
       "description": "Manage your subscription, view usage and invoices"

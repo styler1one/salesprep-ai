@@ -19,15 +19,21 @@ import {
   Bell,
   ExternalLink,
   Sparkles,
-  Crown
+  Crown,
+  Brain,
+  RotateCcw,
+  Power
 } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { useToast } from '@/components/ui/use-toast'
 import { useSettings } from '@/lib/settings-context'
 import { LanguageSelect } from '@/components/language-select'
 import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
 import { useBilling } from '@/lib/billing-context'
 import { UsageMeter } from '@/components/usage-meter'
+import { useCoachOptional } from '@/components/coach/CoachProvider'
+import { api } from '@/lib/api'
 import type { User } from '@supabase/supabase-js'
 
 export default function SettingsPage() {
@@ -42,11 +48,14 @@ export default function SettingsPage() {
   
   const { settings, updateSettings, loading: settingsLoading, loaded: settingsLoaded } = useSettings()
   const { subscription, usage, loading: billingLoading, createCheckoutSession, openBillingPortal } = useBilling()
+  const coach = useCoachOptional()
   
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [billingActionLoading, setBillingActionLoading] = useState(false)
+  const [coachResetting, setCoachResetting] = useState(false)
+  const [coachToggling, setCoachToggling] = useState(false)
   
   // Local state for form
   const [appLanguage, setAppLanguage] = useState('en')
@@ -158,6 +167,54 @@ export default function SettingsPage() {
       })
     } finally {
       setBillingActionLoading(false)
+    }
+  }
+
+  // Coach handlers
+  const handleCoachToggle = async (enabled: boolean) => {
+    if (!coach) return
+    setCoachToggling(true)
+    try {
+      await coach.updateSettings({ is_enabled: enabled })
+      toast({
+        title: enabled ? t('coach.enabled') : t('coach.disabled'),
+        description: enabled ? t('coach.enabledDesc') : t('coach.disabledDesc'),
+      })
+    } catch (error) {
+      console.error('Failed to toggle coach:', error)
+      toast({
+        title: tErrors('generic'),
+        variant: 'destructive',
+      })
+    } finally {
+      setCoachToggling(false)
+    }
+  }
+
+  const handleCoachReset = async () => {
+    setCoachResetting(true)
+    try {
+      const { error } = await api.post('/api/v1/coach/suggestions/reset', {})
+      if (!error) {
+        // Refresh suggestions
+        if (coach) {
+          await coach.refreshSuggestions()
+        }
+        toast({
+          title: t('coach.reset'),
+          description: t('coach.resetDesc'),
+        })
+      } else {
+        throw new Error(error.message)
+      }
+    } catch (error) {
+      console.error('Failed to reset coach:', error)
+      toast({
+        title: tErrors('generic'),
+        variant: 'destructive',
+      })
+    } finally {
+      setCoachResetting(false)
     }
   }
 
@@ -303,6 +360,67 @@ export default function SettingsPage() {
                     {t('unsavedChanges')}
                   </span>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* AI Coach Settings */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-indigo-500" />
+                <CardTitle>{t('coach.title')}</CardTitle>
+              </div>
+              <CardDescription>
+                {t('coach.description')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Enable/Disable Coach */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <label className="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-2">
+                    <Power className="h-4 w-4 text-slate-400" />
+                    {t('coach.enableLabel')}
+                  </label>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {t('coach.enableDesc')}
+                  </p>
+                </div>
+                <Switch
+                  checked={coach?.isEnabled ?? true}
+                  onCheckedChange={handleCoachToggle}
+                  disabled={coachToggling || !coach}
+                />
+              </div>
+
+              {/* Reset Snoozed Suggestions */}
+              <div className="pt-4 border-t">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <label className="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-2">
+                      <RotateCcw className="h-4 w-4 text-slate-400" />
+                      {t('coach.resetLabel')}
+                    </label>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {t('coach.resetHint')}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCoachReset}
+                    disabled={coachResetting}
+                    className="gap-2"
+                  >
+                    {coachResetting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RotateCcw className="h-4 w-4" />
+                    )}
+                    {t('coach.resetButton')}
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

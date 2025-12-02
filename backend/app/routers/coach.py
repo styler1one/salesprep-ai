@@ -457,6 +457,40 @@ async def record_suggestion_action(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Error recording action: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/suggestions/reset")
+async def reset_snoozed_suggestions(
+    current_user: dict = Depends(get_current_user)
+):
+    """Reset all snoozed suggestions for the current user."""
+    supabase = get_supabase_service()
+    user_id = current_user["sub"]
+    
+    try:
+        # Clear snooze_until and action_taken for all snoozed suggestions
+        result = supabase.table("coach_suggestions") \
+            .update({
+                "action_taken": None,
+                "action_taken_at": None,
+                "snooze_until": None,
+            }) \
+            .eq("user_id", user_id) \
+            .eq("action_taken", "snoozed") \
+            .execute()
+        
+        reset_count = len(result.data) if result.data else 0
+        logger.info(f"Reset {reset_count} snoozed suggestions for user {user_id}")
+        
+        return {"success": True, "reset_count": reset_count}
+        
+    except Exception as e:
+        logger.error(f"Error resetting suggestions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
         logger.error(f"Error recording suggestion action: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
