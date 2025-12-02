@@ -10,6 +10,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCoach } from './CoachProvider'
+import { useCoachInsights, getScoreColor, getScoreLabel } from '@/hooks/useCoachInsights'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
@@ -33,6 +34,7 @@ export function CoachExpanded() {
     clickSuggestion,
     updateSettings,
   } = useCoach()
+  const { tip, score, recommendations, predictions } = useCoachInsights()
   const t = useTranslations('coach')
   
   const pendingSuggestions = suggestions.filter(s => !s.action_taken)
@@ -182,17 +184,102 @@ export function CoachExpanded() {
           </div>
         )}
         
-        {/* Tip of the Day */}
-        <div className="bg-indigo-50 dark:bg-indigo-950 rounded-lg p-4 border border-indigo-200 dark:border-indigo-800">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">
-              💡 {t('sections.tip')}
-            </span>
+        {/* Success Score */}
+        {score > 0 && (
+          <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                🏆 {t('sections.score')}
+              </span>
+              <span className={`text-lg font-bold ${getScoreColor(score)}`}>
+                {score}%
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {getScoreLabel(score)}
+            </p>
           </div>
-          <p className="text-sm text-indigo-900 dark:text-indigo-100">
-            {t('tips.contactsImprove')}
-          </p>
-        </div>
+        )}
+        
+        {/* Tip of the Day */}
+        {tip && (
+          <div className="bg-indigo-50 dark:bg-indigo-950 rounded-lg p-4 border border-indigo-200 dark:border-indigo-800">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">{tip.icon}</span>
+              <span className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">
+                {tip.title}
+              </span>
+              {tip.is_personalized && (
+                <span className="text-xs bg-indigo-200 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded">
+                  AI
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-indigo-900 dark:text-indigo-100">
+              {tip.content}
+            </p>
+          </div>
+        )}
+        
+        {/* Predictions */}
+        {predictions.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                🔮 {t('sections.predictions')}
+              </span>
+            </div>
+            {predictions.map((prediction, idx) => (
+              <div 
+                key={idx}
+                className="flex items-start gap-2 p-3 bg-purple-50 dark:bg-purple-950 rounded-lg border border-purple-200 dark:border-purple-800 cursor-pointer hover:border-purple-400 dark:hover:border-purple-600 transition-colors"
+                onClick={() => prediction.action_route && router.push(prediction.action_route)}
+              >
+                <span className="text-lg">{prediction.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-purple-900 dark:text-purple-100">
+                    {prediction.title}
+                  </p>
+                  <p className="text-xs text-purple-700 dark:text-purple-300 mt-0.5">
+                    {prediction.message}
+                  </p>
+                </div>
+                {prediction.action_route && (
+                  <Icons.chevronRight className="h-4 w-4 text-purple-400 flex-shrink-0" />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {/* Recommendations */}
+        {recommendations.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                📝 {t('sections.recommendations')}
+              </span>
+            </div>
+            {recommendations.slice(0, 2).map((rec, idx) => (
+              <div 
+                key={idx}
+                className={`p-3 rounded-lg border ${
+                  rec.priority === 'high' 
+                    ? 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800' 
+                    : 'bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800'
+                }`}
+              >
+                <p className={`text-sm ${
+                  rec.priority === 'high'
+                    ? 'text-red-900 dark:text-red-100'
+                    : 'text-amber-900 dark:text-amber-100'
+                }`}>
+                  {rec.message}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
         
       </div>
       

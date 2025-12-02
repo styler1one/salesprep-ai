@@ -1260,7 +1260,10 @@
       "priority": "Priority",
       "suggestions": "Suggestions",
       "progress": "Today's Progress",
-      "tip": "Tip of the Day"
+      "tip": "Tip of the Day",
+      "score": "Success Score",
+      "predictions": "Predictions",
+      "recommendations": "Recommendations"
     },
     
     "actions": {
