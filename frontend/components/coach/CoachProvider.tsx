@@ -7,7 +7,7 @@
  * Provides coach state and actions to the entire application.
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 import { api } from '@/lib/api'
 import type {
@@ -80,8 +80,6 @@ export function CoachProvider({ children }: CoachProviderProps) {
   }, [])
   
   const fetchSuggestions = useCallback(async () => {
-    if (!isEnabled) return
-    
     try {
       const { data, error } = await api.get<SuggestionsResponse>('/api/v1/coach/suggestions?limit=10')
       if (!error && data) {
@@ -101,7 +99,7 @@ export function CoachProvider({ children }: CoachProviderProps) {
     } catch (err) {
       console.error('Failed to fetch suggestions:', err)
     }
-  }, [isEnabled])
+  }, [])
   
   const fetchStats = useCallback(async () => {
     try {
@@ -155,19 +153,23 @@ export function CoachProvider({ children }: CoachProviderProps) {
     }
   }, [])
   
+  // Use ref to avoid re-creating this callback on every pathname change
+  const pathnameRef = useRef(pathname)
+  pathnameRef.current = pathname
+  
   const trackEvent = useCallback(async (type: EventType, data?: Record<string, unknown>) => {
     try {
       const event: BehaviorEventCreate = {
         event_type: type,
         event_data: data || {},
-        page_context: pathname,
+        page_context: pathnameRef.current,
       }
       await api.post('/api/v1/coach/events', event)
     } catch (err) {
       // Silently fail - tracking shouldn't break the app
       console.debug('Failed to track event:', err)
     }
-  }, [pathname])
+  }, [])
   
   const updateSettings = useCallback(async (updates: CoachSettingsUpdate) => {
     try {
@@ -215,8 +217,14 @@ export function CoachProvider({ children }: CoachProviderProps) {
   // EFFECTS
   // ==========================================================================
   
-  // Initial load - all in parallel, non-blocking
+  // Track if initial load has happened
+  const hasLoadedRef = useRef(false)
+  
+  // Initial load - run only ONCE on mount
   useEffect(() => {
+    if (hasLoadedRef.current) return
+    hasLoadedRef.current = true
+    
     setIsLoading(true)
     
     // Run all fetches in parallel without blocking
@@ -229,23 +237,27 @@ export function CoachProvider({ children }: CoachProviderProps) {
     })
   }, [fetchSettings, fetchSuggestions, fetchStats])
   
-  // Track page views
+  // Track page views - only when pathname changes
+  const lastTrackedPathRef = useRef<string | null>(null)
+  
   useEffect(() => {
-    if (pathname && isEnabled) {
+    // Only track if pathname changed and we have settings loaded
+    if (pathname && pathname !== lastTrackedPathRef.current && settings?.is_enabled !== false) {
+      lastTrackedPathRef.current = pathname
       trackEvent('page_view', { page: pathname })
     }
-  }, [pathname, isEnabled, trackEvent])
+  }, [pathname, settings?.is_enabled, trackEvent])
   
-  // Refresh suggestions periodically (every 5 minutes)
+  // Refresh suggestions periodically (every 5 minutes) - only if enabled
   useEffect(() => {
-    if (!isEnabled) return
+    if (settings?.is_enabled === false) return
     
     const interval = setInterval(() => {
       fetchSuggestions()
     }, 5 * 60 * 1000)
     
     return () => clearInterval(interval)
-  }, [isEnabled, fetchSuggestions])
+  }, [settings?.is_enabled, fetchSuggestions])
   
   // ==========================================================================
   // CONTEXT VALUE
