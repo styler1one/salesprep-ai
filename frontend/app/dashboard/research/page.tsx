@@ -15,6 +15,7 @@ import { suggestLanguageFromCountry } from '@/lib/language-utils'
 import { useTranslations } from 'next-intl'
 import { useSettings } from '@/lib/settings-context'
 import { api } from '@/lib/api'
+import { CoachInlineTip } from '@/components/coach'
 import type { User } from '@supabase/supabase-js'
 import type { ResearchBrief, CompanyOption } from '@/types'
 
@@ -466,6 +467,12 @@ export default function ResearchPage() {
                   <Icons.search className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   {t('form.title')}
                 </h3>
+                
+                {/* Coach Inline Tip */}
+                <CoachInlineTip 
+                  type="research_form" 
+                  className="mb-3"
+                />
                 
                 <form onSubmit={handleStartResearch} className="space-y-3">
                   <div>
