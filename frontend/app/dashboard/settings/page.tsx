@@ -172,10 +172,9 @@ export default function SettingsPage() {
 
   // Coach handlers
   const handleCoachToggle = async (enabled: boolean) => {
-    if (!coach) return
     setCoachToggling(true)
     try {
-      // Update settings via API
+      // Update settings via API directly (works even if coach context isn't ready)
       const { error } = await api.patch('/api/v1/coach/settings', { 
         is_enabled: enabled,
         widget_state: enabled ? 'minimized' : 'hidden'
@@ -400,7 +399,7 @@ export default function SettingsPage() {
                 <Switch
                   checked={coach?.isEnabled ?? true}
                   onCheckedChange={handleCoachToggle}
-                  disabled={coachToggling || !coach}
+                  disabled={coachToggling}
                 />
               </div>
 
