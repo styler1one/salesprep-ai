@@ -467,12 +467,12 @@ async def record_suggestion_action(
 async def reset_snoozed_suggestions(
     current_user: dict = Depends(get_current_user)
 ):
-    """Reset all snoozed suggestions for the current user."""
+    """Reset all snoozed suggestions AND enable coach for the current user."""
     supabase = get_supabase_service()
     user_id = current_user["sub"]
     
     try:
-        # Clear snooze_until and action_taken for all snoozed suggestions
+        # 1. Clear snooze_until and action_taken for all snoozed suggestions
         result = supabase.table("coach_suggestions") \
             .update({
                 "action_taken": None,
@@ -486,7 +486,34 @@ async def reset_snoozed_suggestions(
         reset_count = len(result.data) if result.data else 0
         logger.info(f"Reset {reset_count} snoozed suggestions for user {user_id}")
         
-        return {"success": True, "reset_count": reset_count}
+        # 2. Force enable the coach and set widget to minimized
+        settings_result = supabase.table("coach_settings") \
+            .update({
+                "is_enabled": True,
+                "widget_state": "minimized",
+                "updated_at": datetime.now().isoformat(),
+            }) \
+            .eq("user_id", user_id) \
+            .execute()
+        
+        if settings_result.data:
+            logger.info(f"Enabled coach for user {user_id}: is_enabled=True, widget_state=minimized")
+        else:
+            # Create new settings if they don't exist
+            supabase.table("coach_settings") \
+                .insert({
+                    "user_id": user_id,
+                    "is_enabled": True,
+                    "widget_state": "minimized",
+                    "show_inline_tips": True,
+                    "show_completion_modals": True,
+                    "notification_frequency": "normal",
+                    "dismissed_tip_ids": [],
+                }) \
+                .execute()
+            logger.info(f"Created new enabled coach settings for user {user_id}")
+        
+        return {"success": True, "reset_count": reset_count, "coach_enabled": True}
         
     except Exception as e:
         logger.error(f"Error resetting suggestions: {e}")
