@@ -25,6 +25,9 @@ from app.database import get_supabase_service
 from app.services.contact_analyzer import get_contact_analyzer
 from app.services.contact_search import get_contact_search_service, ContactMatch as ContactMatchModel
 
+# Inngest integration
+from app.inngest.events import send_event, use_inngest_for, Events
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
@@ -554,21 +557,62 @@ async def add_contact_to_research(
         
         created_contact = result.data[0]
         
-        # Start background analysis with user's language preference
-        background_tasks.add_task(
-            analyze_contact_background,
-            contact_id,
-            contact.name,
-            contact.role,
-            contact.linkedin_url,
-            research_id,
-            organization_id,
-            user_id,
-            contact.linkedin_about,
-            contact.linkedin_experience,
-            contact.additional_notes,
-            output_language
-        )
+        # Start analysis via Inngest (if enabled) or BackgroundTasks (fallback)
+        if use_inngest_for("contacts"):
+            event_sent = await send_event(
+                Events.CONTACT_ADDED,
+                {
+                    "contact_id": contact_id,
+                    "contact_name": contact.name,
+                    "contact_role": contact.role,
+                    "linkedin_url": contact.linkedin_url,
+                    "research_id": research_id,
+                    "organization_id": organization_id,
+                    "user_id": user_id,
+                    "linkedin_about": contact.linkedin_about,
+                    "linkedin_experience": contact.linkedin_experience,
+                    "additional_notes": contact.additional_notes,
+                    "language": output_language
+                },
+                user={"id": user_id}
+            )
+            
+            if event_sent:
+                logger.info(f"Contact {contact_id} analysis triggered via Inngest")
+            else:
+                # Fallback to BackgroundTasks if Inngest fails
+                logger.warning(f"Inngest event failed, falling back to BackgroundTasks for contact {contact_id}")
+                background_tasks.add_task(
+                    analyze_contact_background,
+                    contact_id,
+                    contact.name,
+                    contact.role,
+                    contact.linkedin_url,
+                    research_id,
+                    organization_id,
+                    user_id,
+                    contact.linkedin_about,
+                    contact.linkedin_experience,
+                    contact.additional_notes,
+                    output_language
+                )
+        else:
+            # Use BackgroundTasks (legacy/fallback)
+            background_tasks.add_task(
+                analyze_contact_background,
+                contact_id,
+                contact.name,
+                contact.role,
+                contact.linkedin_url,
+                research_id,
+                organization_id,
+                user_id,
+                contact.linkedin_about,
+                contact.linkedin_experience,
+                contact.additional_notes,
+                output_language
+            )
+            logger.info(f"Contact {contact_id} analysis triggered via BackgroundTasks")
         
         return ContactResponse(
             id=created_contact["id"],
@@ -961,21 +1005,52 @@ async def reanalyze_contact(
         .eq("id", contact_id)\
         .execute()
     
-    # Start background analysis with user's language preference
-    background_tasks.add_task(
-        analyze_contact_background,
-        contact_id,
-        contact["name"],
-        contact.get("role"),
-        contact.get("linkedin_url"),
-        research_id,
-        organization_id,
-        user_id,
-        None,  # linkedin_about
-        None,  # linkedin_experience
-        None,  # additional_notes
-        output_language
-    )
+    # Start analysis via Inngest (if enabled) or BackgroundTasks (fallback)
+    if use_inngest_for("contacts"):
+        event_sent = await send_event(
+            Events.CONTACT_ADDED,
+            {
+                "contact_id": contact_id,
+                "contact_name": contact["name"],
+                "contact_role": contact.get("role"),
+                "linkedin_url": contact.get("linkedin_url"),
+                "research_id": research_id,
+                "organization_id": organization_id,
+                "user_id": user_id,
+                "language": output_language
+            },
+            user={"id": user_id}
+        )
+        
+        if event_sent:
+            logger.info(f"Contact {contact_id} re-analysis triggered via Inngest")
+        else:
+            logger.warning(f"Inngest event failed, falling back to BackgroundTasks")
+            background_tasks.add_task(
+                analyze_contact_background,
+                contact_id,
+                contact["name"],
+                contact.get("role"),
+                contact.get("linkedin_url"),
+                research_id,
+                organization_id,
+                user_id,
+                None, None, None,
+                output_language
+            )
+    else:
+        background_tasks.add_task(
+            analyze_contact_background,
+            contact_id,
+            contact["name"],
+            contact.get("role"),
+            contact.get("linkedin_url"),
+            research_id,
+            organization_id,
+            user_id,
+            None, None, None,
+            output_language
+        )
     
     return ContactResponse(
         id=contact["id"],
