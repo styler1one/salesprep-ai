@@ -1343,6 +1343,8 @@
       "titleHighlight": "in seconds",
       "description": "Research prospects, generate personalized briefs, and follow up with AI-powered summaries. Everything you need to close more deals, faster.",
       "startTrial": "Start Free Trial",
+      "startFree": "Start Free",
+      "viewPricing": "View Pricing",
       "watchDemo": "Watch Demo"
     },
     "preview": {
@@ -1366,9 +1368,17 @@
         "title": "Meeting Follow-up",
         "description": "Upload recordings, get AI summaries, action items, and draft follow-up emails automatically."
       },
+      "aiCoach": {
+        "title": "AI Sales Coach",
+        "description": "Your personal sales coach that analyzes your patterns and provides actionable tips to improve."
+      },
       "knowledgeBase": {
         "title": "Knowledge Base",
         "description": "Upload your company docs. The AI uses your context to generate relevant, on-brand content."
+      },
+      "contactAnalysis": {
+        "title": "Contact Analysis",
+        "description": "Get detailed profiles on decision makers with communication preferences and engagement tips."
       }
     },
     "socialProof": {

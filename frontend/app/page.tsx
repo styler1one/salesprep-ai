@@ -83,17 +83,16 @@ export default function Home() {
                 onClick={() => router.push('/signup')}
                 className="bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-lg px-8 h-14"
               >
-                {t('hero.startTrial')}
+                {t('hero.startFree')}
                 <Icons.arrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button 
                 size="lg" 
                 variant="outline"
-                onClick={() => router.push('/login')}
+                onClick={() => router.push('/pricing')}
                 className="text-lg px-8 h-14"
               >
-                <Icons.play className="mr-2 h-5 w-5" />
-                {t('hero.watchDemo')}
+                {t('hero.viewPricing')}
               </Button>
             </div>
           </div>
@@ -173,8 +172,8 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* Feature 1 */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Feature 1: Research */}
             <div className="group p-6 rounded-2xl border dark:border-slate-800 bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Icons.search className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -185,7 +184,7 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Feature 2 */}
+            {/* Feature 2: Preparation */}
             <div className="group p-6 rounded-2xl border dark:border-slate-800 bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Icons.fileText className="h-6 w-6 text-green-600 dark:text-green-400" />
@@ -196,7 +195,7 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Feature 3 */}
+            {/* Feature 3: Follow-up */}
             <div className="group p-6 rounded-2xl border dark:border-slate-800 bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <div className="w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Icons.mail className="h-6 w-6 text-orange-600 dark:text-orange-400" />
@@ -207,7 +206,18 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Feature 4 */}
+            {/* Feature 4: AI Sales Coach */}
+            <div className="group p-6 rounded-2xl border dark:border-slate-800 bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <div className="w-12 h-12 rounded-xl bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Icons.sparkles className="h-6 w-6 text-pink-600 dark:text-pink-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white">{t('features.aiCoach.title')}</h3>
+              <p className="text-slate-600 dark:text-slate-300 text-sm">
+                {t('features.aiCoach.description')}
+              </p>
+            </div>
+
+            {/* Feature 5: Knowledge Base */}
             <div className="group p-6 rounded-2xl border dark:border-slate-800 bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Icons.book className="h-6 w-6 text-purple-600 dark:text-purple-400" />
@@ -215,6 +225,17 @@ export default function Home() {
               <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white">{t('features.knowledgeBase.title')}</h3>
               <p className="text-slate-600 dark:text-slate-300 text-sm">
                 {t('features.knowledgeBase.description')}
+              </p>
+            </div>
+
+            {/* Feature 6: Contact Analysis */}
+            <div className="group p-6 rounded-2xl border dark:border-slate-800 bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <div className="w-12 h-12 rounded-xl bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Icons.users className="h-6 w-6 text-cyan-600 dark:text-cyan-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white">{t('features.contactAnalysis.title')}</h3>
+              <p className="text-slate-600 dark:text-slate-300 text-sm">
+                {t('features.contactAnalysis.description')}
               </p>
             </div>
           </div>
