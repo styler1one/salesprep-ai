@@ -86,6 +86,11 @@ ON CONFLICT (id) DO UPDATE SET
 -- 3. UPDATE HELPER FUNCTIONS FOR FLOW-BASED LIMITS
 -- ============================================
 
+-- Drop existing functions first (required when changing return type)
+DROP FUNCTION IF EXISTS check_usage_limit(UUID, TEXT);
+DROP FUNCTION IF EXISTS check_flow_limit(UUID);
+DROP FUNCTION IF EXISTS increment_flow(UUID);
+
 -- Function to increment flow count
 CREATE OR REPLACE FUNCTION increment_flow(p_organization_id UUID)
 RETURNS BOOLEAN AS $$
