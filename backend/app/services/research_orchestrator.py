@@ -622,7 +622,8 @@ RULES:
 Generate the complete research brief now:"""
 
         try:
-            response = self.claude.client.messages.create(
+            # Use await since claude.client is now AsyncAnthropic
+            response = await self.claude.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=4096,
                 temperature=0.2,
