@@ -256,11 +256,19 @@ export default function SettingsPage() {
     if (subscription.is_trialing) {
       return <Badge className="bg-amber-500">Trial</Badge>
     }
+    // v2 plans
+    if (subscription.plan_id === 'light_solo') {
+      return <Badge className="bg-gradient-to-r from-blue-500 to-indigo-500">Light Solo</Badge>
+    }
+    if (subscription.plan_id === 'unlimited_solo') {
+      return <Badge className="bg-gradient-to-r from-indigo-500 to-purple-500">Unlimited Solo</Badge>
+    }
+    // v1 legacy plans
     if (subscription.plan_id.startsWith('solo')) {
       return <Badge className="bg-gradient-to-r from-blue-500 to-indigo-500">Solo</Badge>
     }
-    if (subscription.plan_id === 'teams') {
-      return <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">Teams</Badge>
+    if (subscription.plan_id === 'teams' || subscription.plan_id === 'enterprise') {
+      return <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">Enterprise</Badge>
     }
     return null
   }
