@@ -294,9 +294,11 @@ async def start_research(
                 prospect_service.update_prospect(prospect_id, organization_id, updates)
         
         # Start processing via Inngest (if enabled) or BackgroundTasks (fallback)
+        use_background_tasks = True  # Default fallback
+        
         if use_inngest_for("research"):
-            # Use Inngest for durable execution and observability
-            await send_event(
+            # Try Inngest for durable execution and observability
+            event_sent = await send_event(
                 Events.RESEARCH_REQUESTED,
                 {
                     "research_id": research_id,
@@ -311,8 +313,13 @@ async def start_research(
                 },
                 user={"id": user_id}
             )
-            logger.info(f"Research {research_id} triggered via Inngest")
-        else:
+            if event_sent:
+                use_background_tasks = False
+                logger.info(f"Research {research_id} triggered via Inngest")
+            else:
+                logger.warning(f"Inngest event failed, falling back to BackgroundTasks for {research_id}")
+        
+        if use_background_tasks:
             # Fallback to BackgroundTasks
             background_tasks.add_task(
                 process_research_background,

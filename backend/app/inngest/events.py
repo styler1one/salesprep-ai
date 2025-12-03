@@ -9,6 +9,7 @@ import os
 import logging
 from typing import Optional, Any
 from functools import wraps
+import inngest
 
 logger = logging.getLogger(__name__)
 
@@ -58,13 +59,12 @@ async def send_event(
         return False
     
     try:
-        event = {
-            "name": event_name,
-            "data": data,
-        }
-        
-        if user:
-            event["user"] = user
+        # Create Inngest Event object (required by SDK)
+        event = inngest.Event(
+            name=event_name,
+            data=data,
+            user=user
+        )
         
         await client.send(event)
         logger.info(f"Inngest event sent: {event_name}")
