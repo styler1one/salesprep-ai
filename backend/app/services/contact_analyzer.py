@@ -43,7 +43,8 @@ class ContactAnalyzer:
         linkedin_url: Optional[str],
         company_context: Dict[str, Any],
         seller_context: Dict[str, Any],
-        language: str = DEFAULT_LANGUAGE
+        language: str = DEFAULT_LANGUAGE,
+        user_provided_context: Optional[Dict[str, str]] = None
     ) -> Dict[str, Any]:
         """
         Analyze a contact person with full context.
@@ -55,6 +56,7 @@ class ContactAnalyzer:
             company_context: Research data about the company
             seller_context: What the seller offers
             language: Output language code
+            user_provided_context: User-provided LinkedIn info (about, experience, notes)
             
         Returns:
             Analysis dict with all insights
@@ -66,11 +68,12 @@ class ContactAnalyzer:
             linkedin_url,
             company_context,
             seller_context,
-            language
+            language,
+            user_provided_context
         )
         
         try:
-            # Build API call - with web search if LinkedIn URL provided
+            # Build API call - ALWAYS enable web search for alternative sources
             api_params = {
                 "model": "claude-sonnet-4-20250514",
                 "max_tokens": 3000,
@@ -78,19 +81,20 @@ class ContactAnalyzer:
                 "messages": [{
                     "role": "user",
                     "content": prompt
-                }]
-            }
-            
-            # Enable web search to actually fetch LinkedIn profile data
-            if linkedin_url:
-                api_params["tools"] = [
+                }],
+                # Always enable web search to find info from alternative sources
+                # (company websites, news, conferences, podcasts, etc.)
+                "tools": [
                     {
                         "type": "web_search_20250305",
                         "name": "web_search",
                         "max_uses": 5  # Allow multiple searches for thorough research
                     }
                 ]
-                logger.info(f"[CONTACT_ANALYZER] Web search enabled for {contact_name}")
+            }
+            
+            has_user_info = bool(user_provided_context)
+            logger.info(f"[CONTACT_ANALYZER] Analyzing {contact_name} - user-provided info: {has_user_info}")
             
             response = self.client.messages.create(**api_params)
             
@@ -121,15 +125,16 @@ class ContactAnalyzer:
         linkedin_url: Optional[str],
         company_context: Dict[str, Any],
         seller_context: Dict[str, Any],
-        language: str = DEFAULT_LANGUAGE
+        language: str = DEFAULT_LANGUAGE,
+        user_provided_context: Optional[Dict[str, str]] = None
     ) -> str:
         """Build the prompt for contact analysis."""
         lang_instruction = get_language_instruction(language)
+        company_name = company_context.get("company_name", "Unknown") if company_context else "Unknown"
         
         # Company context section
         company_section = ""
         if company_context:
-            company_name = company_context.get("company_name", "Unknown")
             industry = company_context.get("industry", "")
             brief = company_context.get("brief_content", "")[:2000] if company_context.get("brief_content") else ""
             
@@ -157,37 +162,53 @@ class ContactAnalyzer:
 **Target Market**: {target}
 """
         
-        # LinkedIn instruction
-        linkedin_instruction = ""
-        if linkedin_url:
-            linkedin_instruction = f"""
-**LinkedIn Profile**: {linkedin_url}
-
-IMPORTANT: Use web search to research this person. Search for:
-1. "{contact_name}" site:linkedin.com - to find their profile
-2. "{contact_name} {contact_role or ''} {company_context.get('company_name', '')}" - for news/mentions
-3. Look for their recent LinkedIn posts and activity
-
-Extract from their LinkedIn profile:
-- Full job history and career progression
-- Education and certifications
-- Skills and endorsements
-- Recent posts (tone, topics, engagement)
-- Recommendations they've received
-- Any articles or content they've shared
-
-This is REAL research - find actual data, not assumptions.
+        # User-provided LinkedIn info section
+        user_info_section = ""
+        if user_provided_context:
+            user_info_section = "\n## USER-PROVIDED PROFILE INFORMATION\n"
+            if user_provided_context.get("about"):
+                user_info_section += f"""
+### LinkedIn About/Summary:
+{user_provided_context.get('about')}
 """
-        else:
-            linkedin_instruction = """
-**No LinkedIn URL available**
+            if user_provided_context.get("experience"):
+                user_info_section += f"""
+### Experience/Background:
+{user_provided_context.get('experience')}
+"""
+            if user_provided_context.get("notes"):
+                user_info_section += f"""
+### Additional Notes:
+{user_provided_context.get('notes')}
+"""
+            user_info_section += "\n**This is verified information directly from their profile. Use it as the primary source.**\n"
+        
+        # Research instruction - ALWAYS search for alternative sources
+        research_instruction = f"""
+## RESEARCH TASK
 
-Base your analysis on:
-- The job title/role provided
-- Typical responsibilities for this role
-- General patterns for this function in this industry
+Use web search to find information about {contact_name}:
 
-Note: This is a role-based analysis without profile-specific data.
+**IMPORTANT: LinkedIn profiles are mostly inaccessible. Search these ALTERNATIVE SOURCES instead:**
+
+1. **Company website**: Search "{company_name} team" or "{company_name} about us" or "{company_name} leadership"
+2. **News & press**: Search "{contact_name} {company_name}" for news articles, press releases, interviews
+3. **Conference/events**: Search "{contact_name} speaker" or "{contact_name} conference" or "{contact_name} webinar"
+4. **Podcasts**: Search "{contact_name} podcast" or "{contact_name} interview"
+5. **Industry publications**: Search in relevant trade publications
+6. **GitHub/technical**: For tech roles, search "{contact_name} github" or "{contact_name} developer"
+7. **Twitter/X**: Search for their professional social media presence
+
+**What to look for:**
+- Career background and achievements
+- Published articles or thought leadership
+- Speaking engagements or podcast appearances
+- Quotes in news articles
+- Professional interests and expertise areas
+- Communication style from public content
+- Recent news or announcements
+
+**LinkedIn URL for reference** (if available): {linkedin_url or 'Not provided'}
 """
         
         prompt = f"""You are a sales research assistant analyzing contact persons for personalized sales conversations. {lang_instruction}
@@ -195,11 +216,12 @@ Note: This is a role-based analysis without profile-specific data.
 {company_section}
 
 {seller_section}
+{user_info_section}
+{research_instruction}
 
 ## CONTACT PERSON TO ANALYZE
 **Name**: {contact_name}
 **Role**: {contact_role or 'Not specified'}
-{linkedin_instruction}
 
 ---
 

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
@@ -17,7 +18,7 @@ import { ContactMatchCard, ContactMatch } from './contact-match-card'
 import { useToast } from '@/components/ui/use-toast'
 import { api } from '@/lib/api'
 
-type ModalStep = 'search' | 'loading' | 'results' | 'confirm'
+type ModalStep = 'search' | 'loading' | 'results' | 'enrich' | 'confirm'
 
 interface Contact {
   id: string
@@ -59,6 +60,11 @@ export function ContactSearchModal({
   const [selectedMatch, setSelectedMatch] = useState<ContactMatch | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  // Enrich step - user-provided LinkedIn info
+  const [linkedinAbout, setLinkedinAbout] = useState('')
+  const [linkedinExperience, setLinkedinExperience] = useState('')
+  const [additionalNotes, setAdditionalNotes] = useState('')
+
   // Confirm step additional fields
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -73,6 +79,9 @@ export function ContactSearchModal({
     setMatches([])
     setSelectedMatch(null)
     setError(null)
+    setLinkedinAbout('')
+    setLinkedinExperience('')
+    setAdditionalNotes('')
     setEmail('')
     setPhone('')
     setIsPrimary(false)
@@ -119,15 +128,20 @@ export function ContactSearchModal({
     }
   }
 
-  // Select a match
+  // Select a match - go to enrich step
   const handleSelect = (match: ContactMatch) => {
     setSelectedMatch(match)
+    setStep('enrich')
+  }
+
+  // Skip to manual entry (no LinkedIn found)
+  const handleSkipSearch = () => {
+    setSelectedMatch(null)
     setStep('confirm')
   }
 
-  // Skip to manual entry
-  const handleSkipSearch = () => {
-    setSelectedMatch(null)
+  // Skip enrichment and go directly to confirm
+  const handleSkipEnrich = () => {
     setStep('confirm')
   }
 
@@ -136,13 +150,20 @@ export function ContactSearchModal({
     if (step === 'results') {
       setStep('search')
       setMatches([])
-    } else if (step === 'confirm') {
+    } else if (step === 'enrich') {
       if (matches.length > 0) {
         setStep('results')
       } else {
         setStep('search')
       }
-      setSelectedMatch(null)
+    } else if (step === 'confirm') {
+      if (selectedMatch) {
+        setStep('enrich')
+      } else if (matches.length > 0) {
+        setStep('results')
+      } else {
+        setStep('search')
+      }
     }
   }
 
@@ -169,7 +190,11 @@ export function ContactSearchModal({
           linkedin_url: selectedMatch?.linkedin_url || null,
           email: email.trim() || null,
           phone: phone.trim() || null,
-          is_primary: isPrimary
+          is_primary: isPrimary,
+          // User-provided LinkedIn info for richer analysis
+          linkedin_about: linkedinAbout.trim() || null,
+          linkedin_experience: linkedinExperience.trim() || null,
+          additional_notes: additionalNotes.trim() || null
         }
       )
 
@@ -215,6 +240,7 @@ export function ContactSearchModal({
             {step === 'search' && t('contacts.search.title')}
             {step === 'loading' && t('contacts.search.title')}
             {step === 'results' && t('contacts.search.resultsTitle')}
+            {step === 'enrich' && t('contacts.search.enrichTitle')}
             {step === 'confirm' && t('contacts.search.confirmTitle')}
           </DialogTitle>
         </DialogHeader>
@@ -330,6 +356,97 @@ export function ContactSearchModal({
               >
                 <Icons.plus className="h-4 w-4 mr-2" />
                 {t('contacts.search.addManually')}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2.5: Enrich with LinkedIn Info */}
+        {step === 'enrich' && selectedMatch && (
+          <div className="space-y-4">
+            {/* Selected profile summary */}
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <div className="flex items-center gap-2 text-blue-900 dark:text-blue-100 font-medium text-sm">
+                <span>✓</span>
+                <span>{selectedMatch.name}</span>
+                {selectedMatch.title && <span className="text-blue-600 dark:text-blue-400">• {selectedMatch.title}</span>}
+              </div>
+            </div>
+
+            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Icons.lightbulb className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-amber-800 dark:text-amber-200">
+                  <p className="font-medium mb-1">{t('contacts.search.enrichTip')}</p>
+                  <p className="text-amber-700 dark:text-amber-300">{t('contacts.search.enrichDescription')}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="linkedin-about" className="text-sm font-medium">
+                  {t('contacts.search.aboutLabel')}
+                </Label>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1.5">
+                  {t('contacts.search.aboutHint')}
+                </p>
+                <Textarea
+                  id="linkedin-about"
+                  placeholder={t('contacts.search.aboutPlaceholder')}
+                  value={linkedinAbout}
+                  onChange={(e) => setLinkedinAbout(e.target.value)}
+                  className="min-h-[80px] text-sm"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="linkedin-experience" className="text-sm font-medium">
+                  {t('contacts.search.experienceLabel')}
+                </Label>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1.5">
+                  {t('contacts.search.experienceHint')}
+                </p>
+                <Textarea
+                  id="linkedin-experience"
+                  placeholder={t('contacts.search.experiencePlaceholder')}
+                  value={linkedinExperience}
+                  onChange={(e) => setLinkedinExperience(e.target.value)}
+                  className="min-h-[80px] text-sm"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="additional-notes" className="text-sm font-medium">
+                  {t('contacts.search.notesLabel')}
+                </Label>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1.5">
+                  {t('contacts.search.notesHint')}
+                </p>
+                <Textarea
+                  id="additional-notes"
+                  placeholder={t('contacts.search.notesPlaceholder')}
+                  value={additionalNotes}
+                  onChange={(e) => setAdditionalNotes(e.target.value)}
+                  className="min-h-[60px] text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button 
+                variant="outline"
+                onClick={handleSkipEnrich}
+                className="flex-1"
+              >
+                {t('contacts.search.skipEnrich')}
+              </Button>
+              <Button 
+                onClick={() => setStep('confirm')}
+                className="flex-1"
+              >
+                <Icons.arrowRight className="h-4 w-4 mr-2" />
+                {t('contacts.search.continueButton')}
               </Button>
             </div>
           </div>

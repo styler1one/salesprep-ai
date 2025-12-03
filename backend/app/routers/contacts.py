@@ -43,6 +43,10 @@ class ContactCreate(BaseModel):
     email: Optional[str] = None
     phone: Optional[str] = None
     is_primary: bool = False
+    # User-provided LinkedIn info (since LinkedIn blocks scraping)
+    linkedin_about: Optional[str] = None
+    linkedin_experience: Optional[str] = None
+    additional_notes: Optional[str] = None
 
 
 class ContactResponse(BaseModel):
@@ -337,7 +341,11 @@ def analyze_contact_background(
     linkedin_url: Optional[str],
     research_id: str,
     organization_id: str,
-    user_id: str
+    user_id: str,
+    # User-provided info
+    linkedin_about: Optional[str] = None,
+    linkedin_experience: Optional[str] = None,
+    additional_notes: Optional[str] = None
 ):
     """Background task to analyze contact."""
     import asyncio
@@ -351,13 +359,23 @@ def analyze_contact_background(
         company_context = asyncio.run(analyzer.get_company_context(research_id))
         seller_context = asyncio.run(analyzer.get_seller_context(organization_id, user_id))
         
+        # Build user-provided context
+        user_provided_context = {}
+        if linkedin_about:
+            user_provided_context["about"] = linkedin_about
+        if linkedin_experience:
+            user_provided_context["experience"] = linkedin_experience
+        if additional_notes:
+            user_provided_context["notes"] = additional_notes
+        
         # Run analysis
         analysis = asyncio.run(analyzer.analyze_contact(
             contact_name=contact_name,
             contact_role=contact_role,
             linkedin_url=linkedin_url,
             company_context=company_context,
-            seller_context=seller_context
+            seller_context=seller_context,
+            user_provided_context=user_provided_context if user_provided_context else None
         ))
         
         # Update contact with analysis results
@@ -527,7 +545,10 @@ async def add_contact_to_research(
             contact.linkedin_url,
             research_id,
             organization_id,
-            user_id
+            user_id,
+            contact.linkedin_about,
+            contact.linkedin_experience,
+            contact.additional_notes
         )
         
         return ContactResponse(
