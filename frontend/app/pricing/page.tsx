@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -30,6 +31,17 @@ export default function PricingPage() {
   const t = useTranslations('billing')
   const tErrors = useTranslations('errors')
   const [loading, setLoading] = useState<string | null>(null)
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
+  const supabase = createClientComponentClient()
+
+  // Check if user is logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setIsLoggedIn(!!user)
+    }
+    checkAuth()
+  }, [supabase])
 
   // v2 Features - all plans include KB and transcription
   const features = {
@@ -76,6 +88,12 @@ export default function PricingPage() {
   }
 
   const handleSelectPlan = async (planId: string) => {
+    // If not logged in, redirect to signup
+    if (!isLoggedIn) {
+      router.push(`/signup?plan=${planId}`)
+      return
+    }
+
     if (planId === 'free') {
       toast({
         title: t('plans.free.name'),
@@ -108,12 +126,19 @@ export default function PricingPage() {
   }
 
   const handleDonation = async () => {
+    // If not logged in, redirect to signup
+    if (!isLoggedIn) {
+      router.push('/signup')
+      return
+    }
+
     try {
       // Get donation link from backend
-      const response = await fetch('/api/v1/billing/donation-link', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/billing/donation-link`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          'Content-Type': 'application/json',
         },
+        credentials: 'include',
       })
       if (response.ok) {
         const data = await response.json()
@@ -131,6 +156,8 @@ export default function PricingPage() {
   }
 
   const isCurrentPlan = (planId: string) => {
+    // If not logged in, no plan is "current"
+    if (!isLoggedIn) return false
     if (!subscription) return planId === 'free'
     return subscription.plan_id === planId
   }
@@ -206,10 +233,16 @@ export default function PricingPage() {
                 variant="outline" 
                 className="w-full"
                 disabled={isCurrentPlan('free')}
+                onClick={() => !isLoggedIn && router.push('/signup')}
               >
-                {isCurrentPlan('free') ? t('pricing.currentPlan') : t('pricing.startFree')}
+                {!isLoggedIn 
+                  ? t('pricing.getStarted')
+                  : isCurrentPlan('free') 
+                    ? t('pricing.currentPlan') 
+                    : t('pricing.startFree')
+                }
               </Button>
-              {isCurrentPlan('free') && (
+              {isLoggedIn && isCurrentPlan('free') && (
                 <Button 
                   variant="ghost" 
                   size="sm"
@@ -263,6 +296,8 @@ export default function PricingPage() {
               >
                 {loading === 'light_solo' ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : !isLoggedIn ? (
+                  t('pricing.getStarted')
                 ) : isCurrentPlan('light_solo') ? (
                   t('pricing.currentPlan')
                 ) : (
@@ -317,6 +352,11 @@ export default function PricingPage() {
               >
                 {loading === 'unlimited_solo' ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : !isLoggedIn ? (
+                  <>
+                    <Infinity className="h-4 w-4 mr-2" />
+                    {t('pricing.getStarted')}
+                  </>
                 ) : isCurrentPlan('unlimited_solo') ? (
                   t('pricing.currentPlan')
                 ) : (
