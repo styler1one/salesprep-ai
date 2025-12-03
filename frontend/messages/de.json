@@ -1089,22 +1089,38 @@
     "portalError": "Portal konnte nicht geöffnet werden. Bitte versuche es erneut.",
     "pricing": {
       "title": "Wähle den Plan, der zu dir passt",
+      "titleV2": "Einfache Preise für jeden Sales-Profi",
       "subtitle": "Starte kostenlos und upgrade, wenn du bereit bist. 14 Tage kostenlos testen, keine Kreditkarte erforderlich.",
+      "subtitleV2": "Starte kostenlos mit 2 Flows. Upgrade wenn du mehr brauchst.",
+      "flowExplanation": "1 Flow = 1 Research + 1 Vorbereitung + 1 Follow-up",
       "monthly": "Monatlich",
       "yearly": "Jährlich",
       "save": "Spare {percent}%",
       "backToDashboard": "Zurück zum Dashboard",
       "popular": "Beliebt",
+      "earlyAdopter": "Early Adopter",
       "currentPlan": "Aktueller Plan",
       "select": "Auswählen",
+      "startFree": "Kostenlos starten",
       "startTrial": "14 Tage kostenlos testen",
+      "getStarted": "Loslegen",
+      "upgrade": "Upgraden",
+      "goUnlimited": "Unbegrenzt nutzen",
       "contactUs": "Kontaktiere uns",
+      "contactSales": "Vertrieb kontaktieren",
+      "alreadyFree": "Du hast bereits den kostenlosen Plan.",
+      "donate": "Unterstütze uns ❤️",
       "perYear": "pro Jahr",
       "contactForPricing": "Kontaktiere uns für Preise",
       "custom": "Individuell",
       "compareFeatures": "Features vergleichen",
       "feature": "Feature",
-      "trustBadges": "🔒 Sichere Zahlung über Stripe • 💳 Alle gängigen Karten • ❌ Jederzeit kündbar"
+      "trustBadges": "🔒 Sichere Zahlung über Stripe • 💳 Alle gängigen Karten • ❌ Jederzeit kündbar",
+      "whatIsFlow": "Was ist ein Flow?",
+      "flowStep1": "Research",
+      "flowStep2": "Vorbereitung",
+      "flowStep3": "Follow-up",
+      "flowDescription": "Ein kompletter Verkaufszyklus von Interessenten-Research bis Meeting-Follow-up."
     },
     "plans": {
       "free": {
@@ -1189,6 +1205,8 @@
       "titleHighlight": "in Sekunden",
       "description": "Recherchiere Interessenten, erstelle personalisierte Briefings und führe Follow-ups mit KI-generierten Zusammenfassungen durch. Alles, was du brauchst, um mehr Deals schneller abzuschließen.",
       "startTrial": "Kostenlos testen",
+      "startFree": "Kostenlos starten",
+      "viewPricing": "Preise ansehen",
       "watchDemo": "Demo ansehen"
     },
     "preview": {
@@ -1212,9 +1230,17 @@
         "title": "Meeting-Nachbereitung",
         "description": "Lade Aufnahmen hoch, erhalte KI-Zusammenfassungen, Aktionspunkte und automatische Follow-up-E-Mail-Entwürfe."
       },
+      "aiCoach": {
+        "title": "KI Sales Coach",
+        "description": "Dein persönlicher Sales Coach, der deine Muster analysiert und praktische Tipps zur Verbesserung gibt."
+      },
       "knowledgeBase": {
         "title": "Wissensdatenbank",
         "description": "Lade deine Unternehmensdokumente hoch. Die KI nutzt deinen Kontext, um relevante, markengerechte Inhalte zu erstellen."
+      },
+      "contactAnalysis": {
+        "title": "Kontaktanalyse",
+        "description": "Erhalte detaillierte Profile von Entscheidern mit Kommunikationspräferenzen und Engagement-Tipps."
       }
     },
     "socialProof": {

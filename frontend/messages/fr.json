@@ -1083,22 +1083,38 @@
     "portalError": "Impossible d'ouvrir le portail. Veuillez réessayer.",
     "pricing": {
       "title": "Choisissez le plan qui vous convient",
+      "titleV2": "Tarification simple pour chaque professionnel de la vente",
       "subtitle": "Commencez gratuitement et passez à la version supérieure quand vous êtes prêt. 14 jours d'essai gratuit, sans carte bancaire.",
+      "subtitleV2": "Commencez gratuitement avec 2 flows. Passez à la version supérieure si besoin.",
+      "flowExplanation": "1 Flow = 1 Recherche + 1 Préparation + 1 Suivi",
       "monthly": "Mensuel",
       "yearly": "Annuel",
       "save": "Économisez {percent}%",
       "backToDashboard": "Retour au tableau de bord",
       "popular": "Populaire",
+      "earlyAdopter": "Early Adopter",
       "currentPlan": "Plan actuel",
       "select": "Sélectionner",
+      "startFree": "Commencer gratuitement",
       "startTrial": "Essai gratuit 14 jours",
+      "getStarted": "Commencer",
+      "upgrade": "Passer à la version supérieure",
+      "goUnlimited": "Passer en illimité",
       "contactUs": "Contactez-nous",
+      "contactSales": "Contacter les ventes",
+      "alreadyFree": "Vous avez déjà le plan gratuit.",
+      "donate": "Soutenez-nous ❤️",
       "perYear": "par an",
       "contactForPricing": "Contactez-nous pour les tarifs",
       "custom": "Sur mesure",
       "compareFeatures": "Comparer les fonctionnalités",
       "feature": "Fonctionnalité",
-      "trustBadges": "🔒 Paiement sécurisé via Stripe • 💳 Toutes cartes acceptées • ❌ Annulation à tout moment"
+      "trustBadges": "🔒 Paiement sécurisé via Stripe • 💳 Toutes cartes acceptées • ❌ Annulation à tout moment",
+      "whatIsFlow": "Qu'est-ce qu'un Flow ?",
+      "flowStep1": "Recherche",
+      "flowStep2": "Préparation",
+      "flowStep3": "Suivi",
+      "flowDescription": "Un cycle de vente complet de la recherche de prospects au suivi de réunion."
     },
     "plans": {
       "free": {
@@ -1183,6 +1199,8 @@
       "titleHighlight": "en quelques secondes",
       "description": "Recherchez des prospects, générez des briefings personnalisés et effectuez des suivis avec des résumés générés par l'IA. Tout ce dont vous avez besoin pour conclure plus de ventes, plus rapidement.",
       "startTrial": "Essai gratuit",
+      "startFree": "Commencer gratuitement",
+      "viewPricing": "Voir les prix",
       "watchDemo": "Voir la démo"
     },
     "preview": {
@@ -1206,9 +1224,17 @@
         "title": "Suivi de réunion",
         "description": "Téléchargez des enregistrements, obtenez des résumés IA, des actions à entreprendre et des brouillons d'e-mails de suivi automatiquement."
       },
+      "aiCoach": {
+        "title": "Coach Commercial IA",
+        "description": "Votre coach commercial personnel qui analyse vos habitudes et vous donne des conseils pratiques pour vous améliorer."
+      },
       "knowledgeBase": {
         "title": "Base de connaissances",
         "description": "Téléchargez vos documents d'entreprise. L'IA utilise votre contexte pour générer du contenu pertinent et conforme à votre marque."
+      },
+      "contactAnalysis": {
+        "title": "Analyse des contacts",
+        "description": "Obtenez des profils détaillés des décideurs avec leurs préférences de communication et des conseils d'engagement."
       }
     },
     "socialProof": {

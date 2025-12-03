@@ -1083,22 +1083,38 @@
     "portalError": "No se pudo abrir el portal. Por favor, inténtalo de nuevo.",
     "pricing": {
       "title": "Elige el plan que te convenga",
+      "titleV2": "Precios simples para cada profesional de ventas",
       "subtitle": "Empieza gratis y actualiza cuando estés listo. 14 días de prueba gratis, sin tarjeta de crédito.",
+      "subtitleV2": "Empieza gratis con 2 flows. Actualiza cuando necesites más.",
+      "flowExplanation": "1 Flow = 1 Investigación + 1 Preparación + 1 Seguimiento",
       "monthly": "Mensual",
       "yearly": "Anual",
       "save": "Ahorra {percent}%",
       "backToDashboard": "Volver al panel",
       "popular": "Popular",
+      "earlyAdopter": "Early Adopter",
       "currentPlan": "Plan actual",
       "select": "Seleccionar",
+      "startFree": "Empezar gratis",
       "startTrial": "Prueba gratis 14 días",
+      "getStarted": "Comenzar",
+      "upgrade": "Actualizar",
+      "goUnlimited": "Ir a ilimitado",
       "contactUs": "Contáctanos",
+      "contactSales": "Contactar ventas",
+      "alreadyFree": "Ya tienes el plan gratuito.",
+      "donate": "Apóyanos ❤️",
       "perYear": "por año",
       "contactForPricing": "Contáctanos para precios",
       "custom": "Personalizado",
       "compareFeatures": "Comparar características",
       "feature": "Característica",
-      "trustBadges": "🔒 Pago seguro via Stripe • 💳 Todas las tarjetas aceptadas • ❌ Cancela cuando quieras"
+      "trustBadges": "🔒 Pago seguro via Stripe • 💳 Todas las tarjetas aceptadas • ❌ Cancela cuando quieras",
+      "whatIsFlow": "¿Qué es un Flow?",
+      "flowStep1": "Investigación",
+      "flowStep2": "Preparación",
+      "flowStep3": "Seguimiento",
+      "flowDescription": "Un ciclo de ventas completo desde la investigación de prospectos hasta el seguimiento de reuniones."
     },
     "plans": {
       "free": {
@@ -1183,6 +1199,8 @@
       "titleHighlight": "en segundos",
       "description": "Investiga prospectos, genera informes personalizados y haz seguimiento con resúmenes generados por IA. Todo lo que necesitas para cerrar más ventas, más rápido.",
       "startTrial": "Prueba gratis",
+      "startFree": "Empezar gratis",
+      "viewPricing": "Ver precios",
       "watchDemo": "Ver demo"
     },
     "preview": {
@@ -1206,9 +1224,17 @@
         "title": "Seguimiento de reuniones",
         "description": "Sube grabaciones, obtén resúmenes de IA, elementos de acción y borradores de correos de seguimiento automáticamente."
       },
+      "aiCoach": {
+        "title": "Coach de Ventas IA",
+        "description": "Tu coach de ventas personal que analiza tus patrones y te da consejos prácticos para mejorar."
+      },
       "knowledgeBase": {
         "title": "Base de conocimientos",
         "description": "Sube tus documentos de empresa. La IA usa tu contexto para generar contenido relevante y acorde a tu marca."
+      },
+      "contactAnalysis": {
+        "title": "Análisis de contactos",
+        "description": "Obtén perfiles detallados de tomadores de decisiones con preferencias de comunicación y consejos de engagement."
       }
     },
     "socialProof": {

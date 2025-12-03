@@ -1095,22 +1095,38 @@
     "portalError": "Kon beheerportaal niet openen. Probeer opnieuw.",
     "pricing": {
       "title": "Kies het plan dat bij je past",
+      "titleV2": "Simpele prijzen voor elke sales pro",
       "subtitle": "Start gratis en upgrade wanneer je klaar bent. 14 dagen gratis proberen, geen creditcard nodig.",
+      "subtitleV2": "Start gratis met 2 flows. Upgrade wanneer je meer nodig hebt.",
+      "flowExplanation": "1 Flow = 1 Research + 1 Prep + 1 Follow-up",
       "monthly": "Maandelijks",
       "yearly": "Jaarlijks",
       "save": "Bespaar {percent}%",
       "backToDashboard": "Terug naar dashboard",
       "popular": "Populair",
+      "earlyAdopter": "Early Adopter",
       "currentPlan": "Huidig plan",
       "select": "Selecteer",
+      "startFree": "Start Gratis",
       "startTrial": "Start 14 dagen trial",
+      "getStarted": "Aan de slag",
+      "upgrade": "Upgraden",
+      "goUnlimited": "Ga Unlimited",
       "contactUs": "Neem contact op",
+      "contactSales": "Contact Sales",
+      "alreadyFree": "Je hebt al het gratis plan.",
+      "donate": "Steun ons ❤️",
       "perYear": "per jaar",
       "contactForPricing": "Neem contact op voor pricing",
       "custom": "Op maat",
       "compareFeatures": "Vergelijk features",
       "feature": "Feature",
-      "trustBadges": "🔒 Veilig betalen via Stripe • 💳 iDEAL, creditcard, Bancontact • ❌ Opzeggen wanneer je wilt"
+      "trustBadges": "🔒 Veilig betalen via Stripe • 💳 iDEAL, creditcard, Bancontact • ❌ Opzeggen wanneer je wilt",
+      "whatIsFlow": "Wat is een Flow?",
+      "flowStep1": "Research",
+      "flowStep2": "Voorbereiding",
+      "flowStep3": "Follow-up",
+      "flowDescription": "Een complete sales cyclus van prospect research tot meeting follow-up."
     },
     "plans": {
       "free": {
@@ -1119,11 +1135,28 @@
       },
       "solo": {
         "name": "Solo",
-        "description": "Voor de individuele sales pro"
+        "description": "Voor de individuele sales professional"
       },
       "teams": {
         "name": "Teams",
         "description": "Voor sales teams"
+      },
+      "v2": {
+        "free": {
+          "description": "Start gratis met 2 flows"
+        },
+        "lightSolo": {
+          "name": "Light Solo",
+          "description": "Voor de startende sales pro"
+        },
+        "unlimitedSolo": {
+          "name": "Unlimited Solo",
+          "description": "Onbeperkt voor early adopters"
+        },
+        "enterprise": {
+          "name": "Enterprise",
+          "description": "Voor teams met CRM behoeften"
+        }
       }
     },
     "features": {
@@ -1138,6 +1171,26 @@
       "unlimited": "Onbeperkt",
       "hours": "uur",
       "docs": "docs",
+      "v2": {
+        "flows": "{count} flows per maand",
+        "flowsUnlimited": "Onbeperkt flows",
+        "kb": "Knowledge Base inbegrepen",
+        "transcription": "Transcriptie inbegrepen",
+        "contacts": "Volledige contact analyse",
+        "pdf": "Clean PDF exports",
+        "user": "{count} gebruiker",
+        "usersUnlimited": "Onbeperkt gebruikers",
+        "support": "Email support",
+        "prioritySupport": "Priority support",
+        "dedicatedSupport": "Dedicated support",
+        "crm": "CRM integratie",
+        "crmDynamics": "Microsoft Dynamics",
+        "crmSalesforce": "Salesforce",
+        "crmHubspot": "HubSpot",
+        "crmPipedrive": "Pipedrive",
+        "crmZoho": "Zoho CRM",
+        "sso": "SSO/SAML"
+      },
       "free": {
         "research": "3 research briefs per maand",
         "prep": "3 meeting preps per maand",
@@ -1160,12 +1213,12 @@
         "users": "1 gebruiker"
       },
       "teams": {
-        "everything": "Alles van Solo",
+        "everything": "Alles in Solo",
         "users": "Onbeperkt gebruikers",
         "transcription": "Onbeperkt transcriptie",
         "kb": "Onbeperkt knowledge base",
         "crm": "CRM integratie",
-        "sharing": "Team sharing & collab",
+        "sharing": "Team sharing & samenwerking",
         "analytics": "Team analytics",
         "sso": "SSO/SAML",
         "support": "Dedicated support",
@@ -1195,6 +1248,8 @@
       "titleHighlight": "in seconden",
       "description": "Research prospects, genereer gepersonaliseerde briefs en volg op met AI-gestuurde samenvattingen. Alles wat je nodig hebt om meer deals te sluiten, sneller.",
       "startTrial": "Start Gratis Proefperiode",
+      "startFree": "Start Gratis",
+      "viewPricing": "Bekijk Prijzen",
       "watchDemo": "Bekijk Demo"
     },
     "preview": {
@@ -1218,9 +1273,17 @@
         "title": "Meeting Follow-up",
         "description": "Upload opnames, krijg AI-samenvattingen, actiepunten en concept follow-up emails automatisch."
       },
+      "aiCoach": {
+        "title": "AI Sales Coach",
+        "description": "Je persoonlijke sales coach die je patronen analyseert en praktische tips geeft om te verbeteren."
+      },
       "knowledgeBase": {
         "title": "Knowledge Base",
         "description": "Upload je bedrijfsdocumenten. De AI gebruikt jouw context om relevante, on-brand content te genereren."
+      },
+      "contactAnalysis": {
+        "title": "Contact Analyse",
+        "description": "Krijg gedetailleerde profielen van beslissers met communicatievoorkeuren en engagement tips."
       }
     },
     "socialProof": {
