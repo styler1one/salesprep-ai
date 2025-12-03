@@ -36,3 +36,6 @@ slowapi>=0.1.9  # Rate limiting
 
 # Workflow orchestration
 inngest>=0.4.0  # Event-driven workflow orchestration
+
+# Error tracking & monitoring
+sentry-sdk[fastapi]>=2.19.0  # Error tracking with FastAPI integration

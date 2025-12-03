@@ -9,6 +9,44 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from app.routers import users, knowledge_base, research, sales_profile, company_profile, context, preparation, followup, followup_actions, prospects, contacts, settings, billing, webhooks, deals, coach
 
+# Sentry imports (error tracking)
+try:
+    import sentry_sdk
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+    from sentry_sdk.integrations.starlette import StarletteIntegration
+    SENTRY_DSN = os.getenv("SENTRY_DSN")
+    if SENTRY_DSN:
+        sentry_sdk.init(
+            dsn=SENTRY_DSN,
+            # Set traces_sample_rate to 1.0 to capture 100% of transactions for tracing.
+            # We recommend adjusting this in production.
+            traces_sample_rate=0.1,
+            # Set profiles_sample_rate to 1.0 to profile 100% of sampled transactions.
+            # We recommend adjusting this in production.
+            profiles_sample_rate=0.1,
+            # Enable performance monitoring
+            enable_tracing=True,
+            # Environment tag
+            environment=os.getenv("ENVIRONMENT", "development"),
+            # Release version
+            release=os.getenv("RELEASE_VERSION", "1.12.0"),
+            # Integrations
+            integrations=[
+                FastApiIntegration(),
+                StarletteIntegration(),
+            ],
+            # Filter out health checks
+            before_send=lambda event, hint: None if event.get("request", {}).get("url", "").endswith("/health") else event,
+        )
+        SENTRY_ENABLED = True
+        logging.info("Sentry error tracking enabled")
+    else:
+        SENTRY_ENABLED = False
+        logging.info("Sentry DSN not configured, error tracking disabled")
+except ImportError:
+    SENTRY_ENABLED = False
+    logging.warning("Sentry SDK not installed, error tracking disabled")
+
 # Inngest imports (workflow orchestration)
 try:
     import inngest.fast_api
@@ -104,6 +142,7 @@ def health_check():
     return {
         "status": "ok",
         "environment": os.getenv("ENVIRONMENT", "development"),
+        "sentry": "enabled" if SENTRY_ENABLED else "disabled",
         "inngest": "enabled" if INNGEST_ENABLED else "disabled"
     }
 
