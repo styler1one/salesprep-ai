@@ -8,6 +8,7 @@ from .research import research_company_fn
 from .preparation import preparation_meeting_fn
 from .followup import process_followup_audio_fn, process_followup_transcript_fn
 from .contacts import analyze_contact_fn
+from .followup_actions import generate_followup_action_fn
 
 # All functions to register with Inngest
 all_functions = [
@@ -16,6 +17,7 @@ all_functions = [
     process_followup_audio_fn,
     process_followup_transcript_fn,
     analyze_contact_fn,
+    generate_followup_action_fn,
 ]
 
 __all__ = [
@@ -25,5 +27,6 @@ __all__ = [
     "process_followup_audio_fn",
     "process_followup_transcript_fn",
     "analyze_contact_fn",
+    "generate_followup_action_fn",
 ]
 

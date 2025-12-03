@@ -22,6 +22,9 @@ from app.models.followup_actions import (
     ActionTypesResponse,
 )
 
+# Inngest integration
+from app.inngest.events import send_event, use_inngest_for, Events
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/followup", tags=["followup-actions"])
@@ -142,15 +145,43 @@ async def generate_action(
         if not insert_result.data:
             raise HTTPException(status_code=500, detail="Failed to create action")
         
-        # Trigger background generation
-        background_tasks.add_task(
-            generate_action_content,
-            action_id=action_id,
-            followup_id=followup_id,
-            action_type=request.action_type,
-            user_id=user_id,
-            language=language,
-        )
+        # Trigger generation via Inngest (if enabled) or BackgroundTasks (fallback)
+        if use_inngest_for("followup_actions"):
+            event_sent = await send_event(
+                Events.FOLLOWUP_ACTION_REQUESTED,
+                {
+                    "action_id": action_id,
+                    "followup_id": followup_id,
+                    "action_type": request.action_type.value,
+                    "user_id": user_id,
+                    "language": language
+                },
+                user={"id": user_id}
+            )
+            
+            if event_sent:
+                logger.info(f"Action {action_id} triggered via Inngest")
+            else:
+                # Fallback to BackgroundTasks if Inngest fails
+                logger.warning(f"Inngest event failed, falling back to BackgroundTasks")
+                background_tasks.add_task(
+                    generate_action_content,
+                    action_id=action_id,
+                    followup_id=followup_id,
+                    action_type=request.action_type,
+                    user_id=user_id,
+                    language=language,
+                )
+        else:
+            # Use BackgroundTasks (legacy/fallback)
+            background_tasks.add_task(
+                generate_action_content,
+                action_id=action_id,
+                followup_id=followup_id,
+                action_type=request.action_type,
+                user_id=user_id,
+                language=language,
+            )
         
         return FollowupActionResponse.from_db(insert_result.data[0], locale)
         

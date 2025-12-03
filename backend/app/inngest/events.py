@@ -124,6 +124,10 @@ class Events:
     FOLLOWUP_COMPLETED = "salesprep/followup.completed"
     FOLLOWUP_FAILED = "salesprep/followup.failed"
     
+    # Follow-up Actions
+    FOLLOWUP_ACTION_REQUESTED = "salesprep/followup.action.requested"
+    FOLLOWUP_ACTION_COMPLETED = "salesprep/followup.action.completed"
+    
     # Contact Analysis
     CONTACT_ADDED = "salesprep/contact.added"
     CONTACT_ANALYZED = "salesprep/contact.analyzed"
