@@ -291,6 +291,7 @@
         "enrichTitle": "Enrich Profile Data",
         "enrichTip": "Help the AI understand this person better",
         "enrichDescription": "LinkedIn blocks automatic access to profiles. Copy-paste relevant info from their LinkedIn profile for a richer analysis.",
+        "openLinkedIn": "Open LinkedIn Profile",
         "aboutLabel": "About / Summary",
         "aboutHint": "Copy from their LinkedIn 'About' section",
         "aboutPlaceholder": "Paste their LinkedIn summary here...",
