@@ -373,8 +373,9 @@ export default function FollowupDetailPage() {
     }
   }
 
-  // Regenerate action - fire-and-forget pattern (non-blocking)
-  const handleRegenerateAction = async (actionId: string) => {
+  // Regenerate action - completely non-blocking using setTimeout
+  // This ensures navigation is never blocked by the regeneration process
+  const handleRegenerateAction = (actionId: string) => {
     // Summary is built-in and cannot be regenerated
     if (actionId === 'summary-builtin') {
       toast({ title: 'Summary cannot be regenerated', variant: 'destructive' })
@@ -384,24 +385,47 @@ export default function FollowupDetailPage() {
     const action = actions.find(a => a.id === actionId)
     if (!action) return
     
-    try {
-      // Delete the existing action
-      await api.delete(`/api/v1/followup/${followupId}/actions/${actionId}`)
-      
-      // Update local state
-      setActions(prev => prev.filter(a => a.id !== actionId))
-      if (selectedAction?.id === actionId) {
-        setSelectedAction(null)
-      }
-      
-      // Generate new one - DON'T await, fire and forget
-      // This allows the user to navigate away without blocking
-      handleGenerateAction(action.action_type)
-      
-    } catch (error) {
-      console.error('Failed to regenerate action:', error)
-      toast({ title: t('actions.generationFailed'), variant: 'destructive' })
+    // Update UI immediately
+    setActions(prev => prev.filter(a => a.id !== actionId))
+    if (selectedAction?.id === actionId) {
+      setSelectedAction(null)
     }
+    setGeneratingActionType(action.action_type)
+    
+    // Show feedback immediately
+    toast({ 
+      title: t('actions.regenerating'),
+      description: t('actions.regeneratingDesc'),
+    })
+    
+    // Push the actual API work to a new "thread" using setTimeout
+    // This completely breaks out of React's render cycle
+    setTimeout(async () => {
+      try {
+        // Delete the existing action
+        await api.delete(`/api/v1/followup/${followupId}/actions/${actionId}`)
+        
+        // Generate new one
+        const { data, error } = await api.post<FollowupAction>(`/api/v1/followup/${followupId}/actions`, {
+          action_type: action.action_type,
+          regenerate: false,
+        })
+        
+        if (error) {
+          console.error('Failed to regenerate action:', error)
+          // Don't update state here - polling will handle it or user will refresh
+        }
+        
+        if (data) {
+          // Update local state with new action
+          setActions(prev => [...prev.filter(a => a.action_type !== action.action_type), data])
+        }
+        
+      } catch (error) {
+        console.error('Failed to regenerate action:', error)
+        // Polling will detect completion/failure
+      }
+    }, 0)
   }
 
   // View action

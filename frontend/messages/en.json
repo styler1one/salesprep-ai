@@ -558,6 +558,7 @@
       "error": "Error",
       "regenerate": "Regenerate",
       "regenerating": "Regenerating...",
+      "regeneratingDesc": "You can continue working while this generates in the background.",
       "delete": "Delete",
       "confirmDelete": "Are you sure you want to delete this action?",
       "noContent": "No content yet",
