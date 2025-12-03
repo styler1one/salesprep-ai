@@ -310,12 +310,24 @@ export default function FollowupDetailPage() {
       // NOTE: Don't await fetchActions() here - let polling handle it
       // This prevents blocking the UI while waiting for refresh
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to generate action:', error)
-      toast({ title: t('actions.generationFailed'), variant: 'destructive' })
-      setGeneratingActionType(null) // Only clear on error, otherwise polling clears it
+      
+      // Check if it's an "already exists" error - refresh to show existing action
+      const errorMessage = error?.message || ''
+      if (errorMessage.includes('already exists')) {
+        toast({ 
+          title: t('actions.alreadyExists'),
+          description: t('actions.alreadyExistsDesc'),
+        })
+        // Refresh actions to show the existing one
+        fetchActions()
+      } else {
+        toast({ title: t('actions.generationFailed'), variant: 'destructive' })
+      }
+      
+      setGeneratingActionType(null)
     }
-    // NOTE: Don't clear generatingActionType in finally - let polling clear it when action is complete
   }
 
   // Update action content (edit)
