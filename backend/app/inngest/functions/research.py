@@ -10,6 +10,7 @@ Events:
 
 import logging
 from typing import Optional
+import inngest
 from inngest import NonRetriableError, TriggerEvent
 
 from app.inngest.client import inngest_client
@@ -110,16 +111,19 @@ async def research_company_fn(ctx, step):
     )
     
     # Step 9: Emit completion event
-    await step.send_event("emit-completion", {
-        "name": "salesprep/research.completed",
-        "data": {
-            "research_id": research_id,
-            "company_name": company_name,
-            "organization_id": organization_id,
-            "user_id": user_id,
-            "success": True
-        }
-    })
+    await step.send_event(
+        "emit-completion",
+        inngest.Event(
+            name="salesprep/research.completed",
+            data={
+                "research_id": research_id,
+                "company_name": company_name,
+                "organization_id": organization_id,
+                "user_id": user_id,
+                "success": True
+            }
+        )
+    )
     
     logger.info(f"Research completed for {company_name} (id={research_id})")
     
