@@ -298,7 +298,8 @@ Or if not found:
 {{"found": false, "linkedin_url": null, "role": null, "confidence": "low"}}
 """
         
-        response = client.models.generate_content(
+        # Use client.aio for async to not block the event loop
+        response = await client.aio.models.generate_content(
             model="gemini-2.0-flash",
             contents=prompt,
             config=types.GenerateContentConfig(

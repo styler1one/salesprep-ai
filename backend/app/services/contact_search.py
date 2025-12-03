@@ -74,9 +74,10 @@ class ContactSearchService:
             )
         
         try:
-            import anthropic
+            from anthropic import AsyncAnthropic
             
-            client = anthropic.Anthropic(api_key=self.api_key)
+            # Use AsyncAnthropic to not block the event loop
+            client = AsyncAnthropic(api_key=self.api_key)
             
             # Build search query
             search_parts = [f'"{name}"']
@@ -92,7 +93,8 @@ class ContactSearchService:
             
             logger.info(f"[CONTACT_SEARCH] Searching for: {name} at {company_name}")
             
-            response = client.messages.create(
+            # Use await with AsyncAnthropic to not block the event loop
+            response = await client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=2000,
                 messages=[

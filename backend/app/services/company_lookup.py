@@ -360,7 +360,8 @@ Rules:
 - Return valid JSON only, no markdown or explanations"""
 
             # Use Gemini with Google Search grounding
-            response = client.models.generate_content(
+            # Use client.aio for async to not block the event loop
+            response = await client.aio.models.generate_content(
                 model="gemini-2.0-flash",
                 contents=prompt,
                 config=types.GenerateContentConfig(
@@ -456,7 +457,8 @@ Rules:
 - Return empty array [] if no matches found
 - Return valid JSON array only, no markdown or explanations"""
 
-            response = client.models.generate_content(
+            # Use client.aio for async to not block the event loop
+            response = await client.aio.models.generate_content(
                 model="gemini-2.0-flash",
                 contents=prompt,
                 config=types.GenerateContentConfig(

@@ -197,7 +197,8 @@ RULES:
         try:
             # Generate response with Google Search grounding using new SDK
             # Note: Use gemini-2.0-flash (stable, free tier available)
-            response = self.client.models.generate_content(
+            # Use client.aio for async to not block the event loop!
+            response = await self.client.aio.models.generate_content(
                 model='gemini-2.0-flash',
                 contents=prompt,
                 config=self.config
