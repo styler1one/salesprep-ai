@@ -78,7 +78,16 @@
     "and": "और",
     "upload": "दस्तावेज़ अपलोड करें",
     "download": "डाउनलोड करें",
-    "extraOptions": "अतिरिक्त विकल्प"
+    "extraOptions": "अतिरिक्त विकल्प",
+    "confirm": "पुष्टि करें",
+    "processing": "प्रोसेस हो रहा है...",
+    "export": {
+      "markdownDownloaded": "Markdown फ़ाइल डाउनलोड हुई",
+      "pdfDownloaded": "PDF फ़ाइल डाउनलोड हुई",
+      "wordDownloaded": "Word फ़ाइल डाउनलोड हुई",
+      "pdfFailed": "PDF निर्यात विफल",
+      "wordFailed": "Word निर्यात विफल"
+    }
   },
   "navigation": {
     "dashboard": "डैशबोर्ड",
@@ -139,7 +148,14 @@
     "usageLimitReached": "उपयोग सीमा पूरी हो गई। जारी रखने के लिए अपना प्लान अपग्रेड करें।",
     "tryAgain": "पुनः प्रयास करें",
     "goBack": "वापस जाएं",
-    "contactSupport": "यदि यह समस्या बनी रहती है तो सहायता से संपर्क करें"
+    "contactSupport": "यदि यह समस्या बनी रहती है तो सहायता से संपर्क करें",
+    "globalError": {
+      "title": "कुछ गलत हो गया",
+      "description": "एक अप्रत्याशित त्रुटि हुई। हमारी टीम को सूचित कर दिया गया है और वे समाधान पर काम कर रहे हैं।",
+      "tryAgain": "पुनः प्रयास करें",
+      "goToDashboard": "डैशबोर्ड पर जाएं",
+      "devDetails": "त्रुटि विवरण (केवल विकास)"
+    }
   },
   "research": {
     "title": "रिसर्च एजेंट",
@@ -268,7 +284,11 @@
       "addedDesc": "AI विश्लेषण शुरू...",
       "analysisComplete": "विश्लेषण पूर्ण",
       "analysisCompleteDesc": "{name} का विश्लेषण हो गया",
-      "addFailed": "जोड़ नहीं सके"
+      "addFailed": "जोड़ नहीं सके",
+      "search": {
+        "errorTitle": "त्रुटि",
+        "errorAddFailed": "संपर्क जोड़ने में विफल"
+      }
     },
     "context": {
       "title": "AI संदर्भ",
@@ -494,6 +514,87 @@
     },
     "confirm": {
       "delete": "क्या आप वाकई इस फॉलो-अप को हटाना चाहते हैं?"
+    },
+    "actions": {
+      "title": "फॉलो-अप क्रियाएं",
+      "subtitle": "अपनी बैठक से लक्षित आउटपुट जेनरेट करें",
+      "generating": "जेनरेट हो रहा है...",
+      "generatingDesc": "{actionType} जेनरेट हो रहा है...",
+      "generated": "जेनरेट हुआ",
+      "generatedDesc": "{actionType} देखने के लिए तैयार है",
+      "readyToView": "देखने के लिए तैयार है",
+      "clickToGenerate": "जेनरेट करने के लिए क्लिक करें",
+      "error": "त्रुटि",
+      "regenerate": "पुनः जेनरेट करें",
+      "regenerating": "पुनः जेनरेट हो रहा है...",
+      "regeneratingDesc": "यह बैकग्राउंड में जेनरेट होने के दौरान आप काम जारी रख सकते हैं।",
+      "delete": "हटाएं",
+      "confirmDelete": "क्या आप वाकई इस क्रिया को हटाना चाहते हैं?",
+      "noContent": "अभी तक कोई सामग्री नहीं",
+      "generationFailed": "जेनरेशन विफल",
+      "alreadyExists": "क्रिया पहले से जेनरेट है",
+      "alreadyExistsDesc": "यह क्रिया पहले ही जेनरेट हो चुकी है। देखने के लिए क्लिक करें।",
+      "generationFailedDesc": "एक त्रुटि हुई। कृपया पुनः जेनरेट करें।",
+      "tryAgain": "पुनः प्रयास करें",
+      "summaryReadOnly": "सारांश केवल पढ़ने के लिए है",
+      "summaryCannotEdit": "सारांश यहां संपादित नहीं किया जा सकता। ऊपर मुख्य सारांश संपादित करें।",
+      "summaryCannotDelete": "सारांश हटाया नहीं जा सकता",
+      "summaryCannotRegenerate": "सारांश यहां पुनः जेनरेट नहीं किया जा सकता",
+      "contextUsed": "उपयोग किया गया संदर्भ",
+      "wordsGenerated": "शब्द",
+      "generatingContent": "सामग्री जेनरेट हो रही है...",
+      "generatingTime": "इसमें 10-30 सेकंड लग सकते हैं",
+      "export": "निर्यात करें",
+      "exportPdf": "PDF डाउनलोड करें",
+      "exportDocx": "Word डाउनलोड करें",
+      "exportMd": "Markdown डाउनलोड करें",
+      "copied": "क्लिपबोर्ड पर कॉपी किया गया",
+      "changesSaved": "परिवर्तन सहेजे गए",
+      "saveFailed": "सहेजना विफल",
+      "deleteFailed": "हटाना विफल",
+      "actionDeleted": "क्रिया हटाई गई",
+      "exportFailed": "निर्यात विफल",
+      "pdfDownloaded": "PDF डाउनलोड हुई",
+      "docxDownloaded": "Word दस्तावेज़ डाउनलोड हुआ",
+      "mdDownloaded": "Markdown डाउनलोड हुआ",
+      "time": {
+        "justNow": "अभी",
+        "minAgo": "{count} मिनट पहले",
+        "hourAgo": "{count} घंटा पहले",
+        "hoursAgo": "{count} घंटे पहले",
+        "dayAgo": "{count} दिन पहले",
+        "daysAgo": "{count} दिन पहले"
+      },
+      "types": {
+        "summary": {
+          "label": "सारांश",
+          "description": "मुख्य बिंदुओं और अगले चरणों के साथ बैठक का सारांश"
+        },
+        "customer_report": {
+          "label": "ग्राहक रिपोर्ट",
+          "description": "ग्राहक के साथ साझा करने के लिए पेशेवर रिपोर्ट"
+        },
+        "share_email": {
+          "label": "शेयर ईमेल",
+          "description": "रिपोर्ट साझा करने के लिए तैयार ईमेल"
+        },
+        "commercial_analysis": {
+          "label": "वाणिज्यिक विश्लेषण",
+          "description": "खरीद संकेत, जोखिम और सौदा मूल्यांकन"
+        },
+        "sales_coaching": {
+          "label": "सेल्स कोचिंग",
+          "description": "आपके बिक्री प्रदर्शन पर प्रतिक्रिया"
+        },
+        "action_items": {
+          "label": "कार्य आइटम",
+          "description": "मालिकों और समय सीमा के साथ संरचित कार्य"
+        },
+        "internal_report": {
+          "label": "आंतरिक रिपोर्ट",
+          "description": "CRM या टीम के लिए संक्षिप्त सारांश"
+        }
+      }
     },
     "sections": {
       "keyPoints": "मुख्य बिंदु",
@@ -1139,6 +1240,168 @@
       "serverError": "प्रमाणीकरण प्रदाता अस्थायी रूप से अनुपलब्ध है। कृपया बाद में पुनः प्रयास करें।",
       "genericSignIn": "साइन इन के दौरान एक त्रुटि हुई।",
       "genericSignUp": "साइन अप के दौरान एक त्रुटि हुई।"
+    }
+  },
+  "coach": {
+    "name": "Luna",
+    "tagline": "आपका AI सेल्स कोच",
+    
+    "widget": {
+      "expand": "विस्तार करें",
+      "collapse": "संक्षिप्त करें",
+      "close": "बंद करें",
+      "settings": "सेटिंग्स",
+      "hideForToday": "आज के लिए छुपाएं",
+      "allCaughtUp": "सब अपडेट है!",
+      "greatWork": "शानदार काम! नए सुझावों के लिए बाद में वापस आएं।"
+    },
+    
+    "completion": {
+      "researchComplete": {
+        "title": "रिसर्च पूर्ण!",
+        "description": "बढ़िया! {company} पर आपकी रिसर्च तैयार है। आगे क्या करना चाहेंगे?",
+        "addContacts": "संपर्क जोड़ें",
+        "addContactsDesc": "मुख्य लोग जोड़ें",
+        "createPrep": "तैयारी बनाएं",
+        "createPrepDesc": "अभी मीटिंग तैयारी शुरू करें"
+      },
+      "contactsAdded": {
+        "title": "संपर्क जोड़े गए!",
+        "description": "आपने {company} में {count} जोड़े। Luna अब व्यक्तिगत बातचीत शुरूआत जेनरेट कर सकती है।",
+        "createPrep": "तैयारी बनाएं",
+        "createPrepDesc": "व्यक्तिगत बातचीत बिंदु प्राप्त करें",
+        "addMore": "और संपर्क जोड़ें",
+        "addMoreDesc": "जुड़ने के लिए और लोग खोजें"
+      },
+      "prepReady": {
+        "title": "तैयारी तैयार!",
+        "description": "{company} के लिए आपकी मीटिंग तैयारी पूर्ण है। आपकी मीटिंग के लिए शुभकामनाएं!",
+        "viewPrep": "तैयारी देखें",
+        "viewPrepDesc": "अपनी तैयारी समीक्षा करें",
+        "addFollowup": "बाद में फॉलो-अप जोड़ें",
+        "addFollowupDesc": "बाद में फॉलो-अप बनाएं"
+      },
+      "followupComplete": {
+        "title": "फॉलो-अप बनाया गया!",
+        "description": "आपका मीटिंग फॉलो-अप तैयार है। अपनी मीटिंग का अधिकतम लाभ उठाने के लिए क्रियाएं जेनरेट करें।",
+        "generateReport": "रिपोर्ट जेनरेट करें",
+        "generateReportDesc": "एक साझा करने योग्य सारांश बनाएं",
+        "viewActions": "सभी क्रियाएं देखें",
+        "viewActionsDesc": "सभी फॉलो-अप विकल्प देखें"
+      },
+      "actionGenerated": {
+        "title": "क्रिया जेनरेट हुई!",
+        "description": "आपका {actionType} तैयार है।",
+        "export": "निर्यात करें",
+        "exportDesc": "क्रिया डाउनलोड या साझा करें",
+        "moreActions": "अधिक क्रियाएं",
+        "moreActionsDesc": "अतिरिक्त क्रियाएं बनाएं"
+      },
+      "generic": {
+        "title": "शानदार काम!",
+        "description": "आपने एक कार्य सफलतापूर्वक पूर्ण किया।",
+        "continue": "जारी रखें",
+        "continueDesc": "आगे बढ़ें"
+      }
+    },
+    
+    "inlineTips": {
+      "researchForm": {
+        "title": "प्रो टिप: विशिष्ट रहें",
+        "description": "बेहतर रिसर्च परिणामों के लिए कंपनी वेबसाइट या LinkedIn URL शामिल करें।"
+      },
+      "contactsEmpty": {
+        "title": "पहले संपर्क जोड़ें",
+        "description": "तैयारी बनाने से पहले संपर्क जोड़ने से आपकी मीटिंग परिणाम 40% बेहतर होते हैं।",
+        "action": "संपर्क जोड़ें"
+      },
+      "contactsFew": {
+        "title": "और संपर्क जोड़ें",
+        "description": "2-3 संपर्क होने से Luna को व्यक्तिगत बातचीत शुरूआत के लिए अधिक संदर्भ मिलता है।"
+      },
+      "prepForm": {
+        "title": "सर्वोत्तम समय",
+        "description": "इष्टतम परिणामों के लिए मीटिंग से 1-2 दिन पहले अपनी तैयारी बनाएं।"
+      },
+      "prepNoContacts": {
+        "title": "संपर्क गायब हैं",
+        "description": "संपर्कों के बिना आपकी तैयारी अधिक सामान्य होगी। व्यक्तिगत बातचीत बिंदुओं के लिए पहले संपर्क जोड़ें।",
+        "action": "पहले संपर्क जोड़ें"
+      },
+      "followupForm": {
+        "title": "अपनी रिकॉर्डिंग अपलोड करें",
+        "description": "व्यापक फॉलो-अप क्रियाएं जेनरेट करने के लिए अपनी मीटिंग रिकॉर्डिंग या ट्रांसक्रिप्ट अपलोड करें।"
+      },
+      "dealForm": {
+        "title": "अपना डील ट्रैक करें",
+        "description": "डील्स को प्रॉस्पेक्ट्स से लिंक करने से Luna को बेहतर पाइपलाइन इनसाइट्स देने में मदद मिलती है।"
+      },
+      "exportAvailable": {
+        "title": "निर्यात उपलब्ध",
+        "description": "आप ड्रॉपडाउन मेनू का उपयोग करके इस ब्रीफ को PDF, Word या Markdown के रूप में निर्यात कर सकते हैं।"
+      }
+    },
+    
+    "sections": {
+      "priority": "प्राथमिकता",
+      "suggestions": "सुझाव",
+      "progress": "आज की प्रगति",
+      "tip": "आज का टिप",
+      "score": "सफलता स्कोर",
+      "predictions": "पूर्वानुमान",
+      "recommendations": "सिफारिशें"
+    },
+    
+    "actions": {
+      "doIt": "करें",
+      "later": "बाद में",
+      "skip": "छोड़ें",
+      "snooze1hour": "1 घंटे के लिए स्नूज़",
+      "snoozeTonight": "आज रात याद दिलाएं",
+      "snoozeTomorrow": "कल याद दिलाएं"
+    },
+    
+    "suggestions": {
+      "addContacts": "{company} में संपर्क जोड़ें",
+      "createPrep": "मीटिंग तैयारी बनाएं",
+      "uploadFollowup": "मीटिंग रिकॉर्डिंग अपलोड करें",
+      "generateReport": "ग्राहक रिपोर्ट जेनरेट करें",
+      "reviewCoaching": "सेल्स कोचिंग फीडबैक देखें"
+    },
+    
+    "reasons": {
+      "meetingTomorrow": "कल {time} पर मीटिंग",
+      "meetingIn": "{hours} घंटे में मीटिंग",
+      "noContacts": "अभी तक कोई संपर्क नहीं जोड़ा",
+      "prepReady": "तैयारी तैयार है",
+      "overdue": "अंतिम गतिविधि के {days} दिन बाद"
+    },
+    
+    "tips": {
+      "contactsImprove": "प्रेप से पहले संपर्क जोड़ने से मीटिंग परिणाम 40% बेहतर होते हैं",
+      "customerReports": "ग्राहक रिपोर्ट फॉलो-अप प्रतिक्रिया दर 60% बढ़ाती है",
+      "prepTiming": "सबसे अच्छी प्रेप मीटिंग से 1-2 दिन पहले बनाई जाती है"
+    },
+    
+    "stats": {
+      "research": "रिसर्च",
+      "preps": "प्रेप्स",
+      "followups": "फॉलो-अप्स",
+      "completed": "आज पूर्ण"
+    },
+    
+    "settings": {
+      "title": "कोच सेटिंग्स",
+      "enabled": "AI कोच सक्षम करें",
+      "inlineTips": "इनलाइन टिप्स दिखाएं",
+      "completionModals": "पूर्णता सुझाव दिखाएं",
+      "quietHours": "शांत घंटे",
+      "frequency": "सूचना आवृत्ति",
+      "frequencyOptions": {
+        "minimal": "न्यूनतम",
+        "normal": "सामान्य",
+        "frequent": "बार-बार"
+      }
     }
   }
 }

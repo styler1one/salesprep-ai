@@ -78,7 +78,16 @@
     "and": "و",
     "upload": "رفع المستندات",
     "download": "تحميل",
-    "extraOptions": "خيارات إضافية"
+    "extraOptions": "خيارات إضافية",
+    "confirm": "تأكيد",
+    "processing": "جاري المعالجة...",
+    "export": {
+      "markdownDownloaded": "تم تحميل ملف Markdown",
+      "pdfDownloaded": "تم تحميل ملف PDF",
+      "wordDownloaded": "تم تحميل ملف Word",
+      "pdfFailed": "فشل تصدير PDF",
+      "wordFailed": "فشل تصدير Word"
+    }
   },
   "navigation": {
     "dashboard": "لوحة التحكم",
@@ -139,7 +148,14 @@
     "usageLimitReached": "تم الوصول إلى حد الاستخدام. قم بترقية خطتك للمتابعة.",
     "tryAgain": "حاول مرة أخرى",
     "goBack": "رجوع",
-    "contactSupport": "اتصل بالدعم إذا استمرت هذه المشكلة"
+    "contactSupport": "اتصل بالدعم إذا استمرت هذه المشكلة",
+    "globalError": {
+      "title": "حدث خطأ ما",
+      "description": "حدث خطأ غير متوقع. تم إبلاغ فريقنا وهو يعمل على إصلاحه.",
+      "tryAgain": "حاول مرة أخرى",
+      "goToDashboard": "الذهاب إلى لوحة التحكم",
+      "devDetails": "تفاصيل الخطأ (للتطوير فقط)"
+    }
   },
   "research": {
     "title": "وكيل البحث",
@@ -268,7 +284,11 @@
       "addedDesc": "بدأ تحليل الذكاء الاصطناعي...",
       "analysisComplete": "اكتمل التحليل",
       "analysisCompleteDesc": "تم تحليل {name}",
-      "addFailed": "تعذرت الإضافة"
+      "addFailed": "تعذرت الإضافة",
+      "search": {
+        "errorTitle": "خطأ",
+        "errorAddFailed": "تعذر إضافة جهة الاتصال"
+      }
     },
     "context": {
       "title": "سياق الذكاء الاصطناعي",
@@ -494,6 +514,87 @@
     },
     "confirm": {
       "delete": "هل أنت متأكد أنك تريد حذف هذه المتابعة؟"
+    },
+    "actions": {
+      "title": "إجراءات المتابعة",
+      "subtitle": "إنشاء مخرجات موجهة من اجتماعك",
+      "generating": "جاري الإنشاء...",
+      "generatingDesc": "جاري إنشاء {actionType}...",
+      "generated": "تم الإنشاء",
+      "generatedDesc": "{actionType} جاهز للعرض",
+      "readyToView": "جاهز للعرض",
+      "clickToGenerate": "انقر للإنشاء",
+      "error": "خطأ",
+      "regenerate": "إعادة الإنشاء",
+      "regenerating": "جاري إعادة الإنشاء...",
+      "regeneratingDesc": "يمكنك متابعة العمل بينما يتم الإنشاء في الخلفية.",
+      "delete": "حذف",
+      "confirmDelete": "هل أنت متأكد أنك تريد حذف هذا الإجراء؟",
+      "noContent": "لا يوجد محتوى بعد",
+      "generationFailed": "فشل الإنشاء",
+      "alreadyExists": "تم إنشاء الإجراء بالفعل",
+      "alreadyExistsDesc": "تم إنشاء هذا الإجراء بالفعل. انقر للعرض.",
+      "generationFailedDesc": "حدث خطأ. يرجى إعادة المحاولة.",
+      "tryAgain": "حاول مرة أخرى",
+      "summaryReadOnly": "الملخص للقراءة فقط",
+      "summaryCannotEdit": "لا يمكن تعديل الملخص هنا. عدل الملخص الرئيسي أعلاه.",
+      "summaryCannotDelete": "لا يمكن حذف الملخص",
+      "summaryCannotRegenerate": "لا يمكن إعادة إنشاء الملخص هنا",
+      "contextUsed": "السياق المستخدم",
+      "wordsGenerated": "كلمات",
+      "generatingContent": "جاري إنشاء المحتوى...",
+      "generatingTime": "قد يستغرق هذا 10-30 ثانية",
+      "export": "تصدير",
+      "exportPdf": "تحميل PDF",
+      "exportDocx": "تحميل Word",
+      "exportMd": "تحميل Markdown",
+      "copied": "تم النسخ إلى الحافظة",
+      "changesSaved": "تم حفظ التغييرات",
+      "saveFailed": "فشل الحفظ",
+      "deleteFailed": "فشل الحذف",
+      "actionDeleted": "تم حذف الإجراء",
+      "exportFailed": "فشل التصدير",
+      "pdfDownloaded": "تم تحميل PDF",
+      "docxDownloaded": "تم تحميل مستند Word",
+      "mdDownloaded": "تم تحميل Markdown",
+      "time": {
+        "justNow": "الآن",
+        "minAgo": "منذ {count} دقيقة",
+        "hourAgo": "منذ {count} ساعة",
+        "hoursAgo": "منذ {count} ساعات",
+        "dayAgo": "منذ {count} يوم",
+        "daysAgo": "منذ {count} أيام"
+      },
+      "types": {
+        "summary": {
+          "label": "ملخص",
+          "description": "ملخص الاجتماع مع النقاط الرئيسية والخطوات التالية"
+        },
+        "customer_report": {
+          "label": "تقرير العميل",
+          "description": "تقرير احترافي لمشاركته مع العميل"
+        },
+        "share_email": {
+          "label": "بريد المشاركة",
+          "description": "بريد إلكتروني جاهز للإرسال لمشاركة التقرير"
+        },
+        "commercial_analysis": {
+          "label": "التحليل التجاري",
+          "description": "إشارات الشراء والمخاطر وتقييم الصفقة"
+        },
+        "sales_coaching": {
+          "label": "تدريب المبيعات",
+          "description": "ملاحظات على أدائك في المبيعات"
+        },
+        "action_items": {
+          "label": "بنود العمل",
+          "description": "مهام منظمة مع المسؤولين والمواعيد النهائية"
+        },
+        "internal_report": {
+          "label": "التقرير الداخلي",
+          "description": "ملخص قصير لنظام CRM أو الفريق"
+        }
+      }
     },
     "sections": {
       "keyPoints": "النقاط الرئيسية",
@@ -1139,6 +1240,168 @@
       "serverError": "مزود المصادقة غير متاح مؤقتًا. يرجى المحاولة لاحقًا.",
       "genericSignIn": "حدث خطأ أثناء تسجيل الدخول.",
       "genericSignUp": "حدث خطأ أثناء التسجيل."
+    }
+  },
+  "coach": {
+    "name": "Luna",
+    "tagline": "مدرب المبيعات الذكي الخاص بك",
+    
+    "widget": {
+      "expand": "توسيع",
+      "collapse": "طي",
+      "close": "إغلاق",
+      "settings": "الإعدادات",
+      "hideForToday": "إخفاء لليوم",
+      "allCaughtUp": "كل شيء محدث!",
+      "greatWork": "عمل رائع! عد لاحقاً لمزيد من الاقتراحات."
+    },
+    
+    "completion": {
+      "researchComplete": {
+        "title": "اكتمل البحث!",
+        "description": "عمل رائع! بحثك عن {company} جاهز. ماذا تريد أن تفعل بعد ذلك؟",
+        "addContacts": "إضافة جهات اتصال",
+        "addContactsDesc": "إضافة الأشخاص الرئيسيين",
+        "createPrep": "إنشاء تحضير",
+        "createPrepDesc": "ابدأ التحضير للاجتماع الآن"
+      },
+      "contactsAdded": {
+        "title": "تمت إضافة جهات الاتصال!",
+        "description": "لقد أضفت {count} إلى {company}. يمكن لـ Luna الآن إنشاء بدايات محادثة مخصصة.",
+        "createPrep": "إنشاء تحضير",
+        "createPrepDesc": "احصل على نقاط حوار مخصصة",
+        "addMore": "إضافة المزيد من جهات الاتصال",
+        "addMoreDesc": "ابحث عن المزيد من الأشخاص للتواصل معهم"
+      },
+      "prepReady": {
+        "title": "التحضير جاهز!",
+        "description": "تحضيرك للاجتماع مع {company} مكتمل. حظاً موفقاً في اجتماعك!",
+        "viewPrep": "عرض التحضير",
+        "viewPrepDesc": "مراجعة تحضيرك",
+        "addFollowup": "إضافة متابعة لاحقاً",
+        "addFollowupDesc": "إنشاء متابعة لاحقاً"
+      },
+      "followupComplete": {
+        "title": "تم إنشاء المتابعة!",
+        "description": "متابعة اجتماعك جاهزة. أنشئ إجراءات للاستفادة القصوى من اجتماعك.",
+        "generateReport": "إنشاء تقرير",
+        "generateReportDesc": "إنشاء ملخص للمشاركة",
+        "viewActions": "عرض كل الإجراءات",
+        "viewActionsDesc": "عرض جميع خيارات المتابعة"
+      },
+      "actionGenerated": {
+        "title": "تم إنشاء الإجراء!",
+        "description": "{actionType} الخاص بك جاهز.",
+        "export": "تصدير",
+        "exportDesc": "تحميل أو مشاركة الإجراء",
+        "moreActions": "المزيد من الإجراءات",
+        "moreActionsDesc": "إنشاء إجراءات إضافية"
+      },
+      "generic": {
+        "title": "عمل رائع!",
+        "description": "لقد أكملت مهمة بنجاح.",
+        "continue": "متابعة",
+        "continueDesc": "استمر"
+      }
+    },
+    
+    "inlineTips": {
+      "researchForm": {
+        "title": "نصيحة احترافية: كن محدداً",
+        "description": "أضف موقع الشركة أو رابط LinkedIn للحصول على نتائج بحث أفضل."
+      },
+      "contactsEmpty": {
+        "title": "أضف جهات اتصال أولاً",
+        "description": "إضافة جهات اتصال قبل إنشاء التحضير يحسن نتائج اجتماعاتك بنسبة 40%.",
+        "action": "إضافة جهات اتصال"
+      },
+      "contactsFew": {
+        "title": "أضف المزيد من جهات الاتصال",
+        "description": "وجود 2-3 جهات اتصال يعطي Luna سياقاً أكثر لبدايات المحادثة المخصصة."
+      },
+      "prepForm": {
+        "title": "أفضل توقيت",
+        "description": "أنشئ تحضيرك قبل 1-2 يوم من الاجتماع للحصول على أفضل النتائج."
+      },
+      "prepNoContacts": {
+        "title": "جهات الاتصال مفقودة",
+        "description": "سيكون تحضيرك أكثر عمومية بدون جهات اتصال. أضف جهات اتصال أولاً للحصول على نقاط حوار مخصصة.",
+        "action": "أضف جهات اتصال أولاً"
+      },
+      "followupForm": {
+        "title": "ارفع تسجيلك",
+        "description": "ارفع تسجيل اجتماعك أو النص المكتوب لإنشاء إجراءات متابعة شاملة."
+      },
+      "dealForm": {
+        "title": "تتبع صفقتك",
+        "description": "ربط الصفقات بالعملاء المحتملين يساعد Luna في تقديم رؤى أفضل لخط الأنابيب."
+      },
+      "exportAvailable": {
+        "title": "التصدير متاح",
+        "description": "يمكنك تصدير هذا الملخص كـ PDF أو Word أو Markdown من القائمة المنسدلة."
+      }
+    },
+    
+    "sections": {
+      "priority": "الأولوية",
+      "suggestions": "اقتراحات",
+      "progress": "تقدم اليوم",
+      "tip": "نصيحة اليوم",
+      "score": "نقاط النجاح",
+      "predictions": "التوقعات",
+      "recommendations": "التوصيات"
+    },
+    
+    "actions": {
+      "doIt": "افعلها",
+      "later": "لاحقاً",
+      "skip": "تخطي",
+      "snooze1hour": "تأجيل ساعة",
+      "snoozeTonight": "تذكير الليلة",
+      "snoozeTomorrow": "تذكير غداً"
+    },
+    
+    "suggestions": {
+      "addContacts": "إضافة جهات اتصال إلى {company}",
+      "createPrep": "إنشاء تحضير للاجتماع",
+      "uploadFollowup": "رفع تسجيل الاجتماع",
+      "generateReport": "إنشاء تقرير العميل",
+      "reviewCoaching": "مراجعة ملاحظات التدريب على المبيعات"
+    },
+    
+    "reasons": {
+      "meetingTomorrow": "اجتماع غداً في {time}",
+      "meetingIn": "اجتماع خلال {hours} ساعات",
+      "noContacts": "لم تتم إضافة جهات اتصال بعد",
+      "prepReady": "التحضير جاهز",
+      "overdue": "{days} أيام منذ آخر نشاط"
+    },
+    
+    "tips": {
+      "contactsImprove": "إضافة جهات اتصال قبل التحضير يحسن نتائج الاجتماعات بنسبة 40%",
+      "customerReports": "تقارير العملاء تزيد معدلات الاستجابة للمتابعة بنسبة 60%",
+      "prepTiming": "أفضل التحضيرات تُنشأ قبل 1-2 يوم من الاجتماع"
+    },
+    
+    "stats": {
+      "research": "البحث",
+      "preps": "التحضيرات",
+      "followups": "المتابعات",
+      "completed": "مكتمل اليوم"
+    },
+    
+    "settings": {
+      "title": "إعدادات المدرب",
+      "enabled": "تفعيل مدرب الذكاء الاصطناعي",
+      "inlineTips": "عرض النصائح المضمنة",
+      "completionModals": "عرض اقتراحات الإكمال",
+      "quietHours": "ساعات الهدوء",
+      "frequency": "تكرار الإشعارات",
+      "frequencyOptions": {
+        "minimal": "الحد الأدنى",
+        "normal": "عادي",
+        "frequent": "متكرر"
+      }
     }
   }
 }
