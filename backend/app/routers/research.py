@@ -20,6 +20,7 @@ from app.database import get_supabase_service, get_user_client
 from app.services.prospect_service import get_prospect_service
 from app.services.company_lookup import get_company_lookup
 from app.services.usage_service import get_usage_service
+from app.inngest.events import send_event, Events, use_inngest_for
 
 
 router = APIRouter()
@@ -292,19 +293,40 @@ async def start_research(
             if updates:
                 prospect_service.update_prospect(prospect_id, organization_id, updates)
         
-        # Start background processing with seller context
-        background_tasks.add_task(
-            process_research_background,
-            research_id,
-            body.company_name,
-            body.country,
-            body.city,
-            body.company_linkedin_url,
-            body.company_website_url,
-            organization_id,  # For seller context (what you sell)
-            user_id,  # For sales profile context
-            body.language or "en"  # i18n: output language
-        )
+        # Start processing via Inngest (if enabled) or BackgroundTasks (fallback)
+        if use_inngest_for("research"):
+            # Use Inngest for durable execution and observability
+            await send_event(
+                Events.RESEARCH_REQUESTED,
+                {
+                    "research_id": research_id,
+                    "company_name": body.company_name,
+                    "country": body.country,
+                    "city": body.city,
+                    "linkedin_url": body.company_linkedin_url,
+                    "website_url": body.company_website_url,
+                    "organization_id": organization_id,
+                    "user_id": user_id,
+                    "language": body.language or "en"
+                },
+                user={"id": user_id}
+            )
+            logger.info(f"Research {research_id} triggered via Inngest")
+        else:
+            # Fallback to BackgroundTasks
+            background_tasks.add_task(
+                process_research_background,
+                research_id,
+                body.company_name,
+                body.country,
+                body.city,
+                body.company_linkedin_url,
+                body.company_website_url,
+                organization_id,
+                user_id,
+                body.language or "en"
+            )
+            logger.info(f"Research {research_id} triggered via BackgroundTasks")
         
         # Increment usage counter
         await usage_service.increment_usage(organization_id, "research")

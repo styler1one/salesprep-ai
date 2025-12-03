@@ -9,6 +9,15 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from app.routers import users, knowledge_base, research, sales_profile, company_profile, context, preparation, followup, followup_actions, prospects, contacts, settings, billing, webhooks, deals, coach
 
+# Inngest imports (workflow orchestration)
+try:
+    import inngest.fast_api
+    from app.inngest import inngest_client, all_functions
+    INNGEST_ENABLED = True
+except ImportError:
+    INNGEST_ENABLED = False
+    logging.warning("Inngest not installed, workflow orchestration disabled")
+
 load_dotenv()
 
 # Configure logging
@@ -72,6 +81,15 @@ app.include_router(deals.meetings_router)  # Already has prefix /api/v1/meetings
 app.include_router(deals.hub_router)  # Already has prefix /api/v1/prospects (extends existing)
 app.include_router(coach.router)  # Already has prefix /api/v1/coach
 
+# Inngest webhook endpoint for workflow orchestration
+if INNGEST_ENABLED:
+    inngest.fast_api.serve(
+        app,
+        inngest_client,
+        all_functions,
+    )
+    logger.info("Inngest workflow orchestration enabled at /api/inngest")
+
 @app.get("/")
 def read_root():
     return {
@@ -85,7 +103,8 @@ def read_root():
 def health_check():
     return {
         "status": "ok",
-        "environment": os.getenv("ENVIRONMENT", "development")
+        "environment": os.getenv("ENVIRONMENT", "development"),
+        "inngest": "enabled" if INNGEST_ENABLED else "disabled"
     }
 
 @app.get("/api/v1/test")

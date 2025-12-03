@@ -33,3 +33,6 @@ stripe>=7.0.0
 
 # Security dependencies
 slowapi>=0.1.9  # Rate limiting
+
+# Workflow orchestration
+inngest>=0.4.0  # Event-driven workflow orchestration
