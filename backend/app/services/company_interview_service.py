@@ -5,7 +5,7 @@ import os
 import json
 import uuid
 from typing import Dict, Any, Optional, List
-from anthropic import Anthropic
+from anthropic import AsyncAnthropic  # Use async client to not block event loop
 
 
 class CompanyInterviewService:
@@ -92,7 +92,7 @@ class CompanyInterviewService:
     
     def __init__(self):
         """Initialize Anthropic client."""
-        self.client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        self.client = AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
         self.model = "claude-sonnet-4-20250514"
     
     def start_interview(self) -> Dict[str, Any]:
@@ -142,7 +142,7 @@ class CompanyInterviewService:
             "total_questions": len(self.QUESTIONS)
         }
     
-    def analyze_responses(self, responses: Dict[int, str]) -> Dict[str, Any]:
+    async def analyze_responses(self, responses: Dict[int, str]) -> Dict[str, Any]:
         """
         Analyze interview responses with AI to generate structured company profile.
         
@@ -218,7 +218,7 @@ Return ONLY valid JSON (no markdown, no explanation) with this structure:
 }}"""
 
         try:
-            response = self.client.messages.create(
+            response = await self.client.messages.create(
                 model=self.model,
                 max_tokens=4000,
                 messages=[

@@ -189,10 +189,10 @@ async def complete_interview(
         
         # Analyze responses with AI
         print(f"DEBUG: Analyzing interview responses for user {current_user['sub']}")
-        profile_data = interview_service.analyze_responses(responses)
+        profile_data = await interview_service.analyze_responses(responses)
         
         # Generate personalization settings
-        personalization = interview_service.generate_personalization_settings(profile_data)
+        personalization = await interview_service.generate_personalization_settings(profile_data)
         profile_data["personalization_settings"] = personalization
         
         # Get user's organization

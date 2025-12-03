@@ -3,7 +3,7 @@ Interview Service - AI-powered sales rep onboarding interview
 """
 import os
 from typing import Dict, Any, List, Optional
-from anthropic import Anthropic  # Note: Keep sync for now - analyze_responses is sync
+from anthropic import AsyncAnthropic  # Use async client to not block event loop
 import json
 
 
@@ -121,7 +121,7 @@ class InterviewService:
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY environment variable not set")
         
-        self.client = Anthropic(api_key=api_key)
+        self.client = AsyncAnthropic(api_key=api_key)
     
     def start_interview(self) -> Dict[str, Any]:
         """
@@ -174,7 +174,7 @@ class InterviewService:
             "total_questions": len(self.QUESTIONS)
         }
     
-    def analyze_responses(self, responses: Dict[int, str]) -> Dict[str, Any]:
+    async def analyze_responses(self, responses: Dict[int, str]) -> Dict[str, Any]:
         """
         Analyze interview responses and generate structured profile.
         
@@ -227,8 +227,8 @@ Important:
 Return ONLY the JSON, no other text."""
 
         try:
-            # Call Claude for analysis
-            response = self.client.messages.create(
+            # Call Claude for analysis (async to not block event loop)
+            response = await self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=2000,
                 messages=[{
@@ -297,7 +297,7 @@ Return ONLY the JSON, no other text."""
         
         return profile_data
     
-    def generate_personalization_settings(
+    async def generate_personalization_settings(
         self,
         profile_data: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -333,7 +333,7 @@ Generate personalization settings in JSON format:
 Return ONLY the JSON."""
 
         try:
-            response = self.client.messages.create(
+            response = await self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=1000,
                 messages=[{

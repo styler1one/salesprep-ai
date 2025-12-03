@@ -294,7 +294,7 @@ async def complete_company_interview(
         
         # Analyze responses with AI
         print(f"DEBUG: Analyzing company interview for user {current_user['sub']}")
-        profile_data = interview_service.analyze_responses(responses)
+        profile_data = await interview_service.analyze_responses(responses)
         
         # Get or create organization for user
         organization_id = current_user.get("organization_id")
