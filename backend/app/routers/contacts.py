@@ -514,12 +514,12 @@ async def add_contact_to_research(
     output_language = "en"  # Default to English
     try:
         settings_response = supabase_service.table("user_settings")\
-            .select("default_output_language")\
+            .select("output_language")\
             .eq("user_id", user_id)\
-            .single()\
+            .maybe_single()\
             .execute()
-        if settings_response.data and settings_response.data.get("default_output_language"):
-            output_language = settings_response.data["default_output_language"]
+        if settings_response.data and settings_response.data.get("output_language"):
+            output_language = settings_response.data["output_language"]
             logger.info(f"Using user's output language: {output_language}")
     except Exception as e:
         logger.warning(f"Could not get user settings, using default language: {e}")
@@ -915,12 +915,12 @@ async def reanalyze_contact(
     output_language = "en"  # Default to English
     try:
         settings_response = supabase_service.table("user_settings")\
-            .select("default_output_language")\
+            .select("output_language")\
             .eq("user_id", user_id)\
-            .single()\
+            .maybe_single()\
             .execute()
-        if settings_response.data and settings_response.data.get("default_output_language"):
-            output_language = settings_response.data["default_output_language"]
+        if settings_response.data and settings_response.data.get("output_language"):
+            output_language = settings_response.data["output_language"]
     except Exception:
         pass
     

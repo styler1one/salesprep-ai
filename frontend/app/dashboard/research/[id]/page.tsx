@@ -22,6 +22,7 @@ import { useTranslations } from 'next-intl'
 import { api } from '@/lib/api'
 import { exportAsMarkdown, exportAsPdf, exportAsDocx } from '@/lib/export-utils'
 import { ContactSearchModal } from '@/components/contacts'
+import { useConfirmDialog } from '@/components/confirm-dialog'
 import type { User } from '@supabase/supabase-js'
 
 interface ResearchBrief {
@@ -62,6 +63,7 @@ export default function ResearchBriefPage() {
   const params = useParams()
   const supabase = createClientComponentClient()
   const { toast } = useToast()
+  const { confirm } = useConfirmDialog()
   const t = useTranslations('research')
   const tCommon = useTranslations('common')
   
@@ -220,6 +222,17 @@ export default function ResearchBriefPage() {
   // Delete a contact
   const handleDeleteContact = async (contactId: string, e: React.MouseEvent) => {
     e.stopPropagation()
+    
+    // Show confirmation dialog
+    const confirmed = await confirm({
+      title: t('contacts.confirmDeleteTitle'),
+      description: t('contacts.confirmDeleteDescription'),
+      confirmLabel: tCommon('delete'),
+      cancelLabel: tCommon('cancel'),
+      variant: 'danger',
+    })
+    if (!confirmed) return
+    
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return

@@ -286,6 +286,8 @@
       "saveFailedDesc": "Could not save contact changes",
       "editPlaceholder": "Edit the contact analysis...",
       "openingLines": "Opening Lines",
+      "confirmDeleteTitle": "Delete Contact?",
+      "confirmDeleteDescription": "This will permanently delete this contact and their analysis. This action cannot be undone.",
       "search": {
         "title": "Search Contact",
         "subtitle": "Search for a contact at {company}",

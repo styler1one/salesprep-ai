@@ -98,11 +98,49 @@ class ContactAnalyzer:
             
             response = self.client.messages.create(**api_params)
             
-            # Extract text from response (may have multiple content blocks with web search)
+            # Extract ONLY the final analysis text, filtering out Claude's thinking/search narration
             analysis_text = ""
             for block in response.content:
                 if hasattr(block, 'text'):
-                    analysis_text += block.text
+                    text = block.text.strip()
+                    
+                    # Skip Claude's thinking/search narration patterns
+                    skip_patterns = [
+                        "I'll search for",
+                        "Let me search",
+                        "I'll now",
+                        "Let me now",
+                        "Based on the information gathered",
+                        "Based on my search",
+                        "I can now provide",
+                        "Now I can provide",
+                        "I will search",
+                        "Searching for",
+                        "I found",
+                        "The search",
+                    ]
+                    
+                    # Check if this block is Claude's narration
+                    is_narration = any(text.startswith(pattern) for pattern in skip_patterns)
+                    
+                    # Only include text blocks that are the actual analysis
+                    # The analysis should contain structured headers like "## 1." or "## PROFILE"
+                    if not is_narration and ("## 1." in text or "## PROFILE" in text or "##" in text):
+                        analysis_text = text
+                        break  # Use the first actual analysis block
+            
+            # If we didn't find structured analysis, look for any substantial text
+            if not analysis_text:
+                for block in response.content:
+                    if hasattr(block, 'text'):
+                        text = block.text.strip()
+                        # Skip very short blocks and narration
+                        if len(text) > 500 and not any(text.startswith(p) for p in ["I'll", "Let me", "Based on"]):
+                            analysis_text = text
+                            break
+            
+            # Clean up any trailing "0" or similar artifacts
+            analysis_text = analysis_text.rstrip('0').strip()
             
             # Parse the analysis into structured data
             return self._parse_analysis(analysis_text, contact_name, contact_role, linkedin_url)
