@@ -78,7 +78,16 @@
     "and": "y",
     "upload": "Subir documentos",
     "download": "Descargar",
-    "extraOptions": "Opciones adicionales"
+    "extraOptions": "Opciones adicionales",
+    "confirm": "Confirmar",
+    "processing": "Procesando...",
+    "export": {
+      "markdownDownloaded": "Archivo Markdown descargado",
+      "pdfDownloaded": "Archivo PDF descargado",
+      "wordDownloaded": "Archivo Word descargado",
+      "pdfFailed": "Error al exportar PDF",
+      "wordFailed": "Error al exportar Word"
+    }
   },
   "navigation": {
     "dashboard": "Panel",
@@ -139,7 +148,14 @@
     "usageLimitReached": "Límite de uso alcanzado. Actualiza tu plan para continuar.",
     "tryAgain": "Intentar de nuevo",
     "goBack": "Volver",
-    "contactSupport": "Contacta al soporte si este problema persiste"
+    "contactSupport": "Contacta al soporte si este problema persiste",
+    "globalError": {
+      "title": "Algo salió mal",
+      "description": "Ocurrió un error inesperado. Nuestro equipo ha sido notificado y está trabajando en una solución.",
+      "tryAgain": "Intentar de nuevo",
+      "goToDashboard": "Ir al Panel",
+      "devDetails": "Detalles del error (solo desarrollo)"
+    }
   },
   "research": {
     "title": "Agente de Investigación",
@@ -268,7 +284,11 @@
       "addedDesc": "Análisis IA iniciado...",
       "analysisComplete": "Análisis completo",
       "analysisCompleteDesc": "{name} ha sido analizado",
-      "addFailed": "No se pudo agregar"
+      "addFailed": "No se pudo agregar",
+      "search": {
+        "errorTitle": "Error",
+        "errorAddFailed": "No se pudo agregar el contacto"
+      }
     },
     "context": {
       "title": "Contexto IA",
@@ -494,6 +514,87 @@
     },
     "confirm": {
       "delete": "¿Estás seguro de que quieres eliminar este seguimiento?"
+    },
+    "actions": {
+      "title": "Acciones de Seguimiento",
+      "subtitle": "Genera resultados específicos de tu reunión",
+      "generating": "Generando...",
+      "generatingDesc": "{actionType} se está generando...",
+      "generated": "Generado",
+      "generatedDesc": "{actionType} está listo para ver",
+      "readyToView": "está listo para ver",
+      "clickToGenerate": "Clic para generar",
+      "error": "Error",
+      "regenerate": "Regenerar",
+      "regenerating": "Regenerando...",
+      "regeneratingDesc": "Puedes seguir trabajando mientras esto se genera en segundo plano.",
+      "delete": "Eliminar",
+      "confirmDelete": "¿Estás seguro de que quieres eliminar esta acción?",
+      "noContent": "Aún sin contenido",
+      "generationFailed": "Error en la generación",
+      "alreadyExists": "Acción ya generada",
+      "alreadyExistsDesc": "Esta acción ya fue generada. Haz clic para ver.",
+      "generationFailedDesc": "Ocurrió un error. Por favor, intenta regenerar.",
+      "tryAgain": "Intentar de nuevo",
+      "summaryReadOnly": "El resumen es de solo lectura",
+      "summaryCannotEdit": "El resumen no se puede editar aquí. Edita el resumen principal arriba.",
+      "summaryCannotDelete": "El resumen no se puede eliminar",
+      "summaryCannotRegenerate": "El resumen no se puede regenerar aquí",
+      "contextUsed": "Contexto utilizado",
+      "wordsGenerated": "palabras",
+      "generatingContent": "Generando contenido...",
+      "generatingTime": "Esto puede tomar 10-30 segundos",
+      "export": "Exportar",
+      "exportPdf": "Descargar PDF",
+      "exportDocx": "Descargar Word",
+      "exportMd": "Descargar Markdown",
+      "copied": "Copiado al portapapeles",
+      "changesSaved": "Cambios guardados",
+      "saveFailed": "Error al guardar",
+      "deleteFailed": "Error al eliminar",
+      "actionDeleted": "Acción eliminada",
+      "exportFailed": "Error en la exportación",
+      "pdfDownloaded": "PDF descargado",
+      "docxDownloaded": "Documento Word descargado",
+      "mdDownloaded": "Markdown descargado",
+      "time": {
+        "justNow": "ahora mismo",
+        "minAgo": "hace {count} min",
+        "hourAgo": "hace {count} hora",
+        "hoursAgo": "hace {count} horas",
+        "dayAgo": "hace {count} día",
+        "daysAgo": "hace {count} días"
+      },
+      "types": {
+        "summary": {
+          "label": "Resumen",
+          "description": "Resumen de la reunión con puntos clave y próximos pasos"
+        },
+        "customer_report": {
+          "label": "Informe de Cliente",
+          "description": "Informe profesional para compartir con el cliente"
+        },
+        "share_email": {
+          "label": "Email para Compartir",
+          "description": "Email listo para enviar con el informe"
+        },
+        "commercial_analysis": {
+          "label": "Análisis Comercial",
+          "description": "Señales de compra, riesgos y evaluación del negocio"
+        },
+        "sales_coaching": {
+          "label": "Coaching de Ventas",
+          "description": "Retroalimentación sobre tu desempeño de ventas"
+        },
+        "action_items": {
+          "label": "Puntos de Acción",
+          "description": "Tareas estructuradas con responsables y fechas límite"
+        },
+        "internal_report": {
+          "label": "Informe Interno",
+          "description": "Resumen corto para CRM o equipo"
+        }
+      }
     },
     "sections": {
       "keyPoints": "Puntos Clave",
@@ -1139,6 +1240,168 @@
       "serverError": "El proveedor de autenticación no está disponible temporalmente. Inténtalo más tarde.",
       "genericSignIn": "Ocurrió un error durante el inicio de sesión.",
       "genericSignUp": "Ocurrió un error durante el registro."
+    }
+  },
+  "coach": {
+    "name": "Luna",
+    "tagline": "Tu Coach de Ventas IA",
+    
+    "widget": {
+      "expand": "Expandir",
+      "collapse": "Colapsar",
+      "close": "Cerrar",
+      "settings": "Configuración",
+      "hideForToday": "Ocultar por hoy",
+      "allCaughtUp": "¡Todo al día!",
+      "greatWork": "¡Excelente trabajo! Vuelve más tarde para nuevas sugerencias."
+    },
+    
+    "completion": {
+      "researchComplete": {
+        "title": "¡Investigación Completa!",
+        "description": "¡Excelente! Tu investigación sobre {company} está lista. ¿Qué te gustaría hacer ahora?",
+        "addContacts": "Agregar Contactos",
+        "addContactsDesc": "Agregar personas clave",
+        "createPrep": "Crear Preparación",
+        "createPrepDesc": "Comenzar la preparación ahora"
+      },
+      "contactsAdded": {
+        "title": "¡Contactos Agregados!",
+        "description": "Has agregado {count} a {company}. Luna ahora puede generar iniciadores de conversación personalizados.",
+        "createPrep": "Crear Preparación",
+        "createPrepDesc": "Obtener puntos de conversación personalizados",
+        "addMore": "Agregar Más Contactos",
+        "addMoreDesc": "Encontrar más personas para conectar"
+      },
+      "prepReady": {
+        "title": "¡Preparación Lista!",
+        "description": "Tu preparación para {company} está completa. ¡Buena suerte con tu reunión!",
+        "viewPrep": "Ver Preparación",
+        "viewPrepDesc": "Revisar tu preparación",
+        "addFollowup": "Agregar Seguimiento Después",
+        "addFollowupDesc": "Crear seguimiento después"
+      },
+      "followupComplete": {
+        "title": "¡Seguimiento Creado!",
+        "description": "Tu seguimiento de reunión está listo. Genera acciones para aprovechar al máximo tu reunión.",
+        "generateReport": "Generar Informe",
+        "generateReportDesc": "Crear un resumen para compartir",
+        "viewActions": "Ver Todas las Acciones",
+        "viewActionsDesc": "Ver todas las opciones de seguimiento"
+      },
+      "actionGenerated": {
+        "title": "¡Acción Generada!",
+        "description": "Tu {actionType} está listo.",
+        "export": "Exportar",
+        "exportDesc": "Descargar o compartir la acción",
+        "moreActions": "Más Acciones",
+        "moreActionsDesc": "Crear acciones adicionales"
+      },
+      "generic": {
+        "title": "¡Excelente Trabajo!",
+        "description": "Has completado una tarea exitosamente.",
+        "continue": "Continuar",
+        "continueDesc": "Seguir adelante"
+      }
+    },
+    
+    "inlineTips": {
+      "researchForm": {
+        "title": "Consejo pro: Sé específico",
+        "description": "Incluye el sitio web de la empresa o la URL de LinkedIn para mejores resultados."
+      },
+      "contactsEmpty": {
+        "title": "Agrega contactos primero",
+        "description": "Agregar contactos antes de crear una preparación mejora los resultados de tus reuniones en un 40%.",
+        "action": "Agregar contactos"
+      },
+      "contactsFew": {
+        "title": "Agrega más contactos",
+        "description": "Tener 2-3 contactos le da a Luna más contexto para iniciadores de conversación personalizados."
+      },
+      "prepForm": {
+        "title": "Mejor momento",
+        "description": "Crea tu preparación 1-2 días antes de la reunión para resultados óptimos."
+      },
+      "prepNoContacts": {
+        "title": "Faltan contactos",
+        "description": "Tu preparación será más genérica sin contactos. Agrega contactos primero para puntos de conversación personalizados.",
+        "action": "Agregar contactos primero"
+      },
+      "followupForm": {
+        "title": "Sube tu grabación",
+        "description": "Sube tu grabación o transcripción para generar acciones de seguimiento completas."
+      },
+      "dealForm": {
+        "title": "Rastrea tu negocio",
+        "description": "Vincular negocios a prospectos ayuda a Luna a proporcionar mejores insights de pipeline."
+      },
+      "exportAvailable": {
+        "title": "Exportación disponible",
+        "description": "Puedes exportar este brief como PDF, Word o Markdown usando el menú desplegable."
+      }
+    },
+    
+    "sections": {
+      "priority": "Prioridad",
+      "suggestions": "Sugerencias",
+      "progress": "Progreso de Hoy",
+      "tip": "Consejo del Día",
+      "score": "Puntuación de Éxito",
+      "predictions": "Predicciones",
+      "recommendations": "Recomendaciones"
+    },
+    
+    "actions": {
+      "doIt": "Hacerlo",
+      "later": "Después",
+      "skip": "Omitir",
+      "snooze1hour": "Posponer 1 hora",
+      "snoozeTonight": "Recordar esta noche",
+      "snoozeTomorrow": "Recordar mañana"
+    },
+    
+    "suggestions": {
+      "addContacts": "Agregar contactos a {company}",
+      "createPrep": "Crear preparación de reunión",
+      "uploadFollowup": "Subir grabación de reunión",
+      "generateReport": "Generar informe de cliente",
+      "reviewCoaching": "Revisar feedback de coaching"
+    },
+    
+    "reasons": {
+      "meetingTomorrow": "Reunión mañana a las {time}",
+      "meetingIn": "Reunión en {hours} horas",
+      "noContacts": "Sin contactos agregados aún",
+      "prepReady": "La preparación está lista",
+      "overdue": "{days} días desde la última actividad"
+    },
+    
+    "tips": {
+      "contactsImprove": "Agregar contactos antes de la preparación mejora los resultados en un 40%",
+      "customerReports": "Los informes de cliente aumentan las tasas de respuesta en un 60%",
+      "prepTiming": "Las mejores preparaciones se crean 1-2 días antes de la reunión"
+    },
+    
+    "stats": {
+      "research": "Investigación",
+      "preps": "Preparaciones",
+      "followups": "Seguimientos",
+      "completed": "completados hoy"
+    },
+    
+    "settings": {
+      "title": "Configuración del Coach",
+      "enabled": "Activar Coach IA",
+      "inlineTips": "Mostrar consejos inline",
+      "completionModals": "Mostrar sugerencias de completado",
+      "quietHours": "Horas tranquilas",
+      "frequency": "Frecuencia de notificaciones",
+      "frequencyOptions": {
+        "minimal": "Mínimo",
+        "normal": "Normal",
+        "frequent": "Frecuente"
+      }
     }
   }
 }
