@@ -141,7 +141,7 @@ def generate_prep_background(
 @router.post("/start", response_model=dict, status_code=202)
 @limiter.limit("10/minute")
 async def start_prep(
-    http_request: Request,  # Required for rate limiting
+    request: Request,  # Required for rate limiting (must be named 'request')
     body: PrepStartRequest,
     background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user)
