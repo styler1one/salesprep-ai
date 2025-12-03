@@ -10,7 +10,7 @@ Events:
 
 import logging
 from typing import Optional
-from inngest import NonRetriableError
+from inngest import NonRetriableError, TriggerEvent
 
 from app.inngest.client import inngest_client
 from app.database import get_supabase_service
@@ -34,7 +34,7 @@ supabase = get_supabase_service()
 
 @inngest_client.create_function(
     fn_id="research-company",
-    trigger=inngest_client.TriggerEvent("salesprep/research.requested"),
+    trigger=TriggerEvent(event="salesprep/research.requested"),
     retries=2,  # Total attempts = 3 (1 initial + 2 retries)
 )
 async def research_company_fn(ctx, step):
