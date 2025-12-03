@@ -19,6 +19,9 @@ interface TranscriptionUsage extends UsageMetric {
 interface Usage {
   period_start: string
   period_end?: string
+  // v2: Primary metric
+  flow?: UsageMetric
+  // v1 compatibility
   research: UsageMetric
   preparation: UsageMetric
   followup: UsageMetric

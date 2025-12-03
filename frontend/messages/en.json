@@ -1177,7 +1177,7 @@
     "trialEnds": "Trial ends",
     "soon": "soon",
     "usageThisMonth": "Usage this month",
-    "upgradeToSolo": "Upgrade to Solo",
+    "upgradeToSolo": "Upgrade",
     "manageSubscription": "Manage subscription",
     "viewAllPlans": "View all plans",
     "cancelWarning": "Your subscription will be cancelled on {date}",
@@ -1185,24 +1185,43 @@
     "perYear": "/year",
     "checkoutError": "Could not start checkout. Please try again.",
     "portalError": "Could not open portal. Please try again.",
+    "donationNotConfigured": "Donation link is not configured yet.",
+    "flowsUsed": "Flows used",
+    "flowsRemaining": "Flows remaining",
+    "unlimited": "Unlimited",
     "pricing": {
       "title": "Choose the plan that fits you",
+      "titleV2": "Simple pricing for every sales pro",
       "subtitle": "Start free and upgrade when you're ready. 14 days free trial, no credit card required.",
+      "subtitleV2": "Start free with 2 flows. Upgrade when you need more.",
+      "flowExplanation": "1 Flow = 1 Research + 1 Prep + 1 Follow-up",
       "monthly": "Monthly",
       "yearly": "Yearly",
       "save": "Save {percent}%",
       "backToDashboard": "Back to dashboard",
       "popular": "Popular",
+      "earlyAdopter": "Early Adopter",
       "currentPlan": "Current plan",
       "select": "Select",
+      "startFree": "Start Free",
       "startTrial": "Start 14-day trial",
+      "upgrade": "Upgrade",
+      "goUnlimited": "Go Unlimited",
       "contactUs": "Contact us",
+      "contactSales": "Contact Sales",
+      "alreadyFree": "You are already on the free plan.",
+      "donate": "Support us ❤️",
       "perYear": "per year",
       "contactForPricing": "Contact us for pricing",
       "custom": "Custom",
       "compareFeatures": "Compare features",
       "feature": "Feature",
-      "trustBadges": "🔒 Secure payment via Stripe • 💳 All major cards accepted • ❌ Cancel anytime"
+      "trustBadges": "🔒 Secure payment via Stripe • 💳 All major cards accepted • ❌ Cancel anytime",
+      "whatIsFlow": "What is a Flow?",
+      "flowStep1": "Research",
+      "flowStep2": "Preparation",
+      "flowStep3": "Follow-up",
+      "flowDescription": "A complete sales cycle from prospect research to meeting follow-up."
     },
     "plans": {
       "free": {
@@ -1216,6 +1235,23 @@
       "teams": {
         "name": "Teams",
         "description": "For sales teams"
+      },
+      "v2": {
+        "free": {
+          "description": "Start free with 2 flows"
+        },
+        "lightSolo": {
+          "name": "Light Solo",
+          "description": "For the starting sales pro"
+        },
+        "unlimitedSolo": {
+          "name": "Unlimited Solo",
+          "description": "Unlimited for early adopters"
+        },
+        "enterprise": {
+          "name": "Enterprise",
+          "description": "For teams with CRM needs"
+        }
       }
     },
     "features": {
@@ -1230,6 +1266,26 @@
       "unlimited": "Unlimited",
       "hours": "hours",
       "docs": "docs",
+      "v2": {
+        "flows": "{count} flows per month",
+        "flowsUnlimited": "Unlimited flows",
+        "kb": "Knowledge Base included",
+        "transcription": "Transcription included",
+        "contacts": "Full contact analysis",
+        "pdf": "Clean PDF exports",
+        "user": "{count} user",
+        "usersUnlimited": "Unlimited users",
+        "support": "Email support",
+        "prioritySupport": "Priority support",
+        "dedicatedSupport": "Dedicated support",
+        "crm": "CRM integration",
+        "crmDynamics": "Microsoft Dynamics",
+        "crmSalesforce": "Salesforce",
+        "crmHubspot": "HubSpot",
+        "crmPipedrive": "Pipedrive",
+        "crmZoho": "Zoho CRM",
+        "sso": "SSO/SAML"
+      },
       "free": {
         "research": "3 research briefs per month",
         "prep": "3 meeting preps per month",

@@ -5,18 +5,18 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Switch } from '@/components/ui/switch'
 import { 
   Check, 
   X, 
   Sparkles, 
   Loader2,
   ArrowLeft,
-  Building2,
   Zap,
   Crown,
-  Users,
-  Mail
+  Building2,
+  Heart,
+  ExternalLink,
+  Infinity
 } from 'lucide-react'
 import { useBilling } from '@/lib/billing-context'
 import { useToast } from '@/components/ui/use-toast'
@@ -29,70 +29,69 @@ export default function PricingPage() {
   const { subscription, createCheckoutSession } = useBilling()
   const t = useTranslations('billing')
   const tErrors = useTranslations('errors')
-  const [isYearly, setIsYearly] = useState(false)
   const [loading, setLoading] = useState<string | null>(null)
 
-  const monthlyPrice = 29
-  const yearlyPrice = 19 // per month when paid yearly
-  const yearlyTotal = 228
-
-  // Features arrays using translations
+  // v2 Features - all plans include KB and transcription
   const features = {
     free: [
-      { text: t('features.free.research'), included: true },
-      { text: t('features.free.prep'), included: true },
-      { text: t('features.free.followup'), included: true },
-      { text: t('features.free.support'), included: true },
-      { text: t('features.free.users'), included: true },
-      { text: t('features.free.kb'), included: false },
-      { text: t('features.free.contacts'), included: false },
-      { text: t('features.free.pdf'), included: false },
+      { text: t('features.v2.flows', { count: '2' }), included: true },
+      { text: t('features.v2.kb'), included: true },
+      { text: t('features.v2.transcription'), included: true },
+      { text: t('features.v2.contacts'), included: true },
+      { text: t('features.v2.pdf'), included: true },
+      { text: t('features.v2.user', { count: '1' }), included: true },
+      { text: t('features.v2.crm'), included: false },
     ],
-    solo: [
-      { text: t('features.solo.research'), included: true },
-      { text: t('features.solo.prep'), included: true },
-      { text: t('features.solo.followup'), included: true },
-      { text: t('features.solo.transcription'), included: true },
-      { text: t('features.solo.kb'), included: true },
-      { text: t('features.solo.contacts'), included: true },
-      { text: t('features.solo.pdf'), included: true },
-      { text: t('features.solo.support'), included: true },
-      { text: t('features.solo.users'), included: true },
+    lightSolo: [
+      { text: t('features.v2.flows', { count: '5' }), included: true },
+      { text: t('features.v2.kb'), included: true },
+      { text: t('features.v2.transcription'), included: true },
+      { text: t('features.v2.contacts'), included: true },
+      { text: t('features.v2.pdf'), included: true },
+      { text: t('features.v2.user', { count: '1' }), included: true },
+      { text: t('features.v2.support'), included: true },
+      { text: t('features.v2.crm'), included: false },
     ],
-    teams: [
-      { text: t('features.teams.everything'), included: true },
-      { text: t('features.teams.users'), included: true },
-      { text: t('features.teams.transcription'), included: true },
-      { text: t('features.teams.kb'), included: true },
-      { text: t('features.teams.crm'), included: true },
-      { text: t('features.teams.sharing'), included: true },
-      { text: t('features.teams.analytics'), included: true },
-      { text: t('features.teams.sso'), included: true },
-      { text: t('features.teams.support'), included: true },
-      { text: t('features.teams.onboarding'), included: true },
+    unlimitedSolo: [
+      { text: t('features.v2.flowsUnlimited'), included: true },
+      { text: t('features.v2.kb'), included: true },
+      { text: t('features.v2.transcription'), included: true },
+      { text: t('features.v2.contacts'), included: true },
+      { text: t('features.v2.pdf'), included: true },
+      { text: t('features.v2.user', { count: '1' }), included: true },
+      { text: t('features.v2.prioritySupport'), included: true },
+      { text: t('features.v2.crm'), included: false },
+    ],
+    enterprise: [
+      { text: t('features.v2.flowsUnlimited'), included: true },
+      { text: t('features.v2.usersUnlimited'), included: true },
+      { text: t('features.v2.crmDynamics'), included: true },
+      { text: t('features.v2.crmSalesforce'), included: true },
+      { text: t('features.v2.crmHubspot'), included: true },
+      { text: t('features.v2.crmPipedrive'), included: true },
+      { text: t('features.v2.crmZoho'), included: true },
+      { text: t('features.v2.sso'), included: true },
+      { text: t('features.v2.dedicatedSupport'), included: true },
     ],
   }
 
   const handleSelectPlan = async (planId: string) => {
     if (planId === 'free') {
-      // Already on free or want to downgrade
       toast({
-        title: 'Free plan',
-        description: t('pricing.currentPlan'),
+        title: t('plans.free.name'),
+        description: t('pricing.alreadyFree'),
       })
       return
     }
 
-    if (planId === 'teams') {
-      // Contact sales
-      window.location.href = 'mailto:sales@salesprep.ai?subject=Teams%20Plan%20Request'
+    if (planId === 'enterprise') {
+      window.location.href = 'mailto:sales@salesprep.ai?subject=Enterprise%20Plan%20Request'
       return
     }
 
     setLoading(planId)
     try {
-      const checkoutPlanId = isYearly ? 'solo_yearly' : 'solo_monthly'
-      const checkoutUrl = await createCheckoutSession(checkoutPlanId)
+      const checkoutUrl = await createCheckoutSession(planId)
       if (checkoutUrl) {
         window.location.href = checkoutUrl
       }
@@ -108,9 +107,31 @@ export default function PricingPage() {
     }
   }
 
+  const handleDonation = async () => {
+    try {
+      // Get donation link from backend
+      const response = await fetch('/api/v1/billing/donation-link', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        window.open(data.donation_url, '_blank')
+      } else {
+        toast({
+          title: tErrors('generic'),
+          description: t('donationNotConfigured'),
+          variant: 'destructive',
+        })
+      }
+    } catch (error) {
+      console.error('Donation link failed:', error)
+    }
+  }
+
   const isCurrentPlan = (planId: string) => {
     if (!subscription) return planId === 'free'
-    if (planId === 'solo' && subscription.plan_id.startsWith('solo')) return true
     return subscription.plan_id === planId
   }
 
@@ -135,49 +156,37 @@ export default function PricingPage() {
         {/* Title */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
-            {t('pricing.title')}
+            {t('pricing.titleV2')}
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            {t('pricing.subtitle')}
+            {t('pricing.subtitleV2')}
           </p>
-
-          {/* Billing Toggle */}
-          <div className="flex items-center justify-center gap-4 mt-8">
-            <span className={`text-sm ${!isYearly ? 'text-slate-900 dark:text-white font-medium' : 'text-slate-500'}`}>
-              {t('pricing.monthly')}
-            </span>
-            <Switch
-              checked={isYearly}
-              onCheckedChange={setIsYearly}
-            />
-            <span className={`text-sm ${isYearly ? 'text-slate-900 dark:text-white font-medium' : 'text-slate-500'}`}>
-              {t('pricing.yearly')}
-            </span>
-            {isYearly && (
-              <Badge className="bg-emerald-500">{t('pricing.save', { percent: '34' })}</Badge>
-            )}
+          {/* Flow explanation */}
+          <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-full text-sm text-blue-700 dark:text-blue-300">
+            <Sparkles className="h-4 w-4" />
+            {t('pricing.flowExplanation')}
           </div>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        {/* Pricing Cards - 4 columns */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {/* Free Plan */}
           <Card className="relative border-2 hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
-            <CardHeader>
+            <CardHeader className="pb-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
                   <Zap className="h-5 w-5 text-slate-600 dark:text-slate-400" />
                 </div>
-                <CardTitle>{t('plans.free.name')}</CardTitle>
+                <CardTitle className="text-lg">{t('plans.free.name')}</CardTitle>
               </div>
-              <CardDescription>{t('plans.free.description')}</CardDescription>
+              <CardDescription className="text-sm">{t('plans.v2.free.description')}</CardDescription>
               <div className="mt-4">
-                <span className="text-4xl font-bold text-slate-900 dark:text-white">€0</span>
-                <span className="text-slate-500">{t('perMonth')}</span>
+                <span className="text-3xl font-bold text-slate-900 dark:text-white">€0</span>
+                <span className="text-slate-500 text-sm">{t('perMonth')}</span>
               </div>
             </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
+            <CardContent className="pb-4">
+              <ul className="space-y-2">
                 {features.free.map((feature, idx) => (
                   <li key={idx} className="flex items-center gap-2 text-sm">
                     {feature.included ? (
@@ -192,94 +201,151 @@ export default function PricingPage() {
                 ))}
               </ul>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col gap-2">
               <Button 
                 variant="outline" 
                 className="w-full"
                 disabled={isCurrentPlan('free')}
               >
-                {isCurrentPlan('free') ? t('pricing.currentPlan') : t('pricing.select')}
+                {isCurrentPlan('free') ? t('pricing.currentPlan') : t('pricing.startFree')}
               </Button>
+              {isCurrentPlan('free') && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="w-full text-pink-600 hover:text-pink-700 hover:bg-pink-50 dark:hover:bg-pink-900/20"
+                  onClick={handleDonation}
+                >
+                  <Heart className="h-4 w-4 mr-2" />
+                  {t('pricing.donate')}
+                </Button>
+              )}
             </CardFooter>
           </Card>
 
-          {/* Solo Plan */}
-          <Card className="relative border-2 border-blue-500 shadow-lg shadow-blue-500/10 scale-105">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <Badge className="bg-gradient-to-r from-blue-500 to-indigo-500 px-4">
-                {t('pricing.popular')}
-              </Badge>
-            </div>
-            <CardHeader>
+          {/* Light Solo Plan */}
+          <Card className="relative border-2 hover:border-blue-300 dark:hover:border-blue-600 transition-colors">
+            <CardHeader className="pb-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                  <Crown className="h-5 w-5 text-blue-600" />
+                  <Sparkles className="h-5 w-5 text-blue-600" />
                 </div>
-                <CardTitle>{t('plans.solo.name')}</CardTitle>
+                <CardTitle className="text-lg">{t('plans.v2.lightSolo.name')}</CardTitle>
               </div>
-              <CardDescription>{t('plans.solo.description')}</CardDescription>
+              <CardDescription className="text-sm">{t('plans.v2.lightSolo.description')}</CardDescription>
               <div className="mt-4">
-                <span className="text-4xl font-bold text-slate-900 dark:text-white">
-                  €{isYearly ? yearlyPrice : monthlyPrice}
-                </span>
-                <span className="text-slate-500">{t('perMonth')}</span>
-                {isYearly && (
-                  <p className="text-sm text-slate-500 mt-1">
-                    €{yearlyTotal} {t('pricing.perYear')}
-                  </p>
-                )}
+                <span className="text-3xl font-bold text-slate-900 dark:text-white">€9,95</span>
+                <span className="text-slate-500 text-sm">{t('perMonth')}</span>
               </div>
             </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
-                {features.solo.map((feature, idx) => (
+            <CardContent className="pb-4">
+              <ul className="space-y-2">
+                {features.lightSolo.map((feature, idx) => (
                   <li key={idx} className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                    <span className="text-slate-700 dark:text-slate-300">{feature.text}</span>
+                    {feature.included ? (
+                      <Check className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                    ) : (
+                      <X className="h-4 w-4 text-slate-300 dark:text-slate-600 flex-shrink-0" />
+                    )}
+                    <span className={feature.included ? 'text-slate-700 dark:text-slate-300' : 'text-slate-400 dark:text-slate-600'}>
+                      {feature.text}
+                    </span>
                   </li>
                 ))}
               </ul>
             </CardContent>
             <CardFooter>
               <Button 
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                onClick={() => handleSelectPlan('solo')}
-                disabled={loading === 'solo' || isCurrentPlan('solo')}
+                className="w-full"
+                variant="outline"
+                onClick={() => handleSelectPlan('light_solo')}
+                disabled={loading === 'light_solo' || isCurrentPlan('light_solo')}
               >
-                {loading === 'solo' ? (
+                {loading === 'light_solo' ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : isCurrentPlan('solo') ? (
+                ) : isCurrentPlan('light_solo') ? (
+                  t('pricing.currentPlan')
+                ) : (
+                  t('pricing.upgrade')
+                )}
+              </Button>
+            </CardFooter>
+          </Card>
+
+          {/* Unlimited Solo Plan - Featured */}
+          <Card className="relative border-2 border-indigo-500 shadow-lg shadow-indigo-500/10">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <Badge className="bg-gradient-to-r from-indigo-500 to-purple-500 px-3 text-xs">
+                {t('pricing.earlyAdopter')}
+              </Badge>
+            </div>
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-900/30">
+                  <Crown className="h-5 w-5 text-indigo-600" />
+                </div>
+                <CardTitle className="text-lg">{t('plans.v2.unlimitedSolo.name')}</CardTitle>
+              </div>
+              <CardDescription className="text-sm">{t('plans.v2.unlimitedSolo.description')}</CardDescription>
+              <div className="mt-4">
+                <span className="text-lg text-slate-400 line-through">€79,95</span>
+                <span className="text-3xl font-bold text-slate-900 dark:text-white ml-2">€29,95</span>
+                <span className="text-slate-500 text-sm">{t('perMonth')}</span>
+              </div>
+            </CardHeader>
+            <CardContent className="pb-4">
+              <ul className="space-y-2">
+                {features.unlimitedSolo.map((feature, idx) => (
+                  <li key={idx} className="flex items-center gap-2 text-sm">
+                    {feature.included ? (
+                      <Check className="h-4 w-4 text-indigo-500 flex-shrink-0" />
+                    ) : (
+                      <X className="h-4 w-4 text-slate-300 dark:text-slate-600 flex-shrink-0" />
+                    )}
+                    <span className={feature.included ? 'text-slate-700 dark:text-slate-300' : 'text-slate-400 dark:text-slate-600'}>
+                      {feature.text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+            <CardFooter>
+              <Button 
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                onClick={() => handleSelectPlan('unlimited_solo')}
+                disabled={loading === 'unlimited_solo' || isCurrentPlan('unlimited_solo')}
+              >
+                {loading === 'unlimited_solo' ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : isCurrentPlan('unlimited_solo') ? (
                   t('pricing.currentPlan')
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    {t('pricing.startTrial')}
+                    <Infinity className="h-4 w-4 mr-2" />
+                    {t('pricing.goUnlimited')}
                   </>
                 )}
               </Button>
             </CardFooter>
           </Card>
 
-          {/* Teams Plan */}
+          {/* Enterprise Plan */}
           <Card className="relative border-2 hover:border-purple-300 dark:hover:border-purple-600 transition-colors">
-            <CardHeader>
+            <CardHeader className="pb-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                  <Users className="h-5 w-5 text-purple-600" />
+                  <Building2 className="h-5 w-5 text-purple-600" />
                 </div>
-                <CardTitle>{t('plans.teams.name')}</CardTitle>
+                <CardTitle className="text-lg">{t('plans.v2.enterprise.name')}</CardTitle>
               </div>
-              <CardDescription>{t('plans.teams.description')}</CardDescription>
+              <CardDescription className="text-sm">{t('plans.v2.enterprise.description')}</CardDescription>
               <div className="mt-4">
-                <span className="text-2xl font-bold text-slate-900 dark:text-white">{t('pricing.custom')}</span>
-                <p className="text-sm text-slate-500 mt-1">
-                  {t('pricing.contactForPricing')}
-                </p>
+                <span className="text-xl font-bold text-slate-900 dark:text-white">{t('pricing.contactSales')}</span>
               </div>
             </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
-                {features.teams.map((feature, idx) => (
+            <CardContent className="pb-4">
+              <ul className="space-y-2">
+                {features.enterprise.map((feature, idx) => (
                   <li key={idx} className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-purple-500 flex-shrink-0" />
                     <span className="text-slate-700 dark:text-slate-300">{feature.text}</span>
@@ -291,86 +357,54 @@ export default function PricingPage() {
               <Button 
                 variant="outline" 
                 className="w-full border-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20"
-                onClick={() => handleSelectPlan('teams')}
+                onClick={() => handleSelectPlan('enterprise')}
               >
-                <Mail className="h-4 w-4 mr-2" />
+                <ExternalLink className="h-4 w-4 mr-2" />
                 {t('pricing.contactUs')}
               </Button>
             </CardFooter>
           </Card>
         </div>
 
-        {/* FAQ / Trust Section */}
+        {/* What is a Flow? */}
+        <div className="mt-16 max-w-2xl mx-auto text-center">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
+            {t('pricing.whatIsFlow')}
+          </h2>
+          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6">
+            <div className="flex items-center justify-center gap-4 text-sm">
+              <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm">
+                <span className="font-semibold text-blue-600">1</span>
+                <span>{t('pricing.flowStep1')}</span>
+              </div>
+              <span className="text-slate-400">+</span>
+              <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm">
+                <span className="font-semibold text-green-600">1</span>
+                <span>{t('pricing.flowStep2')}</span>
+              </div>
+              <span className="text-slate-400">+</span>
+              <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm">
+                <span className="font-semibold text-purple-600">1</span>
+                <span>{t('pricing.flowStep3')}</span>
+              </div>
+              <span className="text-slate-400">=</span>
+              <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg shadow-sm font-semibold">
+                1 Flow
+              </div>
+            </div>
+            <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
+              {t('pricing.flowDescription')}
+            </p>
+          </div>
+        </div>
+
+        {/* Trust Section */}
         <div className="mt-16 text-center">
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {t('pricing.trustBadges')}
           </p>
         </div>
-
-        {/* Feature Comparison - Simple */}
-        <div className="mt-16 max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-center text-slate-900 dark:text-white mb-8">
-            {t('pricing.compareFeatures')}
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-medium text-slate-700 dark:text-slate-300">{t('pricing.feature')}</th>
-                  <th className="text-center py-3 px-4 font-medium text-slate-700 dark:text-slate-300">{t('plans.free.name')}</th>
-                  <th className="text-center py-3 px-4 font-medium text-blue-600">{t('plans.solo.name')}</th>
-                  <th className="text-center py-3 px-4 font-medium text-purple-600">{t('plans.teams.name')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                <tr>
-                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{t('features.researchBriefs')}</td>
-                  <td className="py-3 px-4 text-center">3{t('features.perMonth')}</td>
-                  <td className="py-3 px-4 text-center text-emerald-600">∞</td>
-                  <td className="py-3 px-4 text-center text-emerald-600">∞</td>
-                </tr>
-                <tr>
-                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{t('features.meetingPreps')}</td>
-                  <td className="py-3 px-4 text-center">3{t('features.perMonth')}</td>
-                  <td className="py-3 px-4 text-center text-emerald-600">∞</td>
-                  <td className="py-3 px-4 text-center text-emerald-600">∞</td>
-                </tr>
-                <tr>
-                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{t('features.followups')}</td>
-                  <td className="py-3 px-4 text-center">1{t('features.perMonth')}</td>
-                  <td className="py-3 px-4 text-center text-emerald-600">∞</td>
-                  <td className="py-3 px-4 text-center text-emerald-600">∞</td>
-                </tr>
-                <tr>
-                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{t('features.transcription')}</td>
-                  <td className="py-3 px-4 text-center">—</td>
-                  <td className="py-3 px-4 text-center">10 {t('features.hours')}{t('features.perMonth')}</td>
-                  <td className="py-3 px-4 text-center text-emerald-600">∞</td>
-                </tr>
-                <tr>
-                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{t('features.knowledgeBase')}</td>
-                  <td className="py-3 px-4 text-center">—</td>
-                  <td className="py-3 px-4 text-center">50 {t('features.docs')}</td>
-                  <td className="py-3 px-4 text-center text-emerald-600">∞</td>
-                </tr>
-                <tr>
-                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{t('features.users')}</td>
-                  <td className="py-3 px-4 text-center">1</td>
-                  <td className="py-3 px-4 text-center">1</td>
-                  <td className="py-3 px-4 text-center text-emerald-600">∞</td>
-                </tr>
-                <tr>
-                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{t('features.crmIntegration')}</td>
-                  <td className="py-3 px-4 text-center"><X className="h-4 w-4 mx-auto text-slate-300" /></td>
-                  <td className="py-3 px-4 text-center"><X className="h-4 w-4 mx-auto text-slate-300" /></td>
-                  <td className="py-3 px-4 text-center"><Check className="h-4 w-4 mx-auto text-emerald-500" /></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
       </div>
     </div>
   )
 }
-

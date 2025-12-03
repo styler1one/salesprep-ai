@@ -511,36 +511,52 @@ export default function SettingsPage() {
                     )}
                   </div>
 
-                  {/* Usage Meters */}
+                  {/* Usage Meters - v2: Flow-based */}
                   {usage && (
                     <div className="space-y-4">
                       <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300">
                         {tBilling('usageThisMonth')}
                       </h4>
-                      <UsageMeter
-                        label="Research"
-                        used={usage.research.used}
-                        limit={usage.research.limit}
-                        unlimited={usage.research.unlimited}
-                        showUpgrade={!subscription || subscription.plan_id === 'free' || !subscription.is_paid}
-                        onUpgrade={handleUpgrade}
-                      />
-                      <UsageMeter
-                        label="Preparation"
-                        used={usage.preparation.used}
-                        limit={usage.preparation.limit}
-                        unlimited={usage.preparation.unlimited}
-                        showUpgrade={!subscription || subscription.plan_id === 'free' || !subscription.is_paid}
-                        onUpgrade={handleUpgrade}
-                      />
-                      <UsageMeter
-                        label="Follow-up"
-                        used={usage.followup.used}
-                        limit={usage.followup.limit}
-                        unlimited={usage.followup.unlimited}
-                        showUpgrade={!subscription || subscription.plan_id === 'free' || !subscription.is_paid}
-                        onUpgrade={handleUpgrade}
-                      />
+                      {/* Primary: Flow usage */}
+                      {usage.flow && (
+                        <UsageMeter
+                          label={tBilling('flowsUsed')}
+                          used={usage.flow.used}
+                          limit={usage.flow.limit}
+                          unlimited={usage.flow.unlimited}
+                          showUpgrade={!subscription || subscription.plan_id === 'free' || !subscription.is_paid}
+                          onUpgrade={handleUpgrade}
+                        />
+                      )}
+                      {/* Fallback: Individual metrics if flow not available */}
+                      {!usage.flow && (
+                        <>
+                          <UsageMeter
+                            label="Research"
+                            used={usage.research.used}
+                            limit={usage.research.limit}
+                            unlimited={usage.research.unlimited}
+                            showUpgrade={!subscription || subscription.plan_id === 'free' || !subscription.is_paid}
+                            onUpgrade={handleUpgrade}
+                          />
+                          <UsageMeter
+                            label="Preparation"
+                            used={usage.preparation.used}
+                            limit={usage.preparation.limit}
+                            unlimited={usage.preparation.unlimited}
+                            showUpgrade={!subscription || subscription.plan_id === 'free' || !subscription.is_paid}
+                            onUpgrade={handleUpgrade}
+                          />
+                          <UsageMeter
+                            label="Follow-up"
+                            used={usage.followup.used}
+                            limit={usage.followup.limit}
+                            unlimited={usage.followup.unlimited}
+                            showUpgrade={!subscription || subscription.plan_id === 'free' || !subscription.is_paid}
+                            onUpgrade={handleUpgrade}
+                          />
+                        </>
+                      )}
                     </div>
                   )}
 
