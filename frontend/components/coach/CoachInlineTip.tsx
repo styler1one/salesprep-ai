@@ -55,7 +55,7 @@ const INLINE_TIPS_CONFIG: Record<InlineTipType, { icon: string; dismissable: boo
  */
 function getInlineTipConfig(
   type: InlineTipType,
-  t: (key: string) => string
+  t: ReturnType<typeof useTranslations>
 ): Omit<InlineTipConfig, 'id' | 'type'> {
   const config = INLINE_TIPS_CONFIG[type]
   const translationKey = type.replace(/_/g, '') // research_form -> researchForm style handled in translations

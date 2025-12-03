@@ -47,7 +47,7 @@ interface CompletionConfig {
 function getCompletionConfig(
   type: CompletionType, 
   context: Record<string, unknown> | undefined,
-  t: (key: string, values?: Record<string, unknown>) => string
+  t: ReturnType<typeof useTranslations>
 ): CompletionConfig {
   const companyName = (context?.companyName as string) || 'the company'
   
