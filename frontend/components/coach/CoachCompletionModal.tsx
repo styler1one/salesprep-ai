@@ -78,7 +78,7 @@ function getCompletionConfig(
       return {
         icon: '👤',
         title: t('completion.contactsAdded.title'),
-        description: t('completion.contactsAdded.description', { count: context?.contactCount || 'contacts', company: companyName }),
+        description: t('completion.contactsAdded.description', { count: String(context?.contactCount || 'contacts'), company: companyName }),
         nextSteps: [
           {
             label: t('completion.contactsAdded.createPrep'),
@@ -146,7 +146,7 @@ function getCompletionConfig(
       return {
         icon: '✨',
         title: t('completion.actionGenerated.title'),
-        description: t('completion.actionGenerated.description', { actionType: context?.actionType || 'follow-up action' }),
+        description: t('completion.actionGenerated.description', { actionType: String(context?.actionType || 'follow-up action') }),
         nextSteps: [
           {
             label: t('completion.actionGenerated.export'),
