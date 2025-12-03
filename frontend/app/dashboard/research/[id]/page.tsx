@@ -938,7 +938,7 @@ export default function ResearchBriefPage() {
                     )}
                     
                     {/* Quick Tips */}
-                    {(selectedContact.opening_suggestions?.length > 0 || selectedContact.questions_to_ask?.length > 0) && (
+                    {((selectedContact.opening_suggestions?.length ?? 0) > 0 || (selectedContact.questions_to_ask?.length ?? 0) > 0) && (
                       <div className="mt-6 grid gap-4 sm:grid-cols-2">
                         {selectedContact.opening_suggestions && selectedContact.opening_suggestions.length > 0 && (
                           <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
