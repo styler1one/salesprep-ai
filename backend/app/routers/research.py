@@ -112,18 +112,37 @@ def process_research_background(
         
         print(f"DEBUG: Status updated to researching")
         
-        # Execute research with seller context (run async function in sync context)
+        # Execute research with seller context using proper event loop handling
         orchestrator = ResearchOrchestrator()
-        research_data = asyncio.run(orchestrator.research_company(
-            company_name=company_name,
-            country=country,
-            city=city,
-            linkedin_url=linkedin_url,
-            website_url=website_url,
-            organization_id=organization_id,  # NEW: Pass for seller context
-            user_id=user_id,  # NEW: Pass for sales profile
-            language=language  # i18n: output language
-        ))
+        
+        # Create a new event loop for this background task
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            research_data = loop.run_until_complete(orchestrator.research_company(
+                company_name=company_name,
+                country=country,
+                city=city,
+                linkedin_url=linkedin_url,
+                website_url=website_url,
+                organization_id=organization_id,  # NEW: Pass for seller context
+                user_id=user_id,  # NEW: Pass for sales profile
+                language=language  # i18n: output language
+            ))
+        finally:
+            # Properly close the event loop and cleanup pending tasks
+            try:
+                # Cancel all pending tasks
+                pending = asyncio.all_tasks(loop)
+                for task in pending:
+                    task.cancel()
+                # Allow cancelled tasks to complete
+                if pending:
+                    loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+                # Shutdown async generators
+                loop.run_until_complete(loop.shutdown_asyncgens())
+            finally:
+                loop.close()
         
         print(f"DEBUG: Research completed, got {len(research_data.get('sources', {}))} sources")
         print(f"DEBUG: Success count: {research_data.get('success_count', 0)}")

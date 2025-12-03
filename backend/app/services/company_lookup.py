@@ -471,10 +471,26 @@ Rules:
             if response and response.text:
                 text = response.text.strip()
                 
+                # Check for empty response
+                if not text:
+                    logger.warning(f"Empty response from Gemini for company search: {company_name}")
+                    return await self._fallback_search(company_name, country)
+                
                 # Remove markdown code blocks if present
                 if text.startswith("```"):
                     text = re.sub(r'^```\w*\n?', '', text)
                     text = re.sub(r'\n?```$', '', text)
+                
+                # Try to find JSON array in the response
+                text = text.strip()
+                if not text.startswith("["):
+                    # Try to extract JSON array from text
+                    match = re.search(r'\[[\s\S]*\]', text)
+                    if match:
+                        text = match.group(0)
+                    else:
+                        logger.warning(f"No JSON array found in response: {text[:100]}...")
+                        return await self._fallback_search(company_name, country)
                 
                 options = json.loads(text)
                 
@@ -488,9 +504,12 @@ Rules:
                     
                     logger.info(f"Found {len(options)} company options for '{company_name}' in {country}")
                     return options
+            else:
+                logger.warning(f"No response from Gemini for company search: {company_name}")
+                return await self._fallback_search(company_name, country)
                 
         except json.JSONDecodeError as e:
-            logger.warning(f"Failed to parse company options response: {e}")
+            logger.warning(f"Failed to parse company options response: {e}. Text was: {text[:200] if 'text' in dir() else 'N/A'}")
         except Exception as e:
             logger.error(f"Company options search failed: {e}")
         

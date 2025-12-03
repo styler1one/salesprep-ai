@@ -47,18 +47,20 @@ class UsageService:
                 "plan_id, subscription_plans(features)"
             ).eq("organization_id", organization_id).maybe_single().execute()
             
-            # Default usage if no record
-            usage = usage_response.data if usage_response.data else {
+            # Default usage if no record (handle None response)
+            usage = {
                 "research_count": 0,
                 "preparation_count": 0,
                 "followup_count": 0,
                 "transcription_seconds": 0,
                 "kb_document_count": 0,
             }
+            if usage_response and hasattr(usage_response, 'data') and usage_response.data:
+                usage = usage_response.data
             
-            # Default to free plan features
+            # Default to free plan features (handle None response)
             features = {}
-            if sub_response.data:
+            if sub_response and hasattr(sub_response, 'data') and sub_response.data:
                 plan_data = sub_response.data.get("subscription_plans", {})
                 features = plan_data.get("features", {}) if plan_data else {}
             
@@ -294,7 +296,7 @@ class UsageService:
                 "period_start", period_start.isoformat()
             ).maybe_single().execute()
             
-            if existing.data:
+            if existing and hasattr(existing, 'data') and existing.data:
                 # Update existing record
                 current_value = existing.data.get(column, 0)
                 self.supabase.table("usage_records").update({
@@ -354,7 +356,7 @@ class UsageService:
                 "period_start", period_start.isoformat()
             ).maybe_single().execute()
             
-            if existing.data:
+            if existing and hasattr(existing, 'data') and existing.data:
                 current_value = existing.data.get(column, 0)
                 new_value = max(0, current_value - amount)  # Don't go below 0
                 
