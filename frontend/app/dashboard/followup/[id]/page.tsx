@@ -373,7 +373,7 @@ export default function FollowupDetailPage() {
     }
   }
 
-  // Regenerate action - same pattern as Research page
+  // Regenerate action - fire-and-forget pattern (non-blocking)
   const handleRegenerateAction = async (actionId: string) => {
     // Summary is built-in and cannot be regenerated
     if (actionId === 'summary-builtin') {
@@ -394,8 +394,9 @@ export default function FollowupDetailPage() {
         setSelectedAction(null)
       }
       
-      // Now generate new one
-      await handleGenerateAction(action.action_type)
+      // Generate new one - DON'T await, fire and forget
+      // This allows the user to navigate away without blocking
+      handleGenerateAction(action.action_type)
       
     } catch (error) {
       console.error('Failed to regenerate action:', error)
