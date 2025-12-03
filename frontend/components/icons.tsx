@@ -56,6 +56,7 @@ import {
     Maximize2,
     Minimize2,
     Link2,
+    Lightbulb,
 } from 'lucide-react'
 
 // Custom Google Icon (official colors)
@@ -148,6 +149,7 @@ export const Icons = {
     maximize: Maximize2,
     minimize: Minimize2,
     link: Link2,
+    lightbulb: Lightbulb,
     google: GoogleIcon,
     microsoft: MicrosoftIcon,
 }
