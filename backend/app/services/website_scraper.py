@@ -93,59 +93,72 @@ class WebsiteScraper:
             }
         }
         
+        # Create connector with force_close to prevent unclosed session warnings
+        connector = aiohttp.TCPConnector(force_close=True, limit=10)
+        session = None
+        
         try:
-            async with aiohttp.ClientSession(
+            session = aiohttp.ClientSession(
                 timeout=self.timeout,
-                headers=self.headers
-            ) as session:
+                headers=self.headers,
+                connector=connector
+            )
+            
+            # First, scrape the homepage
+            homepage_content = await self._fetch_page(session, website_url)
+            if homepage_content:
+                result["content"]["homepage"] = homepage_content
+                result["pages_scraped"] += 1
                 
-                # First, scrape the homepage
-                homepage_content = await self._fetch_page(session, website_url)
-                if homepage_content:
-                    result["content"]["homepage"] = homepage_content
-                    result["pages_scraped"] += 1
-                    
-                    # Find important links from homepage
-                    discovered_urls = self._discover_important_urls(
-                        homepage_content["html"],
-                        website_url,
-                        base_domain
-                    )
-                else:
-                    # Homepage failed, try common paths directly
-                    discovered_urls = [
-                        urljoin(website_url, path) 
-                        for path in self.important_paths[1:]  # Skip "/"
-                    ]
-                
-                # Scrape discovered pages (with limit)
-                pages_to_scrape = discovered_urls[:max_pages - 1]
-                
-                for url in pages_to_scrape:
-                    if result["pages_scraped"] >= max_pages:
-                        break
-                    
-                    page_content = await self._fetch_page(session, url)
-                    if page_content:
-                        page_type = self._classify_page(url, page_content)
-                        result["content"][page_type] = page_content
-                        result["pages_scraped"] += 1
-                    
-                    # Small delay to be respectful
-                    await asyncio.sleep(0.5)
-                
-                # Extract structured data from all scraped content
-                result["extracted_data"] = self._extract_structured_data(
-                    result["content"]
+                # Find important links from homepage
+                discovered_urls = self._discover_important_urls(
+                    homepage_content["html"],
+                    website_url,
+                    base_domain
                 )
+            else:
+                # Homepage failed, try common paths directly
+                discovered_urls = [
+                    urljoin(website_url, path) 
+                    for path in self.important_paths[1:]  # Skip "/"
+                ]
+            
+            # Scrape discovered pages (with limit)
+            pages_to_scrape = discovered_urls[:max_pages - 1]
+            
+            for url in pages_to_scrape:
+                if result["pages_scraped"] >= max_pages:
+                    break
                 
-                # Generate summary
-                result["summary"] = self._generate_summary(result)
-                result["success"] = result["pages_scraped"] > 0
+                page_content = await self._fetch_page(session, url)
+                if page_content:
+                    page_type = self._classify_page(url, page_content)
+                    result["content"][page_type] = page_content
+                    result["pages_scraped"] += 1
+                
+                # Small delay to be respectful
+                await asyncio.sleep(0.5)
+            
+            # Extract structured data from all scraped content
+            result["extracted_data"] = self._extract_structured_data(
+                result["content"]
+            )
+            
+            # Generate summary
+            result["summary"] = self._generate_summary(result)
+            result["success"] = result["pages_scraped"] > 0
                 
         except Exception as e:
             logger.error(f"Error scraping website {website_url}: {e}")
             result["error"] = str(e)
+        
+        finally:
+            # Explicitly close the session to prevent "Unclosed client session" warnings
+            if session is not None:
+                await session.close()
+            # Also close the connector
+            if connector is not None:
+                await connector.close()
         
         return result
     

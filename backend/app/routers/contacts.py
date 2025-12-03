@@ -178,12 +178,12 @@ async def lookup_contact_online(name: str, company_name: str, country: Optional[
     import re
     import aiohttp
     
-    print(f"[CONTACT_LOOKUP] Starting lookup for: {name} at {company_name}")
+    logger.info(f"Starting contact lookup for: {name} at {company_name}")
     
     # Strategy 1: Try direct LinkedIn URL patterns
     linkedin_url = await _try_linkedin_direct(name)
     if linkedin_url:
-        print(f"[CONTACT_LOOKUP] Found via direct URL: {linkedin_url}")
+        logger.info(f"Found contact via direct URL: {linkedin_url}")
         return {
             "name": name,
             "found": True,
@@ -193,7 +193,7 @@ async def lookup_contact_online(name: str, company_name: str, country: Optional[
         }
     
     # Strategy 2: Try Gemini with Google Search
-    print(f"[CONTACT_LOOKUP] Direct lookup failed, trying Gemini...")
+    logger.debug("Direct lookup failed, trying Gemini...")
     result = await _try_gemini_search(name, company_name, country)
     if result.get("found"):
         return result
@@ -240,7 +240,7 @@ async def _try_linkedin_direct(name: str) -> Optional[str]:
         first_last = f"{parts[0]}-{parts[-1]}"
         variations.append(f"https://www.linkedin.com/in/{first_last}")
     
-    print(f"[CONTACT_LOOKUP] Trying direct URLs: {variations}")
+    logger.debug(f"Trying direct URLs: {variations}")
     
     timeout = aiohttp.ClientTimeout(total=5)
     headers = {
@@ -254,7 +254,7 @@ async def _try_linkedin_direct(name: str) -> Optional[str]:
             try:
                 async with session.head(url, allow_redirects=True) as response:
                     final_url = str(response.url)
-                    print(f"[CONTACT_LOOKUP] {url} -> status={response.status}, final={final_url}")
+                    logger.debug(f"{url} -> status={response.status}, final={final_url}")
                     
                     # LinkedIn returns 200 for valid profiles
                     # Redirects to /authwall or /login for invalid ones
@@ -263,7 +263,7 @@ async def _try_linkedin_direct(name: str) -> Optional[str]:
                             # Valid profile found!
                             return final_url
             except Exception as e:
-                print(f"[CONTACT_LOOKUP] URL check failed for {url}: {e}")
+                logger.debug(f"URL check failed for {url}: {e}")
                 continue
     
     return None
@@ -280,7 +280,7 @@ async def _try_gemini_search(name: str, company_name: str, country: Optional[str
         
         api_key = os.getenv("GOOGLE_AI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         if not api_key:
-            print("[CONTACT_LOOKUP] No API key for Gemini")
+            logger.warning("No API key for Gemini")
             return {"name": name, "found": False, "confidence": "low"}
         
         client = genai.Client(api_key=api_key)
@@ -311,7 +311,7 @@ Or if not found:
         
         if response and response.text:
             result_text = response.text.strip()
-            print(f"[CONTACT_LOOKUP] Gemini response: {result_text[:200]}")
+            logger.debug(f"Gemini response: {result_text[:200]}")
             
             # Extract JSON
             json_match = re.search(r'\{[^{}]*"found"[^{}]*\}', result_text, re.DOTALL)
@@ -328,7 +328,7 @@ Or if not found:
                 return result
     
     except Exception as e:
-        print(f"[CONTACT_LOOKUP] Gemini error: {e}")
+        logger.error(f"Gemini lookup error: {e}")
     
     return {"name": name, "found": False, "confidence": "low"}
 
@@ -407,7 +407,7 @@ def analyze_contact_background(
         # Update with error
         supabase_service.table("prospect_contacts")\
             .update({
-                "profile_brief": f"# {contact_name}\n\nAnalyse mislukt: {str(e)}",
+                "profile_brief": f"# {contact_name}\n\nAnalysis failed: {str(e)}",
                 "analyzed_at": datetime.utcnow().isoformat()
             })\
             .eq("id", contact_id)\
@@ -581,7 +581,7 @@ async def add_contact_to_research(
             communication_style=None,
             decision_authority=None,
             probable_drivers=None,
-            profile_brief="Analyse wordt uitgevoerd...",
+            profile_brief="Analysis in progress...",
             opening_suggestions=None,
             questions_to_ask=None,
             topics_to_avoid=None,
@@ -955,7 +955,7 @@ async def reanalyze_contact(
     # Clear old analysis
     supabase_service.table("prospect_contacts")\
         .update({
-            "profile_brief": "Analyse wordt opnieuw uitgevoerd...",
+            "profile_brief": "Re-analyzing...",
             "analyzed_at": None
         })\
         .eq("id", contact_id)\
@@ -988,7 +988,7 @@ async def reanalyze_contact(
         communication_style=None,
         decision_authority=None,
         probable_drivers=None,
-        profile_brief="Analyse wordt opnieuw uitgevoerd...",
+        profile_brief="Re-analyzing...",
         opening_suggestions=None,
         questions_to_ask=None,
         topics_to_avoid=None,

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { api } from '@/lib/api'
+import { formatDate } from '@/lib/date-utils'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -467,7 +468,7 @@ export default function FollowupPage() {
                         
                         <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                           {followup.meeting_date && (
-                            <span>{new Date(followup.meeting_date).toLocaleDateString('nl-NL')}</span>
+                            <span>{formatDate(followup.meeting_date, settings.output_language)}</span>
                           )}
                           {followup.audio_duration_seconds && (
                             <span className="flex items-center gap-1">
@@ -475,7 +476,7 @@ export default function FollowupPage() {
                               {formatDuration(followup.audio_duration_seconds)}
                             </span>
                           )}
-                          <span>{new Date(followup.created_at).toLocaleDateString('nl-NL')}</span>
+                          <span>{formatDate(followup.created_at, settings.output_language)}</span>
                         </div>
 
                         {followup.executive_summary && (

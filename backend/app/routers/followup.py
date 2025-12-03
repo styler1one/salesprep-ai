@@ -4,16 +4,21 @@ Follow-up Router - API endpoints for post-meeting follow-ups
 Handles audio upload, transcription, summary generation, and email drafts.
 """
 
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, BackgroundTasks, Request
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 import logging
 import uuid
 import asyncio
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from app.deps import get_current_user
 from app.database import get_supabase_service
+
+# Rate limiter
+limiter = Limiter(key_func=get_remote_address)
 from app.services.transcription_service import get_transcription_service
 from app.services.followup_generator import get_followup_generator
 from app.services.transcript_parser import get_transcript_parser
@@ -272,7 +277,9 @@ def _get_content_type(filename: str) -> str:
 # API Endpoints
 
 @router.post("/upload", response_model=FollowupResponse, status_code=202)
+@limiter.limit("5/minute")
 async def upload_audio(
+    request: Request,  # Required for rate limiting
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     meeting_prep_id: Optional[str] = Form(None),
@@ -286,7 +293,9 @@ async def upload_audio(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Upload audio file for transcription and follow-up generation
+    Upload audio file for transcription and follow-up generation.
+    
+    Rate limited to 5 requests per minute.
     
     Returns immediately with followup ID, processing happens in background
     """
@@ -322,7 +331,7 @@ async def upload_audio(
                 status_code=402,  # Payment Required
                 detail={
                     "error": "limit_exceeded",
-                    "message": "Je hebt je follow-up limiet bereikt voor deze maand",
+                    "message": "You have reached your follow-up limit for this month",
                     "current": limit_check.get("current", 0),
                     "limit": limit_check.get("limit", 0),
                     "upgrade_url": "/pricing"
@@ -539,7 +548,9 @@ async def _process_transcript_async(
 
 
 @router.post("/upload-transcript", response_model=FollowupResponse, status_code=202)
+@limiter.limit("5/minute")
 async def upload_transcript(
+    request: Request,  # Required for rate limiting
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     meeting_prep_id: Optional[str] = Form(None),
@@ -553,7 +564,9 @@ async def upload_transcript(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Upload transcript file for summary and follow-up generation
+    Upload transcript file for summary and follow-up generation.
+    
+    Rate limited to 5 requests per minute.
     
     Supports: .txt, .md, .docx, .srt files
     Returns immediately with followup ID, processing happens in background
@@ -591,7 +604,7 @@ async def upload_transcript(
                 status_code=402,  # Payment Required
                 detail={
                     "error": "limit_exceeded",
-                    "message": "Je hebt je follow-up limiet bereikt voor deze maand",
+                    "message": "You have reached your follow-up limit for this month",
                     "current": limit_check.get("current", 0),
                     "limit": limit_check.get("limit", 0),
                     "upgrade_url": "/pricing"

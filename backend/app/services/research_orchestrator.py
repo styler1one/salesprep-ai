@@ -17,8 +17,13 @@ from .website_scraper import get_website_scraper
 from app.database import get_supabase_service
 from app.i18n.utils import get_language_instruction
 from app.i18n.config import DEFAULT_LANGUAGE
+from app.utils.timeout import with_timeout, AITimeoutError
 
 logger = logging.getLogger(__name__)
+
+# Timeout settings for research operations (in seconds)
+RESEARCH_TASK_TIMEOUT = 60  # Individual AI task timeout
+RESEARCH_TOTAL_TIMEOUT = 180  # Total research timeout (3 minutes)
 
 
 class ResearchOrchestrator:
@@ -98,8 +103,17 @@ class ResearchOrchestrator:
             tasks.append(self.website_scraper.scrape_website(website_url))
             source_names.append("website")
         
-        # Execute all searches in parallel
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        # Execute all searches in parallel with timeout
+        try:
+            results = await with_timeout(
+                asyncio.gather(*tasks, return_exceptions=True),
+                timeout_seconds=RESEARCH_TOTAL_TIMEOUT,
+                operation_name="Research parallel tasks"
+            )
+        except AITimeoutError:
+            logger.error(f"Research timed out after {RESEARCH_TOTAL_TIMEOUT}s for {company_name}")
+            # Return partial results with timeout errors
+            results = [asyncio.TimeoutError("Research timed out")] * len(tasks)
         
         # Combine results
         combined_data = {

@@ -1,16 +1,45 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import os
+import logging
 from dotenv import load_dotenv
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from app.routers import users, knowledge_base, research, sales_profile, company_profile, context, preparation, followup, followup_actions, prospects, contacts, settings, billing, webhooks, deals, coach
 
 load_dotenv()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Rate limiter configuration
+# Uses remote address for identification
+limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
     title="SalesPrep AI API",
     description="AI-powered sales enablement platform API",
     version="1.0.0"
 )
+
+# Add rate limiter to app state
+app.state.limiter = limiter
+
+# Custom rate limit exceeded handler
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    logger.warning(f"Rate limit exceeded for {get_remote_address(request)}")
+    return JSONResponse(
+        status_code=429,
+        content={
+            "error": "rate_limit_exceeded",
+            "message": "Too many requests. Please try again later.",
+            "retry_after": exc.detail
+        }
+    )
 
 # CORS configuration
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")

@@ -2,12 +2,20 @@
 Research Agent API endpoints.
 """
 import uuid
+import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Response
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Response, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+logger = logging.getLogger(__name__)
 
 from app.deps import get_current_user, get_auth_token
+
+# Get limiter from app state
+limiter = Limiter(key_func=get_remote_address)
 from app.database import get_supabase_service, get_user_client
 from app.services.prospect_service import get_prospect_service
 from app.services.company_lookup import get_company_lookup
@@ -100,17 +108,17 @@ def process_research_background(
     from app.services.research_orchestrator import ResearchOrchestrator
     
     try:
-        print(f"DEBUG: Starting research for {company_name}")
-        print(f"DEBUG: Seller context - org_id={organization_id}, user_id={user_id}")
+        logger.info(f"Starting research for {company_name}")
+        logger.debug(f"Seller context - org_id={organization_id}, user_id={user_id}")
         if website_url:
-            print(f"DEBUG: Will scrape website: {website_url}")
+            logger.debug(f"Will scrape website: {website_url}")
         
         # Update status to researching
         supabase_service.table("research_briefs").update({
             "status": "researching"
         }).eq("id", research_id).execute()
         
-        print(f"DEBUG: Status updated to researching")
+        logger.debug("Status updated to researching")
         
         # Execute research with seller context using proper event loop handling
         orchestrator = ResearchOrchestrator()
@@ -144,8 +152,8 @@ def process_research_background(
             finally:
                 loop.close()
         
-        print(f"DEBUG: Research completed, got {len(research_data.get('sources', {}))} sources")
-        print(f"DEBUG: Success count: {research_data.get('success_count', 0)}")
+        logger.info(f"Research completed, got {len(research_data.get('sources', {}))} sources")
+        logger.debug(f"Success count: {research_data.get('success_count', 0)}")
         
         # Store source data
         # Map source names to allowed source_type values in database
@@ -161,9 +169,9 @@ def process_research_background(
         for source_name, source_result in research_data["sources"].items():
             success = source_result.get('success', False)
             error = source_result.get('error', 'No error message')
-            print(f"DEBUG: Source {source_name} - Success: {success}")
+            logger.debug(f"Source {source_name} - Success: {success}")
             if not success:
-                print(f"ERROR: Source {source_name} failed: {error}")
+                logger.warning(f"Source {source_name} failed: {error}")
             
             # Map source_name to valid source_type
             source_type = source_type_map.get(source_name, "web")
@@ -177,7 +185,7 @@ def process_research_background(
         
         # Get the unified brief
         brief_content = research_data.get("brief", "")
-        print(f"DEBUG: Brief length: {len(brief_content)} characters")
+        logger.debug(f"Brief length: {len(brief_content)} characters")
         
         # TODO: Generate PDF (Phase 2.5)
         pdf_url = None
@@ -191,12 +199,10 @@ def process_research_background(
             "completed_at": "now()"
         }).eq("id", research_id).execute()
         
-        print(f"DEBUG: Research {research_id} completed successfully")
+        logger.info(f"Research {research_id} completed successfully")
         
     except Exception as e:
-        print(f"ERROR: Research failed: {type(e).__name__}: {str(e)}")
-        import traceback
-        print(f"ERROR traceback: {traceback.format_exc()}")
+        logger.error(f"Research failed: {type(e).__name__}: {str(e)}", exc_info=True)
         
         # Update status to failed
         supabase_service.table("research_briefs").update({
@@ -206,14 +212,18 @@ def process_research_background(
 
 
 @router.post("/start", response_model=ResearchResponse)
+@limiter.limit("10/minute")
 async def start_research(
-    request: ResearchRequest,
+    request: Request,  # Required for rate limiting
+    body: ResearchRequest,
     background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user),
     auth_token: str = Depends(get_auth_token)
 ):
     """
     Start a new research brief.
+    
+    Rate limited to 10 requests per minute.
     """
     # Create user-specific client for RLS security
     user_supabase = get_user_client(auth_token)
@@ -235,7 +245,7 @@ async def start_research(
             status_code=402,  # Payment Required
             detail={
                 "error": "limit_exceeded",
-                "message": "Je hebt je research limiet bereikt voor deze maand",
+                "message": "You have reached your research limit for this month",
                 "current": limit_check.get("current", 0),
                 "limit": limit_check.get("limit", 0),
                 "upgrade_url": "/pricing"
@@ -246,7 +256,7 @@ async def start_research(
     prospect_service = get_prospect_service()
     prospect_id = prospect_service.get_or_create_prospect(
         organization_id=organization_id,
-        company_name=request.company_name
+        company_name=body.company_name
     )
     
     # Generate research ID
@@ -259,26 +269,26 @@ async def start_research(
             "organization_id": organization_id,
             "user_id": user_id,
             "prospect_id": prospect_id,  # Link to prospect!
-            "company_name": request.company_name,
-            "company_linkedin_url": request.company_linkedin_url,
-            "country": request.country,
-            "city": request.city,
+            "company_name": body.company_name,
+            "company_linkedin_url": body.company_linkedin_url,
+            "country": body.country,
+            "city": body.city,
             "status": "pending"
         }
         
         result = supabase_service.table("research_briefs").insert(db_record).execute()
         
         # Update prospect with additional info if provided
-        if prospect_id and (request.company_linkedin_url or request.company_website_url or request.country or request.city):
+        if prospect_id and (body.company_linkedin_url or body.company_website_url or body.country or body.city):
             updates = {}
-            if request.company_linkedin_url:
-                updates["linkedin_url"] = request.company_linkedin_url
-            if request.company_website_url:
-                updates["website"] = request.company_website_url
-            if request.country:
-                updates["country"] = request.country
-            if request.city:
-                updates["city"] = request.city
+            if body.company_linkedin_url:
+                updates["linkedin_url"] = body.company_linkedin_url
+            if body.company_website_url:
+                updates["website"] = body.company_website_url
+            if body.country:
+                updates["country"] = body.country
+            if body.city:
+                updates["city"] = body.city
             if updates:
                 prospect_service.update_prospect(prospect_id, organization_id, updates)
         
@@ -286,14 +296,14 @@ async def start_research(
         background_tasks.add_task(
             process_research_background,
             research_id,
-            request.company_name,
-            request.country,
-            request.city,
-            request.company_linkedin_url,
-            request.company_website_url,
+            body.company_name,
+            body.country,
+            body.city,
+            body.company_linkedin_url,
+            body.company_website_url,
             organization_id,  # For seller context (what you sell)
             user_id,  # For sales profile context
-            request.language or "en"  # i18n: output language
+            body.language or "en"  # i18n: output language
         )
         
         # Increment usage counter
@@ -301,7 +311,7 @@ async def start_research(
         
         return ResearchResponse(
             id=research_id,
-            company_name=request.company_name,
+            company_name=body.company_name,
             prospect_id=prospect_id,
             status="pending",
             created_at=result.data[0]["created_at"]
@@ -512,7 +522,7 @@ async def lookup_company(
         )
         return LookupResponse(**result)
     except Exception as e:
-        print(f"Lookup error: {e}")
+        logger.warning(f"Lookup error: {e}")
         # Return empty result on error (non-blocking)
         return LookupResponse(
             company_name=request.company_name,
@@ -541,7 +551,7 @@ async def search_company_options(
                 query_company=request.company_name,
                 query_country=request.country,
                 options=[],
-                message="Land is verplicht om het juiste bedrijf te vinden"
+                message="Country is required to find the correct company"
             )
         
         lookup_service = get_company_lookup()
@@ -567,14 +577,14 @@ async def search_company_options(
             query_company=request.company_name,
             query_country=request.country,
             options=company_options,
-            message=None if company_options else "Geen bedrijven gevonden"
+            message=None if company_options else "No companies found"
         )
         
     except Exception as e:
-        print(f"Company search error: {e}")
+        logger.error(f"Company search error: {e}")
         return CompanySearchResponse(
             query_company=request.company_name,
             query_country=request.country,
             options=[],
-            message=f"Zoeken mislukt: {str(e)}"
+            message=f"Search failed: {str(e)}"
         )

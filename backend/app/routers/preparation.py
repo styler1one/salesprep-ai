@@ -4,13 +4,18 @@ Preparation Router
 API endpoints for meeting preparation management.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
 import logging
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from app.deps import get_current_user
 from app.database import get_supabase_service
+
+# Rate limiter
+limiter = Limiter(key_func=get_remote_address)
 from app.services.rag_service import rag_service
 from app.services.prep_generator import prep_generator
 from app.services.prospect_service import get_prospect_service
@@ -134,15 +139,18 @@ def generate_prep_background(
 
 
 @router.post("/start", response_model=dict, status_code=202)
+@limiter.limit("10/minute")
 async def start_prep(
-    request: PrepStartRequest,
+    http_request: Request,  # Required for rate limiting
+    body: PrepStartRequest,
     background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user)
 ):
     """
     Start a new meeting prep generation
     
-    Returns immediately with prep ID, generation happens in background
+    Returns immediately with prep ID, generation happens in background.
+    Rate limited to 10 requests per minute.
     """
     try:
         # Supabase JWT stores user id as 'sub' (subject)
@@ -168,7 +176,7 @@ async def start_prep(
                 status_code=402,  # Payment Required
                 detail={
                     "error": "limit_exceeded",
-                    "message": "Je hebt je preparation limiet bereikt voor deze maand",
+                    "message": "You have reached your preparation limit for this month",
                     "current": limit_check.get("current", 0),
                     "limit": limit_check.get("limit", 0),
                     "upgrade_url": "/pricing"
@@ -179,7 +187,7 @@ async def start_prep(
         prospect_service = get_prospect_service()
         prospect_id = prospect_service.get_or_create_prospect(
             organization_id=organization_id,
-            company_name=request.prospect_company_name
+            company_name=body.prospect_company_name
         )
         
         # Check if research brief exists (now also by prospect_id)
@@ -194,7 +202,7 @@ async def start_prep(
             research_response = research_response.eq("prospect_id", prospect_id)
         else:
             research_response = research_response.ilike(
-                "company_name", f"%{request.prospect_company_name}%"
+                "company_name", f"%{body.prospect_company_name}%"
             )
         
         research_response = research_response.limit(1).execute()
@@ -205,13 +213,13 @@ async def start_prep(
             "organization_id": organization_id,
             "user_id": user_id,
             "prospect_id": prospect_id,  # Link to prospect!
-            "deal_id": request.deal_id,  # Link to deal (optional)
-            "prospect_company_name": request.prospect_company_name,
-            "meeting_type": request.meeting_type,
-            "custom_notes": request.custom_notes,
+            "deal_id": body.deal_id,  # Link to deal (optional)
+            "prospect_company_name": body.prospect_company_name,
+            "meeting_type": body.meeting_type,
+            "custom_notes": body.custom_notes,
             "status": "pending",
             "research_brief_id": research_brief_id,
-            "contact_ids": request.contact_ids or []  # Store linked contacts
+            "contact_ids": body.contact_ids or []  # Store linked contacts
         }
         
         response = supabase.table("meeting_preps").insert(prep_data).execute()
@@ -226,26 +234,26 @@ async def start_prep(
         background_tasks.add_task(
             generate_prep_background,
             prep_id,
-            request.prospect_company_name,
-            request.meeting_type,
+            body.prospect_company_name,
+            body.meeting_type,
             organization_id,
             user_id,  # Pass user_id for personalized briefs
-            request.custom_notes,
-            request.contact_ids,  # Pass selected contacts
-            request.language or "en"  # i18n: output language (fallback to English)
+            body.custom_notes,
+            body.contact_ids,  # Pass selected contacts
+            body.language or "en"  # i18n: output language (fallback to English)
         )
         
         # Increment usage counter
         await usage_service.increment_usage(organization_id, "preparation")
         
-        contact_count = len(request.contact_ids) if request.contact_ids else 0
-        logger.info(f"Created prep {prep_id} for {request.prospect_company_name} (prospect: {prospect_id}, contacts: {contact_count})")
+        contact_count = len(body.contact_ids) if body.contact_ids else 0
+        logger.info(f"Created prep {prep_id} for {body.prospect_company_name} (prospect: {prospect_id}, contacts: {contact_count})")
         
         return {
             "id": prep_id,
             "prospect_id": prospect_id,
-            "prospect_company_name": request.prospect_company_name,
-            "meeting_type": request.meeting_type,
+            "prospect_company_name": body.prospect_company_name,
+            "meeting_type": body.meeting_type,
             "status": "pending",
             "created_at": prep["created_at"]
         }

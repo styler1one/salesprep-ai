@@ -5,14 +5,19 @@ TASK-029 / SPEC-028
 Endpoints for the AI Sales Coach widget.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from typing import Optional, List
 from datetime import datetime, timedelta
 import logging
 import uuid
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from app.deps import get_current_user
 from app.database import get_supabase_service
+
+# Rate limiter
+limiter = Limiter(key_func=get_remote_address)
 from app.models.coach import (
     CoachSettings,
     CoachSettingsUpdate,
@@ -756,8 +761,9 @@ async def get_inline_suggestions(
 # =============================================================================
 
 @router.get("/insights/tip")
-async def get_tip_of_day(current_user: dict = Depends(get_current_user)):
-    """Get the personalized tip of the day."""
+@limiter.limit("30/minute")
+async def get_tip_of_day(request: Request, current_user: dict = Depends(get_current_user)):
+    """Get the personalized tip of the day. Rate limited to 30/minute."""
     from app.services.coach_insights import CoachInsightsService, get_user_activity_context
     
     supabase = get_supabase_service()
@@ -798,8 +804,9 @@ async def get_tip_of_day(current_user: dict = Depends(get_current_user)):
 
 
 @router.get("/insights/patterns")
-async def get_success_patterns(current_user: dict = Depends(get_current_user)):
-    """Get success pattern analysis for the organization."""
+@limiter.limit("30/minute")
+async def get_success_patterns(request: Request, current_user: dict = Depends(get_current_user)):
+    """Get success pattern analysis for the organization. Rate limited to 30/minute."""
     from app.services.coach_insights import CoachInsightsService
     
     supabase = get_supabase_service()
@@ -848,8 +855,9 @@ async def get_success_patterns(current_user: dict = Depends(get_current_user)):
 
 
 @router.get("/insights/predictions")
-async def get_predictions(current_user: dict = Depends(get_current_user)):
-    """Get predictive suggestions based on patterns and timing."""
+@limiter.limit("30/minute")
+async def get_predictions(request: Request, current_user: dict = Depends(get_current_user)):
+    """Get predictive suggestions based on patterns and timing. Rate limited to 30/minute."""
     from app.services.coach_insights import CoachInsightsService
     
     supabase = get_supabase_service()

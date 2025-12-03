@@ -17,6 +17,7 @@ import { LanguageSelect } from '@/components/language-select'
 import { useTranslations } from 'next-intl'
 import { useSettings } from '@/lib/settings-context'
 import { api } from '@/lib/api'
+import { formatDate } from '@/lib/date-utils'
 import { useConfirmDialog } from '@/components/confirm-dialog'
 import type { User } from '@supabase/supabase-js'
 import type { ProspectContact, Deal } from '@/types'
@@ -352,7 +353,7 @@ export default function PreparationPage() {
                         <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                           <span>{getMeetingTypeLabel(prep.meeting_type)}</span>
                           <span>•</span>
-                          <span>{new Date(prep.created_at).toLocaleDateString('nl-NL')}</span>
+                          <span>{formatDate(prep.created_at, settings.output_language)}</span>
                         </div>
                       </div>
                       

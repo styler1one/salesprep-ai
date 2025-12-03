@@ -12,6 +12,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout'
 import { LanguageSelect } from '@/components/language-select'
 import { suggestLanguageFromCountry } from '@/lib/language-utils'
+import { formatDate } from '@/lib/date-utils'
 import { useTranslations } from 'next-intl'
 import { useSettings } from '@/lib/settings-context'
 import { api } from '@/lib/api'
@@ -407,7 +408,7 @@ export default function ResearchPage() {
                           {(brief.city || brief.country) && (
                             <span>📍 {[brief.city, brief.country].filter(Boolean).join(', ')}</span>
                           )}
-                          <span>{new Date(brief.created_at).toLocaleDateString('nl-NL')}</span>
+                          <span>{formatDate(brief.created_at, settings.output_language)}</span>
                         </div>
                         
                         {brief.error_message && (

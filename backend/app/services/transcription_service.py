@@ -13,6 +13,9 @@ from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
+# Timeout for transcription API calls (5 minutes for long audio)
+TRANSCRIPTION_TIMEOUT = 300
+
 
 @dataclass
 class TranscriptionSegment:
