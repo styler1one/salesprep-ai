@@ -4,6 +4,7 @@ Handles file uploads, processing, and retrieval.
 """
 
 import uuid
+import logging
 from typing import List
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, BackgroundTasks, Response
 from fastapi.responses import JSONResponse
@@ -13,6 +14,11 @@ from app.services.file_processor import FileProcessor
 from app.services.text_chunker import TextChunker
 from app.services.embeddings import EmbeddingsService
 from app.services.vector_store import VectorStore
+
+# Inngest integration
+from app.inngest.events import send_event, use_inngest_for, Events
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -223,14 +229,43 @@ async def upload_file(
         
         result = supabase_service.table("knowledge_base_files").insert(db_record).execute()
         
-        # Start background processing
-        background_tasks.add_task(
-            process_file_background,
-            file_id,
-            storage_path,
-            file.content_type,
-            organization_id
-        )
+        # Start processing via Inngest (if enabled) or BackgroundTasks (fallback)
+        if use_inngest_for("knowledge_base"):
+            event_sent = await send_event(
+                Events.KNOWLEDGE_FILE_UPLOADED,
+                {
+                    "file_id": file_id,
+                    "file_path": storage_path,
+                    "file_type": file.content_type,
+                    "organization_id": organization_id,
+                    "user_id": user_id,
+                    "filename": file.filename
+                },
+                user={"id": user_id}
+            )
+            
+            if event_sent:
+                logger.info(f"Knowledge base file {file_id} triggered via Inngest")
+            else:
+                # Fallback to BackgroundTasks if Inngest fails
+                logger.warning(f"Inngest event failed, falling back to BackgroundTasks for file {file_id}")
+                background_tasks.add_task(
+                    process_file_background,
+                    file_id,
+                    storage_path,
+                    file.content_type,
+                    organization_id
+                )
+        else:
+            # Use BackgroundTasks (legacy/fallback)
+            background_tasks.add_task(
+                process_file_background,
+                file_id,
+                storage_path,
+                file.content_type,
+                organization_id
+            )
+            logger.info(f"Knowledge base file {file_id} triggered via BackgroundTasks")
         
         return JSONResponse(
             status_code=201,

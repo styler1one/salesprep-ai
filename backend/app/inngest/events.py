@@ -132,6 +132,11 @@ class Events:
     CONTACT_ADDED = "salesprep/contact.added"
     CONTACT_ANALYZED = "salesprep/contact.analyzed"
     
+    # Knowledge Base
+    KNOWLEDGE_FILE_UPLOADED = "salesprep/knowledge.file.uploaded"
+    KNOWLEDGE_FILE_PROCESSED = "salesprep/knowledge.file.processed"
+    KNOWLEDGE_FILE_FAILED = "salesprep/knowledge.file.failed"
+    
     # Coach
     COACH_INSIGHT_REQUESTED = "salesprep/coach.insight.requested"
     
