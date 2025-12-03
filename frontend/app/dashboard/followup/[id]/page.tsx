@@ -238,22 +238,41 @@ export default function FollowupDetailPage() {
     }
   }, [followupId])
 
-  // Auto-refresh for generating actions (same pattern as Research page)
+  // Auto-refresh for generating actions
   useEffect(() => {
     const hasGeneratingActions = actions.some(a => 
       !a.content && a.metadata?.status !== 'error'
     )
 
     if (hasGeneratingActions || generatingActionType) {
-      const interval = setInterval(() => {
-        fetchActions()
+      const interval = setInterval(async () => {
+        const updatedActions = await fetchActions()
+        
+        // Check if the action we were generating is now complete
+        if (generatingActionType && updatedActions) {
+          const targetAction = updatedActions.find(a => a.action_type === generatingActionType)
+          if (targetAction && (targetAction.content || targetAction.metadata?.status === 'error')) {
+            // Action is complete or errored - clear the generating state
+            setGeneratingActionType(null)
+            
+            // Show completion toast
+            if (targetAction.content) {
+              toast({
+                title: t('actions.generated'),
+                description: t('actions.generatedDesc', { 
+                  actionType: ACTION_TYPES.find(a => a.type === generatingActionType)?.label || generatingActionType 
+                }),
+              })
+            }
+          }
+        }
       }, 5000)
 
       return () => clearInterval(interval)
     }
-  }, [actions, generatingActionType, fetchActions])
+  }, [actions, generatingActionType, fetchActions, toast, t])
 
-  // Generate a new action - same pattern as Research page
+  // Generate a new action - fire-and-forget pattern
   const handleGenerateAction = async (actionType: ActionType) => {
     // Summary is built-in, not generated via API
     if (actionType === 'summary') {
@@ -264,7 +283,7 @@ export default function FollowupDetailPage() {
       return
     }
     
-    // Set generating state for UI feedback
+    // Set generating state for UI feedback (will be cleared by polling when done)
     setGeneratingActionType(actionType)
     
     try {
@@ -282,21 +301,21 @@ export default function FollowupDetailPage() {
         setActions(prev => [...prev.filter(a => a.action_type !== actionType), data])
       }
       
-      // Show feedback
+      // Show feedback - generation runs in background, polling will pick up completion
       toast({ 
         title: t('actions.generating'),
         description: t('actions.generatingDesc', { actionType: ACTION_TYPES.find(a => a.type === actionType)?.label || actionType }),
       })
       
-      // Refresh to get updated content (non-blocking, runs in background)
-      await fetchActions()
+      // NOTE: Don't await fetchActions() here - let polling handle it
+      // This prevents blocking the UI while waiting for refresh
       
     } catch (error) {
       console.error('Failed to generate action:', error)
       toast({ title: t('actions.generationFailed'), variant: 'destructive' })
-    } finally {
-      setGeneratingActionType(null)
+      setGeneratingActionType(null) // Only clear on error, otherwise polling clears it
     }
+    // NOTE: Don't clear generatingActionType in finally - let polling clear it when action is complete
   }
 
   // Update action content (edit)
