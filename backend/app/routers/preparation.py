@@ -21,6 +21,9 @@ from app.services.prep_generator import prep_generator
 from app.services.prospect_service import get_prospect_service
 from app.services.usage_service import get_usage_service
 
+# Inngest integration
+from app.inngest.events import send_event, use_inngest_for, Events
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
@@ -230,18 +233,54 @@ async def start_prep(
         prep = response.data[0]
         prep_id = prep["id"]
         
-        # Start background generation (now includes user_id for profile context)
-        background_tasks.add_task(
-            generate_prep_background,
-            prep_id,
-            body.prospect_company_name,
-            body.meeting_type,
-            organization_id,
-            user_id,  # Pass user_id for personalized briefs
-            body.custom_notes,
-            body.contact_ids,  # Pass selected contacts
-            body.language or "en"  # i18n: output language (fallback to English)
-        )
+        # Start processing via Inngest (if enabled) or BackgroundTasks (fallback)
+        if use_inngest_for("preparation"):
+            # Use Inngest for durable execution and observability
+            event_sent = await send_event(
+                Events.PREP_REQUESTED,
+                {
+                    "prep_id": prep_id,
+                    "prospect_company": body.prospect_company_name,
+                    "meeting_type": body.meeting_type,
+                    "organization_id": organization_id,
+                    "user_id": user_id,
+                    "custom_notes": body.custom_notes,
+                    "contact_ids": body.contact_ids or [],
+                    "language": body.language or "en"
+                },
+                user={"id": user_id}
+            )
+            
+            if event_sent:
+                logger.info(f"Prep {prep_id} triggered via Inngest")
+            else:
+                # Fallback to BackgroundTasks if Inngest fails
+                logger.warning(f"Inngest event failed, falling back to BackgroundTasks for prep {prep_id}")
+                background_tasks.add_task(
+                    generate_prep_background,
+                    prep_id,
+                    body.prospect_company_name,
+                    body.meeting_type,
+                    organization_id,
+                    user_id,
+                    body.custom_notes,
+                    body.contact_ids,
+                    body.language or "en"
+                )
+        else:
+            # Use BackgroundTasks (legacy/fallback)
+            background_tasks.add_task(
+                generate_prep_background,
+                prep_id,
+                body.prospect_company_name,
+                body.meeting_type,
+                organization_id,
+                user_id,
+                body.custom_notes,
+                body.contact_ids,
+                body.language or "en"
+            )
+            logger.info(f"Prep {prep_id} triggered via BackgroundTasks")
         
         # Increment usage counter
         await usage_service.increment_usage(organization_id, "preparation")
