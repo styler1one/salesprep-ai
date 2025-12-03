@@ -48,7 +48,7 @@ export function ContactSearchModal({
   researchId,
   onContactAdded
 }: ContactSearchModalProps) {
-  const t = useTranslations('contacts.search')
+  const t = useTranslations('research')
   const { toast } = useToast()
 
   // Form state
@@ -84,8 +84,8 @@ export function ContactSearchModal({
     if (!searchName.trim()) {
       toast({
         variant: 'destructive',
-        title: t('nameLabel'),
-        description: t('namePlaceholder')
+        title: t('contacts.search.nameLabel'),
+        description: t('contacts.search.namePlaceholder')
       })
       return
     }
@@ -152,8 +152,8 @@ export function ContactSearchModal({
     if (!name.trim()) {
       toast({
         variant: 'destructive',
-        title: t('nameLabel'),
-        description: t('namePlaceholder')
+        title: t('contacts.search.nameLabel'),
+        description: t('contacts.search.namePlaceholder')
       })
       return
     }
@@ -185,7 +185,7 @@ export function ContactSearchModal({
 
       if (data) {
         toast({
-          title: '✅ ' + t('addAndAnalyze'),
+          title: '✅ ' + t('contacts.search.addAndAnalyze'),
           description: `${name} added. Analysis starting...`
         })
         onContactAdded(data)
@@ -212,10 +212,10 @@ export function ContactSearchModal({
                 <Icons.arrowLeft className="h-4 w-4" />
               </Button>
             )}
-            {step === 'search' && t('title')}
-            {step === 'loading' && t('title')}
-            {step === 'results' && t('resultsTitle')}
-            {step === 'confirm' && t('confirmTitle')}
+            {step === 'search' && t('contacts.search.title')}
+            {step === 'loading' && t('contacts.search.title')}
+            {step === 'results' && t('contacts.search.resultsTitle')}
+            {step === 'confirm' && t('contacts.search.confirmTitle')}
           </DialogTitle>
         </DialogHeader>
 
@@ -223,15 +223,15 @@ export function ContactSearchModal({
         {step === 'search' && (
           <div className="space-y-4">
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              {t('subtitle', { company: companyName })}
+              {t('contacts.search.subtitle', { company: companyName })}
             </p>
 
             <div className="space-y-3">
               <div>
-                <Label htmlFor="search-name">{t('nameLabel')} *</Label>
+                <Label htmlFor="search-name">{t('contacts.search.nameLabel')} *</Label>
                 <Input
                   id="search-name"
-                  placeholder={t('namePlaceholder')}
+                  placeholder={t('contacts.search.namePlaceholder')}
                   value={searchName}
                   onChange={(e) => setSearchName(e.target.value)}
                   className="mt-1"
@@ -240,10 +240,10 @@ export function ContactSearchModal({
               </div>
 
               <div>
-                <Label htmlFor="search-role">{t('roleLabel')}</Label>
+                <Label htmlFor="search-role">{t('contacts.search.roleLabel')}</Label>
                 <Input
                   id="search-role"
-                  placeholder={t('rolePlaceholder')}
+                  placeholder={t('contacts.search.rolePlaceholder')}
                   value={searchRole}
                   onChange={(e) => setSearchRole(e.target.value)}
                   className="mt-1"
@@ -264,7 +264,7 @@ export function ContactSearchModal({
               disabled={!searchName.trim()}
             >
               <Icons.search className="h-4 w-4 mr-2" />
-              {t('searchButton')}
+              {t('contacts.search.searchButton')}
             </Button>
 
             <div className="relative">
@@ -282,7 +282,7 @@ export function ContactSearchModal({
               className="w-full"
             >
               <Icons.plus className="h-4 w-4 mr-2" />
-              {t('skipSearch')}
+              {t('contacts.search.skipSearch')}
             </Button>
           </div>
         )}
@@ -301,7 +301,7 @@ export function ContactSearchModal({
         {step === 'results' && (
           <div className="space-y-4">
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              {t('resultsSubtitle', { name: searchName, company: companyName })}
+              {t('contacts.search.resultsSubtitle', { name: searchName, company: companyName })}
             </p>
 
             {matches.length > 0 ? (
@@ -318,7 +318,7 @@ export function ContactSearchModal({
             ) : (
               <div className="text-center py-8">
                 <Icons.search className="h-12 w-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-                <p className="text-slate-600 dark:text-slate-400">{t('noResults')}</p>
+                <p className="text-slate-600 dark:text-slate-400">{t('contacts.search.noResults')}</p>
               </div>
             )}
 
@@ -329,7 +329,7 @@ export function ContactSearchModal({
                 className="w-full"
               >
                 <Icons.plus className="h-4 w-4 mr-2" />
-                {t('addManually')}
+                {t('contacts.search.addManually')}
               </Button>
             </div>
           </div>
@@ -341,7 +341,7 @@ export function ContactSearchModal({
             {selectedMatch ? (
               <>
                 <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
-                  {t('selectedProfile')}
+                  {t('contacts.search.selectedProfile')}
                 </p>
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                   <div className="flex items-center gap-2 text-blue-900 dark:text-blue-100 font-medium">
@@ -373,11 +373,11 @@ export function ContactSearchModal({
 
             <div className="space-y-3">
               <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                {t('extraInfo')}
+                {t('contacts.search.extraInfo')}
               </p>
 
               <div>
-                <Label htmlFor="confirm-email">{t('emailLabel')}</Label>
+                <Label htmlFor="confirm-email">{t('contacts.search.emailLabel')}</Label>
                 <Input
                   id="confirm-email"
                   type="email"
@@ -389,7 +389,7 @@ export function ContactSearchModal({
               </div>
 
               <div>
-                <Label htmlFor="confirm-phone">{t('phoneLabel')}</Label>
+                <Label htmlFor="confirm-phone">{t('contacts.search.phoneLabel')}</Label>
                 <Input
                   id="confirm-phone"
                   type="tel"
@@ -407,7 +407,7 @@ export function ContactSearchModal({
                   onCheckedChange={(checked) => setIsPrimary(checked === true)}
                 />
                 <Label htmlFor="primary-contact" className="text-sm font-normal cursor-pointer">
-                  {t('primaryContact')}
+                  {t('contacts.search.primaryContact')}
                 </Label>
               </div>
             </div>
@@ -425,7 +425,7 @@ export function ContactSearchModal({
               ) : (
                 <>
                   <Icons.plus className="h-4 w-4 mr-2" />
-                  {t('addAndAnalyze')}
+                  {t('contacts.search.addAndAnalyze')}
                 </>
               )}
             </Button>
@@ -435,4 +435,3 @@ export function ContactSearchModal({
     </Dialog>
   )
 }
-
