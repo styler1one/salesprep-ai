@@ -125,33 +125,17 @@ export default function PricingPage() {
     }
   }
 
-  const handleDonation = async () => {
-    // If not logged in, redirect to signup
-    if (!isLoggedIn) {
-      router.push('/signup')
-      return
-    }
-
-    try {
-      // Get donation link from backend
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/billing/donation-link`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
+  const handleDonation = () => {
+    // Donation link is public - no auth required
+    const donationUrl = process.env.NEXT_PUBLIC_STRIPE_DONATION_LINK
+    if (donationUrl) {
+      window.open(donationUrl, '_blank')
+    } else {
+      toast({
+        title: tErrors('generic'),
+        description: t('donationNotConfigured'),
+        variant: 'destructive',
       })
-      if (response.ok) {
-        const data = await response.json()
-        window.open(data.donation_url, '_blank')
-      } else {
-        toast({
-          title: tErrors('generic'),
-          description: t('donationNotConfigured'),
-          variant: 'destructive',
-        })
-      }
-    } catch (error) {
-      console.error('Donation link failed:', error)
     }
   }
 
@@ -242,17 +226,16 @@ export default function PricingPage() {
                     : t('pricing.startFree')
                 }
               </Button>
-              {isLoggedIn && isCurrentPlan('free') && (
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="w-full text-pink-600 hover:text-pink-700 hover:bg-pink-50 dark:hover:bg-pink-900/20"
-                  onClick={handleDonation}
-                >
-                  <Heart className="h-4 w-4 mr-2" />
-                  {t('pricing.donate')}
-                </Button>
-              )}
+              {/* Donation button visible for everyone */}
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="w-full text-pink-600 hover:text-pink-700 hover:bg-pink-50 dark:hover:bg-pink-900/20"
+                onClick={handleDonation}
+              >
+                <Heart className="h-4 w-4 mr-2" />
+                {t('pricing.donate')}
+              </Button>
             </CardFooter>
           </Card>
 
