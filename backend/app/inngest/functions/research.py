@@ -99,7 +99,7 @@ async def research_company_fn(ctx, step):
     brief_content = await step.run(
         "generate-brief",
         merge_and_generate_brief,
-        company_name, claude_result, gemini_result, kvk_result, website_result, seller_context, language
+        company_name, country, city, claude_result, gemini_result, kvk_result, website_result, seller_context, language
     )
     
     # Step 8: Save results to database
@@ -244,6 +244,8 @@ async def run_website_scrape(website_url: str) -> dict:
 
 async def merge_and_generate_brief(
     company_name: str,
+    country: Optional[str],
+    city: Optional[str],
     claude_result: dict,
     gemini_result: dict,
     kvk_result: Optional[dict],
@@ -274,6 +276,8 @@ async def merge_and_generate_brief(
     try:
         brief = await orchestrator._generate_unified_brief(
             company_name=company_name,
+            country=country,
+            city=city,
             sources=sources,
             seller_context=seller_context,
             language=language
