@@ -284,10 +284,8 @@ export default function FollowupDetailPage() {
   const handleGenerateAction = async (actionType: ActionType) => {
     // Summary is built-in, not generated via API
     if (actionType === 'summary') {
-      const summaryAction = buildSummaryAction()
-      if (summaryAction) {
-        setSelectedAction(summaryAction)
-      }
+      // Summary is built-in - just open the sheet via URL
+      openAction('summary')
       return
     }
     
