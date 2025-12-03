@@ -70,17 +70,35 @@ class ContactAnalyzer:
         )
         
         try:
-            response = self.client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=3000,
-                temperature=0.3,
-                messages=[{
+            # Build API call - with web search if LinkedIn URL provided
+            api_params = {
+                "model": "claude-sonnet-4-20250514",
+                "max_tokens": 3000,
+                "temperature": 0.3,
+                "messages": [{
                     "role": "user",
                     "content": prompt
                 }]
-            )
+            }
             
-            analysis_text = response.content[0].text
+            # Enable web search to actually fetch LinkedIn profile data
+            if linkedin_url:
+                api_params["tools"] = [
+                    {
+                        "type": "web_search_20250305",
+                        "name": "web_search",
+                        "max_uses": 5  # Allow multiple searches for thorough research
+                    }
+                ]
+                logger.info(f"[CONTACT_ANALYZER] Web search enabled for {contact_name}")
+            
+            response = self.client.messages.create(**api_params)
+            
+            # Extract text from response (may have multiple content blocks with web search)
+            analysis_text = ""
+            for block in response.content:
+                if hasattr(block, 'text'):
+                    analysis_text += block.text
             
             # Parse the analysis into structured data
             return self._parse_analysis(analysis_text, contact_name, contact_role, linkedin_url)
@@ -143,23 +161,33 @@ class ContactAnalyzer:
         linkedin_instruction = ""
         if linkedin_url:
             linkedin_instruction = f"""
-**LinkedIn URL**: {linkedin_url}
+**LinkedIn Profile**: {linkedin_url}
 
-Use your web search capabilities to analyze this LinkedIn profile.
-Search for: "{contact_name} {contact_role or ''} linkedin" and analyze:
-- Their career background
-- Recent posts and activity
-- Connections and endorsements
-- Tone and communication style in posts
+IMPORTANT: Use web search to research this person. Search for:
+1. "{contact_name}" site:linkedin.com - to find their profile
+2. "{contact_name} {contact_role or ''} {company_context.get('company_name', '')}" - for news/mentions
+3. Look for their recent LinkedIn posts and activity
+
+Extract from their LinkedIn profile:
+- Full job history and career progression
+- Education and certifications
+- Skills and endorsements
+- Recent posts (tone, topics, engagement)
+- Recommendations they've received
+- Any articles or content they've shared
+
+This is REAL research - find actual data, not assumptions.
 """
         else:
             linkedin_instruction = """
 **No LinkedIn URL available**
 
 Base your analysis on:
-- The job title/role
+- The job title/role provided
 - Typical responsibilities for this role
 - General patterns for this function in this industry
+
+Note: This is a role-based analysis without profile-specific data.
 """
         
         prompt = f"""You are a sales research assistant analyzing contact persons for personalized sales conversations. {lang_instruction}
