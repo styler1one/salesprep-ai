@@ -98,49 +98,11 @@ class ContactAnalyzer:
             
             response = self.client.messages.create(**api_params)
             
-            # Extract ONLY the final analysis text, filtering out Claude's thinking/search narration
+            # Extract text from all text blocks
             analysis_text = ""
             for block in response.content:
                 if hasattr(block, 'text'):
-                    text = block.text.strip()
-                    
-                    # Skip Claude's thinking/search narration patterns
-                    skip_patterns = [
-                        "I'll search for",
-                        "Let me search",
-                        "I'll now",
-                        "Let me now",
-                        "Based on the information gathered",
-                        "Based on my search",
-                        "I can now provide",
-                        "Now I can provide",
-                        "I will search",
-                        "Searching for",
-                        "I found",
-                        "The search",
-                    ]
-                    
-                    # Check if this block is Claude's narration
-                    is_narration = any(text.startswith(pattern) for pattern in skip_patterns)
-                    
-                    # Only include text blocks that are the actual analysis
-                    # The analysis should contain structured headers like "## 1." or "## PROFILE"
-                    if not is_narration and ("## 1." in text or "## PROFILE" in text or "##" in text):
-                        analysis_text = text
-                        break  # Use the first actual analysis block
-            
-            # If we didn't find structured analysis, look for any substantial text
-            if not analysis_text:
-                for block in response.content:
-                    if hasattr(block, 'text'):
-                        text = block.text.strip()
-                        # Skip very short blocks and narration
-                        if len(text) > 500 and not any(text.startswith(p) for p in ["I'll", "Let me", "Based on"]):
-                            analysis_text = text
-                            break
-            
-            # Clean up any trailing "0" or similar artifacts
-            analysis_text = analysis_text.rstrip('0').strip()
+                    analysis_text += block.text
             
             # Parse the analysis into structured data
             return self._parse_analysis(analysis_text, contact_name, contact_role, linkedin_url)
@@ -249,7 +211,15 @@ Use web search to find information about {contact_name}:
 **LinkedIn URL for reference** (if available): {linkedin_url or 'Not provided'}
 """
         
-        prompt = f"""You are a sales research assistant analyzing contact persons for personalized sales conversations. {lang_instruction}
+        prompt = f"""You are a sales research assistant. {lang_instruction}
+
+**CRITICAL OUTPUT RULES:**
+- Output ONLY the structured analysis below
+- Do NOT explain what you are searching for
+- Do NOT narrate your research process
+- Do NOT include phrases like "I'll search for...", "Let me...", "Based on my search..."
+- Start IMMEDIATELY with "## 1. PROFILE SUMMARY"
+- Be concrete and actionable, no vague generalities
 
 {company_section}
 
@@ -263,7 +233,7 @@ Use web search to find information about {contact_name}:
 
 ---
 
-Provide a comprehensive analysis with EXACTLY these sections:
+OUTPUT FORMAT (start directly with this, no introduction):
 
 ## 1. PROFILE SUMMARY
 - Career background (if available)
@@ -319,11 +289,7 @@ Provide EXACTLY 5 smart questions to uncover needs:
 5. [Question about success criteria]
 
 ### Things to Avoid
-What should you NOT do with this person? (2-3 points)
-
----
-
-Be concrete and actionable. No vague generalities."""
+What should you NOT do with this person? (2-3 points)"""
 
         return prompt
     
