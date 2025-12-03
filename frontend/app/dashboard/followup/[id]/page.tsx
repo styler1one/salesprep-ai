@@ -238,39 +238,43 @@ export default function FollowupDetailPage() {
     }
   }, [followupId])
 
-  // Auto-refresh for generating actions
+  // Auto-refresh for generating actions (polling)
+  // IMPORTANT: Keep this simple like Research page - NO async in setInterval callback!
   useEffect(() => {
     const hasGeneratingActions = actions.some(a => 
       !a.content && a.metadata?.status !== 'error'
     )
 
     if (hasGeneratingActions || generatingActionType) {
-      const interval = setInterval(async () => {
-        const updatedActions = await fetchActions()
-        
-        // Check if the action we were generating is now complete
-        if (generatingActionType && updatedActions) {
-          const targetAction = updatedActions.find(a => a.action_type === generatingActionType)
-          if (targetAction && (targetAction.content || targetAction.metadata?.status === 'error')) {
-            // Action is complete or errored - clear the generating state
-            setGeneratingActionType(null)
-            
-            // Show completion toast
-            if (targetAction.content) {
-              toast({
-                title: t('actions.generated'),
-                description: t('actions.generatedDesc', { 
-                  actionType: ACTION_TYPES.find(a => a.type === generatingActionType)?.label || generatingActionType 
-                }),
-              })
-            }
-          }
-        }
+      const interval = setInterval(() => {
+        // Simple call, no await - matches Research page pattern
+        fetchActions()
       }, 5000)
 
       return () => clearInterval(interval)
     }
-  }, [actions, generatingActionType, fetchActions, toast, t])
+  }, [actions, generatingActionType, fetchActions])
+  
+  // Separate effect to handle completion detection - runs when actions state changes
+  useEffect(() => {
+    if (!generatingActionType) return
+    
+    const targetAction = actions.find(a => a.action_type === generatingActionType)
+    if (targetAction && (targetAction.content || targetAction.metadata?.status === 'error')) {
+      // Action is complete or errored - clear the generating state
+      setGeneratingActionType(null)
+      
+      // Show completion toast
+      if (targetAction.content) {
+        toast({
+          title: t('actions.generated'),
+          description: t('actions.generatedDesc', { 
+            actionType: ACTION_TYPES.find(a => a.type === generatingActionType)?.label || generatingActionType 
+          }),
+        })
+      }
+    }
+  }, [actions, generatingActionType, toast, t])
 
   // Generate a new action - fire-and-forget pattern
   const handleGenerateAction = async (actionType: ActionType) => {
