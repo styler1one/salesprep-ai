@@ -508,7 +508,7 @@ export default function SettingsPage() {
                       </span>
                       {subscription?.price_cents && subscription.price_cents > 0 && (
                         <span className="text-sm text-slate-500">
-                          €{(subscription.price_cents / 100).toFixed(0)}{subscription.billing_interval === 'year' ? tBilling('perYear') : tBilling('perMonth')}
+                          €{(subscription.price_cents / 100).toFixed(2).replace('.', ',')}{subscription.billing_interval === 'year' ? tBilling('perYear') : tBilling('perMonth')}
                         </span>
                       )}
                     </div>
