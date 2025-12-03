@@ -104,6 +104,9 @@ class ContactAnalyzer:
                 if hasattr(block, 'text'):
                     analysis_text += block.text
             
+            # Clean up trailing "0" from web search tool results
+            analysis_text = analysis_text.rstrip('0').strip()
+            
             # Parse the analysis into structured data
             return self._parse_analysis(analysis_text, contact_name, contact_role, linkedin_url)
             
