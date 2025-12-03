@@ -159,9 +159,14 @@ def use_inngest_for(feature: str) -> bool:
         True if Inngest should be used for this feature
     """
     if not INNGEST_ENABLED:
+        logger.debug(f"use_inngest_for({feature}): INNGEST_ENABLED={INNGEST_ENABLED}")
         return False
     
     # Check feature-specific flag
-    feature_flag = os.getenv(f"INNGEST_FEATURE_{feature.upper()}", "true")
-    return feature_flag.lower() == "true"
+    env_key = f"INNGEST_FEATURE_{feature.upper()}"
+    feature_flag = os.getenv(env_key, "true")
+    result = feature_flag.lower() == "true"
+    
+    logger.debug(f"use_inngest_for({feature}): {env_key}={feature_flag} -> {result}")
+    return result
 

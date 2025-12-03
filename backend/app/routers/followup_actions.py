@@ -146,7 +146,10 @@ async def generate_action(
             raise HTTPException(status_code=500, detail="Failed to create action")
         
         # Trigger generation via Inngest (if enabled) or BackgroundTasks (fallback)
-        if use_inngest_for("followup_actions"):
+        use_inngest = use_inngest_for("followup_actions")
+        logger.info(f"Action {action_id}: use_inngest={use_inngest}")
+        
+        if use_inngest:
             event_sent = await send_event(
                 Events.FOLLOWUP_ACTION_REQUESTED,
                 {
@@ -160,10 +163,10 @@ async def generate_action(
             )
             
             if event_sent:
-                logger.info(f"Action {action_id} triggered via Inngest")
+                logger.info(f"Action {action_id} triggered via Inngest (event: {Events.FOLLOWUP_ACTION_REQUESTED})")
             else:
                 # Fallback to BackgroundTasks if Inngest fails
-                logger.warning(f"Inngest event failed, falling back to BackgroundTasks")
+                logger.warning(f"Action {action_id}: Inngest event failed, falling back to BackgroundTasks")
                 background_tasks.add_task(
                     generate_action_content,
                     action_id=action_id,
@@ -174,6 +177,7 @@ async def generate_action(
                 )
         else:
             # Use BackgroundTasks (legacy/fallback)
+            logger.info(f"Action {action_id}: Using BackgroundTasks (Inngest disabled for followup_actions)")
             background_tasks.add_task(
                 generate_action_content,
                 action_id=action_id,
