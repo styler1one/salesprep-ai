@@ -22,6 +22,11 @@ function getSupabaseClient() {
   return supabaseClient
 }
 
+// Token cache to prevent concurrent getSession() calls from blocking each other
+let cachedToken: string | null = null
+let tokenExpiry: number = 0
+let tokenPromise: Promise<string | null> | null = null
+
 interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown
 }
@@ -49,12 +54,48 @@ export class ApiClientError extends Error {
 
 /**
  * Get the current access token from Supabase.
- * Uses a singleton client to avoid creating multiple instances.
+ * Uses caching to prevent concurrent getSession() calls from blocking each other.
+ * This is critical for allowing navigation while background tasks are running.
  */
 async function getAccessToken(): Promise<string | null> {
-  const supabase = getSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  return session?.access_token || null
+  const now = Date.now()
+  
+  // If we have a valid cached token (with 60s buffer before expiry), use it
+  if (cachedToken && tokenExpiry > now + 60000) {
+    return cachedToken
+  }
+  
+  // If another call is already fetching the token, wait for it
+  if (tokenPromise) {
+    return tokenPromise
+  }
+  
+  // Fetch new token
+  tokenPromise = (async () => {
+    try {
+      const supabase = getSupabaseClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (session?.access_token) {
+        cachedToken = session.access_token
+        // JWT expiry is in seconds, convert to ms
+        // Default to 1 hour if exp not available
+        const exp = session.expires_at 
+          ? session.expires_at * 1000 
+          : now + 3600000
+        tokenExpiry = exp
+      } else {
+        cachedToken = null
+        tokenExpiry = 0
+      }
+      
+      return cachedToken
+    } finally {
+      tokenPromise = null
+    }
+  })()
+  
+  return tokenPromise
 }
 
 /**
