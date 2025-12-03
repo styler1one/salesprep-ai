@@ -439,18 +439,35 @@ class SubscriptionService:
             # Get subscription details from Stripe
             stripe_sub = self.stripe.Subscription.retrieve(subscription_id)
             
-            # Update local subscription
-            self.supabase.table("organization_subscriptions").upsert({
+            # Build update data - handle both dict and object access patterns
+            current_period_start = getattr(stripe_sub, 'current_period_start', None) or stripe_sub.get('current_period_start')
+            current_period_end = getattr(stripe_sub, 'current_period_end', None) or stripe_sub.get('current_period_end')
+            trial_start = getattr(stripe_sub, 'trial_start', None) or stripe_sub.get('trial_start')
+            trial_end = getattr(stripe_sub, 'trial_end', None) or stripe_sub.get('trial_end')
+            status = getattr(stripe_sub, 'status', None) or stripe_sub.get('status', 'active')
+            
+            update_data = {
                 "organization_id": organization_id,
                 "plan_id": plan_id,
-                "status": stripe_sub.status,
+                "status": status,
                 "stripe_customer_id": customer_id,
                 "stripe_subscription_id": subscription_id,
-                "current_period_start": datetime.fromtimestamp(stripe_sub.current_period_start).isoformat(),
-                "current_period_end": datetime.fromtimestamp(stripe_sub.current_period_end).isoformat(),
-                "trial_start": datetime.fromtimestamp(stripe_sub.trial_start).isoformat() if stripe_sub.trial_start else None,
-                "trial_end": datetime.fromtimestamp(stripe_sub.trial_end).isoformat() if stripe_sub.trial_end else None,
-            }, on_conflict="organization_id").execute()
+            }
+            
+            if current_period_start:
+                update_data["current_period_start"] = datetime.fromtimestamp(current_period_start).isoformat()
+            if current_period_end:
+                update_data["current_period_end"] = datetime.fromtimestamp(current_period_end).isoformat()
+            if trial_start:
+                update_data["trial_start"] = datetime.fromtimestamp(trial_start).isoformat()
+            if trial_end:
+                update_data["trial_end"] = datetime.fromtimestamp(trial_end).isoformat()
+            
+            # Update local subscription
+            self.supabase.table("organization_subscriptions").upsert(
+                update_data, 
+                on_conflict="organization_id"
+            ).execute()
             
             logger.info(f"Checkout completed for org {organization_id}, plan {plan_id}")
             
@@ -465,13 +482,14 @@ class SubscriptionService:
             status = subscription.get("status")
             cancel_at_period_end = subscription.get("cancel_at_period_end", False)
             
-            # Find organization by subscription ID
+            # Find organization by subscription ID - use maybe_single to handle 0 rows
             response = self.supabase.table("organization_subscriptions").select(
                 "organization_id"
-            ).eq("stripe_subscription_id", subscription_id).single().execute()
+            ).eq("stripe_subscription_id", subscription_id).maybe_single().execute()
             
             if not response.data:
-                logger.warning(f"No organization found for subscription {subscription_id}")
+                # Subscription might not exist yet (created event before checkout completed)
+                logger.info(f"No organization found for subscription {subscription_id}, will be handled by checkout webhook")
                 return
             
             organization_id = response.data["organization_id"]
