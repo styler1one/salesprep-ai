@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -20,7 +20,7 @@ import { useTranslations } from 'next-intl'
 import { api } from '@/lib/api'
 import { exportAsMarkdown, exportAsPdf, exportAsDocx } from '@/lib/export-utils'
 import { ActionsGrid } from '@/components/followup/action-card'
-import { ActionPanel } from '@/components/followup/action-panel'
+import { ActionSheet, useActionSheet } from '@/components/followup/action-sheet'
 import { ACTION_TYPES, type FollowupAction, type ActionType, type ActionsListResponse } from '@/types/followup-actions'
 import type { User } from '@supabase/supabase-js'
 
@@ -132,8 +132,12 @@ export default function FollowupDetailPage() {
   
   // Actions states
   const [actions, setActions] = useState<FollowupAction[]>([])
-  const [selectedAction, setSelectedAction] = useState<FollowupAction | null>(null)
   const [generatingActionType, setGeneratingActionType] = useState<ActionType | null>(null)
+  
+  // URL-based action sheet (renders in Portal for isolation)
+  const { openAction } = useActionSheet()
+  const searchParams = useSearchParams()
+  const selectedActionType = searchParams.get('action')
 
   useEffect(() => {
     // Get user for display purposes (non-blocking)
@@ -349,9 +353,6 @@ export default function FollowupDetailPage() {
     
     if (!error && data) {
       setActions(prev => prev.map(a => a.id === actionId ? data : a))
-      if (selectedAction?.id === actionId) {
-        setSelectedAction(data)
-      }
     } else {
       throw new Error('Failed to update action')
     }
@@ -369,9 +370,6 @@ export default function FollowupDetailPage() {
     
     if (!error) {
       setActions(prev => prev.filter(a => a.id !== actionId))
-      if (selectedAction?.id === actionId) {
-        setSelectedAction(null)
-      }
     } else {
       throw new Error('Failed to delete action')
     }
@@ -391,9 +389,6 @@ export default function FollowupDetailPage() {
     
     // Update UI immediately
     setActions(prev => prev.filter(a => a.id !== actionId))
-    if (selectedAction?.id === actionId) {
-      setSelectedAction(null)
-    }
     setGeneratingActionType(action.action_type)
     
     // Show feedback immediately
@@ -455,13 +450,9 @@ export default function FollowupDetailPage() {
     })
   }
 
-  // View action
+  // View action - opens in URL-based side sheet (Portal)
   const handleViewAction = (action: FollowupAction) => {
-    setSelectedAction(action)
-    // Scroll to panel after a short delay
-    setTimeout(() => {
-      document.getElementById('action-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 100)
+    openAction(action.action_type)
   }
 
   useEffect(() => {
@@ -843,20 +834,6 @@ export default function FollowupDetailPage() {
                   />
                 </div>
 
-                {/* Selected Action Panel */}
-                {selectedAction && (
-                  <div id="action-panel">
-                  <ActionPanel
-                    action={selectedAction}
-                    companyName={followup.prospect_company_name || 'Followup'}
-                    onUpdate={handleUpdateAction}
-                    onDelete={handleDeleteAction}
-                    onRegenerate={handleRegenerateAction}
-                    onClose={() => setSelectedAction(null)}
-                  />
-                  </div>
-                )}
-
                 {/* Commercial Signals (Legacy) */}
                 {hasCommercialSignals && (
                   <div className="rounded-xl border-2 border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950 dark:to-yellow-950 p-6 shadow-sm">
@@ -1193,6 +1170,16 @@ export default function FollowupDetailPage() {
         </div>
       
         <Toaster />
+        
+        {/* Action Sheet - Renders in Portal (isolated from main React tree) */}
+        <ActionSheet
+          actions={allActions}
+          companyName={followup?.prospect_company_name || 'Followup'}
+          onUpdate={handleUpdateAction}
+          onDelete={handleDeleteAction}
+          onRegenerate={handleRegenerateAction}
+          generatingType={generatingActionType}
+        />
       </>
     </DashboardLayout>
   )
