@@ -14,7 +14,7 @@ import os
 import json
 import logging
 from typing import Dict, Any, Optional, List
-from anthropic import Anthropic
+from anthropic import AsyncAnthropic  # Use async client to not block event loop
 from app.i18n.utils import get_language_instruction
 from app.i18n.config import DEFAULT_LANGUAGE
 
@@ -25,7 +25,7 @@ class FollowupGenerator:
     """Service for generating follow-up content from meeting transcriptions"""
     
     def __init__(self):
-        self.client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        self.client = AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
         self.model = "claude-sonnet-4-20250514"
     
     async def generate_summary(
@@ -64,7 +64,7 @@ class FollowupGenerator:
         )
         
         try:
-            response = self.client.messages.create(
+            response = await self.client.messages.create(
                 model=self.model,
                 max_tokens=4000,
                 messages=[{"role": "user", "content": prompt}]
@@ -119,7 +119,7 @@ If there are no action items, return an empty array: []
 {lang_instruction}"""
 
         try:
-            response = self.client.messages.create(
+            response = await self.client.messages.create(
                 model=self.model,
                 max_tokens=2000,
                 messages=[{"role": "user", "content": prompt}]
@@ -178,7 +178,7 @@ If there are no action items, return an empty array: []
         )
         
         try:
-            response = self.client.messages.create(
+            response = await self.client.messages.create(
                 model=self.model,
                 max_tokens=2000,
                 messages=[{"role": "user", "content": prompt}]

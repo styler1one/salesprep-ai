@@ -5,7 +5,7 @@ Enhanced with seller context for personalized research output.
 """
 import os
 from typing import Dict, Any, Optional, List
-from anthropic import Anthropic
+from anthropic import AsyncAnthropic  # Use async client to not block event loop
 from app.i18n.utils import get_language_instruction
 from app.i18n.config import DEFAULT_LANGUAGE
 
@@ -19,7 +19,7 @@ class ClaudeResearcher:
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY environment variable not set")
         
-        self.client = Anthropic(api_key=api_key)
+        self.client = AsyncAnthropic(api_key=api_key)
     
     async def search_company(
         self,
@@ -209,7 +209,7 @@ RULES:
 
         try:
             # Call Claude with web search enabled
-            response = self.client.messages.create(
+            response = await self.client.messages.create(
                 model="claude-sonnet-4-20250514",  # Latest Claude Sonnet model
                 max_tokens=4096,
                 temperature=0.3,  # Lower temperature for factual responses

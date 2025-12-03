@@ -8,7 +8,7 @@ from typing import Dict, Any, List, Optional
 import logging
 import os
 import json
-from anthropic import Anthropic
+from anthropic import AsyncAnthropic  # Use async client to not block event loop
 from app.i18n.utils import get_language_instruction
 from app.i18n.config import DEFAULT_LANGUAGE
 
@@ -19,7 +19,7 @@ class PrepGeneratorService:
     """Service for generating meeting preparation briefs"""
     
     def __init__(self):
-        self.anthropic = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        self.anthropic = AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
         self.model = "claude-sonnet-4-20250514"
     
     async def generate_meeting_brief(
@@ -44,7 +44,7 @@ class PrepGeneratorService:
             # Call Claude API
             logger.info(f"Generating brief for {context['prospect_company']} ({context['meeting_type']})")
             
-            response = self.anthropic.messages.create(
+            response = await self.anthropic.messages.create(
                 model=self.model,
                 max_tokens=4096,
                 temperature=0.7,

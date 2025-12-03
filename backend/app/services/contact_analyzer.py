@@ -15,7 +15,7 @@ Generates:
 import os
 import logging
 from typing import Dict, Any, Optional, List
-from anthropic import Anthropic
+from anthropic import AsyncAnthropic  # Use async client to not block event loop
 from supabase import Client
 from app.database import get_supabase_service
 from app.i18n.utils import get_language_instruction
@@ -33,7 +33,7 @@ class ContactAnalyzer:
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY not set")
         
-        self.client = Anthropic(api_key=api_key)
+        self.client = AsyncAnthropic(api_key=api_key)
         self.supabase: Client = get_supabase_service()
     
     async def analyze_contact(
@@ -96,7 +96,7 @@ class ContactAnalyzer:
             has_user_info = bool(user_provided_context)
             logger.info(f"[CONTACT_ANALYZER] Analyzing {contact_name} - user-provided info: {has_user_info}")
             
-            response = self.client.messages.create(**api_params)
+            response = await self.client.messages.create(**api_params)
             
             # Extract text from all text blocks
             analysis_text = ""

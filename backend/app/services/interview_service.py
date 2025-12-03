@@ -3,7 +3,7 @@ Interview Service - AI-powered sales rep onboarding interview
 """
 import os
 from typing import Dict, Any, List, Optional
-from anthropic import Anthropic
+from anthropic import Anthropic  # Note: Keep sync for now - analyze_responses is sync
 import json
 
 
