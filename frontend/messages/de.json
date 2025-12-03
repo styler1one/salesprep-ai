@@ -78,7 +78,16 @@
     "and": "und",
     "upload": "Dokumente hochladen",
     "download": "Herunterladen",
-    "extraOptions": "Zusätzliche Optionen"
+    "extraOptions": "Zusätzliche Optionen",
+    "confirm": "Bestätigen",
+    "processing": "Wird verarbeitet...",
+    "export": {
+      "markdownDownloaded": "Markdown-Datei heruntergeladen",
+      "pdfDownloaded": "PDF-Datei heruntergeladen",
+      "wordDownloaded": "Word-Datei heruntergeladen",
+      "pdfFailed": "PDF-Export fehlgeschlagen",
+      "wordFailed": "Word-Export fehlgeschlagen"
+    }
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -139,7 +148,14 @@
     "usageLimitReached": "Nutzungslimit erreicht. Upgraden Sie Ihren Plan um fortzufahren.",
     "tryAgain": "Erneut versuchen",
     "goBack": "Zurück",
-    "contactSupport": "Kontaktieren Sie den Support wenn dieses Problem weiterhin besteht"
+    "contactSupport": "Kontaktieren Sie den Support wenn dieses Problem weiterhin besteht",
+    "globalError": {
+      "title": "Etwas ist schief gelaufen",
+      "description": "Ein unerwarteter Fehler ist aufgetreten. Unser Team wurde benachrichtigt und arbeitet an einer Lösung.",
+      "tryAgain": "Erneut versuchen",
+      "goToDashboard": "Zum Dashboard",
+      "devDetails": "Fehlerdetails (nur Entwicklung)"
+    }
   },
   "research": {
     "title": "Research Agent",
@@ -268,7 +284,11 @@
       "addedDesc": "KI-Analyse gestartet...",
       "analysisComplete": "Analyse abgeschlossen",
       "analysisCompleteDesc": "{name} wurde analysiert",
-      "addFailed": "Konnte Kontakt nicht hinzufügen"
+      "addFailed": "Konnte Kontakt nicht hinzufügen",
+      "search": {
+        "errorTitle": "Fehler",
+        "errorAddFailed": "Konnte Kontakt nicht hinzufügen"
+      }
     },
     "context": {
       "title": "KI-Kontext",
@@ -494,6 +514,87 @@
     },
     "confirm": {
       "delete": "Bist du sicher, dass du dieses Follow-up löschen möchtest?"
+    },
+    "actions": {
+      "title": "Nachverfolgungs-Aktionen",
+      "subtitle": "Gezielte Outputs aus Ihrem Meeting generieren",
+      "generating": "Wird generiert...",
+      "generatingDesc": "{actionType} wird generiert...",
+      "generated": "Generiert",
+      "generatedDesc": "{actionType} ist bereit zur Ansicht",
+      "readyToView": "ist bereit zur Ansicht",
+      "clickToGenerate": "Klicken zum Generieren",
+      "error": "Fehler",
+      "regenerate": "Neu generieren",
+      "regenerating": "Wird neu generiert...",
+      "regeneratingDesc": "Sie können weiterarbeiten während dies im Hintergrund generiert wird.",
+      "delete": "Löschen",
+      "confirmDelete": "Sind Sie sicher, dass Sie diese Aktion löschen möchten?",
+      "noContent": "Noch kein Inhalt",
+      "generationFailed": "Generierung fehlgeschlagen",
+      "alreadyExists": "Aktion bereits generiert",
+      "alreadyExistsDesc": "Diese Aktion wurde bereits generiert. Klicken Sie zum Ansehen.",
+      "generationFailedDesc": "Ein Fehler ist aufgetreten. Bitte versuchen Sie erneut zu generieren.",
+      "tryAgain": "Erneut versuchen",
+      "summaryReadOnly": "Zusammenfassung ist schreibgeschützt",
+      "summaryCannotEdit": "Die Zusammenfassung kann hier nicht bearbeitet werden. Bearbeiten Sie die Hauptzusammenfassung oben.",
+      "summaryCannotDelete": "Die Zusammenfassung kann nicht gelöscht werden",
+      "summaryCannotRegenerate": "Die Zusammenfassung kann hier nicht neu generiert werden",
+      "contextUsed": "Verwendeter Kontext",
+      "wordsGenerated": "Wörter",
+      "generatingContent": "Inhalt wird generiert...",
+      "generatingTime": "Dies kann 10-30 Sekunden dauern",
+      "export": "Exportieren",
+      "exportPdf": "PDF herunterladen",
+      "exportDocx": "Word herunterladen",
+      "exportMd": "Markdown herunterladen",
+      "copied": "In die Zwischenablage kopiert",
+      "changesSaved": "Änderungen gespeichert",
+      "saveFailed": "Speichern fehlgeschlagen",
+      "deleteFailed": "Löschen fehlgeschlagen",
+      "actionDeleted": "Aktion gelöscht",
+      "exportFailed": "Export fehlgeschlagen",
+      "pdfDownloaded": "PDF heruntergeladen",
+      "docxDownloaded": "Word-Dokument heruntergeladen",
+      "mdDownloaded": "Markdown heruntergeladen",
+      "time": {
+        "justNow": "gerade eben",
+        "minAgo": "vor {count} Min.",
+        "hourAgo": "vor {count} Stunde",
+        "hoursAgo": "vor {count} Stunden",
+        "dayAgo": "vor {count} Tag",
+        "daysAgo": "vor {count} Tagen"
+      },
+      "types": {
+        "summary": {
+          "label": "Zusammenfassung",
+          "description": "Meeting-Zusammenfassung mit Kernpunkten und nächsten Schritten"
+        },
+        "customer_report": {
+          "label": "Kundenbericht",
+          "description": "Professioneller Bericht zum Teilen mit dem Kunden"
+        },
+        "share_email": {
+          "label": "Teilen-E-Mail",
+          "description": "Versandfertige E-Mail zum Teilen des Berichts"
+        },
+        "commercial_analysis": {
+          "label": "Kommerzielle Analyse",
+          "description": "Kaufsignale, Risiken und Deal-Bewertung"
+        },
+        "sales_coaching": {
+          "label": "Vertriebscoaching",
+          "description": "Feedback zu Ihrer Vertriebsleistung"
+        },
+        "action_items": {
+          "label": "Aktionspunkte",
+          "description": "Strukturierte Aufgaben mit Verantwortlichen und Fristen"
+        },
+        "internal_report": {
+          "label": "Interner Bericht",
+          "description": "Kurze Zusammenfassung für CRM oder Team"
+        }
+      }
     },
     "sections": {
       "keyPoints": "Wichtigste Punkte",
@@ -1145,6 +1246,168 @@
       "serverError": "Der Authentifizierungsanbieter ist vorübergehend nicht verfügbar. Bitte versuche es später erneut.",
       "genericSignIn": "Bei der Anmeldung ist ein Fehler aufgetreten.",
       "genericSignUp": "Bei der Registrierung ist ein Fehler aufgetreten."
+    }
+  },
+  "coach": {
+    "name": "Luna",
+    "tagline": "Dein KI-Vertriebscoach",
+    
+    "widget": {
+      "expand": "Erweitern",
+      "collapse": "Minimieren",
+      "close": "Schließen",
+      "settings": "Einstellungen",
+      "hideForToday": "Für heute ausblenden",
+      "allCaughtUp": "Alles erledigt!",
+      "greatWork": "Gut gemacht! Schau später für neue Vorschläge vorbei."
+    },
+    
+    "completion": {
+      "researchComplete": {
+        "title": "Recherche abgeschlossen!",
+        "description": "Gut gemacht! Deine Recherche zu {company} ist fertig. Was möchtest du als nächstes tun?",
+        "addContacts": "Kontakte hinzufügen",
+        "addContactsDesc": "Wichtige Ansprechpartner hinzufügen",
+        "createPrep": "Vorbereitung erstellen",
+        "createPrepDesc": "Jetzt Meeting-Prep starten"
+      },
+      "contactsAdded": {
+        "title": "Kontakte hinzugefügt!",
+        "description": "Du hast {count} zu {company} hinzugefügt. Luna kann jetzt personalisierte Gesprächseinstiege generieren.",
+        "createPrep": "Vorbereitung erstellen",
+        "createPrepDesc": "Personalisierte Gesprächspunkte erhalten",
+        "addMore": "Weitere Kontakte hinzufügen",
+        "addMoreDesc": "Weitere Ansprechpartner finden"
+      },
+      "prepReady": {
+        "title": "Vorbereitung fertig!",
+        "description": "Deine Meeting-Vorbereitung für {company} ist abgeschlossen. Viel Erfolg bei deinem Meeting!",
+        "viewPrep": "Vorbereitung ansehen",
+        "viewPrepDesc": "Deine Vorbereitung überprüfen",
+        "addFollowup": "Follow-up später hinzufügen",
+        "addFollowupDesc": "Später ein Follow-up erstellen"
+      },
+      "followupComplete": {
+        "title": "Follow-up erstellt!",
+        "description": "Dein Meeting-Follow-up ist fertig. Generiere Aktionen, um das Beste aus deinem Meeting herauszuholen.",
+        "generateReport": "Bericht generieren",
+        "generateReportDesc": "Eine teilbare Zusammenfassung erstellen",
+        "viewActions": "Alle Aktionen ansehen",
+        "viewActionsDesc": "Alle Follow-up-Optionen anzeigen"
+      },
+      "actionGenerated": {
+        "title": "Aktion generiert!",
+        "description": "Dein {actionType} ist fertig.",
+        "export": "Exportieren",
+        "exportDesc": "Aktion herunterladen oder teilen",
+        "moreActions": "Weitere Aktionen",
+        "moreActionsDesc": "Zusätzliche Aktionen erstellen"
+      },
+      "generic": {
+        "title": "Gut gemacht!",
+        "description": "Du hast eine Aufgabe erfolgreich abgeschlossen.",
+        "continue": "Weiter",
+        "continueDesc": "Weitermachen"
+      }
+    },
+    
+    "inlineTips": {
+      "researchForm": {
+        "title": "Profi-Tipp: Sei spezifisch",
+        "description": "Füge die Unternehmenswebsite oder LinkedIn-URL für bessere Rechercheergebnisse hinzu."
+      },
+      "contactsEmpty": {
+        "title": "Zuerst Kontakte hinzufügen",
+        "description": "Das Hinzufügen von Ansprechpartnern vor der Vorbereitung verbessert deine Meeting-Ergebnisse um 40%.",
+        "action": "Kontakte hinzufügen"
+      },
+      "contactsFew": {
+        "title": "Mehr Kontakte hinzufügen",
+        "description": "Mit 2-3 Kontakten hat Luna mehr Kontext für personalisierte Gesprächseinstiege."
+      },
+      "prepForm": {
+        "title": "Bestes Timing",
+        "description": "Erstelle deine Vorbereitung 1-2 Tage vor dem Meeting für optimale Ergebnisse."
+      },
+      "prepNoContacts": {
+        "title": "Kontakte fehlen",
+        "description": "Deine Vorbereitung wird ohne Ansprechpartner allgemeiner. Füge zuerst Kontakte für personalisierte Gesprächspunkte hinzu.",
+        "action": "Zuerst Kontakte hinzufügen"
+      },
+      "followupForm": {
+        "title": "Aufnahme hochladen",
+        "description": "Lade deine Meeting-Aufnahme oder Transkript hoch, um umfassende Follow-up-Aktionen zu generieren."
+      },
+      "dealForm": {
+        "title": "Deal verfolgen",
+        "description": "Das Verknüpfen von Deals mit Interessenten hilft Luna, bessere Pipeline-Einblicke zu liefern."
+      },
+      "exportAvailable": {
+        "title": "Export verfügbar",
+        "description": "Du kannst dieses Briefing als PDF, Word oder Markdown über das Dropdown-Menü exportieren."
+      }
+    },
+    
+    "sections": {
+      "priority": "Priorität",
+      "suggestions": "Vorschläge",
+      "progress": "Fortschritt heute",
+      "tip": "Tipp des Tages",
+      "score": "Erfolgsscore",
+      "predictions": "Vorhersagen",
+      "recommendations": "Empfehlungen"
+    },
+    
+    "actions": {
+      "doIt": "Erledigen",
+      "later": "Später",
+      "skip": "Überspringen",
+      "snooze1hour": "1 Stunde schlummern",
+      "snoozeTonight": "Heute Abend erinnern",
+      "snoozeTomorrow": "Morgen erinnern"
+    },
+    
+    "suggestions": {
+      "addContacts": "Kontakte zu {company} hinzufügen",
+      "createPrep": "Meeting-Vorbereitung erstellen",
+      "uploadFollowup": "Meeting-Aufnahme hochladen",
+      "generateReport": "Kundenbericht generieren",
+      "reviewCoaching": "Vertriebscoaching-Feedback überprüfen"
+    },
+    
+    "reasons": {
+      "meetingTomorrow": "Meeting morgen um {time}",
+      "meetingIn": "Meeting in {hours} Stunden",
+      "noContacts": "Noch keine Kontakte hinzugefügt",
+      "prepReady": "Vorbereitung ist fertig",
+      "overdue": "{days} Tage seit letzter Aktivität"
+    },
+    
+    "tips": {
+      "contactsImprove": "Kontakte vor der Prep hinzufügen verbessert Meeting-Ergebnisse um 40%",
+      "customerReports": "Kundenberichte erhöhen Follow-up-Antwortquoten um 60%",
+      "prepTiming": "Die besten Preps werden 1-2 Tage vor dem Meeting erstellt"
+    },
+    
+    "stats": {
+      "research": "Recherche",
+      "preps": "Preps",
+      "followups": "Follow-ups",
+      "completed": "heute abgeschlossen"
+    },
+    
+    "settings": {
+      "title": "Coach-Einstellungen",
+      "enabled": "KI-Coach aktivieren",
+      "inlineTips": "Inline-Tipps anzeigen",
+      "completionModals": "Abschluss-Vorschläge anzeigen",
+      "quietHours": "Ruhezeiten",
+      "frequency": "Benachrichtigungshäufigkeit",
+      "frequencyOptions": {
+        "minimal": "Minimal",
+        "normal": "Normal",
+        "frequent": "Häufig"
+      }
     }
   }
 }

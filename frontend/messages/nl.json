@@ -78,7 +78,16 @@
     "and": "en",
     "upload": "Upload Documenten",
     "download": "Downloaden",
-    "extraOptions": "Extra opties"
+    "extraOptions": "Extra opties",
+    "confirm": "Bevestigen",
+    "processing": "Verwerken...",
+    "export": {
+      "markdownDownloaded": "Markdown bestand gedownload",
+      "pdfDownloaded": "PDF bestand gedownload",
+      "wordDownloaded": "Word bestand gedownload",
+      "pdfFailed": "Kon PDF niet exporteren",
+      "wordFailed": "Kon Word document niet exporteren"
+    }
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -139,7 +148,14 @@
     "usageLimitReached": "Gebruikslimiet bereikt. Upgrade je abonnement om door te gaan.",
     "tryAgain": "Probeer opnieuw",
     "goBack": "Ga terug",
-    "contactSupport": "Neem contact op met support als dit probleem aanhoudt"
+    "contactSupport": "Neem contact op met support als dit probleem aanhoudt",
+    "globalError": {
+      "title": "Er is iets misgegaan",
+      "description": "Er is een onverwachte fout opgetreden. Ons team is op de hoogte gesteld en werkt aan een oplossing.",
+      "tryAgain": "Probeer opnieuw",
+      "goToDashboard": "Ga naar Dashboard",
+      "devDetails": "Foutdetails (alleen ontwikkeling)"
+    }
   },
   "research": {
     "title": "Research Agent",
@@ -271,7 +287,11 @@
       "addedDesc": "AI-analyse gestart...",
       "analysisComplete": "Analyse voltooid",
       "analysisCompleteDesc": "{name} is geanalyseerd",
-      "addFailed": "Kon contact niet toevoegen"
+      "addFailed": "Kon contact niet toevoegen",
+      "search": {
+        "errorTitle": "Fout",
+        "errorAddFailed": "Kon contact niet toevoegen"
+      }
     },
     "context": {
       "title": "AI Context",
@@ -497,6 +517,87 @@
     },
     "confirm": {
       "delete": "Weet je zeker dat je deze follow-up wilt verwijderen?"
+    },
+    "actions": {
+      "title": "Follow-up Acties",
+      "subtitle": "Genereer gerichte outputs van je meeting",
+      "generating": "Genereren...",
+      "generatingDesc": "{actionType} wordt gegenereerd...",
+      "generated": "Gegenereerd",
+      "generatedDesc": "{actionType} is klaar om te bekijken",
+      "readyToView": "is klaar om te bekijken",
+      "clickToGenerate": "Klik om te genereren",
+      "error": "Fout",
+      "regenerate": "Opnieuw genereren",
+      "regenerating": "Opnieuw genereren...",
+      "regeneratingDesc": "Je kunt verder werken terwijl dit op de achtergrond wordt gegenereerd.",
+      "delete": "Verwijderen",
+      "confirmDelete": "Weet je zeker dat je deze actie wilt verwijderen?",
+      "noContent": "Nog geen inhoud",
+      "generationFailed": "Genereren mislukt",
+      "alreadyExists": "Actie al gegenereerd",
+      "alreadyExistsDesc": "Deze actie is al gegenereerd. Klik om te bekijken.",
+      "generationFailedDesc": "Er is een fout opgetreden. Probeer opnieuw te genereren.",
+      "tryAgain": "Probeer opnieuw",
+      "summaryReadOnly": "Samenvatting is alleen-lezen",
+      "summaryCannotEdit": "De samenvatting kan hier niet worden bewerkt. Bewerk de hoofdsamenvatting hierboven.",
+      "summaryCannotDelete": "De samenvatting kan niet worden verwijderd",
+      "summaryCannotRegenerate": "De samenvatting kan hier niet opnieuw worden gegenereerd",
+      "contextUsed": "Context gebruikt",
+      "wordsGenerated": "woorden",
+      "generatingContent": "Content genereren...",
+      "generatingTime": "Dit kan 10-30 seconden duren",
+      "export": "Exporteren",
+      "exportPdf": "Download PDF",
+      "exportDocx": "Download Word",
+      "exportMd": "Download Markdown",
+      "copied": "Gekopieerd naar klembord",
+      "changesSaved": "Wijzigingen opgeslagen",
+      "saveFailed": "Opslaan mislukt",
+      "deleteFailed": "Verwijderen mislukt",
+      "actionDeleted": "Actie verwijderd",
+      "exportFailed": "Exporteren mislukt",
+      "pdfDownloaded": "PDF gedownload",
+      "docxDownloaded": "Word document gedownload",
+      "mdDownloaded": "Markdown gedownload",
+      "time": {
+        "justNow": "zojuist",
+        "minAgo": "{count} min geleden",
+        "hourAgo": "{count} uur geleden",
+        "hoursAgo": "{count} uur geleden",
+        "dayAgo": "{count} dag geleden",
+        "daysAgo": "{count} dagen geleden"
+      },
+      "types": {
+        "summary": {
+          "label": "Samenvatting",
+          "description": "Meeting samenvatting met key points en vervolgstappen"
+        },
+        "customer_report": {
+          "label": "Klantrapport",
+          "description": "Professioneel rapport om te delen met de klant"
+        },
+        "share_email": {
+          "label": "Deel E-mail",
+          "description": "Kant-en-klare e-mail om het rapport te delen"
+        },
+        "commercial_analysis": {
+          "label": "Commerciële Analyse",
+          "description": "Koopsignalen, risico's en deal assessment"
+        },
+        "sales_coaching": {
+          "label": "Sales Coaching",
+          "description": "Feedback op je verkoopprestaties"
+        },
+        "action_items": {
+          "label": "Actiepunten",
+          "description": "Gestructureerde taken met eigenaren en deadlines"
+        },
+        "internal_report": {
+          "label": "Intern Rapport",
+          "description": "Korte samenvatting voor CRM of team"
+        }
+      }
     },
     "sections": {
       "keyPoints": "Belangrijkste Punten",
@@ -1151,6 +1252,168 @@
       "serverError": "De authenticatieprovider is tijdelijk niet beschikbaar. Probeer het later opnieuw.",
       "genericSignIn": "Er is een fout opgetreden tijdens het inloggen.",
       "genericSignUp": "Er is een fout opgetreden tijdens het registreren."
+    }
+  },
+  "coach": {
+    "name": "Luna",
+    "tagline": "Jouw AI Sales Coach",
+    
+    "widget": {
+      "expand": "Uitklappen",
+      "collapse": "Inklappen",
+      "close": "Sluiten",
+      "settings": "Instellingen",
+      "hideForToday": "Verberg voor vandaag",
+      "allCaughtUp": "Alles bijgewerkt!",
+      "greatWork": "Goed bezig! Kom later terug voor nieuwe suggesties."
+    },
+    
+    "completion": {
+      "researchComplete": {
+        "title": "Research Voltooid!",
+        "description": "Goed bezig! Je research over {company} is klaar. Wat wil je nu doen?",
+        "addContacts": "Contacten Toevoegen",
+        "addContactsDesc": "Voeg belangrijke personen toe",
+        "createPrep": "Voorbereiding Maken",
+        "createPrepDesc": "Start nu met meeting prep"
+      },
+      "contactsAdded": {
+        "title": "Contacten Toegevoegd!",
+        "description": "Je hebt {count} toegevoegd aan {company}. Luna kan nu gepersonaliseerde gespreksstarters genereren.",
+        "createPrep": "Voorbereiding Maken",
+        "createPrepDesc": "Krijg gepersonaliseerde gespreksonderwerpen",
+        "addMore": "Meer Contacten Toevoegen",
+        "addMoreDesc": "Vind meer mensen om mee te verbinden"
+      },
+      "prepReady": {
+        "title": "Voorbereiding Klaar!",
+        "description": "Je meeting voorbereiding voor {company} is compleet. Succes met je meeting!",
+        "viewPrep": "Bekijk Voorbereiding",
+        "viewPrepDesc": "Bekijk je voorbereiding",
+        "addFollowup": "Follow-up Later Toevoegen",
+        "addFollowupDesc": "Maak later een follow-up"
+      },
+      "followupComplete": {
+        "title": "Follow-up Aangemaakt!",
+        "description": "Je meeting follow-up is klaar. Genereer acties om het meeste uit je meeting te halen.",
+        "generateReport": "Rapport Genereren",
+        "generateReportDesc": "Maak een deelbare samenvatting",
+        "viewActions": "Bekijk Alle Acties",
+        "viewActionsDesc": "Bekijk alle follow-up opties"
+      },
+      "actionGenerated": {
+        "title": "Actie Gegenereerd!",
+        "description": "Je {actionType} is klaar.",
+        "export": "Exporteren",
+        "exportDesc": "Download of deel de actie",
+        "moreActions": "Meer Acties",
+        "moreActionsDesc": "Maak extra acties"
+      },
+      "generic": {
+        "title": "Goed Bezig!",
+        "description": "Je hebt een taak succesvol voltooid.",
+        "continue": "Doorgaan",
+        "continueDesc": "Ga verder"
+      }
+    },
+    
+    "inlineTips": {
+      "researchForm": {
+        "title": "Pro tip: Wees specifiek",
+        "description": "Voeg de bedrijfswebsite of LinkedIn URL toe voor betere research resultaten."
+      },
+      "contactsEmpty": {
+        "title": "Voeg eerst contacten toe",
+        "description": "Het toevoegen van contactpersonen voordat je een voorbereiding maakt verbetert je meeting resultaten met 40%.",
+        "action": "Contacten toevoegen"
+      },
+      "contactsFew": {
+        "title": "Voeg meer contacten toe",
+        "description": "Met 2-3 contacten heeft Luna meer context voor gepersonaliseerde gespreksstarters."
+      },
+      "prepForm": {
+        "title": "Beste timing",
+        "description": "Maak je voorbereiding 1-2 dagen voor de meeting voor optimale resultaten."
+      },
+      "prepNoContacts": {
+        "title": "Contacten ontbreken",
+        "description": "Je voorbereiding wordt algemener zonder contactpersonen. Voeg eerst contacten toe voor gepersonaliseerde gespreksonderwerpen.",
+        "action": "Voeg eerst contacten toe"
+      },
+      "followupForm": {
+        "title": "Upload je opname",
+        "description": "Upload je meeting opname of transcript om uitgebreide follow-up acties te genereren."
+      },
+      "dealForm": {
+        "title": "Volg je deal",
+        "description": "Het koppelen van deals aan prospects helpt Luna betere pipeline inzichten te geven."
+      },
+      "exportAvailable": {
+        "title": "Export beschikbaar",
+        "description": "Je kunt deze brief exporteren als PDF, Word of Markdown via het dropdown menu."
+      }
+    },
+    
+    "sections": {
+      "priority": "Prioriteit",
+      "suggestions": "Suggesties",
+      "progress": "Voortgang Vandaag",
+      "tip": "Tip van de Dag",
+      "score": "Succes Score",
+      "predictions": "Voorspellingen",
+      "recommendations": "Aanbevelingen"
+    },
+    
+    "actions": {
+      "doIt": "Doen",
+      "later": "Later",
+      "skip": "Overslaan",
+      "snooze1hour": "Snooze 1 uur",
+      "snoozeTonight": "Herinner vanavond",
+      "snoozeTomorrow": "Herinner morgen"
+    },
+    
+    "suggestions": {
+      "addContacts": "Voeg contacten toe aan {company}",
+      "createPrep": "Maak meeting voorbereiding",
+      "uploadFollowup": "Upload meeting opname",
+      "generateReport": "Genereer klantrapport",
+      "reviewCoaching": "Bekijk sales coaching feedback"
+    },
+    
+    "reasons": {
+      "meetingTomorrow": "Meeting morgen om {time}",
+      "meetingIn": "Meeting over {hours} uur",
+      "noContacts": "Nog geen contacten toegevoegd",
+      "prepReady": "Voorbereiding is klaar",
+      "overdue": "{days} dagen sinds laatste activiteit"
+    },
+    
+    "tips": {
+      "contactsImprove": "Contacten toevoegen voor prep verbetert meeting resultaten met 40%",
+      "customerReports": "Klantrapporten verhogen follow-up response rates met 60%",
+      "prepTiming": "De beste preps worden 1-2 dagen voor de meeting gemaakt"
+    },
+    
+    "stats": {
+      "research": "Research",
+      "preps": "Preps",
+      "followups": "Follow-ups",
+      "completed": "vandaag voltooid"
+    },
+    
+    "settings": {
+      "title": "Coach Instellingen",
+      "enabled": "AI Coach Inschakelen",
+      "inlineTips": "Toon inline tips",
+      "completionModals": "Toon voltooiingssuggesties",
+      "quietHours": "Stille uren",
+      "frequency": "Notificatie frequentie",
+      "frequencyOptions": {
+        "minimal": "Minimaal",
+        "normal": "Normaal",
+        "frequent": "Frequent"
+      }
     }
   }
 }
