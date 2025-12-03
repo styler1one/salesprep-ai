@@ -373,8 +373,8 @@ export default function FollowupDetailPage() {
     }
   }
 
-  // Regenerate action - completely non-blocking using setTimeout
-  // This ensures navigation is never blocked by the regeneration process
+  // Regenerate action - TRULY fire-and-forget using Web API directly
+  // This bypasses React completely to ensure navigation is never blocked
   const handleRegenerateAction = (actionId: string) => {
     // Summary is built-in and cannot be regenerated
     if (actionId === 'summary-builtin') {
@@ -398,34 +398,57 @@ export default function FollowupDetailPage() {
       description: t('actions.regeneratingDesc'),
     })
     
-    // Push the actual API work to a new "thread" using setTimeout
-    // This completely breaks out of React's render cycle
-    setTimeout(async () => {
-      try {
-        // Delete the existing action
-        await api.delete(`/api/v1/followup/${followupId}/actions/${actionId}`)
-        
-        // Generate new one
-        const { data, error } = await api.post<FollowupAction>(`/api/v1/followup/${followupId}/actions`, {
-          action_type: action.action_type,
+    // Use native fetch directly (NOT the api client) to completely bypass
+    // any React-related code. Get token once, then fire-and-forget.
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+    
+    // Get auth token synchronously from Supabase storage (no async needed)
+    const supabaseKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'))
+    const authData = supabaseKey ? JSON.parse(localStorage.getItem(supabaseKey) || '{}') : {}
+    const token = authData?.access_token || ''
+    
+    // Fire DELETE then POST using native fetch - completely outside React
+    // Use requestIdleCallback or setTimeout to push to next frame
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(() => {
+        fireRegenerateRequests(apiBase, token, followupId, actionId, action.action_type)
+      })
+    } else {
+      setTimeout(() => {
+        fireRegenerateRequests(apiBase, token, followupId, actionId, action.action_type)
+      }, 0)
+    }
+  }
+  
+  // Helper function that runs completely outside React lifecycle
+  function fireRegenerateRequests(apiBase: string, token: string, followupId: string, actionId: string, actionType: string) {
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    }
+    
+    // Delete existing action
+    fetch(`${apiBase}/api/v1/followup/${followupId}/actions/${actionId}`, {
+      method: 'DELETE',
+      headers,
+    }).then(() => {
+      // Generate new one
+      return fetch(`${apiBase}/api/v1/followup/${followupId}/actions`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          action_type: actionType,
           regenerate: false,
-        })
-        
-        if (error) {
-          console.error('Failed to regenerate action:', error)
-          // Don't update state here - polling will handle it or user will refresh
-        }
-        
-        if (data) {
-          // Update local state with new action
-          setActions(prev => [...prev.filter(a => a.action_type !== action.action_type), data])
-        }
-        
-      } catch (error) {
-        console.error('Failed to regenerate action:', error)
-        // Polling will detect completion/failure
+        }),
+      })
+    }).then(response => {
+      if (!response.ok) {
+        console.error('Regeneration failed:', response.status)
       }
-    }, 0)
+      // Don't update React state - let polling handle it
+    }).catch(error => {
+      console.error('Regeneration error:', error)
+    })
   }
 
   // View action
