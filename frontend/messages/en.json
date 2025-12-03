@@ -280,6 +280,12 @@
       "analysisComplete": "Analysis complete",
       "analysisCompleteDesc": "{name} has been analyzed",
       "addFailed": "Could not add contact",
+      "saved": "Contact saved",
+      "savedDesc": "Your changes have been saved",
+      "saveFailed": "Save failed",
+      "saveFailedDesc": "Could not save contact changes",
+      "editPlaceholder": "Edit the contact analysis...",
+      "openingLines": "Opening Lines",
       "search": {
         "title": "Search Contact",
         "subtitle": "Search for a contact at {company}",

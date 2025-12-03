@@ -82,6 +82,11 @@ export default function ResearchBriefPage() {
   const [editedContent, setEditedContent] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   
+  // Edit contact states
+  const [isEditingContact, setIsEditingContact] = useState(false)
+  const [editedContactBrief, setEditedContactBrief] = useState('')
+  const [isSavingContact, setIsSavingContact] = useState(false)
+  
   // Export states
   const [isExporting, setIsExporting] = useState(false)
 
@@ -298,6 +303,66 @@ export default function ResearchBriefPage() {
     } finally {
       setIsSaving(false)
     }
+  }
+  
+  // Save contact analysis
+  const handleSaveContactBrief = async () => {
+    if (!selectedContact || !editedContactBrief.trim()) return
+    
+    setIsSavingContact(true)
+    try {
+      const { data, error } = await api.patch<Contact>(
+        `/api/v1/contacts/${selectedContact.id}`,
+        { profile_brief: editedContactBrief }
+      )
+      
+      if (error) {
+        toast({
+          title: t('contacts.saveFailed'),
+          description: t('contacts.saveFailedDesc'),
+          variant: 'destructive'
+        })
+        return
+      }
+      
+      // Update local state
+      setContacts(contacts.map(c => 
+        c.id === selectedContact.id 
+          ? { ...c, profile_brief: editedContactBrief }
+          : c
+      ))
+      setSelectedContact({ ...selectedContact, profile_brief: editedContactBrief })
+      setIsEditingContact(false)
+      setEditedContactBrief('')
+      
+      toast({
+        title: t('contacts.saved'),
+        description: t('contacts.savedDesc')
+      })
+    } catch (err) {
+      console.error('Error saving contact:', err)
+      toast({
+        title: t('contacts.saveFailed'),
+        description: t('contacts.saveFailedDesc'),
+        variant: 'destructive'
+      })
+    } finally {
+      setIsSavingContact(false)
+    }
+  }
+  
+  // Start editing contact
+  const handleEditContact = () => {
+    if (selectedContact?.profile_brief) {
+      setEditedContactBrief(selectedContact.profile_brief)
+      setIsEditingContact(true)
+    }
+  }
+  
+  // Cancel editing contact
+  const handleCancelEditContact = () => {
+    setIsEditingContact(false)
+    setEditedContactBrief('')
   }
 
   // Export handlers
@@ -773,70 +838,122 @@ export default function ResearchBriefPage() {
         {selectedContact && selectedContact.analyzed_at && (
           <div 
             className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-            onClick={() => setSelectedContact(null)}
+            onClick={() => { setSelectedContact(null); setIsEditingContact(false); setEditedContactBrief(''); }}
           >
             <div 
               className="bg-white dark:bg-slate-900 rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-xl border border-slate-200 dark:border-slate-700"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
+              <div className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between z-10">
                 <div>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">{selectedContact.name}</h2>
                   {selectedContact.role && (
                     <p className="text-sm text-slate-500 dark:text-slate-400">{selectedContact.role}</p>
                   )}
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => setSelectedContact(null)}>
-                  <Icons.x className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  {isEditingContact ? (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleCancelEditContact}
+                      >
+                        {tCommon('cancel')}
+                      </Button>
+                      <Button 
+                        variant="default"
+                        size="sm"
+                        onClick={handleSaveContactBrief}
+                        disabled={isSavingContact}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        {isSavingContact ? (
+                          <>
+                            <Icons.spinner className="h-4 w-4 mr-2 animate-spin" />
+                            {t('brief.saving')}
+                          </>
+                        ) : (
+                          <>
+                            <Icons.check className="h-4 w-4 mr-2" />
+                            {t('brief.save')}
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleEditContact}
+                    >
+                      <Icons.edit className="h-4 w-4 mr-1" />
+                      {t('brief.edit')}
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={() => { setSelectedContact(null); setIsEditingContact(false); setEditedContactBrief(''); }}>
+                    <Icons.x className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
               <div className="p-6">
-                {selectedContact.profile_brief && (
-                  <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        h1: ({ node, ...props }) => <h1 className="text-xl font-bold mb-3 text-slate-900 dark:text-white" {...props} />,
-                        h2: ({ node, ...props }) => <h2 className="text-lg font-bold mt-4 mb-2 text-slate-900 dark:text-white" {...props} />,
-                        h3: ({ node, ...props }) => <h3 className="text-base font-semibold mt-3 mb-2 text-slate-900 dark:text-white" {...props} />,
-                        p: ({ node, ...props }) => <p className="mb-2 text-sm text-slate-700 dark:text-slate-300" {...props} />,
-                        ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-2 space-y-1 text-sm" {...props} />,
-                        li: ({ node, ...props }) => <li className="ml-2 text-slate-700 dark:text-slate-300" {...props} />,
-                      }}
-                    >
-                      {selectedContact.profile_brief}
-                    </ReactMarkdown>
-                  </div>
-                )}
-                
-                {/* Quick Tips */}
-                {(selectedContact.opening_suggestions?.length || selectedContact.questions_to_ask?.length) && (
-                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                    {selectedContact.opening_suggestions && selectedContact.opening_suggestions.length > 0 && (
-                      <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
-                        <h4 className="font-semibold text-green-700 dark:text-green-300 mb-2 text-sm">
-                          💬 Openingszinnen
-                        </h4>
-                        <ul className="space-y-2">
-                          {selectedContact.opening_suggestions.map((s, i) => (
-                            <li key={i} className="text-sm text-green-800 dark:text-green-200">"{s}"</li>
-                          ))}
-                        </ul>
+                {isEditingContact ? (
+                  <MarkdownEditor
+                    value={editedContactBrief}
+                    onChange={setEditedContactBrief}
+                    placeholder={t('contacts.editPlaceholder')}
+                    className="min-h-[400px]"
+                  />
+                ) : (
+                  <>
+                    {selectedContact.profile_brief && (
+                      <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            h1: ({ node, ...props }) => <h1 className="text-xl font-bold mb-3 text-slate-900 dark:text-white" {...props} />,
+                            h2: ({ node, ...props }) => <h2 className="text-lg font-bold mt-4 mb-2 text-slate-900 dark:text-white" {...props} />,
+                            h3: ({ node, ...props }) => <h3 className="text-base font-semibold mt-3 mb-2 text-slate-900 dark:text-white" {...props} />,
+                            p: ({ node, ...props }) => <p className="mb-2 text-sm text-slate-700 dark:text-slate-300" {...props} />,
+                            ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-2 space-y-1 text-sm" {...props} />,
+                            li: ({ node, ...props }) => <li className="ml-2 text-slate-700 dark:text-slate-300" {...props} />,
+                          }}
+                        >
+                          {selectedContact.profile_brief}
+                        </ReactMarkdown>
                       </div>
                     )}
-                    {selectedContact.questions_to_ask && selectedContact.questions_to_ask.length > 0 && (
-                      <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
-                        <h4 className="font-semibold text-blue-700 dark:text-blue-300 mb-2 text-sm">
-                          ❓ {t('detail.discoveryQuestions')}
-                        </h4>
-                        <ul className="space-y-2">
-                          {selectedContact.questions_to_ask.map((q, i) => (
-                            <li key={i} className="text-sm text-blue-800 dark:text-blue-200">{q}</li>
-                          ))}
-                        </ul>
+                    
+                    {/* Quick Tips */}
+                    {(selectedContact.opening_suggestions?.length || selectedContact.questions_to_ask?.length) && (
+                      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                        {selectedContact.opening_suggestions && selectedContact.opening_suggestions.length > 0 && (
+                          <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
+                            <h4 className="font-semibold text-green-700 dark:text-green-300 mb-2 text-sm">
+                              💬 {t('contacts.openingLines')}
+                            </h4>
+                            <ul className="space-y-2">
+                              {selectedContact.opening_suggestions.map((s, i) => (
+                                <li key={i} className="text-sm text-green-800 dark:text-green-200">"{s}"</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {selectedContact.questions_to_ask && selectedContact.questions_to_ask.length > 0 && (
+                          <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <h4 className="font-semibold text-blue-700 dark:text-blue-300 mb-2 text-sm">
+                              ❓ {t('detail.discoveryQuestions')}
+                            </h4>
+                            <ul className="space-y-2">
+                              {selectedContact.questions_to_ask.map((q, i) => (
+                                <li key={i} className="text-sm text-blue-800 dark:text-blue-200">{q}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     )}
-                  </div>
+                  </>
                 )}
               </div>
             </div>

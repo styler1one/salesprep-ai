@@ -345,13 +345,15 @@ def analyze_contact_background(
     # User-provided info
     linkedin_about: Optional[str] = None,
     linkedin_experience: Optional[str] = None,
-    additional_notes: Optional[str] = None
+    additional_notes: Optional[str] = None,
+    # i18n: output language
+    language: str = "en"
 ):
     """Background task to analyze contact."""
     import asyncio
     
     try:
-        logger.info(f"Starting contact analysis for {contact_name}")
+        logger.info(f"Starting contact analysis for {contact_name} in language: {language}")
         
         analyzer = get_contact_analyzer()
         
@@ -368,13 +370,14 @@ def analyze_contact_background(
         if additional_notes:
             user_provided_context["notes"] = additional_notes
         
-        # Run analysis
+        # Run analysis with language setting
         analysis = asyncio.run(analyzer.analyze_contact(
             contact_name=contact_name,
             contact_role=contact_role,
             linkedin_url=linkedin_url,
             company_context=company_context,
             seller_context=seller_context,
+            language=language,
             user_provided_context=user_provided_context if user_provided_context else None
         ))
         
@@ -507,6 +510,20 @@ async def add_contact_to_research(
     user_id = current_user.get("sub")
     organization_id = get_organization_id(user_id)
     
+    # Get user's preferred output language from settings
+    output_language = "en"  # Default to English
+    try:
+        settings_response = supabase_service.table("user_settings")\
+            .select("default_output_language")\
+            .eq("user_id", user_id)\
+            .single()\
+            .execute()
+        if settings_response.data and settings_response.data.get("default_output_language"):
+            output_language = settings_response.data["default_output_language"]
+            logger.info(f"Using user's output language: {output_language}")
+    except Exception as e:
+        logger.warning(f"Could not get user settings, using default language: {e}")
+    
     # Get prospect_id from research
     prospect_id = get_prospect_id_from_research(research_id, organization_id)
     
@@ -536,7 +553,7 @@ async def add_contact_to_research(
         
         created_contact = result.data[0]
         
-        # Start background analysis
+        # Start background analysis with user's language preference
         background_tasks.add_task(
             analyze_contact_background,
             contact_id,
@@ -548,7 +565,8 @@ async def add_contact_to_research(
             user_id,
             contact.linkedin_about,
             contact.linkedin_experience,
-            contact.additional_notes
+            contact.additional_notes,
+            output_language
         )
         
         return ContactResponse(
@@ -763,6 +781,98 @@ async def get_contact(
     )
 
 
+class ContactUpdate(BaseModel):
+    """Request model for updating a contact."""
+    name: Optional[str] = None
+    role: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    is_primary: Optional[bool] = None
+    profile_brief: Optional[str] = None  # For editing the analysis
+
+
+@router.patch("/contacts/{contact_id}", response_model=ContactResponse)
+async def update_contact(
+    contact_id: str,
+    updates: ContactUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Update a contact's information or analysis.
+    
+    Can be used to:
+    - Edit contact details (name, role, email, phone)
+    - Edit the profile_brief (analysis content)
+    - Set/unset primary contact status
+    """
+    user_id = current_user.get("sub")
+    organization_id = get_organization_id(user_id)
+    
+    # Verify contact exists and belongs to org
+    check = supabase_service.table("prospect_contacts")\
+        .select("*")\
+        .eq("id", contact_id)\
+        .eq("organization_id", organization_id)\
+        .single()\
+        .execute()
+    
+    if not check.data:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    
+    # Build update dict from non-None fields
+    update_data = {}
+    if updates.name is not None:
+        update_data["name"] = updates.name
+    if updates.role is not None:
+        update_data["role"] = updates.role
+    if updates.email is not None:
+        update_data["email"] = updates.email
+    if updates.phone is not None:
+        update_data["phone"] = updates.phone
+    if updates.linkedin_url is not None:
+        update_data["linkedin_url"] = updates.linkedin_url
+    if updates.is_primary is not None:
+        update_data["is_primary"] = updates.is_primary
+    if updates.profile_brief is not None:
+        update_data["profile_brief"] = updates.profile_brief
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No updates provided")
+    
+    # Update
+    result = supabase_service.table("prospect_contacts")\
+        .update(update_data)\
+        .eq("id", contact_id)\
+        .execute()
+    
+    if not result.data:
+        raise HTTPException(status_code=500, detail="Failed to update contact")
+    
+    c = result.data[0]
+    logger.info(f"Updated contact {contact_id}: {list(update_data.keys())}")
+    
+    return ContactResponse(
+        id=c["id"],
+        prospect_id=c["prospect_id"],
+        name=c["name"],
+        role=c.get("role"),
+        email=c.get("email"),
+        phone=c.get("phone"),
+        linkedin_url=c.get("linkedin_url"),
+        communication_style=c.get("communication_style"),
+        decision_authority=c.get("decision_authority"),
+        probable_drivers=c.get("probable_drivers"),
+        profile_brief=c.get("profile_brief"),
+        opening_suggestions=c.get("opening_suggestions"),
+        questions_to_ask=c.get("questions_to_ask"),
+        topics_to_avoid=c.get("topics_to_avoid"),
+        is_primary=c.get("is_primary", False),
+        analyzed_at=c.get("analyzed_at"),
+        created_at=c["created_at"]
+    )
+
+
 @router.delete("/contacts/{contact_id}")
 async def delete_contact(
     contact_id: str,
@@ -801,6 +911,19 @@ async def reanalyze_contact(
     user_id = current_user.get("sub")
     organization_id = get_organization_id(user_id)
     
+    # Get user's preferred output language from settings
+    output_language = "en"  # Default to English
+    try:
+        settings_response = supabase_service.table("user_settings")\
+            .select("default_output_language")\
+            .eq("user_id", user_id)\
+            .single()\
+            .execute()
+        if settings_response.data and settings_response.data.get("default_output_language"):
+            output_language = settings_response.data["default_output_language"]
+    except Exception:
+        pass
+    
     # Get contact
     response = supabase_service.table("prospect_contacts")\
         .select("*, prospects(id)")\
@@ -837,7 +960,7 @@ async def reanalyze_contact(
         .eq("id", contact_id)\
         .execute()
     
-    # Start background analysis
+    # Start background analysis with user's language preference
     background_tasks.add_task(
         analyze_contact_background,
         contact_id,
@@ -846,7 +969,11 @@ async def reanalyze_contact(
         contact.get("linkedin_url"),
         research_id,
         organization_id,
-        user_id
+        user_id,
+        None,  # linkedin_about
+        None,  # linkedin_experience
+        None,  # additional_notes
+        output_language
     )
     
     return ContactResponse(
