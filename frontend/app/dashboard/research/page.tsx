@@ -16,6 +16,7 @@ import { useTranslations } from 'next-intl'
 import { useSettings } from '@/lib/settings-context'
 import { api } from '@/lib/api'
 import { CoachInlineTip } from '@/components/coach'
+import { useConfirmDialog } from '@/components/confirm-dialog'
 import type { User } from '@supabase/supabase-js'
 import type { ResearchBrief, CompanyOption } from '@/types'
 
@@ -23,6 +24,7 @@ export default function ResearchPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const { toast } = useToast()
+  const { confirm } = useConfirmDialog()
   const t = useTranslations('research')
   const tLang = useTranslations('language')
   const tCommon = useTranslations('common')
@@ -253,6 +255,17 @@ export default function ResearchPage() {
 
   const handleDeleteBrief = async (briefId: string, e: React.MouseEvent) => {
     e.stopPropagation()
+    
+    const confirmed = await confirm({
+      title: t('confirm.deleteTitle'),
+      description: t('confirm.deleteDescription'),
+      confirmLabel: t('confirm.deleteButton'),
+      cancelLabel: t('confirm.cancelButton'),
+      variant: 'danger'
+    })
+    
+    if (!confirmed) return
+    
     try {
       // Note: api client handles authentication automatically
       const { error } = await api.delete(`/api/v1/research/${briefId}`)

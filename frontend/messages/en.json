@@ -191,6 +191,12 @@
       "loadFailed": "Could not load brief",
       "loadFailedDesc": "An error occurred while loading the research brief"
     },
+    "confirm": {
+      "deleteTitle": "Delete Research?",
+      "deleteDescription": "This will permanently delete this research brief. This action cannot be undone.",
+      "deleteButton": "Delete",
+      "cancelButton": "Cancel"
+    },
     "history": {
       "title": "My Prospects",
       "empty": "No research yet",
@@ -427,7 +433,10 @@
       "loadFailedDesc": "An error occurred"
     },
     "confirm": {
-      "delete": "Are you sure you want to delete this preparation?"
+      "deleteTitle": "Delete Preparation?",
+      "deleteDescription": "This will permanently delete this meeting preparation. This action cannot be undone.",
+      "deleteButton": "Delete",
+      "cancelButton": "Cancel"
     },
     "detail": {
       "meetingContext": "Meeting Context",
@@ -626,7 +635,10 @@
       "uploadStartedDesc": "Your file is being processed"
     },
     "confirm": {
-      "delete": "Are you sure you want to delete this follow-up?"
+      "deleteTitle": "Delete Follow-up?",
+      "deleteDescription": "This will permanently delete this follow-up and all associated actions. This action cannot be undone.",
+      "deleteButton": "Delete",
+      "cancelButton": "Cancel"
     },
     "sections": {
       "keyPoints": "Key Points",

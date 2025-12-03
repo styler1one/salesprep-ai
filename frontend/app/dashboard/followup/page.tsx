@@ -16,6 +16,7 @@ import { ProspectAutocomplete } from '@/components/prospect-autocomplete'
 import { LanguageSelect } from '@/components/language-select'
 import { useTranslations } from 'next-intl'
 import { useSettings } from '@/lib/settings-context'
+import { useConfirmDialog } from '@/components/confirm-dialog'
 import type { User } from '@supabase/supabase-js'
 import type { ProspectContact, Deal } from '@/types'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -36,6 +37,7 @@ export default function FollowupPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const { toast } = useToast()
+  const { confirm } = useConfirmDialog()
   const t = useTranslations('followup')
   const tCommon = useTranslations('common')
   const tLang = useTranslations('language')
@@ -328,7 +330,16 @@ export default function FollowupPage() {
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!confirm(t('confirm.delete'))) return
+    
+    const confirmed = await confirm({
+      title: t('confirm.deleteTitle'),
+      description: t('confirm.deleteDescription'),
+      confirmLabel: t('confirm.deleteButton'),
+      cancelLabel: t('confirm.cancelButton'),
+      variant: 'danger'
+    })
+    
+    if (!confirmed) return
 
     try {
       const { error } = await api.delete(`/api/v1/followup/${id}`)

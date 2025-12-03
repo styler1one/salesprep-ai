@@ -17,6 +17,7 @@ import { LanguageSelect } from '@/components/language-select'
 import { useTranslations } from 'next-intl'
 import { useSettings } from '@/lib/settings-context'
 import { api } from '@/lib/api'
+import { useConfirmDialog } from '@/components/confirm-dialog'
 import type { User } from '@supabase/supabase-js'
 import type { ProspectContact, Deal } from '@/types'
 
@@ -40,6 +41,7 @@ export default function PreparationPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const { toast } = useToast()
+  const { confirm } = useConfirmDialog()
   const t = useTranslations('preparation')
   const tLang = useTranslations('language')
   const { settings, loaded: settingsLoaded } = useSettings()
@@ -239,7 +241,16 @@ export default function PreparationPage() {
 
   const deletePrep = async (prepId: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!confirm(t('confirm.delete'))) return
+    
+    const confirmed = await confirm({
+      title: t('confirm.deleteTitle'),
+      description: t('confirm.deleteDescription'),
+      confirmLabel: t('confirm.deleteButton'),
+      cancelLabel: t('confirm.cancelButton'),
+      variant: 'danger'
+    })
+    
+    if (!confirmed) return
 
     try {
       // Note: api client handles authentication automatically
