@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, startTransition } from 'react'
-import { useRouter, useParams, useSearchParams } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -20,7 +20,7 @@ import { useTranslations } from 'next-intl'
 import { api } from '@/lib/api'
 import { exportAsMarkdown, exportAsPdf, exportAsDocx } from '@/lib/export-utils'
 import { ActionsGrid } from '@/components/followup/action-card'
-import { ActionSheet, useActionSheet } from '@/components/followup/action-sheet'
+import { ActionPanel } from '@/components/followup/action-panel'
 import { ACTION_TYPES, type FollowupAction, type ActionType, type ActionsListResponse } from '@/types/followup-actions'
 import type { User } from '@supabase/supabase-js'
 
@@ -133,11 +133,7 @@ export default function FollowupDetailPage() {
   // Actions states
   const [actions, setActions] = useState<FollowupAction[]>([])
   const [generatingActionType, setGeneratingActionType] = useState<ActionType | null>(null)
-  
-  // URL-based action sheet (renders in Portal for isolation)
-  const { openAction } = useActionSheet()
-  const searchParams = useSearchParams()
-  const selectedActionType = searchParams.get('action')
+  const [selectedAction, setSelectedAction] = useState<FollowupAction | null>(null)
 
   useEffect(() => {
     // Get user for display purposes (non-blocking)
@@ -284,13 +280,25 @@ export default function FollowupDetailPage() {
       }
     }
   }, [actions, generatingActionType, toast, t])
+  
+  // Keep selectedAction in sync with actions array (for live updates after regeneration)
+  useEffect(() => {
+    if (selectedAction && selectedAction.id !== 'summary-builtin') {
+      const updatedAction = actions.find(a => a.id === selectedAction.id)
+      if (updatedAction && updatedAction.content !== selectedAction.content) {
+        setSelectedAction(updatedAction)
+      }
+    }
+  }, [actions, selectedAction])
 
   // Generate a new action - fire-and-forget pattern
   const handleGenerateAction = async (actionType: ActionType) => {
     // Summary is built-in, not generated via API
     if (actionType === 'summary') {
-      // Summary is built-in - just open the sheet via URL
-      openAction('summary')
+      const summaryAction = buildSummaryAction()
+      if (summaryAction) {
+        setSelectedAction(summaryAction)
+      }
       return
     }
     
@@ -464,9 +472,9 @@ export default function FollowupDetailPage() {
     })
   }
 
-  // View action - opens in URL-based side sheet (Portal)
+  // View action - shows inline panel
   const handleViewAction = (action: FollowupAction) => {
-    openAction(action.action_type)
+    setSelectedAction(action)
   }
 
   useEffect(() => {
@@ -846,6 +854,20 @@ export default function FollowupDetailPage() {
                     disabled={!!generatingActionType}
                     generatingType={generatingActionType}
                   />
+                  
+                  {/* Selected Action Panel - Inline Display */}
+                  {selectedAction && (
+                    <div className="mt-6 border-t pt-6">
+                      <ActionPanel
+                        action={selectedAction}
+                        companyName={followup?.prospect_company_name || 'Followup'}
+                        onUpdate={handleUpdateAction}
+                        onDelete={handleDeleteAction}
+                        onRegenerate={handleRegenerateAction}
+                        onClose={() => setSelectedAction(null)}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Commercial Signals (Legacy) */}
@@ -1184,16 +1206,6 @@ export default function FollowupDetailPage() {
         </div>
       
         <Toaster />
-        
-        {/* Action Sheet - Renders in Portal (isolated from main React tree) */}
-        <ActionSheet
-          actions={allActions}
-          companyName={followup?.prospect_company_name || 'Followup'}
-          onUpdate={handleUpdateAction}
-          onDelete={handleDeleteAction}
-          onRegenerate={handleRegenerateAction}
-          generatingType={generatingActionType}
-        />
       </>
     </DashboardLayout>
   )
