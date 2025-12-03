@@ -288,7 +288,7 @@ export default function PreparationDetailPage() {
     exportAsMarkdown(prep.brief_content, prep.prospect_company_name)
     toast({
       title: t('brief.copied'),
-      description: 'Markdown file downloaded',
+      description: tCommon('export.markdownDownloaded'),
     })
   }
 
@@ -299,14 +299,14 @@ export default function PreparationDetailPage() {
       await exportAsPdf(prep.brief_content, prep.prospect_company_name, `${prep.prospect_company_name} - Meeting Prep`)
       toast({
         title: t('brief.copied'),
-        description: 'PDF file downloaded',
+        description: tCommon('export.pdfDownloaded'),
       })
     } catch (error) {
       console.error('PDF export failed:', error)
       toast({
         variant: 'destructive',
         title: t('brief.saveFailed'),
-        description: 'Failed to export PDF',
+        description: tCommon('export.pdfFailed'),
       })
     } finally {
       setIsExporting(false)
@@ -320,14 +320,14 @@ export default function PreparationDetailPage() {
       await exportAsDocx(prep.brief_content, prep.prospect_company_name, `${prep.prospect_company_name} - Meeting Prep`)
       toast({
         title: t('brief.copied'),
-        description: 'Word file downloaded',
+        description: tCommon('export.wordDownloaded'),
       })
     } catch (error) {
       console.error('DOCX export failed:', error)
       toast({
         variant: 'destructive',
         title: t('brief.saveFailed'),
-        description: 'Failed to export Word document',
+        description: tCommon('export.wordFailed'),
       })
     } finally {
       setIsExporting(false)

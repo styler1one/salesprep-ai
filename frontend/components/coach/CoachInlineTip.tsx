@@ -36,60 +36,52 @@ interface InlineTipConfig {
 }
 
 /**
- * Pre-configured inline tips
+ * Pre-configured inline tips - icons and settings only
+ * Labels and descriptions come from translations
  */
-const INLINE_TIPS: Record<InlineTipType, Omit<InlineTipConfig, 'id' | 'type'>> = {
-  research_form: {
-    icon: '🔍',
-    title: 'Pro tip: Be specific',
-    description: 'Include the company website or LinkedIn URL for better research results.',
-    dismissable: true,
-  },
-  contacts_empty: {
-    icon: '👤',
-    title: 'Add contacts first',
-    description: 'Adding contact persons before creating a preparation improves your meeting outcomes by 40%.',
-    actionLabel: 'Add contacts',
-    dismissable: true,
-  },
-  contacts_few: {
-    icon: '👥',
-    title: 'Add more contacts',
-    description: 'Having 2-3 contacts gives Luna more context for personalized conversation starters.',
-    dismissable: true,
-  },
-  prep_form: {
-    icon: '📋',
-    title: 'Best timing',
-    description: 'Create your preparation 1-2 days before the meeting for optimal results.',
-    dismissable: true,
-  },
-  prep_no_contacts: {
-    icon: '⚠️',
-    title: 'Missing contacts',
-    description: 'Your preparation will be more generic without contact persons. Add contacts first for personalized talking points.',
-    actionLabel: 'Add contacts first',
-    dismissable: true,
-  },
-  followup_form: {
-    icon: '🎙️',
-    title: 'Upload your recording',
-    description: 'Upload your meeting recording or transcript to generate comprehensive follow-up actions.',
-    dismissable: true,
-  },
-  deal_form: {
-    icon: '💼',
-    title: 'Track your deal',
-    description: 'Linking deals to prospects helps Luna provide better pipeline insights.',
-    dismissable: true,
-  },
-  export_available: {
-    icon: '📤',
-    title: 'Export available',
-    description: 'You can export this brief as PDF, Word, or Markdown using the dropdown menu.',
-    dismissable: true,
-    showOnce: true,
-  },
+const INLINE_TIPS_CONFIG: Record<InlineTipType, { icon: string; dismissable: boolean; showOnce?: boolean; hasAction?: boolean }> = {
+  research_form: { icon: '🔍', dismissable: true },
+  contacts_empty: { icon: '👤', dismissable: true, hasAction: true },
+  contacts_few: { icon: '👥', dismissable: true },
+  prep_form: { icon: '📋', dismissable: true },
+  prep_no_contacts: { icon: '⚠️', dismissable: true, hasAction: true },
+  followup_form: { icon: '🎙️', dismissable: true },
+  deal_form: { icon: '💼', dismissable: true },
+  export_available: { icon: '📤', dismissable: true, showOnce: true },
+}
+
+/**
+ * Get inline tip configuration with translated strings
+ */
+function getInlineTipConfig(
+  type: InlineTipType,
+  t: (key: string) => string
+): Omit<InlineTipConfig, 'id' | 'type'> {
+  const config = INLINE_TIPS_CONFIG[type]
+  const translationKey = type.replace(/_/g, '') // research_form -> researchForm style handled in translations
+  
+  // Map type to translation key (snake_case to camelCase for translation keys)
+  const keyMap: Record<InlineTipType, string> = {
+    research_form: 'researchForm',
+    contacts_empty: 'contactsEmpty',
+    contacts_few: 'contactsFew',
+    prep_form: 'prepForm',
+    prep_no_contacts: 'prepNoContacts',
+    followup_form: 'followupForm',
+    deal_form: 'dealForm',
+    export_available: 'exportAvailable',
+  }
+  
+  const key = keyMap[type]
+  
+  return {
+    icon: config.icon,
+    title: t(`inlineTips.${key}.title`),
+    description: t(`inlineTips.${key}.description`),
+    actionLabel: config.hasAction ? t(`inlineTips.${key}.action`) : undefined,
+    dismissable: config.dismissable,
+    showOnce: config.showOnce,
+  }
 }
 
 interface CoachInlineTipProps {
@@ -120,10 +112,11 @@ export function CoachInlineTip({
   config: overrideConfig,
   tipId,
 }: CoachInlineTipProps) {
+  const t = useTranslations('coach')
   const { settings, dismissTipId, isDismissed } = useCoach()
   const [visible, setVisible] = useState(true)
   
-  const baseConfig = INLINE_TIPS[type]
+  const baseConfig = getInlineTipConfig(type, t)
   const config: InlineTipConfig = {
     ...baseConfig,
     ...overrideConfig,
@@ -222,10 +215,11 @@ export function CoachInlineTipCompact({
   className,
   tipId,
 }: Pick<CoachInlineTipProps, 'type' | 'className' | 'tipId'>) {
+  const t = useTranslations('coach')
   const { settings, isDismissed } = useCoach()
   const [visible, setVisible] = useState(true)
   
-  const config = INLINE_TIPS[type]
+  const config = getInlineTipConfig(type, t)
   const id = tipId || `inline-${type}`
   
   useEffect(() => {

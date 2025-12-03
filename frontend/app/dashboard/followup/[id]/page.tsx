@@ -18,6 +18,8 @@ import {
 import { MarkdownEditor } from '@/components/markdown-editor'
 import { useTranslations } from 'next-intl'
 import { api } from '@/lib/api'
+
+// Note: We use multiple translation namespaces for reusable strings
 import { exportAsMarkdown, exportAsPdf, exportAsDocx } from '@/lib/export-utils'
 import { ActionsGrid } from '@/components/followup/action-card'
 import { ActionPanel } from '@/components/followup/action-panel'
@@ -274,7 +276,7 @@ export default function FollowupDetailPage() {
         toast({
           title: t('actions.generated'),
           description: t('actions.generatedDesc', { 
-            actionType: ACTION_TYPES.find(a => a.type === generatingActionType)?.label || generatingActionType 
+            actionType: t(`actions.types.${generatingActionType}.label`)
           }),
         })
       }
@@ -328,7 +330,7 @@ export default function FollowupDetailPage() {
       // Show feedback - generation runs in background, polling will pick up completion
       toast({ 
         title: t('actions.generating'),
-        description: t('actions.generatingDesc', { actionType: ACTION_TYPES.find(a => a.type === actionType)?.label || actionType }),
+        description: t('actions.generatingDesc', { actionType: t(`actions.types.${actionType}.label`) }),
       })
       
       // NOTE: Don't await fetchActions() here - let polling handle it
@@ -360,7 +362,7 @@ export default function FollowupDetailPage() {
   const handleUpdateAction = async (actionId: string, content: string) => {
     // Summary is built-in and not editable via API
     if (actionId === 'summary-builtin') {
-      toast({ title: 'Summary cannot be edited here', variant: 'destructive' })
+      toast({ title: t('actions.summaryCannotEdit'), variant: 'destructive' })
       return
     }
     
@@ -380,7 +382,7 @@ export default function FollowupDetailPage() {
   const handleDeleteAction = async (actionId: string) => {
     // Summary is built-in and cannot be deleted
     if (actionId === 'summary-builtin') {
-      toast({ title: 'Summary cannot be deleted', variant: 'destructive' })
+      toast({ title: t('actions.summaryCannotDelete'), variant: 'destructive' })
       return
     }
     
@@ -400,7 +402,7 @@ export default function FollowupDetailPage() {
   const handleRegenerateAction = (actionId: string) => {
     // Summary is built-in and cannot be regenerated
     if (actionId === 'summary-builtin') {
-      toast({ title: 'Summary cannot be regenerated', variant: 'destructive' })
+      toast({ title: t('actions.summaryCannotRegenerate'), variant: 'destructive' })
       return
     }
     
@@ -674,8 +676,8 @@ export default function FollowupDetailPage() {
     if (!content) return
     exportAsMarkdown(content, followup?.prospect_company_name || 'followup')
     toast({
-      title: t('toast.copied'),
-      description: 'Markdown file downloaded',
+      title: t('actions.mdDownloaded'),
+      description: tCommon('export.markdownDownloaded'),
     })
   }
 
@@ -686,15 +688,15 @@ export default function FollowupDetailPage() {
     try {
       await exportAsPdf(content, followup?.prospect_company_name || 'followup', `${followup?.prospect_company_name || 'Meeting'} - Follow-up`)
       toast({
-        title: t('toast.copied'),
-        description: 'PDF file downloaded',
+        title: t('actions.pdfDownloaded'),
+        description: tCommon('export.pdfDownloaded'),
       })
     } catch (error) {
       console.error('PDF export failed:', error)
       toast({
         variant: 'destructive',
         title: t('toast.failed'),
-        description: 'Failed to export PDF',
+        description: tCommon('export.pdfFailed'),
       })
     } finally {
       setIsExporting(false)
@@ -708,15 +710,15 @@ export default function FollowupDetailPage() {
     try {
       await exportAsDocx(content, followup?.prospect_company_name || 'followup', `${followup?.prospect_company_name || 'Meeting'} - Follow-up`)
       toast({
-        title: t('toast.copied'),
-        description: 'Word file downloaded',
+        title: t('actions.docxDownloaded'),
+        description: tCommon('export.wordDownloaded'),
       })
     } catch (error) {
       console.error('DOCX export failed:', error)
       toast({
         variant: 'destructive',
         title: t('toast.failed'),
-        description: 'Failed to export Word document',
+        description: tCommon('export.wordFailed'),
       })
     } finally {
       setIsExporting(false)

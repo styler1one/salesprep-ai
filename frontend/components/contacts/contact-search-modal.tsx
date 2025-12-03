@@ -201,8 +201,8 @@ export function ContactSearchModal({
       if (error) {
         toast({
           variant: 'destructive',
-          title: 'Error',
-          description: error.message || 'Failed to add contact'
+          title: t('contacts.search.errorTitle'),
+          description: error.message || t('contacts.search.errorAddFailed')
         })
         setIsAdding(false)
         return
@@ -211,7 +211,7 @@ export function ContactSearchModal({
       if (data) {
         toast({
           title: '✅ ' + t('contacts.search.addAndAnalyze'),
-          description: `${name} added. Analysis starting...`
+          description: t('contacts.addedDesc')
         })
         onContactAdded(data)
         handleClose()
@@ -219,8 +219,8 @@ export function ContactSearchModal({
     } catch (err) {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add contact'
+        title: t('contacts.search.errorTitle'),
+        description: t('contacts.search.errorAddFailed')
       })
     } finally {
       setIsAdding(false)

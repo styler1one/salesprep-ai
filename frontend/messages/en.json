@@ -78,7 +78,16 @@
     "and": "and",
     "upload": "Upload Documents",
     "download": "Download",
-    "extraOptions": "Extra options"
+    "extraOptions": "Extra options",
+    "confirm": "Confirm",
+    "processing": "Processing...",
+    "export": {
+      "markdownDownloaded": "Markdown file downloaded",
+      "pdfDownloaded": "PDF file downloaded",
+      "wordDownloaded": "Word file downloaded",
+      "pdfFailed": "Failed to export PDF",
+      "wordFailed": "Failed to export Word document"
+    }
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -139,7 +148,14 @@
     "usageLimitReached": "Usage limit reached. Upgrade your plan to continue.",
     "tryAgain": "Try again",
     "goBack": "Go back",
-    "contactSupport": "Contact support if this problem persists"
+    "contactSupport": "Contact support if this problem persists",
+    "globalError": {
+      "title": "Something went wrong",
+      "description": "An unexpected error occurred. Our team has been notified and is working on a fix.",
+      "tryAgain": "Try again",
+      "goToDashboard": "Go to Dashboard",
+      "devDetails": "Error details (development only)"
+    }
   },
   "research": {
     "title": "Research Agent",
@@ -332,7 +348,9 @@
           "exact": "Name + Company + Role exact match",
           "partial": "Name match, different details",
           "nameOnly": "Name match only"
-        }
+        },
+        "errorTitle": "Error",
+        "errorAddFailed": "Failed to add contact"
       }
     },
     "context": {
@@ -567,6 +585,10 @@
       "alreadyExistsDesc": "This action was already generated. Click to view it.",
       "generationFailedDesc": "An error occurred. Please try regenerating.",
       "tryAgain": "Try Again",
+      "summaryReadOnly": "Summary is read-only",
+      "summaryCannotEdit": "The summary cannot be edited here. Edit the main summary above.",
+      "summaryCannotDelete": "The summary cannot be deleted",
+      "summaryCannotRegenerate": "The summary cannot be regenerated here",
       "contextUsed": "Context used",
       "wordsGenerated": "words",
       "generatingContent": "Generating content...",
@@ -1336,6 +1358,92 @@
       "hideForToday": "Hide for today",
       "allCaughtUp": "All caught up!",
       "greatWork": "Great work! Check back later for new suggestions."
+    },
+    
+    "completion": {
+      "researchComplete": {
+        "title": "Research Complete!",
+        "description": "Great work! Your research on {company} is ready. What would you like to do next?",
+        "addContacts": "Add Contacts",
+        "addContactsDesc": "Add key people to talk to",
+        "createPrep": "Create Preparation",
+        "createPrepDesc": "Start meeting prep now"
+      },
+      "contactsAdded": {
+        "title": "Contacts Added!",
+        "description": "You've added {count} to {company}. Luna can now generate personalized conversation starters.",
+        "createPrep": "Create Preparation",
+        "createPrepDesc": "Get personalized talking points",
+        "addMore": "Add More Contacts",
+        "addMoreDesc": "Find more people to connect with"
+      },
+      "prepReady": {
+        "title": "Prep Ready!",
+        "description": "Your meeting preparation for {company} is complete. Good luck with your meeting!",
+        "viewPrep": "View Preparation",
+        "viewPrepDesc": "Review your preparation",
+        "addFollowup": "Add Follow-up Later",
+        "addFollowupDesc": "Create follow-up later"
+      },
+      "followupComplete": {
+        "title": "Follow-up Created!",
+        "description": "Your meeting follow-up is ready. Generate actions to make the most of your meeting.",
+        "generateReport": "Generate Report",
+        "generateReportDesc": "Create a shareable summary",
+        "viewActions": "View All Actions",
+        "viewActionsDesc": "See all follow-up options"
+      },
+      "actionGenerated": {
+        "title": "Action Generated!",
+        "description": "Your {actionType} is ready.",
+        "export": "Export",
+        "exportDesc": "Download or share the action",
+        "moreActions": "More Actions",
+        "moreActionsDesc": "Create additional actions"
+      },
+      "generic": {
+        "title": "Great Work!",
+        "description": "You completed a task successfully.",
+        "continue": "Continue",
+        "continueDesc": "Keep going"
+      }
+    },
+    
+    "inlineTips": {
+      "researchForm": {
+        "title": "Pro tip: Be specific",
+        "description": "Include the company website or LinkedIn URL for better research results."
+      },
+      "contactsEmpty": {
+        "title": "Add contacts first",
+        "description": "Adding contact persons before creating a preparation improves your meeting outcomes by 40%.",
+        "action": "Add contacts"
+      },
+      "contactsFew": {
+        "title": "Add more contacts",
+        "description": "Having 2-3 contacts gives Luna more context for personalized conversation starters."
+      },
+      "prepForm": {
+        "title": "Best timing",
+        "description": "Create your preparation 1-2 days before the meeting for optimal results."
+      },
+      "prepNoContacts": {
+        "title": "Missing contacts",
+        "description": "Your preparation will be more generic without contact persons. Add contacts first for personalized talking points.",
+        "action": "Add contacts first"
+      },
+      "followupForm": {
+        "title": "Upload your recording",
+        "description": "Upload your meeting recording or transcript to generate comprehensive follow-up actions."
+      },
+      "dealForm": {
+        "title": "Track your deal",
+        "description": "Linking deals to prospects helps Luna provide better pipeline insights."
+      },
+      "exportAvailable": {
+        "title": "Export available",
+        "description": "You can export this brief as PDF, Word, or Markdown using the dropdown menu."
+      }
     },
     
     "sections": {

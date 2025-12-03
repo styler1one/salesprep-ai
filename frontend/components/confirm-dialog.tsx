@@ -1,6 +1,7 @@
 'use client'
 
 import { ReactNode, useState, createContext, useContext, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
 import { cn } from '@/lib/utils'
@@ -159,13 +160,20 @@ function ConfirmDialogModal({
   isLoading,
   title,
   description,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel,
+  cancelLabel,
   variant = 'default',
   icon,
   onConfirm,
   onCancel,
 }: ConfirmDialogModalProps) {
+  const t = useTranslations('common')
+  
+  // Use translations as defaults if not provided
+  const finalConfirmLabel = confirmLabel || t('confirm')
+  const finalCancelLabel = cancelLabel || t('cancel')
+  const processingLabel = t('processing')
+  
   if (!isOpen) return null
 
   const variantConfig = {
@@ -231,7 +239,7 @@ function ConfirmDialogModal({
               onClick={onCancel}
               disabled={isLoading}
             >
-              {cancelLabel}
+              {finalCancelLabel}
             </Button>
             <Button
               className={cn('flex-1', config.buttonClass)}
@@ -241,10 +249,10 @@ function ConfirmDialogModal({
               {isLoading ? (
                 <>
                   <Icons.spinner className="h-4 w-4 mr-2 animate-spin" />
-                  Processing...
+                  {processingLabel}
                 </>
               ) : (
-                confirmLabel
+                finalConfirmLabel
               )}
             </Button>
           </div>

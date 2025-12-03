@@ -42,10 +42,12 @@ interface CompletionConfig {
 
 /**
  * Get completion configuration based on type and context
+ * @param t - Translation function from useTranslations('coach')
  */
 function getCompletionConfig(
   type: CompletionType, 
-  context?: Record<string, unknown>
+  context: Record<string, unknown> | undefined,
+  t: (key: string, values?: Record<string, unknown>) => string
 ): CompletionConfig {
   const companyName = (context?.companyName as string) || 'the company'
   
@@ -53,20 +55,20 @@ function getCompletionConfig(
     case 'research_completed':
       return {
         icon: '🎉',
-        title: 'Research Complete!',
-        description: `Great work! Your research on ${companyName} is ready. What would you like to do next?`,
+        title: t('completion.researchComplete.title'),
+        description: t('completion.researchComplete.description', { company: companyName }),
         nextSteps: [
           {
-            label: 'Add Contacts',
-            description: 'Add key people to talk to',
+            label: t('completion.researchComplete.addContacts'),
+            description: t('completion.researchComplete.addContactsDesc'),
             route: context?.researchId 
               ? `/dashboard/research/${context.researchId}` 
               : '/dashboard/research',
             primary: true,
           },
           {
-            label: 'Create Preparation',
-            description: 'Start meeting prep now',
+            label: t('completion.researchComplete.createPrep'),
+            description: t('completion.researchComplete.createPrepDesc'),
             route: '/dashboard/preparation/new',
           },
         ],
@@ -75,18 +77,18 @@ function getCompletionConfig(
     case 'contacts_added':
       return {
         icon: '👤',
-        title: 'Contacts Added!',
-        description: `You've added ${context?.contactCount || 'contacts'} to ${companyName}. Luna can now generate personalized conversation starters.`,
+        title: t('completion.contactsAdded.title'),
+        description: t('completion.contactsAdded.description', { count: context?.contactCount || 'contacts', company: companyName }),
         nextSteps: [
           {
-            label: 'Create Preparation',
-            description: 'Get personalized talking points',
+            label: t('completion.contactsAdded.createPrep'),
+            description: t('completion.contactsAdded.createPrepDesc'),
             route: '/dashboard/preparation/new',
             primary: true,
           },
           {
-            label: 'Add More Contacts',
-            description: 'Find more people to connect with',
+            label: t('completion.contactsAdded.addMore'),
+            description: t('completion.contactsAdded.addMoreDesc'),
             route: context?.prospectId 
               ? `/dashboard/prospects/${context.prospectId}` 
               : '/dashboard/prospects',
@@ -97,20 +99,20 @@ function getCompletionConfig(
     case 'prep_completed':
       return {
         icon: '📋',
-        title: 'Prep Ready!',
-        description: `Your meeting preparation for ${companyName} is complete. You're all set for your meeting!`,
+        title: t('completion.prepReady.title'),
+        description: t('completion.prepReady.description', { company: companyName }),
         nextSteps: [
           {
-            label: 'View Prep',
-            description: 'Review your preparation',
+            label: t('completion.prepReady.viewPrep'),
+            description: t('completion.prepReady.viewPrepDesc'),
             route: context?.prepId 
               ? `/dashboard/preparation/${context.prepId}` 
               : '/dashboard/preparation',
             primary: true,
           },
           {
-            label: 'After Meeting',
-            description: 'Create follow-up later',
+            label: t('completion.prepReady.addFollowup'),
+            description: t('completion.prepReady.addFollowupDesc'),
             route: '/dashboard/followup/new',
           },
         ],
@@ -119,20 +121,20 @@ function getCompletionConfig(
     case 'followup_completed':
       return {
         icon: '🎙️',
-        title: 'Follow-up Created!',
-        description: `Your meeting notes for ${companyName} have been processed. Generate follow-up actions to make the most of it.`,
+        title: t('completion.followupComplete.title'),
+        description: t('completion.followupComplete.description', { company: companyName }),
         nextSteps: [
           {
-            label: 'Generate Customer Report',
-            description: 'Create a shareable summary',
+            label: t('completion.followupComplete.generateReport'),
+            description: t('completion.followupComplete.generateReportDesc'),
             route: context?.followupId 
               ? `/dashboard/followup/${context.followupId}` 
               : '/dashboard/followup',
             primary: true,
           },
           {
-            label: 'View All Actions',
-            description: 'See all follow-up options',
+            label: t('completion.followupComplete.viewActions'),
+            description: t('completion.followupComplete.viewActionsDesc'),
             route: context?.followupId 
               ? `/dashboard/followup/${context.followupId}` 
               : '/dashboard/followup',
@@ -143,20 +145,20 @@ function getCompletionConfig(
     case 'action_generated':
       return {
         icon: '✨',
-        title: 'Action Generated!',
-        description: `Your ${context?.actionType || 'follow-up action'} is ready. You can export it as PDF, Word, or Markdown.`,
+        title: t('completion.actionGenerated.title'),
+        description: t('completion.actionGenerated.description', { actionType: context?.actionType || 'follow-up action' }),
         nextSteps: [
           {
-            label: 'View & Export',
-            description: 'Download or share the action',
+            label: t('completion.actionGenerated.export'),
+            description: t('completion.actionGenerated.exportDesc'),
             route: context?.followupId 
               ? `/dashboard/followup/${context.followupId}` 
               : '/dashboard/followup',
             primary: true,
           },
           {
-            label: 'Generate More',
-            description: 'Create additional actions',
+            label: t('completion.actionGenerated.moreActions'),
+            description: t('completion.actionGenerated.moreActionsDesc'),
             route: context?.followupId 
               ? `/dashboard/followup/${context.followupId}` 
               : '/dashboard/followup',
@@ -167,12 +169,12 @@ function getCompletionConfig(
     default:
       return {
         icon: '🎉',
-        title: 'Great Work!',
-        description: 'You completed a task successfully.',
+        title: t('completion.generic.title'),
+        description: t('completion.generic.description'),
         nextSteps: [
           {
-            label: 'Continue',
-            description: 'Keep going',
+            label: t('completion.generic.continue'),
+            description: t('completion.generic.continueDesc'),
             route: '/dashboard',
             primary: true,
           },
@@ -213,6 +215,7 @@ export function CoachCompletionModal({
   context,
 }: CoachCompletionModalProps) {
   const router = useRouter()
+  const t = useTranslations('coach')
   const { settings, trackEvent } = useCoach()
   
   // Don't show if completion modals are disabled
@@ -220,7 +223,7 @@ export function CoachCompletionModal({
     return null
   }
   
-  const config = getCompletionConfig(type, context)
+  const config = getCompletionConfig(type, context, t)
   
   const handleNextStep = (route: string) => {
     trackEvent('action_completed', { type, action: 'next_step', route })
