@@ -147,10 +147,20 @@ export async function apiClient<T>(
     const responseData = await response.json()
     
     if (!response.ok) {
+      // Handle case where detail is an object (e.g., limit errors with structured data)
+      let errorMessage = 'An error occurred'
+      if (typeof responseData.detail === 'string') {
+        errorMessage = responseData.detail
+      } else if (responseData.detail?.message) {
+        errorMessage = responseData.detail.message
+      } else if (responseData.message) {
+        errorMessage = responseData.message
+      }
+      
       const error: ApiError = {
-        message: responseData.detail || responseData.message || 'An error occurred',
-        code: responseData.code,
-        details: responseData,
+        message: errorMessage,
+        code: responseData.detail?.error || responseData.code,
+        details: responseData.detail || responseData,
       }
       return { data: null, error, status: response.status }
     }
@@ -229,10 +239,20 @@ export async function uploadFile<T>(
     const responseData = await response.json()
     
     if (!response.ok) {
+      // Handle case where detail is an object (e.g., limit errors with structured data)
+      let errorMessage = 'Upload failed'
+      if (typeof responseData.detail === 'string') {
+        errorMessage = responseData.detail
+      } else if (responseData.detail?.message) {
+        errorMessage = responseData.detail.message
+      } else if (responseData.message) {
+        errorMessage = responseData.message
+      }
+      
       const error: ApiError = {
-        message: responseData.detail || responseData.message || 'Upload failed',
-        code: responseData.code,
-        details: responseData,
+        message: errorMessage,
+        code: responseData.detail?.error || responseData.code,
+        details: responseData.detail || responseData,
       }
       return { data: null, error, status: response.status }
     }
