@@ -2,6 +2,10 @@
 Usage Service
 
 Tracks usage metrics and enforces subscription limits.
+
+v2 (December 2025): Simplified flow-based tracking
+- 1 flow = 1 research + 1 prep + 1 followup
+- KB and transcription have no limits
 """
 
 import logging
@@ -22,7 +26,177 @@ class UsageService:
         self.supabase = supabase
     
     # ==========================================
-    # USAGE RETRIEVAL
+    # FLOW-BASED USAGE (v2)
+    # ==========================================
+    
+    async def get_flow_usage(self, organization_id: str) -> Dict[str, Any]:
+        """
+        Get flow-based usage for v2 pricing model
+        
+        Returns:
+            {
+                "period_start": str,
+                "period_end": str,
+                "flow": {
+                    "used": int,
+                    "limit": int,
+                    "unlimited": bool,
+                    "remaining": int
+                }
+            }
+        """
+        try:
+            period_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            period_end = (period_start.replace(month=period_start.month + 1) if period_start.month < 12 
+                         else period_start.replace(year=period_start.year + 1, month=1))
+            
+            # Get usage record
+            usage_response = self.supabase.table("usage_records").select("*").eq(
+                "organization_id", organization_id
+            ).eq(
+                "period_start", period_start.isoformat()
+            ).maybe_single().execute()
+            
+            flow_count = 0
+            if usage_response and hasattr(usage_response, 'data') and usage_response.data:
+                flow_count = usage_response.data.get("flow_count", 0)
+            
+            # Get subscription for flow limit
+            sub_response = self.supabase.table("organization_subscriptions").select(
+                "plan_id, subscription_plans(features)"
+            ).eq("organization_id", organization_id).maybe_single().execute()
+            
+            flow_limit = 2  # Default free limit
+            if sub_response and hasattr(sub_response, 'data') and sub_response.data:
+                plan_data = sub_response.data.get("subscription_plans", {})
+                features = plan_data.get("features", {}) if plan_data else {}
+                flow_limit = features.get("flow_limit", 2)
+            
+            unlimited = flow_limit == -1
+            remaining = -1 if unlimited else max(0, flow_limit - flow_count)
+            
+            return {
+                "period_start": period_start.isoformat(),
+                "period_end": period_end.isoformat(),
+                "flow": {
+                    "used": flow_count,
+                    "limit": flow_limit,
+                    "unlimited": unlimited,
+                    "remaining": remaining,
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting flow usage: {e}")
+            return {
+                "period_start": datetime.utcnow().replace(day=1).isoformat(),
+                "flow": {"used": 0, "limit": 2, "unlimited": False, "remaining": 2}
+            }
+    
+    async def check_flow_limit(self, organization_id: str) -> Dict[str, Any]:
+        """
+        Check if user can start a new flow (research)
+        
+        Returns:
+            {
+                "allowed": bool,
+                "current": int,
+                "limit": int,
+                "unlimited": bool,
+                "remaining": int,
+                "upgrade_required": bool
+            }
+        """
+        try:
+            flow_usage = await self.get_flow_usage(organization_id)
+            flow = flow_usage.get("flow", {})
+            
+            used = flow.get("used", 0)
+            limit = flow.get("limit", 2)
+            unlimited = flow.get("unlimited", False)
+            
+            if unlimited:
+                return {
+                    "allowed": True,
+                    "current": used,
+                    "limit": -1,
+                    "unlimited": True,
+                    "remaining": -1,
+                    "upgrade_required": False,
+                }
+            
+            remaining = max(0, limit - used)
+            allowed = used < limit
+            
+            return {
+                "allowed": allowed,
+                "current": used,
+                "limit": limit,
+                "unlimited": False,
+                "remaining": remaining,
+                "upgrade_required": not allowed,
+            }
+            
+        except Exception as e:
+            logger.error(f"Error checking flow limit: {e}")
+            return {
+                "allowed": False,
+                "current": 0,
+                "limit": 2,
+                "unlimited": False,
+                "remaining": 0,
+                "upgrade_required": True,
+                "error": str(e),
+            }
+    
+    async def increment_flow(self, organization_id: str) -> bool:
+        """
+        Increment flow count when starting a new research
+        
+        Returns:
+            True if successful
+        """
+        try:
+            period_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            period_end = (period_start.replace(month=period_start.month + 1) if period_start.month < 12 
+                         else period_start.replace(year=period_start.year + 1, month=1))
+            
+            # Get existing record
+            existing = self.supabase.table("usage_records").select("id", "flow_count", "research_count").eq(
+                "organization_id", organization_id
+            ).eq(
+                "period_start", period_start.isoformat()
+            ).maybe_single().execute()
+            
+            if existing and hasattr(existing, 'data') and existing.data:
+                # Update existing record
+                current_flow = existing.data.get("flow_count", 0) or 0
+                current_research = existing.data.get("research_count", 0) or 0
+                
+                self.supabase.table("usage_records").update({
+                    "flow_count": current_flow + 1,
+                    "research_count": current_research + 1,
+                    "updated_at": datetime.utcnow().isoformat(),
+                }).eq("id", existing.data["id"]).execute()
+            else:
+                # Create new record
+                self.supabase.table("usage_records").insert({
+                    "organization_id": organization_id,
+                    "period_start": period_start.isoformat(),
+                    "period_end": period_end.isoformat(),
+                    "flow_count": 1,
+                    "research_count": 1,
+                }).execute()
+            
+            logger.info(f"Incremented flow count for org {organization_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error incrementing flow: {e}")
+            return False
+    
+    # ==========================================
+    # USAGE RETRIEVAL (v1 compatibility + v2 flow)
     # ==========================================
     
     async def get_usage(self, organization_id: str) -> Dict[str, Any]:
@@ -52,6 +226,7 @@ class UsageService:
                 "research_count": 0,
                 "preparation_count": 0,
                 "followup_count": 0,
+                "flow_count": 0,
                 "transcription_seconds": 0,
                 "kb_document_count": 0,
             }
@@ -64,45 +239,64 @@ class UsageService:
                 plan_data = sub_response.data.get("subscription_plans", {})
                 features = plan_data.get("features", {}) if plan_data else {}
             
-            if not features:
+            # v2 flow-based limits (default to free: 2 flows)
+            flow_limit = features.get("flow_limit", 2)
+            flow_count = usage.get("flow_count", 0) or 0
+            flow_unlimited = flow_limit == -1
+            
+            # For backward compatibility, also check old limits
+            # But prefer flow_limit if it exists
+            if "flow_limit" not in features:
                 features = {
                     "research_limit": 3,
                     "preparation_limit": 3,
                     "followup_limit": 1,
                     "transcription_seconds_limit": 0,
                     "kb_document_limit": 0,
+                    "flow_limit": 2,
                 }
+            
+            period_end = (period_start.replace(month=period_start.month + 1) if period_start.month < 12 
+                         else period_start.replace(year=period_start.year + 1, month=1))
             
             return {
                 "period_start": period_start.isoformat(),
-                "period_end": (period_start.replace(month=period_start.month + 1) if period_start.month < 12 
-                              else period_start.replace(year=period_start.year + 1, month=1)).isoformat(),
+                "period_end": period_end.isoformat(),
+                # v2: Primary metric is flow
+                "flow": {
+                    "used": flow_count,
+                    "limit": flow_limit,
+                    "unlimited": flow_unlimited,
+                    "remaining": -1 if flow_unlimited else max(0, flow_limit - flow_count),
+                },
+                # v1 compatibility: individual metrics (still tracked for analytics)
                 "research": {
                     "used": usage.get("research_count", 0),
-                    "limit": features.get("research_limit", 3),
-                    "unlimited": features.get("research_limit", 3) == -1,
+                    "limit": flow_limit,  # Use flow_limit for all
+                    "unlimited": flow_unlimited,
                 },
                 "preparation": {
                     "used": usage.get("preparation_count", 0),
-                    "limit": features.get("preparation_limit", 3),
-                    "unlimited": features.get("preparation_limit", 3) == -1,
+                    "limit": flow_limit,  # Use flow_limit for all
+                    "unlimited": flow_unlimited,
                 },
                 "followup": {
                     "used": usage.get("followup_count", 0),
-                    "limit": features.get("followup_limit", 1),
-                    "unlimited": features.get("followup_limit", 1) == -1,
+                    "limit": flow_limit,  # Use flow_limit for all
+                    "unlimited": flow_unlimited,
                 },
+                # These are now unlimited (no limits in v2)
                 "transcription_seconds": {
                     "used": usage.get("transcription_seconds", 0),
-                    "limit": features.get("transcription_seconds_limit", 0),
-                    "unlimited": features.get("transcription_seconds_limit", 0) == -1,
+                    "limit": -1,  # Unlimited in v2
+                    "unlimited": True,
                     "used_hours": round(usage.get("transcription_seconds", 0) / 3600, 2),
-                    "limit_hours": round(features.get("transcription_seconds_limit", 0) / 3600, 2) if features.get("transcription_seconds_limit", 0) > 0 else 0,
+                    "limit_hours": 0,
                 },
                 "kb_documents": {
                     "used": usage.get("kb_document_count", 0),
-                    "limit": features.get("kb_document_limit", 0),
-                    "unlimited": features.get("kb_document_limit", 0) == -1,
+                    "limit": -1,  # Unlimited in v2
+                    "unlimited": True,
                 },
             }
             

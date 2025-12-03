@@ -238,15 +238,15 @@ async def start_research(
     
     organization_id = org_response.data[0]["organization_id"]
     
-    # Check subscription limit
+    # Check subscription limit (v2: flow-based)
     usage_service = get_usage_service()
-    limit_check = await usage_service.check_limit(organization_id, "research")
+    limit_check = await usage_service.check_flow_limit(organization_id)
     if not limit_check.get("allowed"):
         raise HTTPException(
             status_code=402,  # Payment Required
             detail={
                 "error": "limit_exceeded",
-                "message": "You have reached your research limit for this month",
+                "message": "You have reached your flow limit for this month",
                 "current": limit_check.get("current", 0),
                 "limit": limit_check.get("limit", 0),
                 "upgrade_url": "/pricing"
@@ -335,8 +335,8 @@ async def start_research(
             )
             logger.info(f"Research {research_id} triggered via BackgroundTasks")
         
-        # Increment usage counter
-        await usage_service.increment_usage(organization_id, "research")
+        # Increment flow counter (v2: flow-based tracking)
+        await usage_service.increment_flow(organization_id)
         
         return ResearchResponse(
             id=research_id,

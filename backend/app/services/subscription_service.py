@@ -20,10 +20,18 @@ stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 supabase = get_supabase_service()
 
 # Stripe Price IDs (set via environment variables after creating in Stripe)
+# v2 pricing model (December 2025)
 STRIPE_PRICES = {
+    # v2 plans
+    "light_solo": os.getenv("STRIPE_PRICE_LIGHT_SOLO"),
+    "unlimited_solo": os.getenv("STRIPE_PRICE_UNLIMITED_SOLO"),
+    # v1 legacy (deprecated but kept for existing subscribers)
     "solo_monthly": os.getenv("STRIPE_PRICE_SOLO_MONTHLY"),
     "solo_yearly": os.getenv("STRIPE_PRICE_SOLO_YEARLY"),
 }
+
+# Stripe Donation Link (for free users)
+STRIPE_DONATION_LINK = os.getenv("STRIPE_DONATION_LINK")
 
 
 class SubscriptionService:
@@ -192,6 +200,7 @@ class SubscriptionService:
             )
             
             # Create checkout session
+            # v2: No trial period - direct payment
             session = self.stripe.checkout.Session.create(
                 customer=stripe_customer_id,
                 payment_method_types=["card", "ideal", "bancontact"],  # EU payment methods
@@ -203,7 +212,7 @@ class SubscriptionService:
                 success_url=success_url + "?session_id={CHECKOUT_SESSION_ID}",
                 cancel_url=cancel_url,
                 subscription_data={
-                    "trial_period_days": 14,  # 14-day trial
+                    # v2: No trial - removed trial_period_days
                     "metadata": {
                         "organization_id": organization_id,
                         "plan_id": plan_id,

@@ -31,9 +31,13 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 # ==========================================
 
 class CheckoutRequest(BaseModel):
-    plan_id: str  # 'solo_monthly' or 'solo_yearly'
+    plan_id: str  # v2: 'light_solo' or 'unlimited_solo'
     success_url: Optional[str] = None
     cancel_url: Optional[str] = None
+
+
+class DonationResponse(BaseModel):
+    donation_url: str
 
 
 class CheckoutResponse(BaseModel):
@@ -50,7 +54,7 @@ class PortalResponse(BaseModel):
 
 
 class CheckLimitRequest(BaseModel):
-    metric: str  # 'research', 'preparation', 'followup', 'transcription_seconds', 'kb_document'
+    metric: str  # v2: 'flow' is primary. Legacy: 'research', 'preparation', 'followup'
     additional_amount: Optional[int] = None  # For transcription_seconds
 
 
@@ -65,6 +69,9 @@ class UsageMetric(BaseModel):
 class UsageResponse(BaseModel):
     period_start: str
     period_end: Optional[str] = None
+    # v2: Primary metric
+    flow: Optional[UsageMetric] = None
+    # v1 compatibility
     research: UsageMetric
     preparation: UsageMetric
     followup: UsageMetric
@@ -380,6 +387,8 @@ async def check_limit(
     """
     Check if an action is allowed within subscription limits
     
+    v2: Use 'flow' as the primary metric (1 flow = research + prep + followup)
+    
     Returns whether the action is allowed and remaining quota
     """
     try:
@@ -391,7 +400,10 @@ async def check_limit(
         
         usage_service = get_usage_service()
         
-        if request.metric == "transcription_seconds" and request.additional_amount:
+        # v2: Use flow-based limit checking
+        if request.metric == "flow" or request.metric in ["research", "preparation", "followup"]:
+            result = await usage_service.check_flow_limit(organization_id)
+        elif request.metric == "transcription_seconds" and request.additional_amount:
             result = await usage_service.check_transcription_limit(
                 organization_id,
                 request.additional_amount
@@ -406,4 +418,28 @@ async def check_limit(
     except Exception as e:
         logger.error(f"Error checking limit: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==========================================
+# DONATION ENDPOINT (v2)
+# ==========================================
+
+# Stripe Donation Link (for free users)
+STRIPE_DONATION_LINK = os.getenv("STRIPE_DONATION_LINK")
+
+
+@router.get("/donation-link", response_model=DonationResponse)
+async def get_donation_link(current_user: dict = Depends(get_current_user)):
+    """
+    Get Stripe donation link for free users
+    
+    Returns URL to Stripe Payment Link for donations
+    """
+    if not STRIPE_DONATION_LINK:
+        raise HTTPException(
+            status_code=503, 
+            detail="Donation link not configured"
+        )
+    
+    return {"donation_url": STRIPE_DONATION_LINK}
 
