@@ -7,7 +7,7 @@ Generates content for follow-up actions using Claude AI with full context.
 import os
 import logging
 from typing import Tuple, Dict, Any, Optional
-from anthropic import Anthropic
+from anthropic import AsyncAnthropic  # Use async client!
 
 from app.database import get_supabase_service
 from app.models.followup_actions import ActionType
@@ -20,7 +20,8 @@ class ActionGeneratorService:
     """Service for generating follow-up action content using AI"""
     
     def __init__(self):
-        self.client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        # Use AsyncAnthropic to prevent blocking the event loop
+        self.client = AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
         self.model = "claude-sonnet-4-20250514"
     
     async def generate(
@@ -1043,9 +1044,10 @@ RULES:
 Generate the complete internal report now:"""
     
     async def _generate_with_claude(self, prompt: str) -> str:
-        """Call Claude API to generate content"""
+        """Call Claude API to generate content (async to not block event loop)"""
         try:
-            response = self.client.messages.create(
+            # Use await with AsyncAnthropic - this is non-blocking!
+            response = await self.client.messages.create(
                 model=self.model,
                 max_tokens=4000,
                 messages=[
