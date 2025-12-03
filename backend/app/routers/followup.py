@@ -26,6 +26,9 @@ from app.services.prospect_context_service import get_prospect_context_service
 from app.services.prospect_service import get_prospect_service
 from app.services.usage_service import get_usage_service
 
+# Inngest integration
+from app.inngest.events import send_event, use_inngest_for, Events
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/followup", tags=["followup"])
@@ -383,24 +386,84 @@ async def upload_audio(
         followup = response.data[0]
         followup_id = followup["id"]
         
-        # Start background processing
-        background_tasks.add_task(
-            process_followup_background,
-            followup_id,
+        # Upload audio to storage first
+        storage_path = f"{organization_id}/{followup_id}/{file.filename}"
+        
+        supabase.storage.from_("followup-audio").upload(
+            storage_path,
             audio_data,
-            file.filename,
-            organization_id,
-            user_id,
-            meeting_prep_id,
-            prospect_company_name,
-            include_coaching,  # pass coaching flag
-            language  # i18n: output language
+            {"content-type": _get_content_type(file.filename)}
         )
+        
+        # Get signed URL for the audio
+        audio_url = supabase.storage.from_("followup-audio").create_signed_url(
+            storage_path,
+            expires_in=86400 * 7  # 7 days
+        )
+        audio_url = audio_url.get("signedURL", "")
+        
+        # Update with audio URL
+        supabase.table("followups").update({
+            "audio_url": audio_url,
+            "audio_filename": file.filename,
+            "audio_size_bytes": len(audio_data)
+        }).eq("id", followup_id).execute()
+        
+        # Start processing via Inngest (if enabled) or BackgroundTasks (fallback)
+        if use_inngest_for("followup"):
+            event_sent = await send_event(
+                Events.FOLLOWUP_AUDIO_UPLOADED,
+                {
+                    "followup_id": followup_id,
+                    "storage_path": storage_path,
+                    "filename": file.filename,
+                    "organization_id": organization_id,
+                    "user_id": user_id,
+                    "meeting_prep_id": meeting_prep_id,
+                    "prospect_company": prospect_company_name,
+                    "include_coaching": include_coaching,
+                    "language": language
+                },
+                user={"id": user_id}
+            )
+            
+            if event_sent:
+                logger.info(f"Followup {followup_id} triggered via Inngest")
+            else:
+                # Fallback to BackgroundTasks if Inngest fails
+                logger.warning(f"Inngest event failed, falling back to BackgroundTasks for followup {followup_id}")
+                background_tasks.add_task(
+                    process_followup_background,
+                    followup_id,
+                    audio_data,
+                    file.filename,
+                    organization_id,
+                    user_id,
+                    meeting_prep_id,
+                    prospect_company_name,
+                    include_coaching,
+                    language
+                )
+        else:
+            # Use BackgroundTasks (legacy/fallback)
+            background_tasks.add_task(
+                process_followup_background,
+                followup_id,
+                audio_data,
+                file.filename,
+                organization_id,
+                user_id,
+                meeting_prep_id,
+                prospect_company_name,
+                include_coaching,
+                language
+            )
+            logger.info(f"Followup {followup_id} triggered via BackgroundTasks")
         
         # Increment usage counter
         await usage_service.increment_usage(organization_id, "followup")
         
-        logger.info(f"Created followup {followup_id} for prospect {prospect_id}, coaching={include_coaching}, starting background processing")
+        logger.info(f"Created followup {followup_id} for prospect {prospect_id}, coaching={include_coaching}")
         
         return FollowupResponse(
             id=followup_id,
@@ -671,26 +734,67 @@ async def upload_transcript(
         followup = response.data[0]
         followup_id = followup["id"]
         
-        # Start background processing
-        background_tasks.add_task(
-            process_transcript_background,
-            followup_id,
-            parsed.full_text,
-            segments,
-            parsed.speaker_count,
-            organization_id,
-            user_id,
-            meeting_prep_id,
-            prospect_company_name,
-            parsed.estimated_duration,
-            include_coaching,  # NEW: pass coaching flag
-            language  # i18n: output language
-        )
+        # Start processing via Inngest (if enabled) or BackgroundTasks (fallback)
+        if use_inngest_for("followup"):
+            event_sent = await send_event(
+                Events.FOLLOWUP_TRANSCRIPT_UPLOADED,
+                {
+                    "followup_id": followup_id,
+                    "transcription_text": parsed.full_text,
+                    "segments": segments,
+                    "speaker_count": parsed.speaker_count,
+                    "organization_id": organization_id,
+                    "user_id": user_id,
+                    "meeting_prep_id": meeting_prep_id,
+                    "prospect_company": prospect_company_name,
+                    "include_coaching": include_coaching,
+                    "language": language,
+                    "estimated_duration": parsed.estimated_duration
+                },
+                user={"id": user_id}
+            )
+            
+            if event_sent:
+                logger.info(f"Transcript followup {followup_id} triggered via Inngest")
+            else:
+                # Fallback to BackgroundTasks if Inngest fails
+                logger.warning(f"Inngest event failed, falling back to BackgroundTasks for followup {followup_id}")
+                background_tasks.add_task(
+                    process_transcript_background,
+                    followup_id,
+                    parsed.full_text,
+                    segments,
+                    parsed.speaker_count,
+                    organization_id,
+                    user_id,
+                    meeting_prep_id,
+                    prospect_company_name,
+                    parsed.estimated_duration,
+                    include_coaching,
+                    language
+                )
+        else:
+            # Use BackgroundTasks (legacy/fallback)
+            background_tasks.add_task(
+                process_transcript_background,
+                followup_id,
+                parsed.full_text,
+                segments,
+                parsed.speaker_count,
+                organization_id,
+                user_id,
+                meeting_prep_id,
+                prospect_company_name,
+                parsed.estimated_duration,
+                include_coaching,
+                language
+            )
+            logger.info(f"Transcript followup {followup_id} triggered via BackgroundTasks")
         
         # Increment usage counter
         await usage_service.increment_usage(organization_id, "followup")
         
-        logger.info(f"Created transcript followup {followup_id} for prospect {prospect_id}, coaching={include_coaching}, language={language}, starting background processing")
+        logger.info(f"Created transcript followup {followup_id} for prospect {prospect_id}, coaching={include_coaching}, language={language}")
         
         return FollowupResponse(
             id=followup_id,
