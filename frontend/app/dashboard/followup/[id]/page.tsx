@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, startTransition } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from '@/components/ui/button'
@@ -232,7 +232,10 @@ export default function FollowupDetailPage() {
     try {
       const { data, error } = await api.get<ActionsListResponse>(`/api/v1/followup/${followupId}/actions`)
       if (!error && data) {
-        setActions(data.actions || [])
+        // Use startTransition to prevent blocking navigation
+        startTransition(() => {
+          setActions(data.actions || [])
+        })
         return data.actions || []
       }
       return null
@@ -265,8 +268,10 @@ export default function FollowupDetailPage() {
     
     const targetAction = actions.find(a => a.action_type === generatingActionType)
     if (targetAction && (targetAction.content || targetAction.metadata?.status === 'error')) {
-      // Action is complete or errored - clear the generating state
-      setGeneratingActionType(null)
+      // Action is complete or errored - use startTransition to not block navigation
+      startTransition(() => {
+        setGeneratingActionType(null)
+      })
       
       // Show completion toast
       if (targetAction.content) {
@@ -290,7 +295,10 @@ export default function FollowupDetailPage() {
     }
     
     // Set generating state for UI feedback (will be cleared by polling when done)
-    setGeneratingActionType(actionType)
+    // Use startTransition to prevent blocking navigation
+    startTransition(() => {
+      setGeneratingActionType(actionType)
+    })
     
     try {
       const { data, error } = await api.post<FollowupAction>(`/api/v1/followup/${followupId}/actions`, {
@@ -304,7 +312,9 @@ export default function FollowupDetailPage() {
       
       if (data) {
         // Add the new action (with pending status initially)
-        setActions(prev => [...prev.filter(a => a.action_type !== actionType), data])
+        startTransition(() => {
+          setActions(prev => [...prev.filter(a => a.action_type !== actionType), data])
+        })
       }
       
       // Show feedback - generation runs in background, polling will pick up completion
@@ -332,7 +342,9 @@ export default function FollowupDetailPage() {
         toast({ title: t('actions.generationFailed'), variant: 'destructive' })
       }
       
-      setGeneratingActionType(null)
+      startTransition(() => {
+        setGeneratingActionType(null)
+      })
     }
   }
 
@@ -367,7 +379,9 @@ export default function FollowupDetailPage() {
     const { error } = await api.delete(`/api/v1/followup/${followupId}/actions/${actionId}`)
     
     if (!error) {
-      setActions(prev => prev.filter(a => a.id !== actionId))
+      startTransition(() => {
+        setActions(prev => prev.filter(a => a.id !== actionId))
+      })
     } else {
       throw new Error('Failed to delete action')
     }
@@ -385,9 +399,11 @@ export default function FollowupDetailPage() {
     const action = actions.find(a => a.id === actionId)
     if (!action) return
     
-    // Update UI immediately
-    setActions(prev => prev.filter(a => a.id !== actionId))
-    setGeneratingActionType(action.action_type)
+    // Update UI immediately - use startTransition to not block navigation
+    startTransition(() => {
+      setActions(prev => prev.filter(a => a.id !== actionId))
+      setGeneratingActionType(action.action_type)
+    })
     
     // Show feedback immediately
     toast({ 
