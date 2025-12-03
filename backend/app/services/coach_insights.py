@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 from enum import Enum
 import os
-import anthropic
+from anthropic import AsyncAnthropic  # Use async client to not block event loop
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class CoachInsightsService:
         # Initialize Claude client if API key available
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if api_key:
-            self.anthropic_client = anthropic.Anthropic(api_key=api_key)
+            self.anthropic_client = AsyncAnthropic(api_key=api_key)
     
     async def analyze_success_patterns(
         self, 
@@ -329,7 +329,7 @@ Generate a single, specific tip that would help this sales rep improve. Format a
 
 Only output the JSON, nothing else."""
 
-            message = self.anthropic_client.messages.create(
+            message = await self.anthropic_client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=200,
                 messages=[{"role": "user", "content": prompt}]
