@@ -381,3 +381,148 @@ async def check_profile_exists(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to check profile: {str(e)}"
         )
+
+
+# ==========================================
+# Style Guide Endpoints
+# ==========================================
+
+class StyleGuideRequest(BaseModel):
+    """Request for updating style guide."""
+    tone: Optional[str] = None  # direct, warm, formal, casual, professional
+    formality: Optional[str] = None  # formal, professional, casual
+    language_style: Optional[str] = None  # technical, business, simple
+    persuasion_style: Optional[str] = None  # logic, story, reference
+    emoji_usage: Optional[bool] = None
+    signoff: Optional[str] = None
+    writing_length: Optional[str] = None  # concise, detailed
+
+
+class StyleGuideResponse(BaseModel):
+    """Style guide response."""
+    tone: str = "professional"
+    formality: str = "professional"
+    language_style: str = "business"
+    persuasion_style: str = "logic"
+    emoji_usage: bool = False
+    signoff: str = "Best regards"
+    writing_length: str = "concise"
+    confidence_score: float = 0.5
+
+
+@router.get("/style-guide", response_model=StyleGuideResponse)
+async def get_style_guide(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get the user's communication style guide.
+    
+    Returns style guide from profile, or defaults if not set.
+    """
+    try:
+        profile_service = ProfileService()
+        profile = profile_service.get_sales_profile(current_user["sub"])
+        
+        if not profile:
+            # Return defaults
+            return StyleGuideResponse()
+        
+        # Return style guide if exists, otherwise derive from profile
+        style_guide = profile.get("style_guide")
+        if style_guide:
+            return StyleGuideResponse(**style_guide)
+        
+        # Derive from existing fields
+        communication_style = (profile.get("communication_style") or "").lower()
+        
+        tone = "professional"
+        if "direct" in communication_style:
+            tone = "direct"
+        elif "warm" in communication_style or "relationship" in communication_style:
+            tone = "warm"
+        elif "formal" in communication_style:
+            tone = "formal"
+        elif "casual" in communication_style:
+            tone = "casual"
+        
+        return StyleGuideResponse(
+            tone=tone,
+            formality="professional",
+            language_style="business",
+            persuasion_style="logic",
+            emoji_usage=profile.get("uses_emoji", False),
+            signoff=profile.get("email_signoff", "Best regards"),
+            writing_length=profile.get("writing_length_preference", "concise"),
+            confidence_score=0.5
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get style guide: {str(e)}"
+        )
+
+
+@router.put("/style-guide", response_model=StyleGuideResponse)
+async def update_style_guide(
+    request: StyleGuideRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Update the user's communication style guide.
+    
+    Allows users to customize their AI output style.
+    """
+    try:
+        profile_service = ProfileService()
+        profile = profile_service.get_sales_profile(current_user["sub"])
+        
+        if not profile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Profile not found. Complete onboarding first."
+            )
+        
+        # Get existing style guide or create new one
+        existing_guide = profile.get("style_guide") or {
+            "tone": "professional",
+            "formality": "professional",
+            "language_style": "business",
+            "persuasion_style": "logic",
+            "emoji_usage": False,
+            "signoff": "Best regards",
+            "writing_length": "concise",
+            "confidence_score": 0.5
+        }
+        
+        # Update with provided values
+        update_data = request.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            if value is not None:
+                existing_guide[key] = value
+        
+        # Set high confidence since user manually configured
+        existing_guide["confidence_score"] = 1.0
+        
+        # Save to profile
+        updated = profile_service.update_sales_profile(
+            user_id=current_user["sub"],
+            updates={"style_guide": existing_guide},
+            organization_id=profile.get("organization_id")
+        )
+        
+        if not updated:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update style guide"
+            )
+        
+        return StyleGuideResponse(**existing_guide)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update style guide: {str(e)}"
+        )

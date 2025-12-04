@@ -997,6 +997,32 @@
       "reset": "Suggestions Reset",
       "resetDesc": "All snoozed suggestions are now visible again"
     },
+    "style": {
+      "title": "Communication Style",
+      "description": "Customize how AI generates your emails and reports",
+      "saved": "Style Saved",
+      "savedDesc": "Your communication style preferences have been updated",
+      "tone": "Tone",
+      "toneDesc": "The overall tone of your communications",
+      "toneDirect": "Direct - Get straight to the point",
+      "toneWarm": "Warm - Friendly and personable",
+      "toneFormal": "Formal - Professional and structured",
+      "toneCasual": "Casual - Relaxed and conversational",
+      "toneProfessional": "Professional - Balanced warmth and professionalism",
+      "formality": "Formality Level",
+      "formalityDesc": "How formal should your communications be",
+      "formalityFormal": "Formal - Complete sentences, no contractions",
+      "formalityProfessional": "Professional - Clear and businesslike",
+      "formalityCasual": "Casual - Relaxed grammar, friendly",
+      "emoji": "Use Emoji",
+      "emojiDesc": "Include emoji in professional communications",
+      "length": "Writing Length",
+      "lengthDesc": "How detailed should your communications be",
+      "lengthConcise": "Concise - Short and to the point",
+      "lengthDetailed": "Detailed - Thorough explanations",
+      "signoff": "Email Sign-off",
+      "signoffDesc": "How you prefer to end your emails"
+    },
     "subscription": {
       "description": "Manage your subscription, view usage and invoices"
     },

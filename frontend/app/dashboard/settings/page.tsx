@@ -22,7 +22,11 @@ import {
   Crown,
   Brain,
   RotateCcw,
-  Power
+  Power,
+  Palette,
+  Smile,
+  Type,
+  FileText
 } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { useToast } from '@/components/ui/use-toast'
@@ -57,6 +61,19 @@ export default function SettingsPage() {
   const [coachEnabled, setCoachEnabled] = useState<boolean | null>(null)
   const [coachSettingsLoading, setCoachSettingsLoading] = useState(true)
   
+  // Style guide state
+  const [styleGuide, setStyleGuide] = useState({
+    tone: 'professional',
+    formality: 'professional',
+    emoji_usage: false,
+    signoff: 'Best regards',
+    writing_length: 'concise'
+  })
+  const [styleGuideLoading, setStyleGuideLoading] = useState(true)
+  const [styleSaving, setStyleSaving] = useState(false)
+  const [styleHasChanges, setStyleHasChanges] = useState(false)
+  const [originalStyleGuide, setOriginalStyleGuide] = useState(styleGuide)
+  
   // Fetch coach settings directly (independent of CoachProvider)
   useEffect(() => {
     const fetchCoachSettings = async () => {
@@ -72,6 +89,24 @@ export default function SettingsPage() {
       }
     }
     fetchCoachSettings()
+  }, [])
+  
+  // Fetch style guide
+  useEffect(() => {
+    const fetchStyleGuide = async () => {
+      try {
+        const { data, error } = await api.get<typeof styleGuide>('/api/v1/profile/sales/style-guide')
+        if (!error && data) {
+          setStyleGuide(data)
+          setOriginalStyleGuide(data)
+        }
+      } catch (err) {
+        console.error('Failed to fetch style guide:', err)
+      } finally {
+        setStyleGuideLoading(false)
+      }
+    }
+    fetchStyleGuide()
   }, [])
   
   // Local state for form
@@ -244,6 +279,38 @@ export default function SettingsPage() {
         variant: 'destructive',
       })
       setCoachResetting(false)
+    }
+  }
+  
+  // Style guide handlers
+  const updateStyleField = (field: keyof typeof styleGuide, value: string | boolean) => {
+    setStyleGuide(prev => ({ ...prev, [field]: value }))
+    setStyleHasChanges(true)
+  }
+  
+  const handleStyleSave = async () => {
+    setStyleSaving(true)
+    try {
+      const { error } = await api.put('/api/v1/profile/sales/style-guide', styleGuide)
+      if (error) {
+        throw new Error(error.message || 'Save failed')
+      }
+      
+      setOriginalStyleGuide(styleGuide)
+      setStyleHasChanges(false)
+      
+      toast({
+        title: t('style.saved'),
+        description: t('style.savedDesc'),
+      })
+    } catch (error) {
+      console.error('Failed to save style guide:', error)
+      toast({
+        title: tErrors('generic'),
+        variant: 'destructive',
+      })
+    } finally {
+      setStyleSaving(false)
     }
   }
 
@@ -463,6 +530,150 @@ export default function SettingsPage() {
                   </Button>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Communication Style Settings */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Palette className="h-5 w-5 text-pink-500" />
+                <CardTitle>{t('style.title')}</CardTitle>
+              </div>
+              <CardDescription>
+                {t('style.description')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {styleGuideLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                </div>
+              ) : (
+                <>
+                  {/* Tone */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4 text-slate-400" />
+                      {t('style.tone')}
+                    </label>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {t('style.toneDesc')}
+                    </p>
+                    <select
+                      value={styleGuide.tone}
+                      onChange={(e) => updateStyleField('tone', e.target.value)}
+                      className="w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
+                    >
+                      <option value="direct">{t('style.toneDirect')}</option>
+                      <option value="warm">{t('style.toneWarm')}</option>
+                      <option value="formal">{t('style.toneFormal')}</option>
+                      <option value="casual">{t('style.toneCasual')}</option>
+                      <option value="professional">{t('style.toneProfessional')}</option>
+                    </select>
+                  </div>
+
+                  {/* Formality */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-2">
+                      <Type className="h-4 w-4 text-slate-400" />
+                      {t('style.formality')}
+                    </label>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {t('style.formalityDesc')}
+                    </p>
+                    <select
+                      value={styleGuide.formality}
+                      onChange={(e) => updateStyleField('formality', e.target.value)}
+                      className="w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
+                    >
+                      <option value="formal">{t('style.formalityFormal')}</option>
+                      <option value="professional">{t('style.formalityProfessional')}</option>
+                      <option value="casual">{t('style.formalityCasual')}</option>
+                    </select>
+                  </div>
+
+                  {/* Emoji Usage */}
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <label className="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-2">
+                        <Smile className="h-4 w-4 text-slate-400" />
+                        {t('style.emoji')}
+                      </label>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {t('style.emojiDesc')}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={styleGuide.emoji_usage}
+                      onCheckedChange={(checked) => updateStyleField('emoji_usage', checked)}
+                    />
+                  </div>
+
+                  {/* Writing Length */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-slate-400" />
+                      {t('style.length')}
+                    </label>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {t('style.lengthDesc')}
+                    </p>
+                    <select
+                      value={styleGuide.writing_length}
+                      onChange={(e) => updateStyleField('writing_length', e.target.value)}
+                      className="w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
+                    >
+                      <option value="concise">{t('style.lengthConcise')}</option>
+                      <option value="detailed">{t('style.lengthDetailed')}</option>
+                    </select>
+                  </div>
+
+                  {/* Email Sign-off */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-slate-400" />
+                      {t('style.signoff')}
+                    </label>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {t('style.signoffDesc')}
+                    </p>
+                    <input
+                      type="text"
+                      value={styleGuide.signoff}
+                      onChange={(e) => updateStyleField('signoff', e.target.value)}
+                      placeholder="Best regards"
+                      className="w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
+                    />
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="pt-4 border-t">
+                    <Button 
+                      onClick={handleStyleSave} 
+                      disabled={styleSaving || !styleHasChanges}
+                      className="gap-2"
+                    >
+                      {styleSaving ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          {t('saving')}
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4" />
+                          {t('save')}
+                        </>
+                      )}
+                    </Button>
+                    {styleHasChanges && (
+                      <span className="ml-3 text-sm text-amber-600 dark:text-amber-400">
+                        {t('unsavedChanges')}
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
