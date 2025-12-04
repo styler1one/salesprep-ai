@@ -501,7 +501,33 @@ async def reset_snoozed_suggestions(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-        logger.error(f"Error recording suggestion action: {e}")
+@router.post("/suggestions/cleanup")
+async def cleanup_orphaned_suggestions(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Clean up orphaned suggestions for the current user.
+    
+    Removes suggestions that reference deleted entities (research, preps, followups).
+    This is called automatically when entities are deleted, but can also be
+    triggered manually to clean up any orphans.
+    """
+    from app.services.coach_cleanup import cleanup_orphaned_suggestions as do_cleanup
+    
+    supabase = get_supabase_service()
+    user_id = current_user["sub"]
+    
+    try:
+        stats = await do_cleanup(supabase, user_id)
+        
+        return {
+            "success": True,
+            "cleaned": stats["total_cleaned"],
+            "details": stats,
+        }
+        
+    except Exception as e:
+        logger.error(f"Error cleaning orphaned suggestions: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

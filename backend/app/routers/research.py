@@ -434,6 +434,8 @@ async def delete_research(
     """
     Delete a research brief.
     """
+    from app.services.coach_cleanup import cleanup_suggestions_for_entity
+    
     # Create user-specific client for RLS security
     user_supabase = get_user_client(auth_token)
     
@@ -444,6 +446,7 @@ async def delete_research(
         raise HTTPException(status_code=404, detail="Research not found")
     
     research = research_response.data[0]
+    user_id = current_user.get("sub") or current_user.get("id")
     
     try:
         # Delete PDF from storage if exists
@@ -451,6 +454,14 @@ async def delete_research(
             # Extract path from URL
             # TODO: Implement PDF deletion from storage
             pass
+        
+        # Clean up related coach suggestions
+        await cleanup_suggestions_for_entity(
+            supabase_service, 
+            "research", 
+            research_id, 
+            user_id
+        )
         
         # Delete research sources (will cascade)
         # Delete research brief (RLS ensures user can only delete their org's research)

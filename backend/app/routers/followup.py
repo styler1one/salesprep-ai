@@ -949,6 +949,8 @@ async def delete_followup(
     current_user: dict = Depends(get_current_user)
 ):
     """Delete a follow-up"""
+    from app.services.coach_cleanup import cleanup_suggestions_for_entity
+    
     try:
         user_id = current_user.get("sub") or current_user.get("id")
         
@@ -974,6 +976,9 @@ async def delete_followup(
                 supabase.storage.from_("followup-audio").remove([storage_path])
             except Exception as e:
                 logger.warning(f"Could not delete audio file: {e}")
+        
+        # Clean up related coach suggestions
+        await cleanup_suggestions_for_entity(supabase, "followup", followup_id, user_id)
         
         # Delete followup record
         response = supabase.table("followups").delete().eq(

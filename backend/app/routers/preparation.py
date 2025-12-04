@@ -457,6 +457,8 @@ async def delete_prep(
     current_user: dict = Depends(get_current_user)
 ):
     """Delete a meeting prep"""
+    from app.services.coach_cleanup import cleanup_suggestions_for_entity
+    
     try:
         user_id = current_user.get("sub") or current_user.get("id")
         
@@ -469,6 +471,9 @@ async def delete_prep(
             raise HTTPException(status_code=404, detail="User not in any organization")
         
         organization_id = org_response.data[0]["organization_id"]
+        
+        # Clean up related coach suggestions
+        await cleanup_suggestions_for_entity(supabase, "prep", prep_id, user_id)
         
         # Delete prep
         response = supabase.table("meeting_preps").delete().eq(
