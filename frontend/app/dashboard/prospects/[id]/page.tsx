@@ -222,7 +222,7 @@ export default function ProspectHubPage() {
     )
   }
   
-  const { prospect, research, contacts, stats, preps, followups, timeline } = hubData
+  const { prospect, research, contacts, stats, recent_activities } = hubData
   
   // Determine journey progress
   const journeySteps = [
@@ -306,7 +306,7 @@ export default function ProspectHubPage() {
   
   // Build timeline events
   const timelineEvents: TimelineEvent[] = [
-    ...(timeline || []).slice(0, 6).map((event: any) => ({
+    ...(recent_activities || []).slice(0, 6).map((event) => ({
       id: event.id,
       type: event.activity_type as TimelineEvent['type'],
       title: event.title,
