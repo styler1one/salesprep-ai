@@ -109,6 +109,9 @@ export interface Prospect {
   website?: string
   linkedin_url?: string
   industry?: string
+  company_size?: string
+  country?: string
+  city?: string
   employee_count?: string
   annual_revenue?: string
   headquarters_location?: string
@@ -116,6 +119,7 @@ export interface Prospect {
   contact_email?: string
   contact_phone?: string
   contact_role?: string
+  contact_linkedin?: string
   tags?: string[]
   notes?: string
   last_activity_at?: string
