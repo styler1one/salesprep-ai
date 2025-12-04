@@ -166,10 +166,6 @@ class ActionGeneratorService:
 - Communication Style: {sales.get('communication_style', 'Professional')}
 - Selling Style: {sales.get('selling_style', 'Consultative')}
 """)
-            # Add style rules if style guide is available
-            style_guide = sales.get('style_guide')
-            if style_guide:
-                parts.append(self._format_style_rules(style_guide))
         
         # Company Profile
         company = context.get("company_profile", {})
@@ -223,7 +219,7 @@ class ActionGeneratorService:
         return "\n".join(parts)
     
     def _prompt_customer_report(self, context_text: str, lang_instruction: str, context: Dict) -> str:
-        """Prompt for customer report generation"""
+        """Prompt for customer report generation - CUSTOMER-FACING, uses style rules"""
         company_name = context.get("followup", {}).get("prospect_company_name", "the company")
         meeting_date = context.get("followup", {}).get("meeting_date", "Unknown date")
         meeting_subject = context.get("followup", {}).get("meeting_subject", "Meeting")
@@ -242,7 +238,12 @@ class ActionGeneratorService:
         contacts = context.get("contacts", [])
         attendee_names = [c.get("name", "") for c in contacts if c.get("name")]
         
+        # Get style rules for customer-facing output
+        style_guide = sales_profile.get("style_guide", {})
+        style_rules = self._format_style_rules(style_guide) if style_guide else ""
+        
         return f"""You are creating a customer-facing meeting report.
+{style_rules}
 
 {lang_instruction}
 
@@ -327,7 +328,7 @@ GENERAL RULES:
 Generate the complete Customer Report now:"""
     
     def _prompt_share_email(self, context_text: str, lang_instruction: str, context: Dict) -> str:
-        """Prompt for share email generation"""
+        """Prompt for share email generation - CUSTOMER-FACING, uses style rules"""
         # Get primary contact
         contacts = context.get("contacts", [])
         contact_name = contacts[0].get("name", "there") if contacts else "there"
@@ -361,7 +362,16 @@ Generate the complete Customer Report now:"""
             signature_parts.append(rep_phone)
         signature = "\n".join(signature_parts) if signature_parts else "[Your signature]"
         
+        # Get style rules for customer-facing output
+        style_guide = sales_profile.get("style_guide", {})
+        style_rules = self._format_style_rules(style_guide) if style_guide else ""
+        
+        # Get specific style preferences for email
+        email_signoff = style_guide.get("signoff", "Best regards") if style_guide else "Best regards"
+        uses_emoji = style_guide.get("emoji_usage", False) if style_guide else False
+        
         return f"""You are writing a short follow-up email to share a meeting summary with a customer.
+{style_rules}
 
 Write as if you are the salesperson who just had the conversation.
 Write in clear, warm and professional language.
@@ -449,7 +459,7 @@ RULES:
 Generate the complete email now:"""
     
     def _prompt_commercial_analysis(self, context_text: str, lang_instruction: str, context: Dict) -> str:
-        """Prompt for commercial analysis generation"""
+        """Prompt for commercial analysis generation - INTERNAL, professional/objective style"""
         company_name = context.get("followup", {}).get("prospect_company_name", "the company")
         
         return f"""You are a seasoned commercial strategist analyzing a sales conversation.
@@ -614,7 +624,7 @@ RULES:
 Generate the complete Commercial Analysis now:"""
     
     def _prompt_sales_coaching(self, context_text: str, lang_instruction: str, context: Dict) -> str:
-        """Prompt for sales coaching generation"""
+        """Prompt for sales coaching generation - INTERNAL, from app/Luna persona"""
         company_name = context.get("followup", {}).get("prospect_company_name", "the company")
         
         # Build sales profile context for personalized coaching
@@ -806,7 +816,7 @@ Generate the complete Sales Coaching feedback now:"""
             return "Limited profile information - provide balanced coaching."
     
     def _prompt_action_items(self, context_text: str, lang_instruction: str, context: Dict) -> str:
-        """Prompt for action items extraction"""
+        """Prompt for action items extraction - INTERNAL, standardized task format"""
         company_name = context.get("followup", {}).get("prospect_company_name", "the customer")
         
         return f"""You are extracting action items from a sales conversation.
@@ -926,7 +936,7 @@ RULES:
 Generate the complete action item list now:"""
     
     def _prompt_internal_report(self, context_text: str, lang_instruction: str, context: Dict) -> str:
-        """Prompt for internal report generation"""
+        """Prompt for internal report generation - INTERNAL, CRM-standard format"""
         company_name = context.get("followup", {}).get("prospect_company_name", "the customer")
         deal = context.get("deal", {})
         current_stage = deal.get("stage", "Unknown")

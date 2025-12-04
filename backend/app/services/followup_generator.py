@@ -216,16 +216,11 @@ This summary gives the essentials. Deeper analysis lives in separate reports.
             company_name = prospect_context.get("prospect_company", prospect_company or "Unknown")
             prompt += f"## PROSPECT COMPANY: {company_name}\n\n"
             
-            # Sales Profile
+            # Sales Profile (for context only - summaries are professional/standardized)
             sales = prospect_context.get("sales_profile")
             if sales:
                 if sales.get("sales_narrative"):
                     prompt += f"## ABOUT YOU (SALES REP)\n{sales['sales_narrative'][:800]}\n\n"
-                
-                # Add style guide if available
-                style_guide = sales.get("style_guide")
-                if style_guide:
-                    prompt += self._format_style_rules(style_guide) + "\n\n"
             
             # Company Profile
             company = prospect_context.get("company_profile")

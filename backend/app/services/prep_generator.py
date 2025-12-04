@@ -113,6 +113,9 @@ IMPORTANT:
         prompt += "\n"
         
         # Add sales rep & company profile context (PERSONALIZATION)
+        # Note: Meeting briefs are internal preparation materials, so we use seller context
+        # for content relevance (methodology, products, target market) but NOT style rules.
+        # Style rules are only applied to customer-facing outputs like emails and reports.
         if context.get("has_profile_context") and context.get("formatted_profile_context"):
             prompt += "## PERSONALIZATION CONTEXT (Use this to tailor the brief):\n"
             prompt += context["formatted_profile_context"] + "\n\n"
@@ -124,9 +127,6 @@ IMPORTANT:
 - Reference case studies if available
 
 """
-            # Add style rules if available
-            if context.get("style_guide"):
-                prompt += self._format_style_rules(context["style_guide"]) + "\n\n"
         
         # Add company context from KB
         if context["has_kb_data"]:
