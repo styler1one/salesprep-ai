@@ -166,6 +166,10 @@ class ActionGeneratorService:
 - Communication Style: {sales.get('communication_style', 'Professional')}
 - Selling Style: {sales.get('selling_style', 'Consultative')}
 """)
+            # Add style rules if style guide is available
+            style_guide = sales.get('style_guide')
+            if style_guide:
+                parts.append(self._format_style_rules(style_guide))
         
         # Company Profile
         company = context.get("company_profile", {})
@@ -1099,6 +1103,40 @@ Generate the complete internal report now:"""
                 metadata["overall_score"] = float(score_match.group(1))
         
         return metadata
+    
+    def _format_style_rules(self, style_guide: Dict[str, Any]) -> str:
+        """Format style guide into prompt instructions for output styling."""
+        tone = style_guide.get("tone", "professional")
+        formality = style_guide.get("formality", "professional")
+        emoji = style_guide.get("emoji_usage", False)
+        length = style_guide.get("writing_length", "concise")
+        signoff = style_guide.get("signoff", "Best regards")
+        
+        # Tone descriptions
+        tone_desc = {
+            "direct": "Be straightforward and get to the point quickly",
+            "warm": "Be friendly, personable, show genuine interest",
+            "formal": "Be professional, structured, use proper titles",
+            "casual": "Be relaxed and conversational",
+            "professional": "Balance warmth with professionalism"
+        }
+        
+        emoji_instruction = "Emoji are OK to use sparingly" if emoji else "Do NOT use emoji"
+        length_instruction = "Keep content concise and scannable" if length == "concise" else "Provide detailed, thorough explanations"
+        
+        return f"""
+## OUTPUT STYLE REQUIREMENTS
+
+**CRITICAL**: Match the sales rep's communication style in ALL output:
+- **Tone**: {tone.title()} - {tone_desc.get(tone, tone_desc['professional'])}
+- **Formality**: {formality.title()}
+- **Emoji**: {emoji_instruction}
+- **Length**: {length_instruction}
+- **Email Sign-off**: Use "{signoff}" when ending emails
+
+The output MUST sound like the sales rep wrote it themselves - their voice, their style, their personality.
+Not generic AI text. Make it personal.
+"""
 
 
 def get_action_generator() -> ActionGeneratorService:

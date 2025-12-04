@@ -124,6 +124,9 @@ IMPORTANT:
 - Reference case studies if available
 
 """
+            # Add style rules if available
+            if context.get("style_guide"):
+                prompt += self._format_style_rules(context["style_guide"]) + "\n\n"
         
         # Add company context from KB
         if context["has_kb_data"]:
@@ -211,6 +214,35 @@ When generating the meeting brief:
 
 """
         return context
+    
+    def _format_style_rules(self, style_guide: Dict[str, Any]) -> str:
+        """Format style guide into prompt instructions for output styling."""
+        tone = style_guide.get("tone", "professional")
+        formality = style_guide.get("formality", "professional")
+        emoji = style_guide.get("emoji_usage", False)
+        length = style_guide.get("writing_length", "concise")
+        
+        # Tone descriptions
+        tone_desc = {
+            "direct": "Be straightforward and get to the point",
+            "warm": "Be friendly and personable",
+            "formal": "Be professional and structured",
+            "casual": "Be relaxed and conversational",
+            "professional": "Balance warmth with professionalism"
+        }
+        
+        emoji_instruction = "Emoji are OK to use sparingly" if emoji else "Do NOT use emoji"
+        length_instruction = "Keep content concise and scannable" if length == "concise" else "Provide detailed explanations"
+        
+        return f"""## OUTPUT STYLE REQUIREMENTS
+
+Match the sales rep's communication style:
+- **Tone**: {tone.title()} - {tone_desc.get(tone, tone_desc['professional'])}
+- **Formality**: {formality.title()}
+- **Emoji**: {emoji_instruction}
+- **Length**: {length_instruction}
+
+The brief must sound like the sales rep wrote it themselves - their voice, their style."""
     
     def _get_meeting_type_instructions(self, meeting_type: str, language: str = DEFAULT_LANGUAGE) -> str:
         """Get specific instructions based on meeting type"""

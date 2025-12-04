@@ -10,7 +10,7 @@ import json
 class InterviewService:
     """Service for conducting AI-powered onboarding interviews."""
     
-    # Interview questions (15 total)
+    # Interview questions (19 total - includes 4 communication style questions)
     QUESTIONS = [
         # Section 1: Background (3 questions)
         {
@@ -112,6 +112,32 @@ class InterviewService:
             "section": "territory",
             "question": "What regions or markets do you focus on? (e.g., North America, Europe, APAC)",
             "field_mapping": ["target_regions"]
+        },
+        
+        # Section 7: Communication Style (4 questions) - NEW for style guide
+        {
+            "id": 16,
+            "section": "communication_preferences",
+            "question": "How would you describe the tone of your emails? (e.g., Direct and businesslike, Warm and personal, Formal, Casual)",
+            "field_mapping": ["email_tone"]
+        },
+        {
+            "id": 17,
+            "section": "communication_preferences",
+            "question": "Do you use emojis in professional communication? (Yes/No)",
+            "field_mapping": ["uses_emoji"]
+        },
+        {
+            "id": 18,
+            "section": "communication_preferences",
+            "question": "How do you typically sign off your emails? (e.g., Best regards, Cheers, Thanks, Kind regards)",
+            "field_mapping": ["email_signoff"]
+        },
+        {
+            "id": 19,
+            "section": "communication_preferences",
+            "question": "Do you prefer writing short, punchy messages or more detailed explanations?",
+            "field_mapping": ["writing_length_preference"]
         }
     ]
     
@@ -213,6 +239,23 @@ Extract and structure the following information in JSON format:
   "target_company_sizes": ["List", "of", "company", "sizes"],
   "quarterly_goals": "Extract quarterly goals",
   "preferred_meeting_types": ["List", "of", "meeting", "types"],
+  
+  "email_tone": "Extract email tone preference (direct, warm, formal, casual)",
+  "uses_emoji": true or false based on their response,
+  "email_signoff": "Extract preferred email sign-off",
+  "writing_length_preference": "concise or detailed based on their preference",
+  
+  "style_guide": {{
+    "tone": "direct" | "warm" | "formal" | "casual" - derive from communication_style and email_tone,
+    "formality": "formal" | "professional" | "casual" - derive from overall responses,
+    "language_style": "technical" | "business" | "simple" - derive from how they express themselves,
+    "persuasion_style": "logic" | "story" | "reference" - derive from methodology and approach,
+    "emoji_usage": true or false,
+    "signoff": "Their preferred email sign-off",
+    "writing_length": "concise" | "detailed",
+    "confidence_score": 0.8 to 1.0 if style questions answered, 0.5 if derived from other answers
+  }},
+  
   "ai_summary": "Write a 2-3 sentence summary of this sales rep's profile, highlighting their methodology, strengths, and focus areas.",
   "sales_narrative": "Write a comprehensive 4-6 paragraph narrative story about this sales professional. Include: their professional background and journey, their sales philosophy and approach, what makes them unique, how they connect with prospects, and their goals. Write in third person, making it engaging and personal. This narrative will be used as context for AI agents to personalize outputs."
 }}
@@ -223,6 +266,9 @@ Important:
 - Use empty arrays [] if information not provided
 - Keep ai_summary concise and actionable
 - Format company sizes as ranges (e.g., "50-200", "200-1000")
+- For style_guide: If style questions (Q16-Q19) are answered, use those values directly. If not, derive from communication_style and overall tone.
+- style_guide.tone should match email_tone if provided, otherwise derive from communication_style
+- style_guide.persuasion_style: Challenger/SPIN = "logic", Story-based = "story", Reference-based = "reference"
 
 Return ONLY the JSON, no other text."""
 
@@ -275,6 +321,14 @@ Return ONLY the JSON, no other text."""
         Returns:
             Basic profile data
         """
+        # Parse uses_emoji from response
+        emoji_response = responses.get(17, "").lower()
+        uses_emoji = "yes" in emoji_response or "ja" in emoji_response
+        
+        # Determine writing length preference
+        length_response = responses.get(19, "").lower()
+        writing_length = "concise" if "short" in length_response or "punchy" in length_response or "kort" in length_response else "detailed"
+        
         profile_data = {
             "full_name": responses.get(1, "").split("\n")[0][:100],  # First line
             "role": "",
@@ -290,6 +344,25 @@ Return ONLY the JSON, no other text."""
             "target_company_sizes": [],
             "quarterly_goals": responses.get(12, "")[:500],
             "preferred_meeting_types": [],
+            
+            # New style fields
+            "email_tone": responses.get(16, "professional")[:100],
+            "uses_emoji": uses_emoji,
+            "email_signoff": responses.get(18, "Best regards")[:100],
+            "writing_length_preference": writing_length,
+            
+            # Default style guide
+            "style_guide": {
+                "tone": "professional",
+                "formality": "professional",
+                "language_style": "business",
+                "persuasion_style": "logic",
+                "emoji_usage": uses_emoji,
+                "signoff": responses.get(18, "Best regards")[:100],
+                "writing_length": writing_length,
+                "confidence_score": 0.5  # Low confidence for basic extraction
+            },
+            
             "ai_summary": "Profile created from interview responses.",
             "sales_narrative": "This sales professional is building their profile. More details will be available after the complete onboarding interview.",
             "interview_responses": responses
