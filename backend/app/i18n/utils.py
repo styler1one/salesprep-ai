@@ -221,6 +221,7 @@ def get_country_iso_code(country_name: Optional[str]) -> Optional[str]:
     Convert a country name to its 2-letter ISO 3166-1 alpha-2 code.
     
     Used for Claude's web search tool which requires ISO country codes.
+    Case-insensitive lookup.
     
     Args:
         country_name: Full country name or common variant
@@ -231,9 +232,20 @@ def get_country_iso_code(country_name: Optional[str]) -> Optional[str]:
     if not country_name:
         return None
     
-    # Check if it's already a 2-letter code
-    if len(country_name) == 2 and country_name.isupper():
-        return country_name
+    country_clean = country_name.strip()
     
-    # Look up in mapping
-    return COUNTRY_TO_ISO.get(country_name)
+    # Check if it's already a 2-letter code
+    if len(country_clean) == 2:
+        return country_clean.upper()
+    
+    # Try exact match first
+    if country_clean in COUNTRY_TO_ISO:
+        return COUNTRY_TO_ISO[country_clean]
+    
+    # Try case-insensitive lookup
+    country_lower = country_clean.lower()
+    for name, code in COUNTRY_TO_ISO.items():
+        if name.lower() == country_lower:
+            return code
+    
+    return None
