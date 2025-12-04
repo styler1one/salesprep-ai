@@ -1,10 +1,17 @@
 -- ============================================================
 -- SalesPrep-AI Complete Database Schema
--- Version: 3.0
+-- Version: 3.1
 -- Last Updated: 4 December 2025
 -- 
 -- This file consolidates ALL migrations into a single schema.
 -- Use this as reference documentation - DO NOT run on existing DB!
+-- 
+-- Changes in 3.1:
+-- - Added all missing functions (23 total)
+-- - Added all triggers (17 total)
+-- - Added handle_new_user for auto-org creation
+-- - Added activity logging functions
+-- - Added profile completeness calculators
 -- 
 -- Changes in 3.0:
 -- - Added user_settings table (i18n preferences)
@@ -1019,6 +1026,413 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Handle new user (auto-create organization)
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+DECLARE
+  new_org_id UUID;
+  free_plan_id TEXT := 'free';
+BEGIN
+  -- Create personal organization
+  INSERT INTO public.organizations (name, slug)
+  VALUES (
+    'Personal - ' || COALESCE(NEW.email, NEW.id::TEXT),
+    'personal-' || NEW.id::TEXT
+  )
+  RETURNING id INTO new_org_id;
+  
+  -- Add user as owner
+  INSERT INTO public.organization_members (organization_id, user_id, role)
+  VALUES (new_org_id, NEW.id, 'owner');
+  
+  -- Create free subscription
+  INSERT INTO public.organization_subscriptions (organization_id, plan_id, status)
+  VALUES (new_org_id, free_plan_id, 'active');
+  
+  -- Create initial usage record
+  INSERT INTO public.usage_records (organization_id, period_start, period_end)
+  VALUES (new_org_id, date_trunc('month', NOW()), date_trunc('month', NOW()) + INTERVAL '1 month');
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+-- Get style guide with defaults
+CREATE OR REPLACE FUNCTION get_style_guide_with_defaults(profile_row sales_profiles)
+RETURNS JSONB AS $$
+BEGIN
+  RETURN COALESCE(profile_row.style_guide, '{}'::jsonb) || jsonb_build_object(
+    'tone', COALESCE(profile_row.email_tone, 'professional'),
+    'uses_emoji', COALESCE(profile_row.uses_emoji, false),
+    'signoff', profile_row.email_signoff,
+    'writing_length', profile_row.writing_length_preference
+  );
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+-- Cleanup old coach tips
+CREATE OR REPLACE FUNCTION cleanup_old_coach_tips()
+RETURNS INTEGER AS $$
+DECLARE
+  deleted_count INTEGER;
+BEGIN
+  DELETE FROM coach_daily_tips
+  WHERE tip_date < CURRENT_DATE - INTERVAL '7 days';
+  GET DIAGNOSTICS deleted_count = ROW_COUNT;
+  RETURN deleted_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+-- Calculate sales profile completeness
+CREATE OR REPLACE FUNCTION calculate_sales_profile_completeness(profile_data JSONB)
+RETURNS INTEGER AS $$
+DECLARE
+  completeness INTEGER := 0;
+  total_fields INTEGER := 10;
+  filled_fields INTEGER := 0;
+BEGIN
+  IF profile_data->>'full_name' IS NOT NULL AND profile_data->>'full_name' != '' THEN filled_fields := filled_fields + 1; END IF;
+  IF profile_data->>'email' IS NOT NULL AND profile_data->>'email' != '' THEN filled_fields := filled_fields + 1; END IF;
+  IF profile_data->>'phone' IS NOT NULL AND profile_data->>'phone' != '' THEN filled_fields := filled_fields + 1; END IF;
+  IF profile_data->>'job_title' IS NOT NULL AND profile_data->>'job_title' != '' THEN filled_fields := filled_fields + 1; END IF;
+  IF profile_data->>'linkedin_url' IS NOT NULL AND profile_data->>'linkedin_url' != '' THEN filled_fields := filled_fields + 1; END IF;
+  IF profile_data->>'years_experience' IS NOT NULL THEN filled_fields := filled_fields + 1; END IF;
+  IF profile_data->>'industries' IS NOT NULL AND jsonb_array_length(profile_data->'industries') > 0 THEN filled_fields := filled_fields + 1; END IF;
+  IF profile_data->>'expertise_areas' IS NOT NULL AND jsonb_array_length(profile_data->'expertise_areas') > 0 THEN filled_fields := filled_fields + 1; END IF;
+  IF profile_data->>'sales_style' IS NOT NULL AND profile_data->>'sales_style' != '' THEN filled_fields := filled_fields + 1; END IF;
+  IF profile_data->>'bio' IS NOT NULL AND profile_data->>'bio' != '' THEN filled_fields := filled_fields + 1; END IF;
+  completeness := (filled_fields * 100) / total_fields;
+  RETURN completeness;
+END;
+$$ LANGUAGE plpgsql SET search_path = '';
+
+-- Calculate company profile completeness
+CREATE OR REPLACE FUNCTION calculate_company_profile_completeness(profile_data JSONB)
+RETURNS INTEGER AS $$
+DECLARE
+  completeness INTEGER := 0;
+  total_fields INTEGER := 8;
+  filled_fields INTEGER := 0;
+BEGIN
+  IF profile_data->>'company_name' IS NOT NULL AND profile_data->>'company_name' != '' THEN filled_fields := filled_fields + 1; END IF;
+  IF profile_data->>'website' IS NOT NULL AND profile_data->>'website' != '' THEN filled_fields := filled_fields + 1; END IF;
+  IF profile_data->>'industry' IS NOT NULL AND profile_data->>'industry' != '' THEN filled_fields := filled_fields + 1; END IF;
+  IF profile_data->>'description' IS NOT NULL AND profile_data->>'description' != '' THEN filled_fields := filled_fields + 1; END IF;
+  IF profile_data->>'target_market' IS NOT NULL AND profile_data->>'target_market' != '' THEN filled_fields := filled_fields + 1; END IF;
+  IF profile_data->>'value_proposition' IS NOT NULL AND profile_data->>'value_proposition' != '' THEN filled_fields := filled_fields + 1; END IF;
+  IF profile_data->>'products_services' IS NOT NULL AND jsonb_array_length(profile_data->'products_services') > 0 THEN filled_fields := filled_fields + 1; END IF;
+  IF profile_data->>'unique_selling_points' IS NOT NULL AND jsonb_array_length(profile_data->'unique_selling_points') > 0 THEN filled_fields := filled_fields + 1; END IF;
+  completeness := (filled_fields * 100) / total_fields;
+  RETURN completeness;
+END;
+$$ LANGUAGE plpgsql SET search_path = '';
+
+-- Get or create default deal for a prospect
+CREATE OR REPLACE FUNCTION get_or_create_default_deal(
+  p_prospect_id UUID,
+  p_organization_id UUID,
+  p_created_by UUID DEFAULT NULL
+)
+RETURNS UUID AS $$
+DECLARE
+  v_deal_id UUID;
+  v_company_name TEXT;
+BEGIN
+  SELECT id INTO v_deal_id
+  FROM public.deals
+  WHERE prospect_id = p_prospect_id
+    AND is_active = true
+  ORDER BY created_at DESC
+  LIMIT 1;
+  
+  IF v_deal_id IS NULL THEN
+    SELECT company_name INTO v_company_name
+    FROM public.prospects WHERE id = p_prospect_id;
+    
+    INSERT INTO public.deals (prospect_id, organization_id, name, created_by)
+    VALUES (p_prospect_id, p_organization_id, 'Deal - ' || COALESCE(v_company_name, 'Unknown'), p_created_by)
+    RETURNING id INTO v_deal_id;
+  END IF;
+  
+  RETURN v_deal_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+-- Get or create subscription for organization
+CREATE OR REPLACE FUNCTION get_or_create_subscription(p_organization_id UUID)
+RETURNS UUID AS $$
+DECLARE
+  v_subscription_id UUID;
+BEGIN
+  SELECT id INTO v_subscription_id
+  FROM organization_subscriptions
+  WHERE organization_id = p_organization_id;
+  
+  IF v_subscription_id IS NULL THEN
+    INSERT INTO organization_subscriptions (organization_id, plan_id, status)
+    VALUES (p_organization_id, 'free', 'active')
+    RETURNING id INTO v_subscription_id;
+  END IF;
+  
+  RETURN v_subscription_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+-- Increment usage (legacy - supports individual metrics)
+CREATE OR REPLACE FUNCTION increment_usage(
+  p_organization_id UUID,
+  p_metric TEXT
+)
+RETURNS BOOLEAN AS $$
+DECLARE
+  v_usage_id UUID;
+BEGIN
+  v_usage_id := get_or_create_usage_record(p_organization_id);
+  
+  IF p_metric = 'research' THEN
+    UPDATE usage_records SET research_count = research_count + 1, updated_at = NOW() WHERE id = v_usage_id;
+  ELSIF p_metric = 'preparation' THEN
+    UPDATE usage_records SET preparation_count = preparation_count + 1, updated_at = NOW() WHERE id = v_usage_id;
+  ELSIF p_metric = 'followup' THEN
+    UPDATE usage_records SET followup_count = followup_count + 1, updated_at = NOW() WHERE id = v_usage_id;
+  END IF;
+  
+  RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+-- Check usage limit (legacy - supports individual metrics)
+CREATE OR REPLACE FUNCTION check_usage_limit(
+  p_organization_id UUID,
+  p_metric TEXT
+)
+RETURNS JSONB AS $$
+DECLARE
+  v_plan_id TEXT;
+  v_features JSONB;
+  v_limit INTEGER;
+  v_current INTEGER;
+BEGIN
+  SELECT plan_id INTO v_plan_id
+  FROM organization_subscriptions
+  WHERE organization_id = p_organization_id;
+  
+  IF v_plan_id IS NULL THEN v_plan_id := 'free'; END IF;
+  
+  SELECT features INTO v_features
+  FROM subscription_plans WHERE id = v_plan_id;
+  
+  v_limit := COALESCE((v_features->>p_metric || '_limit')::INTEGER, 10);
+  
+  IF v_limit = -1 THEN
+    RETURN jsonb_build_object('allowed', true, 'current', 0, 'limit', -1, 'unlimited', true);
+  END IF;
+  
+  SELECT COALESCE(
+    CASE 
+      WHEN p_metric = 'research' THEN research_count
+      WHEN p_metric = 'preparation' THEN preparation_count
+      WHEN p_metric = 'followup' THEN followup_count
+      ELSE 0
+    END, 0
+  ) INTO v_current
+  FROM usage_records
+  WHERE organization_id = p_organization_id
+    AND period_start = date_trunc('month', NOW());
+  
+  RETURN jsonb_build_object(
+    'allowed', COALESCE(v_current, 0) < v_limit,
+    'current', COALESCE(v_current, 0),
+    'limit', v_limit,
+    'unlimited', false,
+    'remaining', GREATEST(0, v_limit - COALESCE(v_current, 0))
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+-- Is organization member helper
+CREATE OR REPLACE FUNCTION is_org_member(org_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM organization_members
+    WHERE organization_id = org_id AND user_id = auth.uid()
+  );
+END;
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '';
+
+-- Get or create prospect contact
+CREATE OR REPLACE FUNCTION get_or_create_prospect_contact(
+  p_prospect_id UUID,
+  p_organization_id UUID,
+  p_name TEXT,
+  p_role TEXT DEFAULT NULL,
+  p_linkedin_url TEXT DEFAULT NULL
+)
+RETURNS UUID AS $$
+DECLARE
+  v_contact_id UUID;
+BEGIN
+  SELECT id INTO v_contact_id
+  FROM prospect_contacts
+  WHERE prospect_id = p_prospect_id
+    AND LOWER(name) = LOWER(p_name)
+  LIMIT 1;
+  
+  IF v_contact_id IS NULL THEN
+    INSERT INTO prospect_contacts (prospect_id, organization_id, name, role, linkedin_url, is_primary)
+    VALUES (
+      p_prospect_id, p_organization_id, p_name, p_role, p_linkedin_url,
+      NOT EXISTS(SELECT 1 FROM prospect_contacts WHERE prospect_id = p_prospect_id)
+    )
+    RETURNING id INTO v_contact_id;
+  END IF;
+  
+  RETURN v_contact_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+-- Ensure single primary contact per prospect
+CREATE OR REPLACE FUNCTION ensure_single_primary_contact()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.is_primary = true THEN
+    UPDATE prospect_contacts
+    SET is_primary = false
+    WHERE prospect_id = NEW.prospect_id
+      AND id != NEW.id
+      AND is_primary = true;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Activity logging functions
+CREATE OR REPLACE FUNCTION log_deal_activity()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO prospect_activities (prospect_id, deal_id, organization_id, activity_type, title, description, metadata, created_by)
+  VALUES (
+    NEW.prospect_id, NEW.id, NEW.organization_id, 'deal_created',
+    'Deal Created: ' || NEW.name, NEW.description,
+    jsonb_build_object('deal_id', NEW.id, 'is_active', NEW.is_active),
+    NEW.created_by
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SET search_path = '';
+
+CREATE OR REPLACE FUNCTION log_meeting_activity()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO prospect_activities (prospect_id, deal_id, meeting_id, organization_id, activity_type, title, description, metadata, created_by)
+  VALUES (
+    NEW.prospect_id, NEW.deal_id, NEW.id, NEW.organization_id, 'meeting',
+    'Meeting: ' || NEW.title, NEW.notes,
+    jsonb_build_object('meeting_id', NEW.id, 'meeting_type', NEW.meeting_type, 'status', NEW.status),
+    NEW.created_by
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SET search_path = '';
+
+CREATE OR REPLACE FUNCTION log_prep_activity()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO prospect_activities (prospect_id, organization_id, activity_type, title, description, metadata)
+  SELECT 
+    NEW.prospect_id, NEW.organization_id, 'prep_created', 'Meeting Preparation',
+    'Status: ' || NEW.status,
+    jsonb_build_object('prep_id', NEW.id, 'status', NEW.status)
+  WHERE NEW.prospect_id IS NOT NULL AND NEW.organization_id IS NOT NULL;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SET search_path = '';
+
+CREATE OR REPLACE FUNCTION log_followup_activity()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO prospect_activities (prospect_id, organization_id, activity_type, title, description, metadata)
+  SELECT 
+    NEW.prospect_id, NEW.organization_id, 'followup_created', 'Follow-up Brief',
+    'Status: ' || NEW.status,
+    jsonb_build_object('followup_id', NEW.id, 'status', NEW.status)
+  WHERE NEW.prospect_id IS NOT NULL AND NEW.organization_id IS NOT NULL;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SET search_path = '';
+
+CREATE OR REPLACE FUNCTION log_research_activity()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO prospect_activities (prospect_id, organization_id, activity_type, title, description, metadata)
+  SELECT 
+    NEW.prospect_id, NEW.organization_id, 'research_completed', 'Research Brief',
+    'Status: ' || NEW.status,
+    jsonb_build_object('research_id', NEW.id, 'status', NEW.status)
+  WHERE NEW.prospect_id IS NOT NULL AND NEW.organization_id IS NOT NULL;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SET search_path = '';
+
+-- ============================================================
+-- TRIGGERS
+-- ============================================================
+
+-- Auto-create organization for new users
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Updated_at triggers
+CREATE TRIGGER set_updated_at_deals BEFORE UPDATE ON deals
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER set_updated_at_meetings BEFORE UPDATE ON meetings
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER update_subscription_plans_updated_at BEFORE UPDATE ON subscription_plans
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER update_organization_subscriptions_updated_at BEFORE UPDATE ON organization_subscriptions
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER update_usage_records_updated_at BEFORE UPDATE ON usage_records
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trigger_user_settings_updated_at BEFORE UPDATE ON user_settings
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trigger_prospect_contacts_updated_at BEFORE UPDATE ON prospect_contacts
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- Primary contact enforcement
+CREATE TRIGGER trigger_single_primary_contact
+  BEFORE INSERT OR UPDATE ON prospect_contacts
+  FOR EACH ROW EXECUTE FUNCTION ensure_single_primary_contact();
+
+-- Activity logging triggers
+CREATE TRIGGER log_deal_created
+  AFTER INSERT ON deals
+  FOR EACH ROW EXECUTE FUNCTION log_deal_activity();
+CREATE TRIGGER log_meeting_created
+  AFTER INSERT ON meetings
+  FOR EACH ROW EXECUTE FUNCTION log_meeting_activity();
+CREATE TRIGGER log_prep_completed
+  AFTER INSERT OR UPDATE ON meeting_preps
+  FOR EACH ROW EXECUTE FUNCTION log_prep_activity();
+CREATE TRIGGER log_followup_completed
+  AFTER INSERT OR UPDATE ON followups
+  FOR EACH ROW EXECUTE FUNCTION log_followup_activity();
+CREATE TRIGGER log_research_completed
+  AFTER INSERT OR UPDATE ON research_briefs
+  FOR EACH ROW EXECUTE FUNCTION log_research_activity();
+
+-- Prospect activity tracking
+CREATE TRIGGER update_prospect_activity_research 
+  AFTER INSERT OR UPDATE ON research_briefs
+  FOR EACH ROW EXECUTE FUNCTION update_prospect_activity();
+CREATE TRIGGER update_prospect_activity_prep 
+  AFTER INSERT OR UPDATE ON meeting_preps
+  FOR EACH ROW EXECUTE FUNCTION update_prospect_activity();
+CREATE TRIGGER update_prospect_activity_followup 
+  AFTER INSERT OR UPDATE ON followups
+  FOR EACH ROW EXECUTE FUNCTION update_prospect_activity();
+
 -- ============================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- ============================================================
@@ -1099,10 +1513,15 @@ JOIN prospects p ON p.id = d.prospect_id;
 -- ============================================================
 -- END OF SCHEMA
 -- ============================================================
--- Version: 3.0
--- Tables: 25
--- Views: 2
--- Functions: 6
+-- Version: 3.1
+-- Last Updated: 4 December 2025
+-- 
+-- Summary:
+-- - Tables: 25
+-- - Views: 2
+-- - Functions: 23
+-- - Triggers: 17
+-- - Storage Buckets: 3
 -- 
 -- This file is for REFERENCE ONLY. Do not run on existing database!
 -- Use individual migration files for updates.
