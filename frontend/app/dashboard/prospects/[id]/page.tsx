@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
@@ -13,6 +13,7 @@ import {
   Search, 
   FileText, 
   ChevronRight,
+  ChevronLeft,
   Plus,
   ExternalLink,
   Globe,
@@ -21,7 +22,14 @@ import {
   Calendar,
   CheckCircle,
   AlertCircle,
-  Loader2
+  Loader2,
+  StickyNote,
+  Pin,
+  PinOff,
+  Trash2,
+  Mail,
+  Send,
+  Mic
 } from 'lucide-react'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { Button } from '@/components/ui/button'
@@ -29,32 +37,143 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/components/ui/use-toast'
+import { useConfirmDialog } from '@/components/confirm-dialog'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { api } from '@/lib/api'
 import { 
   ProspectHub, 
   DealWithStats, 
   Activity, 
   ProspectContact,
-  ResearchBrief 
+  ResearchBrief,
+  ProspectStatus
 } from '@/types'
 import { formatDate, smartDate } from '@/lib/date-utils'
-import { getActivityIcon, getProspectStatusColor } from '@/lib/constants/activity'
+import { getActivityIcon } from '@/lib/constants/activity'
+
+// Status configurations
+const STATUS_OPTIONS: ProspectStatus[] = ['new', 'researching', 'qualified', 'meeting_scheduled', 'proposal_sent', 'won', 'lost', 'inactive']
+const STATUS_COLORS: Record<string, string> = {
+  new: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
+  researching: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+  qualified: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300',
+  meeting_scheduled: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
+  proposal_sent: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-300',
+  won: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300',
+  lost: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
+  inactive: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+}
+
+interface ProspectNote {
+  id: string
+  prospect_id: string
+  user_id: string
+  content: string
+  is_pinned: boolean
+  created_at: string
+  updated_at: string
+}
 
 export default function ProspectHubPage() {
   const params = useParams()
   const router = useRouter()
   const prospectId = params.id as string
   const t = useTranslations('prospectHub')
+  const tProspects = useTranslations('prospects')
   const tCommon = useTranslations('common')
   const { toast } = useToast()
+  const { confirm } = useConfirmDialog()
   
   const supabase = createClientComponentClient()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [hubData, setHubData] = useState<ProspectHub | null>(null)
   const [activeTab, setActiveTab] = useState('overview')
+  const [organizationId, setOrganizationId] = useState<string | null>(null)
   
-  // Fetch user and hub data
+  // Notes state
+  const [notes, setNotes] = useState<ProspectNote[]>([])
+  const [notesLoading, setNotesLoading] = useState(false)
+  const [newNoteContent, setNewNoteContent] = useState('')
+  const [savingNote, setSavingNote] = useState(false)
+  
+  // Add Contact Modal
+  const [showAddContact, setShowAddContact] = useState(false)
+  const [newContact, setNewContact] = useState({
+    name: '',
+    role: '',
+    email: '',
+    phone: '',
+    linkedin_url: '',
+    decision_authority: ''
+  })
+  const [savingContact, setSavingContact] = useState(false)
+  
+  // Status update
+  const [updatingStatus, setUpdatingStatus] = useState(false)
+  
+  // Fetch hub data
+  const fetchHubData = useCallback(async () => {
+    if (!organizationId) return
+    
+    try {
+      const { data, error } = await api.get<ProspectHub>(
+        `/api/v1/prospects/${prospectId}/hub?organization_id=${organizationId}`
+      )
+      
+      if (error) {
+        toast({ variant: "destructive", title: t('errors.loadFailed') })
+        console.error('Failed to load prospect hub:', error)
+      } else {
+        setHubData(data)
+      }
+    } catch (error) {
+      console.error('Error loading hub:', error)
+    }
+  }, [prospectId, organizationId, t, toast])
+  
+  // Fetch notes
+  const fetchNotes = useCallback(async () => {
+    setNotesLoading(true)
+    try {
+      const { data, error } = await api.get<ProspectNote[]>(
+        `/api/v1/prospects/${prospectId}/notes`
+      )
+      
+      if (!error && data) {
+        setNotes(data)
+      }
+    } catch (error) {
+      console.error('Error fetching notes:', error)
+    } finally {
+      setNotesLoading(false)
+    }
+  }, [prospectId])
+  
+  // Initial load
   useEffect(() => {
     async function loadData() {
       try {
@@ -62,7 +181,6 @@ export default function ProspectHubPage() {
         setUser(user)
         
         if (user) {
-          // Get organization ID
           const { data: orgMember } = await supabase
             .from('organization_members')
             .select('organization_id')
@@ -70,17 +188,7 @@ export default function ProspectHubPage() {
             .single()
           
           if (orgMember) {
-            // Fetch hub data
-            const { data, error } = await api.get<ProspectHub>(
-              `/api/v1/prospects/${prospectId}/hub?organization_id=${orgMember.organization_id}`
-            )
-            
-            if (error) {
-              toast({ variant: "destructive", title: t('errors.loadFailed') })
-              console.error('Failed to load prospect hub:', error)
-            } else {
-              setHubData(data)
-            }
+            setOrganizationId(orgMember.organization_id)
           }
         }
       } catch (error) {
@@ -92,7 +200,147 @@ export default function ProspectHubPage() {
     }
     
     loadData()
-  }, [prospectId, supabase, t])
+  }, [supabase, t, toast])
+  
+  // Fetch data when org ID is set
+  useEffect(() => {
+    if (organizationId) {
+      fetchHubData()
+      fetchNotes()
+    }
+  }, [organizationId, fetchHubData, fetchNotes])
+  
+  // Update status
+  const handleStatusChange = async (newStatus: ProspectStatus) => {
+    if (!hubData) return
+    
+    setUpdatingStatus(true)
+    try {
+      const { error } = await api.patch(`/api/v1/prospects/${prospectId}/status`, {
+        status: newStatus
+      })
+      
+      if (error) {
+        toast({ variant: "destructive", title: t('errors.updateFailed') })
+      } else {
+        setHubData({
+          ...hubData,
+          prospect: { ...hubData.prospect, status: newStatus }
+        })
+        toast({ title: t('toast.statusUpdated') })
+      }
+    } catch (error) {
+      console.error('Error updating status:', error)
+      toast({ variant: "destructive", title: t('errors.updateFailed') })
+    } finally {
+      setUpdatingStatus(false)
+    }
+  }
+  
+  // Add note
+  const handleAddNote = async () => {
+    if (!newNoteContent.trim()) return
+    
+    setSavingNote(true)
+    try {
+      const { data, error } = await api.post<ProspectNote>(
+        `/api/v1/prospects/${prospectId}/notes`,
+        { content: newNoteContent.trim(), is_pinned: false }
+      )
+      
+      if (error) {
+        toast({ variant: "destructive", title: t('errors.noteSaveFailed') })
+      } else if (data) {
+        setNotes([data, ...notes])
+        setNewNoteContent('')
+        toast({ title: t('toast.noteAdded') })
+      }
+    } catch (error) {
+      console.error('Error adding note:', error)
+      toast({ variant: "destructive", title: t('errors.noteSaveFailed') })
+    } finally {
+      setSavingNote(false)
+    }
+  }
+  
+  // Toggle note pin
+  const handleTogglePin = async (note: ProspectNote) => {
+    try {
+      const { error } = await api.patch(
+        `/api/v1/prospects/${prospectId}/notes/${note.id}`,
+        { is_pinned: !note.is_pinned }
+      )
+      
+      if (!error) {
+        setNotes(notes.map(n => 
+          n.id === note.id ? { ...n, is_pinned: !n.is_pinned } : n
+        ).sort((a, b) => {
+          if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        }))
+      }
+    } catch (error) {
+      console.error('Error toggling pin:', error)
+    }
+  }
+  
+  // Delete note
+  const handleDeleteNote = async (noteId: string) => {
+    const confirmed = await confirm({
+      title: t('confirm.deleteNoteTitle'),
+      description: t('confirm.deleteNoteDescription'),
+      confirmLabel: tCommon('delete'),
+      cancelLabel: tCommon('cancel'),
+      variant: 'danger'
+    })
+    
+    if (!confirmed) return
+    
+    try {
+      const { error } = await api.delete(`/api/v1/prospects/${prospectId}/notes/${noteId}`)
+      
+      if (!error) {
+        setNotes(notes.filter(n => n.id !== noteId))
+        toast({ title: t('toast.noteDeleted') })
+      }
+    } catch (error) {
+      console.error('Error deleting note:', error)
+    }
+  }
+  
+  // Add contact
+  const handleAddContact = async () => {
+    if (!newContact.name.trim()) return
+    
+    setSavingContact(true)
+    try {
+      const { data, error } = await api.post<ProspectContact>(
+        `/api/v1/prospects/${prospectId}/contacts`,
+        {
+          name: newContact.name.trim(),
+          role: newContact.role || undefined,
+          email: newContact.email || undefined,
+          phone: newContact.phone || undefined,
+          linkedin_url: newContact.linkedin_url || undefined,
+          decision_authority: newContact.decision_authority || undefined
+        }
+      )
+      
+      if (error) {
+        toast({ variant: "destructive", title: t('errors.contactSaveFailed'), description: error.message })
+      } else {
+        setShowAddContact(false)
+        setNewContact({ name: '', role: '', email: '', phone: '', linkedin_url: '', decision_authority: '' })
+        toast({ title: t('toast.contactAdded') })
+        fetchHubData() // Refresh to get updated contacts
+      }
+    } catch (error) {
+      console.error('Error adding contact:', error)
+      toast({ variant: "destructive", title: t('errors.contactSaveFailed') })
+    } finally {
+      setSavingContact(false)
+    }
+  }
   
   if (loading) {
     return (
@@ -120,25 +368,66 @@ export default function ProspectHubPage() {
   
   return (
     <DashboardLayout user={user}>
-      <div className="space-y-6">
+      <div className="p-4 lg:p-6 space-y-6">
+        {/* Back Button */}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => router.push('/dashboard/prospects')}
+          className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 -ml-2"
+        >
+          <ChevronLeft className="w-4 h-4 mr-1" />
+          {t('actions.backToProspects')}
+        </Button>
+        
         {/* Header */}
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center flex-shrink-0">
               <Building2 className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                {prospect.company_name}
-              </h1>
-              <div className="flex items-center gap-3 mt-1 text-sm text-slate-500 dark:text-slate-400">
-                {prospect.industry && (
-                  <span>{prospect.industry}</span>
-                )}
-                {prospect.headquarters_location && (
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                  {prospect.company_name}
+                </h1>
+                
+                {/* Status Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className={`${STATUS_COLORS[prospect.status]} border-0 h-7`}
+                      disabled={updatingStatus}
+                    >
+                      {updatingStatus ? (
+                        <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                      ) : null}
+                      {tProspects(`status.${prospect.status}`)}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {STATUS_OPTIONS.map(status => (
+                      <DropdownMenuItem
+                        key={status}
+                        onClick={() => handleStatusChange(status)}
+                        className={prospect.status === status ? 'bg-slate-100 dark:bg-slate-800' : ''}
+                      >
+                        <span className={`w-2 h-2 rounded-full mr-2 ${STATUS_COLORS[status].split(' ')[0]}`} />
+                        {tProspects(`status.${status}`)}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              
+              <div className="flex items-center gap-3 mt-1 text-sm text-slate-500 dark:text-slate-400 flex-wrap">
+                {prospect.industry && <span>{prospect.industry}</span>}
+                {(prospect.city || prospect.country) && (
                   <span className="flex items-center gap-1">
                     <MapPin className="w-3 h-3" />
-                    {prospect.headquarters_location}
+                    {[prospect.city, prospect.country].filter(Boolean).join(', ')}
                   </span>
                 )}
                 {prospect.employee_count && (
@@ -148,7 +437,7 @@ export default function ProspectHubPage() {
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {prospect.website && (
               <Button variant="outline" size="sm" asChild>
                 <a href={prospect.website} target="_blank" rel="noopener noreferrer">
@@ -168,9 +457,48 @@ export default function ProspectHubPage() {
           </div>
         </div>
         
+        {/* Quick Actions Bar */}
+        <div className="flex items-center gap-2 flex-wrap p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+          <span className="text-sm font-medium text-slate-500 dark:text-slate-400 mr-2">
+            {t('actions.quickActions')}:
+          </span>
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => router.push(`/dashboard/research?company=${encodeURIComponent(prospect.company_name)}&country=${encodeURIComponent(prospect.country || '')}`)}
+          >
+            <Search className="w-4 h-4 mr-1" />
+            {t('actions.startResearch')}
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => router.push('/dashboard/preparation')}
+          >
+            <FileText className="w-4 h-4 mr-1" />
+            {t('actions.createPrep')}
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => router.push('/dashboard/followup')}
+          >
+            <Mic className="w-4 h-4 mr-1" />
+            {t('actions.uploadFollowup')}
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => setShowAddContact(true)}
+          >
+            <Users className="w-4 h-4 mr-1" />
+            {t('actions.addContact')}
+          </Button>
+        </div>
+        
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Building2 className="w-4 h-4" />
               <span className="hidden sm:inline">{t('tabs.overview')}</span>
@@ -184,6 +512,13 @@ export default function ProspectHubPage() {
               <span className="hidden sm:inline">{t('tabs.contacts')}</span>
               {stats.contact_count > 0 && (
                 <Badge variant="secondary" className="ml-1">{stats.contact_count}</Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="notes" className="flex items-center gap-2">
+              <StickyNote className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('tabs.notes')}</span>
+              {notes.length > 0 && (
+                <Badge variant="secondary" className="ml-1">{notes.length}</Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="deals" className="flex items-center gap-2">
@@ -323,13 +658,46 @@ export default function ProspectHubPage() {
                   </CardHeader>
                   <CardContent>
                     {contacts.length === 0 ? (
-                      <p className="text-sm text-slate-500 text-center py-4">
-                        {t('empty.noContacts')}
-                      </p>
+                      <div className="text-center py-4">
+                        <p className="text-sm text-slate-500 mb-2">{t('empty.noContacts')}</p>
+                        <Button variant="outline" size="sm" onClick={() => setShowAddContact(true)}>
+                          <Plus className="w-3 h-3 mr-1" />
+                          {t('actions.addContact')}
+                        </Button>
+                      </div>
                     ) : (
                       <div className="space-y-3">
                         {contacts.slice(0, 3).map(contact => (
                           <ContactCard key={contact.id} contact={contact} />
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                {/* Recent Notes */}
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <StickyNote className="w-4 h-4 text-amber-500" />
+                      {t('sections.recentNotes')}
+                    </CardTitle>
+                    <Button variant="ghost" size="sm" onClick={() => setActiveTab('notes')}>
+                      {t('actions.viewAll')}
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    {notes.length === 0 ? (
+                      <p className="text-sm text-slate-500 text-center py-4">
+                        {t('empty.noNotes')}
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {notes.slice(0, 3).map(note => (
+                          <div key={note.id} className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-sm">
+                            <p className="line-clamp-2 text-slate-700 dark:text-slate-300">{note.content}</p>
+                            <p className="text-xs text-slate-400 mt-1">{smartDate(note.created_at)}</p>
+                          </div>
                         ))}
                       </div>
                     )}
@@ -371,6 +739,7 @@ export default function ProspectHubPage() {
               research={research || null} 
               prospectId={prospectId}
               companyName={prospect.company_name}
+              country={prospect.country}
             />
           </TabsContent>
           
@@ -379,6 +748,21 @@ export default function ProspectHubPage() {
             <ContactsTabContent 
               contacts={contacts} 
               prospectId={prospectId}
+              onAddContact={() => setShowAddContact(true)}
+            />
+          </TabsContent>
+          
+          {/* Notes Tab */}
+          <TabsContent value="notes" className="mt-6">
+            <NotesTabContent 
+              notes={notes}
+              loading={notesLoading}
+              newNoteContent={newNoteContent}
+              setNewNoteContent={setNewNoteContent}
+              onAddNote={handleAddNote}
+              onTogglePin={handleTogglePin}
+              onDeleteNote={handleDeleteNote}
+              savingNote={savingNote}
             />
           </TabsContent>
           
@@ -399,6 +783,93 @@ export default function ProspectHubPage() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Add Contact Modal */}
+      <Dialog open={showAddContact} onOpenChange={setShowAddContact}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('modal.addContactTitle')}</DialogTitle>
+            <DialogDescription>{t('modal.addContactDescription')}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="contact-name">{t('modal.contactName')} *</Label>
+              <Input
+                id="contact-name"
+                value={newContact.name}
+                onChange={e => setNewContact({ ...newContact, name: e.target.value })}
+                placeholder="John Doe"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="contact-role">{t('modal.contactRole')}</Label>
+              <Input
+                id="contact-role"
+                value={newContact.role}
+                onChange={e => setNewContact({ ...newContact, role: e.target.value })}
+                placeholder="Sales Director"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="contact-email">{t('modal.contactEmail')}</Label>
+              <Input
+                id="contact-email"
+                type="email"
+                value={newContact.email}
+                onChange={e => setNewContact({ ...newContact, email: e.target.value })}
+                placeholder="john@company.com"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="contact-linkedin">{t('modal.contactLinkedIn')}</Label>
+              <Input
+                id="contact-linkedin"
+                value={newContact.linkedin_url}
+                onChange={e => setNewContact({ ...newContact, linkedin_url: e.target.value })}
+                placeholder="https://linkedin.com/in/..."
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="contact-authority">{t('modal.contactAuthority')}</Label>
+              <Select 
+                value={newContact.decision_authority} 
+                onValueChange={val => setNewContact({ ...newContact, decision_authority: val })}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder={t('modal.selectAuthority')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="decision_maker">{t('modal.decisionMaker')}</SelectItem>
+                  <SelectItem value="influencer">{t('modal.influencer')}</SelectItem>
+                  <SelectItem value="gatekeeper">{t('modal.gatekeeper')}</SelectItem>
+                  <SelectItem value="end_user">{t('modal.endUser')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddContact(false)}>
+              {tCommon('cancel')}
+            </Button>
+            <Button 
+              onClick={handleAddContact} 
+              disabled={!newContact.name.trim() || savingContact}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              {savingContact ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Plus className="w-4 h-4 mr-2" />
+              )}
+              {t('actions.addContact')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   )
 }
@@ -420,7 +891,7 @@ function StatsCard({
 }) {
   return (
     <Card 
-      className={`${onClick ? 'cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 transition' : ''}`}
+      className={`${onClick ? 'cursor-pointer hover:border-purple-300 dark:hover:border-purple-700 transition' : ''}`}
       onClick={onClick}
     >
       <CardContent className="pt-4">
@@ -519,11 +990,13 @@ function ActivityItem({ activity }: { activity: Activity }) {
 function ResearchTabContent({ 
   research, 
   prospectId,
-  companyName 
+  companyName,
+  country
 }: { 
   research: ResearchBrief | null
   prospectId: string
   companyName: string
+  country?: string
 }) {
   const router = useRouter()
   const t = useTranslations('prospectHub')
@@ -538,7 +1011,10 @@ function ResearchTabContent({
             <p className="text-slate-500 dark:text-slate-400 mb-4">
               {t('empty.noResearchDesc')}
             </p>
-            <Button onClick={() => router.push(`/dashboard/research?company=${encodeURIComponent(companyName)}`)}>
+            <Button 
+              className="bg-purple-600 hover:bg-purple-700"
+              onClick={() => router.push(`/dashboard/research?company=${encodeURIComponent(companyName)}&country=${encodeURIComponent(country || '')}`)}
+            >
               <Search className="w-4 h-4 mr-2" />
               {t('actions.startResearch')}
             </Button>
@@ -570,19 +1046,20 @@ function ResearchTabContent({
 
 function ContactsTabContent({ 
   contacts, 
-  prospectId 
+  prospectId,
+  onAddContact
 }: { 
   contacts: ProspectContact[]
   prospectId: string
+  onAddContact: () => void
 }) {
-  const router = useRouter()
   const t = useTranslations('prospectHub')
   
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{t('sections.allContacts')}</CardTitle>
-        <Button size="sm">
+        <Button size="sm" onClick={onAddContact} className="bg-purple-600 hover:bg-purple-700">
           <Plus className="w-4 h-4 mr-1" />
           {t('actions.addContact')}
         </Button>
@@ -592,14 +1069,18 @@ function ContactsTabContent({
           <div className="text-center py-12">
             <Users className="w-12 h-12 mx-auto mb-4 text-slate-300 dark:text-slate-600" />
             <h3 className="text-lg font-medium mb-2">{t('empty.noContactsTitle')}</h3>
-            <p className="text-slate-500 dark:text-slate-400">
+            <p className="text-slate-500 dark:text-slate-400 mb-4">
               {t('empty.noContactsDesc')}
             </p>
+            <Button onClick={onAddContact} className="bg-purple-600 hover:bg-purple-700">
+              <Plus className="w-4 h-4 mr-2" />
+              {t('actions.addContact')}
+            </Button>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 gap-4">
             {contacts.map(contact => (
-              <div key={contact.id} className="p-4 border rounded-lg">
+              <div key={contact.id} className="p-4 border rounded-lg hover:border-purple-200 dark:hover:border-purple-800 transition">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                     <span className="text-lg font-medium text-green-700 dark:text-green-400">
@@ -610,6 +1091,9 @@ function ContactsTabContent({
                     <h4 className="font-medium text-slate-900 dark:text-white">{contact.name}</h4>
                     {contact.role && (
                       <p className="text-sm text-slate-500 dark:text-slate-400">{contact.role}</p>
+                    )}
+                    {contact.email && (
+                      <p className="text-xs text-slate-400 mt-1">{contact.email}</p>
                     )}
                     {contact.decision_authority && (
                       <Badge variant="outline" className="mt-2">
@@ -637,6 +1121,130 @@ function ContactsTabContent({
   )
 }
 
+function NotesTabContent({ 
+  notes,
+  loading,
+  newNoteContent,
+  setNewNoteContent,
+  onAddNote,
+  onTogglePin,
+  onDeleteNote,
+  savingNote
+}: { 
+  notes: ProspectNote[]
+  loading: boolean
+  newNoteContent: string
+  setNewNoteContent: (val: string) => void
+  onAddNote: () => void
+  onTogglePin: (note: ProspectNote) => void
+  onDeleteNote: (id: string) => void
+  savingNote: boolean
+}) {
+  const t = useTranslations('prospectHub')
+  const tCommon = useTranslations('common')
+  
+  return (
+    <div className="space-y-6">
+      {/* Add Note Form */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Plus className="w-5 h-5" />
+            {t('notes.addNote')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Textarea
+            placeholder={t('notes.placeholder')}
+            value={newNoteContent}
+            onChange={e => setNewNoteContent(e.target.value)}
+            rows={3}
+            className="mb-3"
+          />
+          <Button 
+            onClick={onAddNote} 
+            disabled={!newNoteContent.trim() || savingNote}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            {savingNote ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <Send className="w-4 h-4 mr-2" />
+            )}
+            {t('notes.save')}
+          </Button>
+        </CardContent>
+      </Card>
+      
+      {/* Notes List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('notes.allNotes')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-purple-500" />
+            </div>
+          ) : notes.length === 0 ? (
+            <div className="text-center py-12">
+              <StickyNote className="w-12 h-12 mx-auto mb-4 text-slate-300 dark:text-slate-600" />
+              <h3 className="text-lg font-medium mb-2">{t('empty.noNotesTitle')}</h3>
+              <p className="text-slate-500 dark:text-slate-400">
+                {t('empty.noNotesDesc')}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {notes.map(note => (
+                <div 
+                  key={note.id} 
+                  className={`p-4 border rounded-lg ${note.is_pinned ? 'border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-900/20' : ''}`}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      {note.is_pinned && (
+                        <Badge variant="outline" className="mb-2 text-amber-600 border-amber-300">
+                          <Pin className="w-3 h-3 mr-1" />
+                          Pinned
+                        </Badge>
+                      )}
+                      <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{note.content}</p>
+                      <p className="text-xs text-slate-400 mt-2">{smartDate(note.created_at)}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onTogglePin(note)}
+                        className="h-8 w-8 p-0"
+                      >
+                        {note.is_pinned ? (
+                          <PinOff className="w-4 h-4 text-amber-500" />
+                        ) : (
+                          <Pin className="w-4 h-4 text-slate-400" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDeleteNote(note.id)}
+                        className="h-8 w-8 p-0 text-slate-400 hover:text-red-500"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
 function DealsTabContent({ 
   deals, 
   prospectId 
@@ -656,7 +1264,7 @@ function DealsTabContent({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>{t('sections.activeDeals')}</CardTitle>
-          <Button size="sm" onClick={() => router.push(`/dashboard/prospects/${prospectId}/deals/new`)}>
+          <Button size="sm" onClick={() => router.push(`/dashboard/prospects/${prospectId}/deals/new`)} className="bg-purple-600 hover:bg-purple-700">
             <Plus className="w-4 h-4 mr-1" />
             {t('actions.newDeal')}
           </Button>
@@ -739,7 +1347,7 @@ function TimelineTabContent({
                 <div className="space-y-3 pl-4 border-l-2 border-slate-200 dark:border-slate-700">
                   {dayActivities.map(activity => (
                     <div key={activity.id} className="relative pl-4">
-                      <div className="absolute left-0 top-1 w-2 h-2 -translate-x-[5px] rounded-full bg-slate-400 dark:bg-slate-500" />
+                      <div className="absolute left-0 top-1 w-2 h-2 -translate-x-[5px] rounded-full bg-purple-400 dark:bg-purple-500" />
                       <div>
                         <div className="flex items-center gap-2">
                           <span>{activity.icon || '📌'}</span>
@@ -767,4 +1375,3 @@ function TimelineTabContent({
     </Card>
   )
 }
-

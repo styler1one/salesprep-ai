@@ -1172,6 +1172,7 @@
       "overview": "Overview",
       "research": "Research",
       "contacts": "Contacts",
+      "notes": "Notes",
       "deals": "Deals",
       "timeline": "Timeline"
     },
@@ -1186,6 +1187,7 @@
       "activeDealsDesc": "Current opportunities with this prospect",
       "latestResearch": "Latest Research",
       "keyContacts": "Key Contacts",
+      "recentNotes": "Recent Notes",
       "recentActivity": "Recent Activity",
       "researchBrief": "Research Brief",
       "allContacts": "All Contacts",
@@ -1198,29 +1200,69 @@
       "completed": "Completed"
     },
     "actions": {
+      "backToProspects": "Back to Prospects",
+      "quickActions": "Quick Actions",
       "newDeal": "New Deal",
       "createFirstDeal": "Create First Deal",
+      "createPrep": "Create Prep",
+      "uploadFollowup": "Upload Follow-up",
       "viewAll": "View All",
       "viewResearch": "View Research",
       "startResearch": "Start Research",
       "openFull": "Open Full",
       "addContact": "Add Contact"
     },
+    "notes": {
+      "addNote": "Add Note",
+      "allNotes": "All Notes",
+      "placeholder": "Write a note about this prospect...",
+      "save": "Save Note"
+    },
+    "modal": {
+      "addContactTitle": "Add Contact",
+      "addContactDescription": "Add a new contact for this prospect",
+      "contactName": "Name",
+      "contactRole": "Role / Title",
+      "contactEmail": "Email",
+      "contactLinkedIn": "LinkedIn URL",
+      "contactAuthority": "Decision Authority",
+      "selectAuthority": "Select authority level",
+      "decisionMaker": "Decision Maker",
+      "influencer": "Influencer",
+      "gatekeeper": "Gatekeeper",
+      "endUser": "End User"
+    },
+    "confirm": {
+      "deleteNoteTitle": "Delete Note",
+      "deleteNoteDescription": "Are you sure you want to delete this note? This cannot be undone."
+    },
+    "toast": {
+      "statusUpdated": "Status updated",
+      "noteAdded": "Note added",
+      "noteDeleted": "Note deleted",
+      "contactAdded": "Contact added"
+    },
     "empty": {
       "noDeals": "No active deals yet",
       "noContacts": "No contacts added",
+      "noNotes": "No notes yet",
       "noActivity": "No recent activity",
       "noResearchTitle": "No Research Yet",
       "noResearchDesc": "Start researching this prospect to get AI-powered insights",
       "noContactsTitle": "No Contacts Yet",
       "noContactsDesc": "Add contacts to personalize your sales approach",
+      "noNotesTitle": "No Notes Yet",
+      "noNotesDesc": "Add notes to keep track of important information",
       "noActiveDeals": "No active deals",
       "noTimelineTitle": "No Activity Yet",
       "noTimelineDesc": "Activities will appear here as you work with this prospect"
     },
     "errors": {
       "loadFailed": "Failed to load prospect data",
-      "notFound": "Prospect not found"
+      "notFound": "Prospect not found",
+      "updateFailed": "Failed to update",
+      "noteSaveFailed": "Failed to save note",
+      "contactSaveFailed": "Failed to add contact"
     }
   },
   "billing": {
