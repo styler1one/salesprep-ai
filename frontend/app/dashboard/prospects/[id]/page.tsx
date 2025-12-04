@@ -60,11 +60,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
 import { api } from '@/lib/api'
 import { 
   ProspectHub, 
@@ -646,49 +641,48 @@ export default function ProspectHubPage() {
               
               {/* Research - Always shown if exists */}
               {research && (
-                <Collapsible 
-                  open={expandedSections.includes('research')}
-                  onOpenChange={() => toggleSection('research')}
-                >
-                  <Card className="border-green-200 dark:border-green-800/50">
-                    <CollapsibleTrigger asChild>
-                      <CardHeader className="py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
-                              <Search className="w-4 h-4 text-green-600 dark:text-green-400" />
-                            </div>
-                            <div>
-                              <CardTitle className="text-base">{t('journey.items.research')}</CardTitle>
-                              <p className="text-xs text-slate-500">{researchBullets.length} key insights</p>
-                            </div>
-                          </div>
-                          <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${expandedSections.includes('research') ? 'rotate-180' : ''}`} />
+                <Card className="border-green-200 dark:border-green-800/50">
+                  <CardHeader 
+                    className="py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                    onClick={() => toggleSection('research')}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                          <Search className="w-4 h-4 text-green-600 dark:text-green-400" />
                         </div>
-                      </CardHeader>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <CardContent className="pt-0 pb-4">
-                        <ul className="space-y-2 mb-3">
-                          {researchBullets.map((bullet, i) => (
-                            <li key={i} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
-                              <span className="text-purple-500 mt-1">•</span>
-                              {bullet}
-                            </li>
-                          ))}
-                        </ul>
-                        <Button 
-                          variant="link" 
-                          size="sm" 
-                          className="p-0 h-auto text-purple-600"
-                          onClick={() => router.push(`/dashboard/research/${research.id}`)}
-                        >
-                          {t('journey.viewFull')} <ExternalLink className="w-3 h-3 ml-1" />
-                        </Button>
-                      </CardContent>
-                    </CollapsibleContent>
-                  </Card>
-                </Collapsible>
+                        <div>
+                          <CardTitle className="text-base">{t('journey.items.research')}</CardTitle>
+                          <p className="text-xs text-slate-500">{researchBullets.length} key insights</p>
+                        </div>
+                      </div>
+                      <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${expandedSections.includes('research') ? 'rotate-180' : ''}`} />
+                    </div>
+                  </CardHeader>
+                  {expandedSections.includes('research') && (
+                    <CardContent className="pt-0 pb-4">
+                      <ul className="space-y-2 mb-3">
+                        {researchBullets.map((bullet, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+                            <span className="text-purple-500 mt-1">•</span>
+                            {bullet}
+                          </li>
+                        ))}
+                      </ul>
+                      <Button 
+                        variant="link" 
+                        size="sm" 
+                        className="p-0 h-auto text-purple-600"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          router.push(`/dashboard/research/${research.id}`)
+                        }}
+                      >
+                        {t('journey.viewFull')} <ExternalLink className="w-3 h-3 ml-1" />
+                      </Button>
+                    </CardContent>
+                  )}
+                </Card>
               )}
               
               {/* Contacts - Shown if any */}
