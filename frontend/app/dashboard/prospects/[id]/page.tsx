@@ -8,38 +8,36 @@ import { User } from '@supabase/supabase-js'
 import { 
   Building2, 
   Users, 
-  Target, 
-  Clock, 
   Search, 
   FileText, 
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
   Plus,
-  ExternalLink,
   Globe,
   Linkedin,
   MapPin,
-  Calendar,
   CheckCircle,
   AlertCircle,
   Loader2,
-  StickyNote,
+  Mic,
+  Target,
+  Trophy,
+  TrendingDown,
+  Lock,
+  Send,
   Pin,
   PinOff,
   Trash2,
-  Mail,
-  Send,
-  Mic
+  ExternalLink
 } from 'lucide-react'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/components/ui/use-toast'
 import { useConfirmDialog } from '@/components/confirm-dialog'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import {
   DropdownMenu,
@@ -62,20 +60,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import { api } from '@/lib/api'
 import { 
   ProspectHub, 
-  DealWithStats, 
-  Activity, 
   ProspectContact,
-  ResearchBrief,
   ProspectStatus
 } from '@/types'
-import { formatDate, smartDate } from '@/lib/date-utils'
-import { getActivityIcon } from '@/lib/constants/activity'
+import { smartDate } from '@/lib/date-utils'
 
-// Status configurations
+// ============================================================
+// Types & Constants
+// ============================================================
+
+type JourneyPhase = 
+  | 'research_only'
+  | 'has_contacts'
+  | 'has_prep'
+  | 'has_followup'
+  | 'deal_won'
+  | 'deal_lost'
+
+interface ProspectNote {
+  id: string
+  prospect_id: string
+  user_id: string
+  content: string
+  is_pinned: boolean
+  created_at: string
+  updated_at: string
+}
+
 const STATUS_OPTIONS: ProspectStatus[] = ['new', 'researching', 'qualified', 'meeting_scheduled', 'proposal_sent', 'won', 'lost', 'inactive']
+
 const STATUS_COLORS: Record<string, string> = {
   new: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
   researching: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
@@ -87,15 +108,114 @@ const STATUS_COLORS: Record<string, string> = {
   inactive: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
 }
 
-interface ProspectNote {
-  id: string
-  prospect_id: string
-  user_id: string
-  content: string
-  is_pinned: boolean
-  created_at: string
-  updated_at: string
+// ============================================================
+// Journey Detection Logic
+// ============================================================
+
+function detectJourneyPhase(hubData: ProspectHub): JourneyPhase {
+  const { prospect, contacts, stats } = hubData
+  
+  // Check for closed deals first
+  if (prospect.status === 'won') return 'deal_won'
+  if (prospect.status === 'lost') return 'deal_lost'
+  
+  // Check for follow-ups
+  if (stats.followup_count > 0) return 'has_followup'
+  
+  // Check for preps
+  if (stats.prep_count > 0) return 'has_prep'
+  
+  // Check for contacts
+  if (contacts.length > 0) return 'has_contacts'
+  
+  // Default: only research
+  return 'research_only'
 }
+
+interface NextStepConfig {
+  icon: React.ReactNode
+  title: string
+  description: string
+  tip?: string
+  actionLabel: string
+  actionPath: string
+  secondaryAction?: {
+    label: string
+    path: string
+  }
+}
+
+function getNextStepConfig(
+  phase: JourneyPhase, 
+  prospect: ProspectHub['prospect'],
+  stats: ProspectHub['stats'],
+  t: ReturnType<typeof useTranslations>
+): NextStepConfig {
+  switch (phase) {
+    case 'research_only':
+      return {
+        icon: <Users className="w-8 h-8 text-purple-600" />,
+        title: t('journey.steps.addContacts.title'),
+        description: t('journey.steps.addContacts.description'),
+        tip: t('journey.steps.addContacts.tip'),
+        actionLabel: t('journey.steps.addContacts.action'),
+        actionPath: 'add-contact'
+      }
+    
+    case 'has_contacts':
+      return {
+        icon: <FileText className="w-8 h-8 text-purple-600" />,
+        title: t('journey.steps.createPrep.title'),
+        description: t('journey.steps.createPrep.description'),
+        actionLabel: t('journey.steps.createPrep.action'),
+        actionPath: '/dashboard/preparation'
+      }
+    
+    case 'has_prep':
+      return {
+        icon: <Mic className="w-8 h-8 text-purple-600" />,
+        title: t('journey.steps.processFollowup.title'),
+        description: t('journey.steps.processFollowup.description'),
+        actionLabel: t('journey.steps.processFollowup.action'),
+        actionPath: '/dashboard/followup',
+        secondaryAction: {
+          label: t('journey.steps.processFollowup.secondaryAction'),
+          path: '/dashboard/followup'
+        }
+      }
+    
+    case 'has_followup':
+      return {
+        icon: <Target className="w-8 h-8 text-purple-600" />,
+        title: t('journey.steps.executeActions.title'),
+        description: t('journey.steps.executeActions.description', { count: stats.followup_count }),
+        actionLabel: t('journey.steps.executeActions.action'),
+        actionPath: '/dashboard/followup'
+      }
+    
+    case 'deal_won':
+      return {
+        icon: <Trophy className="w-8 h-8 text-green-600" />,
+        title: t('journey.steps.dealWon.title'),
+        description: t('journey.steps.dealWon.description'),
+        actionLabel: t('journey.steps.dealWon.action'),
+        actionPath: '/dashboard/prospects'
+      }
+    
+    case 'deal_lost':
+      return {
+        icon: <TrendingDown className="w-8 h-8 text-red-500" />,
+        title: t('journey.steps.dealLost.title'),
+        description: t('journey.steps.dealLost.description'),
+        actionLabel: t('journey.steps.dealLost.action'),
+        actionPath: '/dashboard/prospects'
+      }
+  }
+}
+
+// ============================================================
+// Main Component
+// ============================================================
 
 export default function ProspectHubPage() {
   const params = useParams()
@@ -111,12 +231,10 @@ export default function ProspectHubPage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [hubData, setHubData] = useState<ProspectHub | null>(null)
-  const [activeTab, setActiveTab] = useState('overview')
   const [organizationId, setOrganizationId] = useState<string | null>(null)
   
   // Notes state
   const [notes, setNotes] = useState<ProspectNote[]>([])
-  const [notesLoading, setNotesLoading] = useState(false)
   const [newNoteContent, setNewNoteContent] = useState('')
   const [savingNote, setSavingNote] = useState(false)
   
@@ -126,7 +244,6 @@ export default function ProspectHubPage() {
     name: '',
     role: '',
     email: '',
-    phone: '',
     linkedin_url: '',
     decision_authority: ''
   })
@@ -135,45 +252,10 @@ export default function ProspectHubPage() {
   // Status update
   const [updatingStatus, setUpdatingStatus] = useState(false)
   
-  // Fetch hub data
-  const fetchHubData = useCallback(async () => {
-    if (!organizationId) return
-    
-    try {
-      const { data, error } = await api.get<ProspectHub>(
-        `/api/v1/prospects/${prospectId}/hub?organization_id=${organizationId}`
-      )
-      
-      if (error) {
-        toast({ variant: "destructive", title: t('errors.loadFailed') })
-        console.error('Failed to load prospect hub:', error)
-      } else {
-        setHubData(data)
-      }
-    } catch (error) {
-      console.error('Error loading hub:', error)
-    }
-  }, [prospectId, organizationId, t, toast])
+  // Expanded sections
+  const [expandedSections, setExpandedSections] = useState<string[]>(['research'])
   
-  // Fetch notes
-  const fetchNotes = useCallback(async () => {
-    setNotesLoading(true)
-    try {
-      const { data, error } = await api.get<ProspectNote[]>(
-        `/api/v1/prospects/${prospectId}/notes`
-      )
-      
-      if (!error && data) {
-        setNotes(data)
-      }
-    } catch (error) {
-      console.error('Error fetching notes:', error)
-    } finally {
-      setNotesLoading(false)
-    }
-  }, [prospectId])
-  
-  // Initial load - fetch everything before setting loading to false
+  // Initial load
   useEffect(() => {
     async function loadData() {
       try {
@@ -190,14 +272,12 @@ export default function ProspectHubPage() {
           if (orgMember) {
             setOrganizationId(orgMember.organization_id)
             
-            // Fetch hub data immediately with the org ID
+            // Fetch hub data
             const { data, error } = await api.get<ProspectHub>(
               `/api/v1/prospects/${prospectId}/hub?organization_id=${orgMember.organization_id}`
             )
             
-            if (error) {
-              console.error('Failed to load prospect hub:', error)
-            } else {
+            if (!error && data) {
               setHubData(data)
             }
             
@@ -221,7 +301,20 @@ export default function ProspectHubPage() {
     loadData()
   }, [supabase, prospectId, t, toast])
   
-  // Update status
+  // Refetch hub data
+  const refetchHubData = useCallback(async () => {
+    if (!organizationId) return
+    
+    const { data, error } = await api.get<ProspectHub>(
+      `/api/v1/prospects/${prospectId}/hub?organization_id=${organizationId}`
+    )
+    
+    if (!error && data) {
+      setHubData(data)
+    }
+  }, [prospectId, organizationId])
+  
+  // Status change handler
   const handleStatusChange = async (newStatus: ProspectStatus) => {
     if (!hubData) return
     
@@ -231,9 +324,7 @@ export default function ProspectHubPage() {
         status: newStatus
       })
       
-      if (error) {
-        toast({ variant: "destructive", title: t('errors.updateFailed') })
-      } else {
+      if (!error) {
         setHubData({
           ...hubData,
           prospect: { ...hubData.prospect, status: newStatus }
@@ -241,14 +332,13 @@ export default function ProspectHubPage() {
         toast({ title: t('toast.statusUpdated') })
       }
     } catch (error) {
-      console.error('Error updating status:', error)
       toast({ variant: "destructive", title: t('errors.updateFailed') })
     } finally {
       setUpdatingStatus(false)
     }
   }
   
-  // Add note
+  // Add note handler
   const handleAddNote = async () => {
     if (!newNoteContent.trim()) return
     
@@ -259,22 +349,19 @@ export default function ProspectHubPage() {
         { content: newNoteContent.trim(), is_pinned: false }
       )
       
-      if (error) {
-        toast({ variant: "destructive", title: t('errors.noteSaveFailed') })
-      } else if (data) {
+      if (!error && data) {
         setNotes([data, ...notes])
         setNewNoteContent('')
         toast({ title: t('toast.noteAdded') })
       }
     } catch (error) {
-      console.error('Error adding note:', error)
       toast({ variant: "destructive", title: t('errors.noteSaveFailed') })
     } finally {
       setSavingNote(false)
     }
   }
   
-  // Toggle note pin
+  // Toggle pin handler
   const handleTogglePin = async (note: ProspectNote) => {
     try {
       const { error } = await api.patch(
@@ -295,7 +382,7 @@ export default function ProspectHubPage() {
     }
   }
   
-  // Delete note
+  // Delete note handler
   const handleDeleteNote = async (noteId: string) => {
     const confirmed = await confirm({
       title: t('confirm.deleteNoteTitle'),
@@ -309,7 +396,6 @@ export default function ProspectHubPage() {
     
     try {
       const { error } = await api.delete(`/api/v1/prospects/${prospectId}/notes/${noteId}`)
-      
       if (!error) {
         setNotes(notes.filter(n => n.id !== noteId))
         toast({ title: t('toast.noteDeleted') })
@@ -319,40 +405,57 @@ export default function ProspectHubPage() {
     }
   }
   
-  // Add contact
+  // Add contact handler
   const handleAddContact = async () => {
     if (!newContact.name.trim()) return
     
     setSavingContact(true)
     try {
-      const { data, error } = await api.post<ProspectContact>(
+      const { error } = await api.post(
         `/api/v1/prospects/${prospectId}/contacts`,
         {
           name: newContact.name.trim(),
           role: newContact.role || undefined,
           email: newContact.email || undefined,
-          phone: newContact.phone || undefined,
           linkedin_url: newContact.linkedin_url || undefined,
           decision_authority: newContact.decision_authority || undefined
         }
       )
       
-      if (error) {
-        toast({ variant: "destructive", title: t('errors.contactSaveFailed'), description: error.message })
-      } else {
+      if (!error) {
         setShowAddContact(false)
-        setNewContact({ name: '', role: '', email: '', phone: '', linkedin_url: '', decision_authority: '' })
+        setNewContact({ name: '', role: '', email: '', linkedin_url: '', decision_authority: '' })
         toast({ title: t('toast.contactAdded') })
-        fetchHubData() // Refresh to get updated contacts
+        refetchHubData()
+      } else {
+        toast({ variant: "destructive", title: t('errors.contactSaveFailed') })
       }
     } catch (error) {
-      console.error('Error adding contact:', error)
       toast({ variant: "destructive", title: t('errors.contactSaveFailed') })
     } finally {
       setSavingContact(false)
     }
   }
   
+  // Next step action handler
+  const handleNextStepAction = (actionPath: string) => {
+    if (actionPath === 'add-contact') {
+      setShowAddContact(true)
+    } else {
+      router.push(actionPath)
+    }
+  }
+  
+  // Toggle section expansion
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => 
+      prev.includes(section) 
+        ? prev.filter(s => s !== section)
+        : [...prev, section]
+    )
+  }
+  
+  // Loading state
   if (loading) {
     return (
       <DashboardLayout user={user}>
@@ -363,19 +466,42 @@ export default function ProspectHubPage() {
     )
   }
   
+  // Not found state
   if (!hubData) {
     return (
       <DashboardLayout user={user}>
         <div className="flex flex-col items-center justify-center h-96">
           <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
           <h2 className="text-xl font-semibold mb-2">{t('errors.notFound')}</h2>
-          <Button onClick={() => router.back()}>{tCommon('back')}</Button>
+          <Button onClick={() => router.push('/dashboard/prospects')}>{tCommon('back')}</Button>
         </div>
       </DashboardLayout>
     )
   }
   
-  const { prospect, research, contacts, deals, recent_activities, stats } = hubData
+  const { prospect, research, contacts, stats } = hubData
+  const phase = detectJourneyPhase(hubData)
+  const nextStepConfig = getNextStepConfig(phase, prospect, stats, t)
+  
+  // Get research summary bullets
+  const getResearchBullets = () => {
+    if (!research?.brief_content) return []
+    const content = research.brief_content
+    // Try to extract key points - this is a simple heuristic
+    const lines = content.split('\n').filter(line => 
+      line.trim().startsWith('•') || 
+      line.trim().startsWith('-') ||
+      line.trim().startsWith('*')
+    ).slice(0, 3)
+    
+    if (lines.length > 0) return lines.map(l => l.replace(/^[•\-\*]\s*/, '').trim())
+    
+    // Fallback: first 3 sentences
+    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 20).slice(0, 3)
+    return sentences.map(s => s.trim().substring(0, 100) + '...')
+  }
+  
+  const researchBullets = getResearchBullets()
   
   return (
     <DashboardLayout user={user}>
@@ -394,8 +520,8 @@ export default function ProspectHubPage() {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-              <Building2 className="w-8 h-8 text-white" />
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+              <Building2 className="w-7 h-7 text-white" />
             </div>
             <div>
               <div className="flex items-center gap-3 flex-wrap">
@@ -412,9 +538,7 @@ export default function ProspectHubPage() {
                       className={`${STATUS_COLORS[prospect.status]} border-0 h-7`}
                       disabled={updatingStatus}
                     >
-                      {updatingStatus ? (
-                        <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                      ) : null}
+                      {updatingStatus && <Loader2 className="w-3 h-3 animate-spin mr-1" />}
                       {tProspects(`status.${prospect.status}`)}
                     </Button>
                   </DropdownMenuTrigger>
@@ -441,9 +565,6 @@ export default function ProspectHubPage() {
                     {[prospect.city, prospect.country].filter(Boolean).join(', ')}
                   </span>
                 )}
-                {prospect.employee_count && (
-                  <span>{prospect.employee_count} employees</span>
-                )}
               </div>
             </div>
           </div>
@@ -468,331 +589,349 @@ export default function ProspectHubPage() {
           </div>
         </div>
         
-        {/* Quick Actions Bar */}
-        <div className="flex items-center gap-2 flex-wrap p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-          <span className="text-sm font-medium text-slate-500 dark:text-slate-400 mr-2">
-            {t('actions.quickActions')}:
-          </span>
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={() => router.push(`/dashboard/research?company=${encodeURIComponent(prospect.company_name)}&country=${encodeURIComponent(prospect.country || '')}`)}
-          >
-            <Search className="w-4 h-4 mr-1" />
-            {t('actions.startResearch')}
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={() => router.push('/dashboard/preparation')}
-          >
-            <FileText className="w-4 h-4 mr-1" />
-            {t('actions.createPrep')}
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={() => router.push('/dashboard/followup')}
-          >
-            <Mic className="w-4 h-4 mr-1" />
-            {t('actions.uploadFollowup')}
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={() => setShowAddContact(true)}
-          >
-            <Users className="w-4 h-4 mr-1" />
-            {t('actions.addContact')}
-          </Button>
-        </div>
+        {/* Next Step Card */}
+        <Card className="border-2 border-purple-200 dark:border-purple-800 bg-gradient-to-br from-purple-50 to-white dark:from-purple-950/30 dark:to-slate-900">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-xl bg-purple-100 dark:bg-purple-900/50">
+                {nextStepConfig.icon}
+              </div>
+              <div className="flex-1">
+                <p className="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wide mb-1">
+                  {t('journey.nextStep')}
+                </p>
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  {nextStepConfig.title}
+                </h2>
+                <p className="text-slate-600 dark:text-slate-400 mt-1">
+                  {nextStepConfig.description}
+                </p>
+                {nextStepConfig.tip && (
+                  <p className="text-sm text-purple-600 dark:text-purple-400 mt-2">
+                    💡 {nextStepConfig.tip}
+                  </p>
+                )}
+                <div className="flex items-center gap-3 mt-4">
+                  <Button 
+                    className="bg-purple-600 hover:bg-purple-700"
+                    onClick={() => handleNextStepAction(nextStepConfig.actionPath)}
+                  >
+                    {nextStepConfig.actionLabel}
+                  </Button>
+                  {nextStepConfig.secondaryAction && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => router.push(nextStepConfig.secondaryAction!.path)}
+                    >
+                      {nextStepConfig.secondaryAction.label}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <Building2 className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('tabs.overview')}</span>
-            </TabsTrigger>
-            <TabsTrigger value="research" className="flex items-center gap-2">
-              <Search className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('tabs.research')}</span>
-            </TabsTrigger>
-            <TabsTrigger value="contacts" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('tabs.contacts')}</span>
-              {stats.contact_count > 0 && (
-                <Badge variant="secondary" className="ml-1">{stats.contact_count}</Badge>
+        {/* Two Column Layout */}
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-4">
+            
+            {/* Completed Section */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                {t('journey.completed')}
+              </h3>
+              
+              {/* Research - Always shown if exists */}
+              {research && (
+                <Collapsible 
+                  open={expandedSections.includes('research')}
+                  onOpenChange={() => toggleSection('research')}
+                >
+                  <Card className="border-green-200 dark:border-green-800/50">
+                    <CollapsibleTrigger asChild>
+                      <CardHeader className="py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                              <Search className="w-4 h-4 text-green-600 dark:text-green-400" />
+                            </div>
+                            <div>
+                              <CardTitle className="text-base">{t('journey.items.research')}</CardTitle>
+                              <p className="text-xs text-slate-500">{researchBullets.length} key insights</p>
+                            </div>
+                          </div>
+                          <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${expandedSections.includes('research') ? 'rotate-180' : ''}`} />
+                        </div>
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent className="pt-0 pb-4">
+                        <ul className="space-y-2 mb-3">
+                          {researchBullets.map((bullet, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+                              <span className="text-purple-500 mt-1">•</span>
+                              {bullet}
+                            </li>
+                          ))}
+                        </ul>
+                        <Button 
+                          variant="link" 
+                          size="sm" 
+                          className="p-0 h-auto text-purple-600"
+                          onClick={() => router.push(`/dashboard/research/${research.id}`)}
+                        >
+                          {t('journey.viewFull')} <ExternalLink className="w-3 h-3 ml-1" />
+                        </Button>
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
               )}
-            </TabsTrigger>
-            <TabsTrigger value="notes" className="flex items-center gap-2">
-              <StickyNote className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('tabs.notes')}</span>
-              {notes.length > 0 && (
-                <Badge variant="secondary" className="ml-1">{notes.length}</Badge>
+              
+              {/* Contacts - Shown if any */}
+              {contacts.length > 0 && (
+                <Card className="border-green-200 dark:border-green-800/50">
+                  <CardHeader className="py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                        <Users className="w-4 h-4 text-green-600 dark:text-green-400" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-base">
+                          {contacts.length} {t('journey.items.contacts')}
+                        </CardTitle>
+                        <p className="text-xs text-slate-500">
+                          {contacts.slice(0, 2).map(c => c.name).join(', ')}
+                          {contacts.length > 2 && ` +${contacts.length - 2}`}
+                        </p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                </Card>
               )}
-            </TabsTrigger>
-            <TabsTrigger value="deals" className="flex items-center gap-2">
-              <Target className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('tabs.deals')}</span>
-              {stats.active_deal_count > 0 && (
-                <Badge variant="secondary" className="ml-1">{stats.active_deal_count}</Badge>
+              
+              {/* Prep - Shown if any */}
+              {stats.prep_count > 0 && (
+                <Card className="border-green-200 dark:border-green-800/50">
+                  <CardHeader className="py-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                          <FileText className="w-4 h-4 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-base">{t('journey.items.preparation')}</CardTitle>
+                          <p className="text-xs text-slate-500">{stats.prep_count} prep(s) created</p>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => router.push('/dashboard/preparation')}
+                      >
+                        {t('journey.view')} <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                </Card>
               )}
-            </TabsTrigger>
-            <TabsTrigger value="timeline" className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('tabs.timeline')}</span>
-            </TabsTrigger>
-          </TabsList>
-          
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6 mt-6">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatsCard
-                icon={<Search className="w-5 h-5 text-blue-500" />}
-                label={t('stats.research')}
-                value={stats.research_count}
-                onClick={() => setActiveTab('research')}
-              />
-              <StatsCard
-                icon={<Users className="w-5 h-5 text-green-500" />}
-                label={t('stats.contacts')}
-                value={stats.contact_count}
-                onClick={() => setActiveTab('contacts')}
-              />
-              <StatsCard
-                icon={<Target className="w-5 h-5 text-purple-500" />}
-                label={t('stats.activeDeals')}
-                value={stats.active_deal_count}
-                onClick={() => setActiveTab('deals')}
-              />
-              <StatsCard
-                icon={<Calendar className="w-5 h-5 text-orange-500" />}
-                label={t('stats.meetings')}
-                value={stats.meeting_count}
-              />
+              
+              {/* Follow-up - Shown if any */}
+              {stats.followup_count > 0 && (
+                <Card className="border-green-200 dark:border-green-800/50">
+                  <CardHeader className="py-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                          <Mic className="w-4 h-4 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-base">{t('journey.items.followup')}</CardTitle>
+                          <p className="text-xs text-slate-500">{stats.followup_count} follow-up(s)</p>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => router.push('/dashboard/followup')}
+                      >
+                        {t('journey.view')} <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                </Card>
+              )}
             </div>
             
-            {/* Two Column Layout */}
-            <div className="grid lg:grid-cols-3 gap-6">
-              {/* Main Content */}
-              <div className="lg:col-span-2 space-y-6">
-                {/* Active Deals */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Target className="w-5 h-5 text-purple-500" />
-                        {t('sections.activeDeals')}
-                      </CardTitle>
-                      <CardDescription>{t('sections.activeDealsDesc')}</CardDescription>
-                    </div>
-                    <Button size="sm" onClick={() => router.push(`/dashboard/prospects/${prospectId}/deals/new`)}>
-                      <Plus className="w-4 h-4 mr-1" />
-                      {t('actions.newDeal')}
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    {deals.filter(d => d.is_active).length === 0 ? (
-                      <div className="text-center py-8 text-slate-500 dark:text-slate-400">
-                        <Target className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                        <p>{t('empty.noDeals')}</p>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="mt-3"
-                          onClick={() => router.push(`/dashboard/prospects/${prospectId}/deals/new`)}
-                        >
-                          <Plus className="w-4 h-4 mr-1" />
-                          {t('actions.createFirstDeal')}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {deals.filter(d => d.is_active).map(deal => (
-                          <DealCard key={deal.id} deal={deal} prospectId={prospectId} />
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+            {/* Upcoming Section */}
+            {phase !== 'deal_won' && phase !== 'deal_lost' && (
+              <div className="space-y-3">
+                <h3 className="font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                  {t('journey.upcoming')}
+                </h3>
                 
-                {/* Recent Research */}
-                {research && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Search className="w-5 h-5 text-blue-500" />
-                        {t('sections.latestResearch')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div 
-                        className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition"
-                        onClick={() => router.push(`/dashboard/research/${research.id}`)}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            {t('status.completed')}
-                          </Badge>
-                          <span className="text-xs text-slate-500">
-                            {research.completed_at && formatDate(research.completed_at)}
-                          </span>
-                        </div>
-                        <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-3">
-                          {research.brief_content?.substring(0, 200)}...
-                        </p>
-                        <Button variant="link" size="sm" className="mt-2 p-0">
-                          {t('actions.viewResearch')}
-                          <ChevronRight className="w-4 h-4 ml-1" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                {/* Show locked items based on phase */}
+                {phase === 'research_only' && (
+                  <>
+                    <LockedItem 
+                      icon={<FileText className="w-4 h-4" />}
+                      title={t('journey.items.preparation')}
+                      reason={t('journey.locked.needsContacts')}
+                    />
+                    <LockedItem 
+                      icon={<Mic className="w-4 h-4" />}
+                      title={t('journey.items.followup')}
+                      reason={t('journey.locked.needsMeeting')}
+                    />
+                  </>
+                )}
+                
+                {phase === 'has_contacts' && (
+                  <LockedItem 
+                    icon={<Mic className="w-4 h-4" />}
+                    title={t('journey.items.followup')}
+                    reason={t('journey.locked.needsMeeting')}
+                  />
                 )}
               </div>
-              
-              {/* Sidebar */}
-              <div className="space-y-6">
-                {/* Key Contacts */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Users className="w-4 h-4 text-green-500" />
-                      {t('sections.keyContacts')}
-                    </CardTitle>
-                    <Button variant="ghost" size="sm" onClick={() => setActiveTab('contacts')}>
-                      {t('actions.viewAll')}
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    {contacts.length === 0 ? (
-                      <div className="text-center py-4">
-                        <p className="text-sm text-slate-500 mb-2">{t('empty.noContacts')}</p>
-                        <Button variant="outline" size="sm" onClick={() => setShowAddContact(true)}>
-                          <Plus className="w-3 h-3 mr-1" />
-                          {t('actions.addContact')}
-                        </Button>
+            )}
+          </div>
+          
+          {/* Sidebar */}
+          <div className="space-y-4">
+            {/* Key Contacts */}
+            <Card>
+              <CardHeader className="py-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Users className="w-4 h-4 text-purple-500" />
+                    {t('sidebar.keyContacts')} ({contacts.length})
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {contacts.length === 0 ? (
+                  <p className="text-sm text-slate-500 text-center py-2">
+                    {t('empty.noContacts')}
+                  </p>
+                ) : (
+                  <div className="space-y-2 mb-3">
+                    {contacts.slice(0, 4).map(contact => (
+                      <div key={contact.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800">
+                        <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-sm font-medium text-purple-700 dark:text-purple-300">
+                          {contact.name.charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                            {contact.name}
+                          </p>
+                          <p className="text-xs text-slate-500 truncate">
+                            {contact.role || contact.decision_authority || '—'}
+                          </p>
+                        </div>
+                        {contact.linkedin_url && (
+                          <a 
+                            href={contact.linkedin_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-slate-400 hover:text-blue-500"
+                          >
+                            <Linkedin className="w-4 h-4" />
+                          </a>
+                        )}
                       </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {contacts.slice(0, 3).map(contact => (
-                          <ContactCard key={contact.id} contact={contact} />
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                    ))}
+                  </div>
+                )}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => setShowAddContact(true)}
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  {t('actions.addContact')}
+                </Button>
+              </CardContent>
+            </Card>
+            
+            {/* Quick Notes */}
+            <Card>
+              <CardHeader className="py-3">
+                <CardTitle className="text-base">{t('sidebar.quickNotes')}</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex gap-2 mb-3">
+                  <Input
+                    value={newNoteContent}
+                    onChange={e => setNewNoteContent(e.target.value)}
+                    placeholder={t('sidebar.addNotePlaceholder')}
+                    className="h-9 text-sm"
+                    onKeyDown={e => e.key === 'Enter' && handleAddNote()}
+                  />
+                  <Button 
+                    size="sm" 
+                    className="h-9 px-3 bg-purple-600 hover:bg-purple-700"
+                    onClick={handleAddNote}
+                    disabled={!newNoteContent.trim() || savingNote}
+                  >
+                    {savingNote ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  </Button>
+                </div>
                 
-                {/* Recent Notes */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <StickyNote className="w-4 h-4 text-amber-500" />
-                      {t('sections.recentNotes')}
-                    </CardTitle>
-                    <Button variant="ghost" size="sm" onClick={() => setActiveTab('notes')}>
-                      {t('actions.viewAll')}
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    {notes.length === 0 ? (
-                      <p className="text-sm text-slate-500 text-center py-4">
-                        {t('empty.noNotes')}
-                      </p>
-                    ) : (
-                      <div className="space-y-2">
-                        {notes.slice(0, 3).map(note => (
-                          <div key={note.id} className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-sm">
-                            <p className="line-clamp-2 text-slate-700 dark:text-slate-300">{note.content}</p>
-                            <p className="text-xs text-slate-400 mt-1">{smartDate(note.created_at)}</p>
+                {notes.length === 0 ? (
+                  <p className="text-sm text-slate-500 text-center py-2">
+                    {t('empty.noNotes')}
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {notes.slice(0, 3).map(note => (
+                      <div 
+                        key={note.id} 
+                        className={`p-2 rounded-lg text-sm group ${
+                          note.is_pinned 
+                            ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800' 
+                            : 'bg-slate-50 dark:bg-slate-800'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-slate-700 dark:text-slate-300 line-clamp-2">{note.content}</p>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={() => handleTogglePin(note)}
+                              className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded"
+                            >
+                              {note.is_pinned ? (
+                                <PinOff className="w-3 h-3 text-amber-500" />
+                              ) : (
+                                <Pin className="w-3 h-3 text-slate-400" />
+                              )}
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteNote(note.id)}
+                              className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded"
+                            >
+                              <Trash2 className="w-3 h-3 text-slate-400 hover:text-red-500" />
+                            </button>
                           </div>
-                        ))}
+                        </div>
+                        <p className="text-xs text-slate-400 mt-1">{smartDate(note.created_at)}</p>
                       </div>
+                    ))}
+                    {notes.length > 3 && (
+                      <Button variant="link" size="sm" className="w-full text-purple-600">
+                        {t('sidebar.viewAllNotes', { count: notes.length })}
+                      </Button>
                     )}
-                  </CardContent>
-                </Card>
-                
-                {/* Recent Activity */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-orange-500" />
-                      {t('sections.recentActivity')}
-                    </CardTitle>
-                    <Button variant="ghost" size="sm" onClick={() => setActiveTab('timeline')}>
-                      {t('actions.viewAll')}
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    {recent_activities.length === 0 ? (
-                      <p className="text-sm text-slate-500 text-center py-4">
-                        {t('empty.noActivity')}
-                      </p>
-                    ) : (
-                      <div className="space-y-3">
-                        {recent_activities.slice(0, 5).map(activity => (
-                          <ActivityItem key={activity.id} activity={activity} />
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </TabsContent>
-          
-          {/* Research Tab */}
-          <TabsContent value="research" className="mt-6">
-            <ResearchTabContent 
-              research={research || null} 
-              prospectId={prospectId}
-              companyName={prospect.company_name}
-              country={prospect.country}
-            />
-          </TabsContent>
-          
-          {/* Contacts Tab */}
-          <TabsContent value="contacts" className="mt-6">
-            <ContactsTabContent 
-              contacts={contacts} 
-              prospectId={prospectId}
-              onAddContact={() => setShowAddContact(true)}
-            />
-          </TabsContent>
-          
-          {/* Notes Tab */}
-          <TabsContent value="notes" className="mt-6">
-            <NotesTabContent 
-              notes={notes}
-              loading={notesLoading}
-              newNoteContent={newNoteContent}
-              setNewNoteContent={setNewNoteContent}
-              onAddNote={handleAddNote}
-              onTogglePin={handleTogglePin}
-              onDeleteNote={handleDeleteNote}
-              savingNote={savingNote}
-            />
-          </TabsContent>
-          
-          {/* Deals Tab */}
-          <TabsContent value="deals" className="mt-6">
-            <DealsTabContent 
-              deals={deals} 
-              prospectId={prospectId}
-            />
-          </TabsContent>
-          
-          {/* Timeline Tab */}
-          <TabsContent value="timeline" className="mt-6">
-            <TimelineTabContent 
-              activities={recent_activities}
-              prospectId={prospectId}
-            />
-          </TabsContent>
-        </Tabs>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
       
       {/* Add Contact Modal */}
@@ -889,500 +1028,31 @@ export default function ProspectHubPage() {
 // Sub Components
 // ============================================================
 
-function StatsCard({ 
+function LockedItem({ 
   icon, 
-  label, 
-  value, 
-  onClick 
+  title, 
+  reason 
 }: { 
   icon: React.ReactNode
-  label: string
-  value: number
-  onClick?: () => void
+  title: string
+  reason: string
 }) {
   return (
-    <Card 
-      className={`${onClick ? 'cursor-pointer hover:border-purple-300 dark:hover:border-purple-700 transition' : ''}`}
-      onClick={onClick}
-    >
-      <CardContent className="pt-4">
+    <Card className="border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 opacity-60">
+      <CardHeader className="py-3">
         <div className="flex items-center gap-3">
-          {icon}
-          <div>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">{value}</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
+          <div className="p-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-400">
+            {icon}
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-function DealCard({ deal, prospectId }: { deal: DealWithStats; prospectId: string }) {
-  const router = useRouter()
-  const t = useTranslations('prospectHub')
-  
-  return (
-    <div 
-      className="p-4 border rounded-lg hover:border-purple-300 dark:hover:border-purple-700 transition cursor-pointer"
-      onClick={() => router.push(`/dashboard/prospects/${prospectId}/deals/${deal.id}`)}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <h4 className="font-medium text-slate-900 dark:text-white">{deal.name}</h4>
-        <Badge variant={deal.is_active ? 'default' : 'secondary'}>
-          {deal.is_active ? t('status.active') : t('status.archived')}
-        </Badge>
-      </div>
-      {deal.description && (
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-3 line-clamp-2">
-          {deal.description}
-        </p>
-      )}
-      <div className="flex items-center gap-4 text-xs text-slate-500">
-        <span>{deal.meeting_count} {t('stats.meetings').toLowerCase()}</span>
-        <span>{deal.prep_count} preps</span>
-        <span>{deal.followup_count} follow-ups</span>
-      </div>
-    </div>
-  )
-}
-
-function ContactCard({ contact }: { contact: ProspectContact }) {
-  return (
-    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800">
-      <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-        <span className="text-sm font-medium text-green-700 dark:text-green-400">
-          {contact.name.charAt(0).toUpperCase()}
-        </span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
-          {contact.name}
-        </p>
-        {contact.role && (
-          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-            {contact.role}
-          </p>
-        )}
-      </div>
-      {contact.linkedin_url && (
-        <a 
-          href={contact.linkedin_url} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          onClick={e => e.stopPropagation()}
-          className="text-slate-400 hover:text-blue-500"
-        >
-          <Linkedin className="w-4 h-4" />
-        </a>
-      )}
-    </div>
-  )
-}
-
-function ActivityItem({ activity }: { activity: Activity }) {
-  return (
-    <div className="flex items-start gap-3">
-      <span className="text-lg">{getActivityIcon(activity.activity_type, activity.icon)}</span>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm text-slate-900 dark:text-white">{activity.title}</p>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          {smartDate(activity.created_at)}
-        </p>
-      </div>
-    </div>
-  )
-}
-
-// ============================================================
-// Tab Content Components
-// ============================================================
-
-function ResearchTabContent({ 
-  research, 
-  prospectId,
-  companyName,
-  country
-}: { 
-  research: ResearchBrief | null
-  prospectId: string
-  companyName: string
-  country?: string
-}) {
-  const router = useRouter()
-  const t = useTranslations('prospectHub')
-  
-  if (!research) {
-    return (
-      <Card>
-        <CardContent className="py-12">
-          <div className="text-center">
-            <Search className="w-12 h-12 mx-auto mb-4 text-slate-300 dark:text-slate-600" />
-            <h3 className="text-lg font-medium mb-2">{t('empty.noResearchTitle')}</h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-4">
-              {t('empty.noResearchDesc')}
-            </p>
-            <Button 
-              className="bg-purple-600 hover:bg-purple-700"
-              onClick={() => router.push(`/dashboard/research?company=${encodeURIComponent(companyName)}&country=${encodeURIComponent(country || '')}`)}
-            >
-              <Search className="w-4 h-4 mr-2" />
-              {t('actions.startResearch')}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-  
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>{t('sections.researchBrief')}</CardTitle>
-          <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/research/${research.id}`)}>
-            <ExternalLink className="w-4 h-4 mr-1" />
-            {t('actions.openFull')}
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="prose prose-sm dark:prose-invert max-w-none">
-          {research.brief_content}
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-function ContactsTabContent({ 
-  contacts, 
-  prospectId,
-  onAddContact
-}: { 
-  contacts: ProspectContact[]
-  prospectId: string
-  onAddContact: () => void
-}) {
-  const t = useTranslations('prospectHub')
-  
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>{t('sections.allContacts')}</CardTitle>
-        <Button size="sm" onClick={onAddContact} className="bg-purple-600 hover:bg-purple-700">
-          <Plus className="w-4 h-4 mr-1" />
-          {t('actions.addContact')}
-        </Button>
-      </CardHeader>
-      <CardContent>
-        {contacts.length === 0 ? (
-          <div className="text-center py-12">
-            <Users className="w-12 h-12 mx-auto mb-4 text-slate-300 dark:text-slate-600" />
-            <h3 className="text-lg font-medium mb-2">{t('empty.noContactsTitle')}</h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-4">
-              {t('empty.noContactsDesc')}
-            </p>
-            <Button onClick={onAddContact} className="bg-purple-600 hover:bg-purple-700">
-              <Plus className="w-4 h-4 mr-2" />
-              {t('actions.addContact')}
-            </Button>
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-2 gap-4">
-            {contacts.map(contact => (
-              <div key={contact.id} className="p-4 border rounded-lg hover:border-purple-200 dark:hover:border-purple-800 transition">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                    <span className="text-lg font-medium text-green-700 dark:text-green-400">
-                      {contact.name.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-slate-900 dark:text-white">{contact.name}</h4>
-                    {contact.role && (
-                      <p className="text-sm text-slate-500 dark:text-slate-400">{contact.role}</p>
-                    )}
-                    {contact.email && (
-                      <p className="text-xs text-slate-400 mt-1">{contact.email}</p>
-                    )}
-                    {contact.decision_authority && (
-                      <Badge variant="outline" className="mt-2">
-                        {contact.decision_authority}
-                      </Badge>
-                    )}
-                  </div>
-                  {contact.linkedin_url && (
-                    <a 
-                      href={contact.linkedin_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-slate-400 hover:text-blue-500"
-                    >
-                      <Linkedin className="w-5 h-5" />
-                    </a>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
-
-function NotesTabContent({ 
-  notes,
-  loading,
-  newNoteContent,
-  setNewNoteContent,
-  onAddNote,
-  onTogglePin,
-  onDeleteNote,
-  savingNote
-}: { 
-  notes: ProspectNote[]
-  loading: boolean
-  newNoteContent: string
-  setNewNoteContent: (val: string) => void
-  onAddNote: () => void
-  onTogglePin: (note: ProspectNote) => void
-  onDeleteNote: (id: string) => void
-  savingNote: boolean
-}) {
-  const t = useTranslations('prospectHub')
-  const tCommon = useTranslations('common')
-  
-  return (
-    <div className="space-y-6">
-      {/* Add Note Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Plus className="w-5 h-5" />
-            {t('notes.addNote')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            placeholder={t('notes.placeholder')}
-            value={newNoteContent}
-            onChange={e => setNewNoteContent(e.target.value)}
-            rows={3}
-            className="mb-3"
-          />
-          <Button 
-            onClick={onAddNote} 
-            disabled={!newNoteContent.trim() || savingNote}
-            className="bg-purple-600 hover:bg-purple-700"
-          >
-            {savingNote ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <Send className="w-4 h-4 mr-2" />
-            )}
-            {t('notes.save')}
-          </Button>
-        </CardContent>
-      </Card>
-      
-      {/* Notes List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('notes.allNotes')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-purple-500" />
-            </div>
-          ) : notes.length === 0 ? (
-            <div className="text-center py-12">
-              <StickyNote className="w-12 h-12 mx-auto mb-4 text-slate-300 dark:text-slate-600" />
-              <h3 className="text-lg font-medium mb-2">{t('empty.noNotesTitle')}</h3>
-              <p className="text-slate-500 dark:text-slate-400">
-                {t('empty.noNotesDesc')}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {notes.map(note => (
-                <div 
-                  key={note.id} 
-                  className={`p-4 border rounded-lg ${note.is_pinned ? 'border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-900/20' : ''}`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      {note.is_pinned && (
-                        <Badge variant="outline" className="mb-2 text-amber-600 border-amber-300">
-                          <Pin className="w-3 h-3 mr-1" />
-                          Pinned
-                        </Badge>
-                      )}
-                      <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{note.content}</p>
-                      <p className="text-xs text-slate-400 mt-2">{smartDate(note.created_at)}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onTogglePin(note)}
-                        className="h-8 w-8 p-0"
-                      >
-                        {note.is_pinned ? (
-                          <PinOff className="w-4 h-4 text-amber-500" />
-                        ) : (
-                          <Pin className="w-4 h-4 text-slate-400" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDeleteNote(note.id)}
-                        className="h-8 w-8 p-0 text-slate-400 hover:text-red-500"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
-function DealsTabContent({ 
-  deals, 
-  prospectId 
-}: { 
-  deals: DealWithStats[]
-  prospectId: string
-}) {
-  const router = useRouter()
-  const t = useTranslations('prospectHub')
-  
-  const activeDeals = deals.filter(d => d.is_active)
-  const archivedDeals = deals.filter(d => !d.is_active)
-  
-  return (
-    <div className="space-y-6">
-      {/* Active Deals */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{t('sections.activeDeals')}</CardTitle>
-          <Button size="sm" onClick={() => router.push(`/dashboard/prospects/${prospectId}/deals/new`)} className="bg-purple-600 hover:bg-purple-700">
-            <Plus className="w-4 h-4 mr-1" />
-            {t('actions.newDeal')}
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {activeDeals.length === 0 ? (
-            <div className="text-center py-8 text-slate-500">
-              <Target className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>{t('empty.noActiveDeals')}</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {activeDeals.map(deal => (
-                <DealCard key={deal.id} deal={deal} prospectId={prospectId} />
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      
-      {/* Archived Deals */}
-      {archivedDeals.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-slate-500">{t('sections.archivedDeals')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 opacity-75">
-              {archivedDeals.map(deal => (
-                <DealCard key={deal.id} deal={deal} prospectId={prospectId} />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  )
-}
-
-function TimelineTabContent({ 
-  activities,
-  prospectId 
-}: { 
-  activities: Activity[]
-  prospectId: string
-}) {
-  const t = useTranslations('prospectHub')
-  
-  // Group activities by date
-  const groupedActivities = activities.reduce((groups, activity) => {
-    const date = formatDate(activity.created_at)
-    if (!groups[date]) {
-      groups[date] = []
-    }
-    groups[date].push(activity)
-    return groups
-  }, {} as Record<string, Activity[]>)
-  
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t('sections.activityTimeline')}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {activities.length === 0 ? (
-          <div className="text-center py-12">
-            <Clock className="w-12 h-12 mx-auto mb-4 text-slate-300 dark:text-slate-600" />
-            <h3 className="text-lg font-medium mb-2">{t('empty.noTimelineTitle')}</h3>
-            <p className="text-slate-500 dark:text-slate-400">
-              {t('empty.noTimelineDesc')}
+          <div className="flex-1">
+            <CardTitle className="text-base text-slate-500 dark:text-slate-400">{title}</CardTitle>
+            <p className="text-xs text-slate-400 flex items-center gap-1">
+              <Lock className="w-3 h-3" />
+              {reason}
             </p>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {Object.entries(groupedActivities).map(([date, dayActivities]) => (
-              <div key={date}>
-                <h4 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-3">
-                  {date}
-                </h4>
-                <div className="space-y-3 pl-4 border-l-2 border-slate-200 dark:border-slate-700">
-                  {dayActivities.map(activity => (
-                    <div key={activity.id} className="relative pl-4">
-                      <div className="absolute left-0 top-1 w-2 h-2 -translate-x-[5px] rounded-full bg-purple-400 dark:bg-purple-500" />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span>{activity.icon || '📌'}</span>
-                          <p className="font-medium text-slate-900 dark:text-white">
-                            {activity.title}
-                          </p>
-                        </div>
-                        {activity.description && (
-                          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                            {activity.description}
-                          </p>
-                        )}
-                        <p className="text-xs text-slate-400 mt-1">
-                          {new Intl.DateTimeFormat('en', { hour: 'numeric', minute: '2-digit' }).format(new Date(activity.created_at))}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
+        </div>
+      </CardHeader>
     </Card>
   )
 }

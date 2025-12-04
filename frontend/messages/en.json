@@ -1168,55 +1168,66 @@
     }
   },
   "prospectHub": {
-    "tabs": {
-      "overview": "Overview",
-      "research": "Research",
-      "contacts": "Contacts",
-      "notes": "Notes",
-      "deals": "Deals",
-      "timeline": "Timeline"
+    "journey": {
+      "nextStep": "Your Next Step",
+      "completed": "Completed",
+      "upcoming": "Upcoming",
+      "view": "View",
+      "viewFull": "View full research",
+      "items": {
+        "research": "Research",
+        "contacts": "contacts added",
+        "preparation": "Meeting Preparation",
+        "followup": "Follow-up"
+      },
+      "locked": {
+        "needsContacts": "Add contacts first",
+        "needsMeeting": "Have your meeting first"
+      },
+      "steps": {
+        "addContacts": {
+          "title": "Add Key Decision Makers",
+          "description": "Identify the people you need to talk to for a successful sale.",
+          "tip": "Focus on the economic buyer and champions first.",
+          "action": "Add Contact"
+        },
+        "createPrep": {
+          "title": "Prepare for Your Meeting",
+          "description": "Create a meeting preparation brief with personalized talking points.",
+          "action": "Create Preparation"
+        },
+        "processFollowup": {
+          "title": "Process Your Meeting",
+          "description": "Upload the recording or notes to get AI-powered action items.",
+          "action": "Upload Recording",
+          "secondaryAction": "Paste Transcript"
+        },
+        "executeActions": {
+          "title": "Execute Your Action Items",
+          "description": "You have {count} follow-up(s) with action items to complete.",
+          "action": "View Follow-ups"
+        },
+        "dealWon": {
+          "title": "Deal Won! 🎉",
+          "description": "Congratulations! You've successfully closed this deal.",
+          "action": "Back to Prospects"
+        },
+        "dealLost": {
+          "title": "Deal Lost",
+          "description": "This deal didn't work out. Review what happened and learn for next time.",
+          "action": "Back to Prospects"
+        }
+      }
     },
-    "stats": {
-      "research": "Research",
-      "contacts": "Contacts",
-      "activeDeals": "Active Deals",
-      "meetings": "Meetings"
-    },
-    "sections": {
-      "activeDeals": "Active Deals",
-      "activeDealsDesc": "Current opportunities with this prospect",
-      "latestResearch": "Latest Research",
+    "sidebar": {
       "keyContacts": "Key Contacts",
-      "recentNotes": "Recent Notes",
-      "recentActivity": "Recent Activity",
-      "researchBrief": "Research Brief",
-      "allContacts": "All Contacts",
-      "archivedDeals": "Archived Deals",
-      "activityTimeline": "Activity Timeline"
-    },
-    "status": {
-      "active": "Active",
-      "archived": "Archived",
-      "completed": "Completed"
+      "quickNotes": "Quick Notes",
+      "addNotePlaceholder": "Add a quick note...",
+      "viewAllNotes": "View all {count} notes"
     },
     "actions": {
       "backToProspects": "Back to Prospects",
-      "quickActions": "Quick Actions",
-      "newDeal": "New Deal",
-      "createFirstDeal": "Create First Deal",
-      "createPrep": "Create Prep",
-      "uploadFollowup": "Upload Follow-up",
-      "viewAll": "View All",
-      "viewResearch": "View Research",
-      "startResearch": "Start Research",
-      "openFull": "Open Full",
       "addContact": "Add Contact"
-    },
-    "notes": {
-      "addNote": "Add Note",
-      "allNotes": "All Notes",
-      "placeholder": "Write a note about this prospect...",
-      "save": "Save Note"
     },
     "modal": {
       "addContactTitle": "Add Contact",
@@ -1243,19 +1254,8 @@
       "contactAdded": "Contact added"
     },
     "empty": {
-      "noDeals": "No active deals yet",
-      "noContacts": "No contacts added",
-      "noNotes": "No notes yet",
-      "noActivity": "No recent activity",
-      "noResearchTitle": "No Research Yet",
-      "noResearchDesc": "Start researching this prospect to get AI-powered insights",
-      "noContactsTitle": "No Contacts Yet",
-      "noContactsDesc": "Add contacts to personalize your sales approach",
-      "noNotesTitle": "No Notes Yet",
-      "noNotesDesc": "Add notes to keep track of important information",
-      "noActiveDeals": "No active deals",
-      "noTimelineTitle": "No Activity Yet",
-      "noTimelineDesc": "Activities will appear here as you work with this prospect"
+      "noContacts": "No contacts yet",
+      "noNotes": "No notes yet"
     },
     "errors": {
       "loadFailed": "Failed to load prospect data",
