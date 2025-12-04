@@ -177,33 +177,50 @@ class ActionGeneratorService:
 - Value Proposition: {company.get('value_proposition', 'Unknown')}
 """)
         
-        # Research Brief
+        # Research Brief - include full BANT, leadership, entry strategy
         research = context.get("research_brief", {})
         if research:
             brief = research.get('brief_content', '')
+            # Use more of research - critical for understanding prospect
             parts.append(f"""
-## Prospect Research
-{brief[:3000] if brief else 'No research available'}
+## Prospect Research (Full)
+{brief[:5000] if brief else 'No research available'}
 """)
         
-        # Contacts
+        # Contacts - include full profile analysis for each
         contacts = context.get("contacts", [])
         if contacts:
-            contact_info = "\n".join([
-                f"- {c.get('name', 'Unknown')}: {c.get('role', 'Unknown role')} - {c.get('communication_style', 'Unknown style')}"
-                for c in contacts[:3]
-            ])
+            contact_parts = []
+            for c in contacts[:3]:  # Top 3 contacts
+                contact_section = f"""### {c.get('name', 'Unknown')}
+- **Role**: {c.get('role', 'Unknown role')}
+- **Decision Authority**: {c.get('decision_authority', 'Unknown')}
+- **Communication Style**: {c.get('communication_style', 'Unknown')}
+- **Key Motivations**: {c.get('probable_drivers', 'Unknown')}"""
+                
+                # Add profile brief if available (truncated but substantial)
+                if c.get('profile_brief'):
+                    brief = c['profile_brief']
+                    if len(brief) > 800:
+                        brief = brief[:800] + "..."
+                    contact_section += f"\n\n**Profile Analysis**:\n{brief}"
+                
+                contact_parts.append(contact_section)
+            
             parts.append(f"""
 ## Key Contacts
-{contact_info}
+
+{chr(10).join(contact_parts)}
 """)
         
-        # Preparation
+        # Preparation - include full meeting prep for context
         prep = context.get("preparation", {})
         if prep:
+            brief = prep.get('brief_content', 'No preparation notes')
+            # Use more of prep - contains talking points, questions, strategy
             parts.append(f"""
 ## Meeting Preparation Notes
-{prep.get('brief_content', 'No preparation notes')[:2000]}
+{brief[:4000] if brief else 'No preparation notes'}
 """)
         
         # Deal

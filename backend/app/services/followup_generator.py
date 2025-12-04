@@ -227,11 +227,12 @@ This summary gives the essentials. Deeper analysis lives in separate reports.
             if company and company.get("company_narrative"):
                 prompt += f"## YOUR COMPANY\n{company['company_narrative'][:800]}\n\n"
             
-            # Research
+            # Research - include more for BANT signals and leadership context
             research = prospect_context.get("research")
             if research:
                 data = research.get("brief_content") or "Not available"
-                prompt += f"## RESEARCH SUMMARY\n{data[:800]}\n\n"
+                # Use more of research - contains BANT, leadership, entry strategy
+                prompt += f"## PROSPECT RESEARCH\n{data[:2500]}\n\n"
             
             # Meeting Prep
             preps = prospect_context.get("meeting_preps")
@@ -523,11 +524,12 @@ You have access to extensive context - use this for a personalized, relevant ema
 
 """
             
-            # Research for personalization
+            # Research for personalization - key insights for relevant email
             if prospect_context.get("research"):
                 research = prospect_context["research"]
+                # Include more research for better personalization
                 prompt += f"""PROSPECT CONTEXT (from research):
-{research.get('brief_content', '')[:500]}
+{research.get('brief_content', '')[:1500]}
 
 """
             
