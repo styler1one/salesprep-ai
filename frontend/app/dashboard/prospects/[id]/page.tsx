@@ -173,7 +173,7 @@ export default function ProspectHubPage() {
     }
   }, [prospectId])
   
-  // Initial load
+  // Initial load - fetch everything before setting loading to false
   useEffect(() => {
     async function loadData() {
       try {
@@ -189,6 +189,25 @@ export default function ProspectHubPage() {
           
           if (orgMember) {
             setOrganizationId(orgMember.organization_id)
+            
+            // Fetch hub data immediately with the org ID
+            const { data, error } = await api.get<ProspectHub>(
+              `/api/v1/prospects/${prospectId}/hub?organization_id=${orgMember.organization_id}`
+            )
+            
+            if (error) {
+              console.error('Failed to load prospect hub:', error)
+            } else {
+              setHubData(data)
+            }
+            
+            // Fetch notes
+            const notesResponse = await api.get<ProspectNote[]>(
+              `/api/v1/prospects/${prospectId}/notes`
+            )
+            if (!notesResponse.error && notesResponse.data) {
+              setNotes(notesResponse.data)
+            }
           }
         }
       } catch (error) {
@@ -200,15 +219,7 @@ export default function ProspectHubPage() {
     }
     
     loadData()
-  }, [supabase, t, toast])
-  
-  // Fetch data when org ID is set
-  useEffect(() => {
-    if (organizationId) {
-      fetchHubData()
-      fetchNotes()
-    }
-  }, [organizationId, fetchHubData, fetchNotes])
+  }, [supabase, prospectId, t, toast])
   
   // Update status
   const handleStatusChange = async (newStatus: ProspectStatus) => {
