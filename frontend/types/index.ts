@@ -98,7 +98,7 @@ export interface CompanySearchResponse {
 // Prospect Types
 // ==========================================
 
-export type ProspectStatus = 'new' | 'researching' | 'contacted' | 'meeting_scheduled' | 'proposal_sent' | 'won' | 'lost' | 'on_hold'
+export type ProspectStatus = 'new' | 'researching' | 'qualified' | 'meeting_scheduled' | 'proposal_sent' | 'won' | 'lost' | 'inactive'
 
 export interface Prospect {
   id: string
