@@ -43,12 +43,6 @@ const navigationItems = [
     icon: Icons.mail,
     color: 'text-orange-500',
   },
-  {
-    key: 'knowledgeBase',
-    href: '/dashboard/knowledge-base',
-    icon: Icons.book,
-    color: 'text-purple-500',
-  },
 ]
 
 const profileItems = [
@@ -63,6 +57,12 @@ const profileItems = [
     href: '/dashboard/company-profile',
     icon: Icons.building,
     color: 'text-indigo-500',
+  },
+  {
+    key: 'knowledgeBase',
+    href: '/dashboard/knowledge-base',
+    icon: Icons.book,
+    color: 'text-purple-500',
   },
 ]
 

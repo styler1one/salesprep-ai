@@ -376,9 +376,12 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="space-y-6">
-          {/* Language Settings Card */}
-          <Card>
+        {/* Two-column layout for better overview */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* LEFT COLUMN */}
+          <div className="space-y-6">
+            {/* Language Settings Card */}
+            <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Globe className="h-5 w-5 text-blue-500" />
@@ -468,13 +471,13 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* AI Coach Settings */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Brain className="h-5 w-5 text-indigo-500" />
-                <CardTitle>{t('coach.title')}</CardTitle>
-              </div>
+            {/* AI Coach Settings */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Brain className="h-5 w-5 text-indigo-500" />
+                  <CardTitle>{t('coach.title')}</CardTitle>
+                </div>
               <CardDescription>
                 {t('coach.description')}
               </CardDescription>
@@ -676,7 +679,10 @@ export default function SettingsPage() {
               )}
             </CardContent>
           </Card>
+          </div>
 
+          {/* RIGHT COLUMN */}
+          <div className="space-y-6">
           {/* Subscription & Billing */}
           <Card>
             <CardHeader>
@@ -859,6 +865,7 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
           </Card>
+          </div>
         </div>
       </div>
     </DashboardLayout>
