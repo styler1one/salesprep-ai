@@ -518,9 +518,11 @@ You have access to extensive context - use this for a personalized, relevant ema
             # Company info for value props
             if prospect_context.get("company_profile"):
                 company = prospect_context["company_profile"]
+                # Extract value propositions from core_value_props
+                value_props = company.get('core_value_props', []) or []
                 prompt += f"""YOUR COMPANY:
 - Company: {company.get('company_name', 'N/A')}
-- Value props: {', '.join(company.get('value_propositions', [])[:3])}
+- Value props: {', '.join(value_props[:3]) if value_props else 'N/A'}
 
 """
             

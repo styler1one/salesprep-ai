@@ -650,7 +650,7 @@ async def _get_seller_context(supabase, user_id: str, organization_ids: List[str
         # Get company profile (from first org)
         if organization_ids:
             company_result = supabase.table("company_profiles") \
-                .select("company_name, industry, products_services, core_value_props") \
+                .select("company_name, industry, products, core_value_props") \
                 .eq("organization_id", organization_ids[0]) \
                 .limit(1) \
                 .execute()
@@ -659,7 +659,12 @@ async def _get_seller_context(supabase, user_id: str, organization_ids: List[str
                 company = company_result.data[0]
                 seller_context["company_name"] = company.get("company_name")
                 seller_context["industry"] = company.get("industry")
-                seller_context["products_services"] = company.get("products_services") or []
+                # Extract product names from products array
+                products = company.get("products", []) or []
+                seller_context["products_services"] = [
+                    p.get("name") for p in products 
+                    if isinstance(p, dict) and p.get("name")
+                ]
                 seller_context["core_value_props"] = company.get("core_value_props") or []
         
         return seller_context if seller_context else None

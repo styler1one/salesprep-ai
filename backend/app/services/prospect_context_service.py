@@ -188,17 +188,24 @@ Key Details:
         # 2. Company Profile - Your company context
         if context.get("company_profile"):
             company = context["company_profile"]
+            # Extract products from products array
+            products = [p.get('name') for p in (company.get('products', []) or []) if isinstance(p, dict) and p.get('name')]
+            products_str = ', '.join(products[:5]) if products else 'N/A'
+            # Extract value propositions from core_value_props
+            value_props = company.get('core_value_props', []) or []
+            value_props_str = ', '.join(value_props[:3]) if value_props else 'N/A'
+            
             if company.get("company_narrative"):
                 sections.append(f"""## YOUR COMPANY:
 {company['company_narrative']}
 
-Products/Services: {', '.join(company.get('products_services', [])[:5])}
-Value Propositions: {', '.join(company.get('value_propositions', [])[:3])}""")
+Products/Services: {products_str}
+Value Propositions: {value_props_str}""")
             else:
                 sections.append(f"""## YOUR COMPANY:
 - Company: {company.get('company_name', 'N/A')}
 - Industry: {company.get('industry', 'N/A')}
-- Products: {', '.join(company.get('products_services', [])[:5])}""")
+- Products: {products_str}""")
         
         # 3. Research Data - Prospect intelligence
         if context.get("research"):
