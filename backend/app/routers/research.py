@@ -33,10 +33,10 @@ supabase_service = get_supabase_service()
 class ResearchRequest(BaseModel):
     company_name: str
     company_linkedin_url: Optional[str] = None
-    company_website_url: Optional[str] = None  # NEW: Direct website scraping
+    company_website_url: Optional[str] = None  # Direct website scraping
     country: Optional[str] = None
     city: Optional[str] = None
-    language: Optional[str] = "en"  # i18n: output language (default: English)
+    # Note: language is now read from user_settings.output_language (not from request)
 
 
 class ResearchResponse(BaseModel):
@@ -238,6 +238,20 @@ async def start_research(
     
     organization_id = org_response.data[0]["organization_id"]
     
+    # Get user's preferred output language from settings (consistent with other routers)
+    output_language = "en"  # Default to English
+    try:
+        settings_response = supabase_service.table("user_settings")\
+            .select("output_language")\
+            .eq("user_id", user_id)\
+            .maybe_single()\
+            .execute()
+        if settings_response.data and settings_response.data.get("output_language"):
+            output_language = settings_response.data["output_language"]
+            logger.info(f"Using user's output language for research: {output_language}")
+    except Exception as e:
+        logger.warning(f"Could not get user settings, using default language: {e}")
+    
     # Check subscription limit (v2: flow-based)
     usage_service = get_usage_service()
     limit_check = await usage_service.check_flow_limit(organization_id)
@@ -309,7 +323,7 @@ async def start_research(
                     "website_url": body.company_website_url,
                     "organization_id": organization_id,
                     "user_id": user_id,
-                    "language": body.language or "en"
+                    "language": output_language
                 },
                 user={"id": user_id}
             )
@@ -331,7 +345,7 @@ async def start_research(
                 body.company_website_url,
                 organization_id,
                 user_id,
-                body.language or "en"
+                output_language
             )
             logger.info(f"Research {research_id} triggered via BackgroundTasks")
         
