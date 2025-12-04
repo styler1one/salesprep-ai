@@ -18,6 +18,7 @@ from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
 from supabase import Client
 from app.database import get_supabase_service
+from app.services.seller_context_builder import get_seller_context_builder
 
 logger = logging.getLogger(__name__)
 
@@ -178,10 +179,11 @@ Key Details:
 - Experience: {sales.get('years_experience', 'N/A')} years
 - Sales Style: {sales.get('sales_methodology', 'N/A')}""")
             
-            # Add style rules if requested and style_guide is available
+            # Add style rules if requested - use centralized SellerContextBuilder
             if include_style_rules:
-                style_guide = sales.get("style_guide") or self._derive_style_guide(sales)
-                sections.append(self._format_style_rules(style_guide))
+                seller_builder = get_seller_context_builder()
+                style_guide = seller_builder.get_style_guide(sales)
+                sections.append(seller_builder.get_output_style_rules(style_guide))
         
         # 2. Company Profile - Your company context
         if context.get("company_profile"):
@@ -513,74 +515,9 @@ Value Propositions: {', '.join(company.get('value_propositions', [])[:3])}""")
         
         return "\n".join(formatted)
     
-    def _derive_style_guide(self, sales_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Derive style guide from existing profile fields.
-        Used when style_guide is not explicitly set.
-        """
-        communication_style = (sales_profile.get("communication_style") or "").lower()
-        methodology = (sales_profile.get("sales_methodology") or "").lower()
-        
-        # Derive tone
-        if "direct" in communication_style:
-            tone = "direct"
-        elif "warm" in communication_style or "relationship" in communication_style:
-            tone = "warm"
-        elif "formal" in communication_style:
-            tone = "formal"
-        elif "casual" in communication_style or "informal" in communication_style:
-            tone = "casual"
-        else:
-            tone = "professional"
-        
-        # Derive persuasion style
-        if "challenger" in methodology or "spin" in methodology:
-            persuasion = "logic"
-        elif "story" in methodology or "narrative" in methodology:
-            persuasion = "story"
-        else:
-            persuasion = "logic"
-        
-        return {
-            "tone": tone,
-            "formality": "professional",
-            "language_style": "business",
-            "persuasion_style": persuasion,
-            "emoji_usage": sales_profile.get("uses_emoji", False),
-            "signoff": sales_profile.get("email_signoff", "Best regards"),
-            "writing_length": sales_profile.get("writing_length_preference", "concise"),
-            "confidence_score": 0.5
-        }
-    
-    def _format_style_rules(self, style_guide: Dict[str, Any]) -> str:
-        """Format style guide into prompt instructions."""
-        tone = style_guide.get("tone", "professional")
-        formality = style_guide.get("formality", "professional")
-        emoji = style_guide.get("emoji_usage", False)
-        length = style_guide.get("writing_length", "concise")
-        signoff = style_guide.get("signoff", "Best regards")
-        
-        # Tone descriptions
-        tone_desc = {
-            "direct": "Be straightforward, get to the point quickly",
-            "warm": "Be friendly and personable, show genuine interest",
-            "formal": "Be professional and structured, use proper titles",
-            "casual": "Be relaxed and conversational",
-            "professional": "Balance warmth with professionalism"
-        }
-        
-        emoji_instruction = "Emoji are OK to use" if emoji else "Do NOT use emoji"
-        length_instruction = "Keep messages concise" if length == "concise" else "Provide detailed explanations"
-        
-        return f"""## OUTPUT STYLE RULES
-
-- **Tone**: {tone.title()} - {tone_desc.get(tone, tone_desc['professional'])}
-- **Formality**: {formality.title()}
-- **Emoji**: {emoji_instruction}
-- **Length**: {length_instruction}
-- **Sign-off**: Use "{signoff}" for emails
-
-**IMPORTANT**: Output must sound like the sales rep wrote it - their voice, their style."""
+    # NOTE: _derive_style_guide and _format_style_rules have been removed
+    # Use SellerContextBuilder from seller_context_builder.py instead
+    # This eliminates code duplication - SPEC-033
 
 
 # Lazy singleton

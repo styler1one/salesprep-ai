@@ -593,34 +593,9 @@ Use [NAME] as placeholder for the recipient name.
 
         return prompt
     
-    def _format_style_rules(self, style_guide: Dict[str, Any]) -> str:
-        """Format style guide into prompt instructions for output styling."""
-        tone = style_guide.get("tone", "professional")
-        formality = style_guide.get("formality", "professional")
-        emoji = style_guide.get("emoji_usage", False)
-        length = style_guide.get("writing_length", "concise")
-        
-        # Tone descriptions
-        tone_desc = {
-            "direct": "Be straightforward and get to the point",
-            "warm": "Be friendly and personable",
-            "formal": "Be professional and structured",
-            "casual": "Be relaxed and conversational",
-            "professional": "Balance warmth with professionalism"
-        }
-        
-        emoji_instruction = "Emoji are OK to use sparingly" if emoji else "Do NOT use emoji"
-        length_instruction = "Keep output concise and scannable" if length == "concise" else "Provide detailed explanations"
-        
-        return f"""## OUTPUT STYLE REQUIREMENTS
-
-Match the sales rep's communication style:
-- **Tone**: {tone.title()} - {tone_desc.get(tone, tone_desc['professional'])}
-- **Formality**: {formality.title()}
-- **Emoji**: {emoji_instruction}
-- **Length**: {length_instruction}
-
-The output must sound like the sales rep wrote it themselves."""
+    # NOTE: _format_style_rules has been removed - SPEC-033
+    # Style rules are only used for customer-facing outputs (share_email, customer_report)
+    # and are handled by ActionGenerator using SellerContextBuilder
 
 
 # Lazy singleton

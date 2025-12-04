@@ -1,5 +1,7 @@
 """
 Company Interview Service - AI-powered company profile onboarding
+
+English-First: Questions in English, frontend handles translations via messages/*.json
 """
 import os
 import json
@@ -14,77 +16,96 @@ class CompanyInterviewService:
     Uses AI to analyze responses and generate structured profiles.
     """
     
-    # Company interview questions
+    # Interview questions (12 total) - English only, frontend translates via i18n
     QUESTIONS = [
+        # Section 1: Company Basics (3 questions)
         {
             "id": 1,
-            "question": "Wat is de naam van jullie bedrijf?",
+            "section": "basics",
+            "question": "What is your company name?",
             "field": "company_name",
             "required": True
         },
         {
             "id": 2,
-            "question": "In welke industrie/sector zijn jullie actief?",
+            "section": "basics",
+            "question": "What industry or sector are you in?",
             "field": "industry",
             "required": True
         },
         {
             "id": 3,
-            "question": "Wat zijn jullie belangrijkste producten of diensten? Beschrijf ze kort.",
+            "section": "basics",
+            "question": "What are your main products or services? Describe them briefly.",
             "field": "products_description",
             "required": True
         },
+        
+        # Section 2: Value & Differentiation (3 questions)
         {
             "id": 4,
-            "question": "Wat zijn jullie kernwaarden en wat maakt jullie uniek ten opzichte van concurrenten?",
+            "section": "value",
+            "question": "What are your core values and what makes you unique compared to competitors?",
             "field": "differentiators",
             "required": True
         },
         {
             "id": 5,
-            "question": "Wie is jullie ideale klant? (industrie, bedrijfsgrootte, regio, etc.)",
+            "section": "value",
+            "question": "Who is your ideal customer? (industry, company size, region, etc.)",
             "field": "ideal_customer",
             "required": True
         },
         {
             "id": 6,
-            "question": "Welke problemen of pijnpunten lossen jullie op voor klanten?",
+            "section": "value",
+            "question": "What problems or pain points do you solve for customers?",
             "field": "pain_points_solved",
             "required": True
         },
+        
+        # Section 3: Market & Buyers (3 questions)
         {
             "id": 7,
-            "question": "Wie zijn jullie typische kopers? (functietitels, beslissers, beïnvloeders)",
+            "section": "market",
+            "question": "Who are your typical buyers? (job titles, decision makers, influencers)",
             "field": "buyer_personas",
             "required": False
         },
         {
             "id": 8,
-            "question": "Hebben jullie succesvolle case studies of referenties die je kunt delen?",
+            "section": "market",
+            "question": "Do you have successful case studies or references you can share?",
             "field": "case_studies",
             "required": False
         },
         {
             "id": 9,
-            "question": "Wie zijn jullie belangrijkste concurrenten en hoe onderscheiden jullie je?",
+            "section": "market",
+            "question": "Who are your main competitors and how do you differentiate?",
             "field": "competitors",
             "required": False
         },
+        
+        # Section 4: Business Info (3 questions)
         {
             "id": 10,
-            "question": "Wat is de gemiddelde grootte van jullie deals en typische sales cycle lengte?",
+            "section": "business",
+            "question": "What is your average deal size and typical sales cycle length?",
             "field": "deal_info",
             "required": False
         },
         {
             "id": 11,
-            "question": "Waar is jullie bedrijf gevestigd en hoeveel medewerkers hebben jullie?",
+            "section": "business",
+            "question": "Where is your company located and how many employees do you have?",
             "field": "company_info",
             "required": False
         },
         {
             "id": 12,
-            "question": "Hebben jullie belangrijke metrics, awards of erkenningen die je wilt delen?",
+            "section": "business",
+            "question": "Do you have important metrics, awards or recognitions you'd like to share?",
             "field": "achievements",
             "required": False
         }
