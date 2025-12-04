@@ -1,13 +1,20 @@
 """
 Claude Web Search integration for research.
 
-Enhanced with seller context for personalized research output.
+Enhanced with:
+- Proper web search tool integration
+- Seller context for personalized research output
+- BANT qualification signals
+- Actionable recommendations
 """
 import os
+import logging
 from typing import Dict, Any, Optional, List
-from anthropic import AsyncAnthropic  # Use async client to not block event loop
+from anthropic import AsyncAnthropic
 from app.i18n.utils import get_language_instruction
 from app.i18n.config import DEFAULT_LANGUAGE
+
+logger = logging.getLogger(__name__)
 
 
 class ClaudeResearcher:
@@ -20,6 +27,13 @@ class ClaudeResearcher:
             raise ValueError("ANTHROPIC_API_KEY environment variable not set")
         
         self.client = AsyncAnthropic(api_key=api_key)
+        
+        # Web search tool configuration
+        self.web_search_tool = {
+            "type": "web_search_20250305",
+            "name": "web_search",
+            "max_uses": 10,  # Allow multiple searches for comprehensive research
+        }
     
     async def search_company(
         self,
@@ -33,7 +47,11 @@ class ClaudeResearcher:
         """
         Search for company information using Claude with web search.
         
-        Enhanced with seller context for personalized research.
+        Enhanced with:
+        - Real web search via Claude's web_search tool
+        - Seller context for personalized research
+        - BANT qualification signals
+        - Actionable recommendations
         
         Args:
             company_name: Name of the company
@@ -47,191 +65,242 @@ class ClaudeResearcher:
             Dictionary with research data
         """
         lang_instruction = get_language_instruction(language)
+        
         # Build search context
         search_context = self._build_search_context(
             company_name, country, city, linkedin_url
         )
         
+        # Build user location for localized search results
+        user_location = None
+        if country:
+            user_location = {
+                "type": "approximate",
+                "country": country,
+            }
+            if city:
+                user_location["city"] = city
+        
         # Build seller context section if available
         seller_section = ""
+        products_list = ""
+        value_props = ""
         if seller_context and seller_context.get("has_context"):
-            products = ", ".join(seller_context.get("products_services", [])[:5]) or "not specified"
+            products_list = ", ".join(seller_context.get("products_services", [])[:5]) or "not specified"
+            value_props = ", ".join(seller_context.get("value_propositions", [])[:3]) or "not specified"
+            target_industries = ", ".join(seller_context.get("target_industries", [])[:3]) or "any"
+            
             seller_section = f"""
+---
+## 🎯 SELLER CONTEXT (Use this to personalize research)
 
-## IMPORTANT - WHAT I SELL:
-My company: {seller_context.get('company_name', 'Unknown')}
-Our products/services: {products}
-Our target market: {seller_context.get('target_market', 'not specified')}
+| Aspect | Details |
+|--------|---------|
+| **My Company** | {seller_context.get('company_name', 'Unknown')} |
+| **What I Sell** | {products_list} |
+| **Our Value Props** | {value_props} |
+| **Target Industries** | {target_industries} |
+| **Target Market** | {seller_context.get('target_market', 'B2B')} |
 
-Focus your research on information relevant to selling these products/services to {company_name}.
+**Your mission**: Find intelligence that helps me sell {products_list} to {company_name}.
+Focus on pain points we can solve, decision makers who would care, and timing signals.
+---
 """
         
-        # Build seller context for sales opportunity section
-        sales_opportunity_section = ""
-        if seller_context and seller_context.get("has_context"):
-            products_list = ", ".join(seller_context.get('products_services', [])[:3])
-            sales_opportunity_section = f"""
-## 7. SALES OPPORTUNITY SIGNALS
+        # Build comprehensive prompt for Claude with web search
+        prompt = f"""You are a senior sales intelligence analyst. {lang_instruction}
 
-### Potential Pain Points
-Based on their situation, what problems might {company_name} have that {products_list} can address?
-
-### Entry Point Indicators
-- Which departments are most likely to have budget?
-- Who would be the ideal first contact?
-- What would make NOW the right time to reach out?
-"""
-        
-        # Build prompt for Claude
-        prompt = f"""You are a senior sales intelligence analyst with access to web search. {lang_instruction}
-
-Your task: Gather comprehensive, commercially relevant intelligence about {company_name}.
+Your task: Use web search to gather comprehensive, commercially relevant intelligence about **{company_name}**.
 
 {search_context}
 {seller_section}
 
-Use web search to find current, verified information. Prioritize:
-1. Official company website and About pages
-2. LinkedIn company profile and employee pages
-3. Press releases and official announcements
-4. Business registries and databases
-5. Industry analyst reports
+## SEARCH STRATEGY (IMPORTANT!)
+
+**Execute these searches in order:**
+
+1. **Company website**: Search "{company_name} official website about us"
+2. **Leadership team**: Search "{company_name} leadership team" AND "{company_name} management team LinkedIn"
+3. **LinkedIn company**: Search "site:linkedin.com/company {company_name}"
+4. **Recent news**: Search "{company_name} news {country or ''}" (last 90 days)
+5. **Funding/growth**: Search "{company_name} funding investment acquisition"
+6. **Jobs/hiring**: Search "{company_name} careers jobs hiring"
+
+**For leadership, specifically search:**
+- "{company_name} CEO" 
+- "{company_name} CFO CTO COO"
+- "site:linkedin.com {company_name} CEO"
+- "site:linkedin.com {company_name} director"
 
 ---
 
-Provide a structured research report with these sections:
+# RESEARCH REPORT: {company_name}
 
 ## 1. COMPANY PROFILE
+
 | Element | Details |
 |---------|---------|
+| **Legal Name** | [Full registered name] |
 | **Industry** | [Sector and sub-sector] |
 | **Size** | [Employee count, revenue if available] |
 | **Headquarters** | [City, Country] |
 | **Founded** | [Year] |
 | **Website** | [URL] |
-| **Company Registration** | [Chamber of Commerce / Company ID if found] |
+| **LinkedIn** | [Company LinkedIn URL] |
+| **Registration** | [Chamber of Commerce / Company ID if found] |
 | **Ownership** | [Private / Public / PE-backed / Family-owned] |
 
 ## 2. BUSINESS MODEL
-### What They Do
-[2-3 sentences describing core business]
 
-### Revenue Streams
-- [How they make money - subscription, services, products, etc.]
+### What They Do
+[2-3 sentences describing core business - be specific, not generic]
+
+### Revenue Model
+- **Primary**: [How they mainly make money]
+- **Secondary**: [Additional revenue streams]
 
 ### Customer Profile
-- **Market Type**: [B2B / B2C / Both]
-- **Customer Segments**: [Enterprise / SMB / Consumer]
-- **Key Verticals**: [Industries they serve]
+| Aspect | Details |
+|--------|---------|
+| **Market Type** | B2B / B2C / Both |
+| **Customer Size** | Enterprise / Mid-market / SMB |
+| **Key Verticals** | [Industries they serve] |
+| **Geographic Focus** | [Regions they operate in] |
 
 ### Value Proposition
-- [What they promise customers]
-- [How they differentiate from alternatives]
+- **Promise**: [What they promise customers]
+- **Differentiation**: [How they're different from alternatives]
 
-## 3. LEADERSHIP & DECISION STRUCTURE
+## 3. LEADERSHIP & DECISION MAKERS ⚠️ CRITICAL
 
-### Key Executives
-| Name | Title | Background | LinkedIn URL |
-|------|-------|------------|--------------|
-| [Name] | [Title] | [Relevant experience] | [Full LinkedIn URL] |
+**Search LinkedIn and company website thoroughly for executives!**
 
-Search specifically for:
-- CEO, CFO, CTO, COO, CMO
-- VP/Director of relevant departments
-- Recent executive hires or departures
+### Executive Team
+| Name | Title | Background | LinkedIn URL | Relevance to Us |
+|------|-------|------------|--------------|-----------------|
+| [Name] | CEO | [Background] | [Full LinkedIn URL] | [Why relevant] |
+| [Name] | CFO | [Background] | [Full LinkedIn URL] | [Budget holder] |
+| [Name] | CTO/CIO | [Background] | [Full LinkedIn URL] | [Tech decisions] |
+| [Name] | [VP/Director relevant to what we sell] | [Background] | [Full LinkedIn URL] | [Direct buyer] |
 
-### Decision-Making Indicators
-Based on company size and structure, note:
-- Likely decision style (top-down, consensus, committee)
-- Departments with buying authority
-- Reporting structure clues
+**If leadership not found via search, note**: "Leadership team not found via web search. Recommend manual LinkedIn research."
+
+### Decision-Making Structure
+| Aspect | Assessment |
+|--------|------------|
+| **Decision Style** | Top-down / Consensus / Committee |
+| **Buying Authority** | [Which departments have budget] |
+| **Likely Stakeholders** | [Who would be involved in a purchase decision] |
 
 ## 4. RECENT DEVELOPMENTS (Last 90 Days)
 
 ### Trigger Events
-Search for and categorize:
+| Date | Event | Type | Source URL | Sales Relevance |
+|------|-------|------|------------|-----------------|
+| [Date] | [What happened] | 💰/📈/👥/🚀/🤝/⚠️ | [URL] | [Why this matters for sales] |
 
-| Date | Event | Type | Source |
-|------|-------|------|--------|
-| [Date] | [What happened] | 💰 Funding / 📈 Growth / 👥 Hiring / 🚀 Product / 🤝 Partnership / ⚠️ Challenge | [Source] |
+**Event Types**: 💰 Funding | 📈 Growth | 👥 Hiring/Layoffs | 🚀 Product | 🤝 Partnership | ⚠️ Challenge
 
-Look specifically for:
-- Funding rounds or financial news
-- Major product launches or pivots
-- Leadership changes (new hires, departures)
-- Office expansions or relocations
-- Strategic partnerships or acquisitions
-- Layoffs, restructuring, or challenges
-
-### What These Events Signal
-[Interpret what the developments suggest about their priorities and challenges]
+### Strategic Interpretation
+[What do these events tell us about their priorities, challenges, and readiness to buy?]
 
 ## 5. COMPETITIVE LANDSCAPE
 
 ### Main Competitors
-| Competitor | Their Position | How They Differ |
-|------------|----------------|-----------------|
-| [Competitor] | [Market position] | [Key difference] |
+| Competitor | Position | Key Difference | Threat Level |
+|------------|----------|----------------|--------------|
+| [Competitor] | [Position] | [Difference] | High/Med/Low |
 
-### Current Vendor Footprint
-Search for mentions of:
-- Technology vendors they use
-- Consulting firms they work with
-- Partners or integrations mentioned
+### Technology Stack
+- **Known vendors**: [Technologies/tools they use]
+- **Potential gaps**: [Areas where they might need solutions]
 
-### Market Position
-- **Trajectory**: [Growing / Stable / Declining / Pivoting]
-- **Evidence**: [Signals supporting this]
+## 6. QUALIFICATION SIGNALS (BANT)
 
-## 6. TIMING & COMMERCIAL SIGNALS
+| Signal | Evidence | Score |
+|--------|----------|-------|
+| **Budget** | [Funding, growth, investment signals] | 🟢 Strong / 🟡 Possible / 🔴 Weak / ⚪ Unknown |
+| **Authority** | [Decision makers identified, org structure clear] | 🟢 Strong / 🟡 Possible / 🔴 Weak / ⚪ Unknown |
+| **Need** | [Pain points, challenges, gaps identified] | 🟢 Strong / 🟡 Possible / 🔴 Weak / ⚪ Unknown |
+| **Timeline** | [Urgency signals, triggers, planning cycles] | 🟢 Strong / 🟡 Possible / 🔴 Weak / ⚪ Unknown |
 
-### Budget Cycle Clues
-- Fiscal year end (if public or mentioned)
-- Planning periods
-- Known budget cycles in their industry
+**Overall Opportunity Score**: [1-10] - [Brief justification]
 
-### External Pressures
-Search for industry-specific factors:
-- Regulatory changes affecting them
-- Industry trends they must respond to
-- Competitive threats they face
-- Economic factors impacting their sector
-{sales_opportunity_section}
+## 7. APPROACH RECOMMENDATION
+
+### Entry Strategy
+| Aspect | Recommendation |
+|--------|----------------|
+| **First Contact** | [Name + Role + Why this person] |
+| **Entry Angle** | [What pain point or trigger to lead with] |
+| **Timing** | 🟢 Reach out now / 🟡 Nurture first / 🔴 Wait for trigger |
+
+### Conversation Starters
+Based on research findings, use one of these openers:
+
+1. **Trigger-based**: "[Based on recent news/event]..."
+2. **Pain-based**: "[Based on challenge they likely have]..."  
+3. **Value-based**: "[Based on what we can offer them]..."
+
+### Things to Avoid
+- [What NOT to mention or assume]
+- [Sensitive topics based on research]
+
 ---
 
-RULES:
-- Be factual and evidence-based
-- Include source URLs where possible
-- If information is not found, state "Not found" rather than guessing
-- Prioritize recent information (last 90 days) for developments
-- Always include full LinkedIn URLs when found
-- Focus on commercially relevant intelligence, not general company descriptions"""
+**RULES**:
+- Execute multiple web searches to find comprehensive information
+- For leadership: Search LinkedIn specifically, include full profile URLs
+- Be factual - if not found, say "Not found via web search"
+- Include source URLs for all claims
+- Focus on what's commercially relevant, not just interesting
+- Prioritize recent info (last 90 days) for developments"""
 
         try:
-            # Call Claude with web search enabled
+            # Build web search tool with optional user location
+            tools = [self.web_search_tool.copy()]
+            if user_location:
+                tools[0]["user_location"] = user_location
+            
+            logger.info(f"Starting Claude research for {company_name} with web search enabled")
+            
+            # Call Claude with web search tool enabled
             response = await self.client.messages.create(
-                model="claude-sonnet-4-20250514",  # Latest Claude Sonnet model
-                max_tokens=4096,
-                temperature=0.3,  # Lower temperature for factual responses
+                model="claude-sonnet-4-20250514",
+                max_tokens=8192,  # Increased for comprehensive research
+                temperature=0.2,  # Lower for more factual responses
+                tools=tools,
                 messages=[{
                     "role": "user",
                     "content": prompt
                 }]
             )
             
+            # Extract text content from response
+            result_text = ""
+            for block in response.content:
+                if hasattr(block, 'text'):
+                    result_text += block.text
+            
+            logger.info(f"Claude research completed for {company_name}, stop_reason: {response.stop_reason}")
+            
             return {
                 "source": "claude",
                 "query": search_context,
-                "data": response.content[0].text,
-                "success": True
+                "data": result_text,
+                "success": True,
+                "web_search_used": True,
+                "stop_reason": response.stop_reason
             }
             
         except Exception as e:
+            logger.error(f"Claude research failed for {company_name}: {str(e)}")
             return {
                 "source": "claude",
                 "query": search_context,
                 "error": str(e),
-                "success": False
+                "success": False,
+                "web_search_used": False
             }
     
     def _build_search_context(
