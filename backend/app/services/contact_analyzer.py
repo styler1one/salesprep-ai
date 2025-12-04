@@ -10,15 +10,16 @@ Generates:
 - Decision authority classification
 - Role-specific pain points
 - Conversation suggestions
+- Relevance score (how relevant this contact is for what we sell)
 """
 
 import os
 import logging
 from typing import Dict, Any, Optional, List
-from anthropic import AsyncAnthropic  # Use async client to not block event loop
+from anthropic import AsyncAnthropic
 from supabase import Client
 from app.database import get_supabase_service
-from app.i18n.utils import get_language_instruction
+from app.i18n.utils import get_language_instruction, get_country_iso_code
 from app.i18n.config import DEFAULT_LANGUAGE
 
 logger = logging.getLogger(__name__)
@@ -73,30 +74,43 @@ class ContactAnalyzer:
         )
         
         try:
-            # Build API call - ALWAYS enable web search for alternative sources
-            api_params = {
-                "model": "claude-sonnet-4-20250514",
-                "max_tokens": 3000,
-                "temperature": 0.3,
-                "messages": [{
-                    "role": "user",
-                    "content": prompt
-                }],
-                # Always enable web search to find info from alternative sources
-                # (company websites, news, conferences, podcasts, etc.)
-                "tools": [
-                    {
-                        "type": "web_search_20250305",
-                        "name": "web_search",
-                        "max_uses": 5  # Allow multiple searches for thorough research
+            # Build web search tool config with location context
+            country = company_context.get("country") if company_context else None
+            user_location = None
+            if country:
+                iso_country = get_country_iso_code(country)
+                if iso_country:
+                    user_location = {
+                        "type": "approximate",
+                        "country": iso_country,
                     }
-                ]
-            }
+                    city = company_context.get("city") if company_context else None
+                    if city:
+                        user_location["city"] = city
+            
+            # Build tools list with web search
+            tools = []
+            if user_location:
+                tools.append({
+                    "type": "web_search",
+                    "web_search_20250305": {"user_location": user_location}
+                })
+            else:
+                tools.append({"type": "web_search"})
             
             has_user_info = bool(user_provided_context)
             logger.info(f"[CONTACT_ANALYZER] Analyzing {contact_name} - user-provided info: {has_user_info}")
             
-            response = await self.client.messages.create(**api_params)
+            response = await self.client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=3500,
+                temperature=0.3,
+                messages=[{
+                    "role": "user",
+                    "content": prompt
+                }],
+                tools=tools
+            )
             
             # Extract text from all text blocks
             analysis_text = ""
@@ -114,7 +128,7 @@ class ContactAnalyzer:
                 "name": contact_name,
                 "role": contact_role,
                 "linkedin_url": linkedin_url,
-                "profile_brief": f"# {contact_name}\n\nAnalyse kon niet worden uitgevoerd: {str(e)}",
+                "profile_brief": f"# {contact_name}\n\nAnalysis could not be completed: {str(e)}",
                 "analysis_failed": True
             }
     
@@ -132,40 +146,50 @@ class ContactAnalyzer:
         lang_instruction = get_language_instruction(language)
         company_name = company_context.get("company_name", "Unknown") if company_context else "Unknown"
         
-        # Company context section
+        # Company context section - include research insights
         company_section = ""
         if company_context:
             industry = company_context.get("industry", "")
-            brief = company_context.get("brief_content", "")[:2000] if company_context.get("brief_content") else ""
+            brief = company_context.get("brief_content", "")[:2500] if company_context.get("brief_content") else ""
             
             company_section = f"""
-## COMPANY CONTEXT
+## COMPANY CONTEXT (from our research)
 **Company**: {company_name}
 **Industry**: {industry}
 
-**Research summary**:
+**Research Insights** (use these to personalize your analysis):
 {brief}
 """
         
-        # Seller context section
+        # Enhanced seller context section
         seller_section = ""
+        products_list = ""
         if seller_context and seller_context.get("has_context"):
-            products = ", ".join(seller_context.get("products_services", [])[:5]) or "Not specified"
+            products_list = ", ".join(seller_context.get("products_services", [])[:5]) or "Not specified"
             values = ", ".join(seller_context.get("value_propositions", [])[:3]) or "Not specified"
             target = seller_context.get("target_market", "Not specified")
+            target_industries = ", ".join(seller_context.get("target_industries", [])[:3]) if seller_context.get("target_industries") else "Any"
+            pain_points = ", ".join(seller_context.get("ideal_customer_pain_points", [])[:3]) if seller_context.get("ideal_customer_pain_points") else "Not specified"
             
             seller_section = f"""
-## WHAT THE SELLER OFFERS
-**Company**: {seller_context.get('company_name', 'Unknown')}
-**Products/Services**: {products}
-**Value Propositions**: {values}
-**Target Market**: {target}
+## 🎯 SELLER CONTEXT (Use this to assess relevance!)
+
+| Aspect | Details |
+|--------|---------|
+| **My Company** | {seller_context.get('company_name', 'Unknown')} |
+| **Products/Services** | {products_list} |
+| **Value Propositions** | {values} |
+| **Target Market** | {target} |
+| **Target Industries** | {target_industries} |
+| **Ideal Customer Pain Points** | {pain_points} |
+
+**Use this to determine how relevant this contact is for what we sell.**
 """
         
         # User-provided LinkedIn info section
         user_info_section = ""
         if user_provided_context:
-            user_info_section = "\n## USER-PROVIDED PROFILE INFORMATION\n"
+            user_info_section = "\n## USER-PROVIDED PROFILE INFORMATION (VERIFIED - USE AS PRIMARY SOURCE)\n"
             if user_provided_context.get("about"):
                 user_info_section += f"""
 ### LinkedIn About/Summary:
@@ -178,118 +202,161 @@ class ContactAnalyzer:
 """
             if user_provided_context.get("notes"):
                 user_info_section += f"""
-### Additional Notes:
+### Additional Notes from Sales Rep:
 {user_provided_context.get('notes')}
 """
-            user_info_section += "\n**This is verified information directly from their profile. Use it as the primary source.**\n"
         
-        # Research instruction - ALWAYS search for alternative sources
+        # Research instruction - improved search strategies
         research_instruction = f"""
 ## RESEARCH TASK
 
-Use web search to find information about {contact_name}:
+Search for information about **{contact_name}** at **{company_name}**.
 
-**IMPORTANT: LinkedIn profiles are mostly inaccessible. Search these ALTERNATIVE SOURCES instead:**
+**SEARCH STRATEGY** (LinkedIn is usually blocked, use alternatives):
 
-1. **Company website**: Search "{company_name} team" or "{company_name} about us" or "{company_name} leadership"
-2. **News & press**: Search "{contact_name} {company_name}" for news articles, press releases, interviews
-3. **Conference/events**: Search "{contact_name} speaker" or "{contact_name} conference" or "{contact_name} webinar"
-4. **Podcasts**: Search "{contact_name} podcast" or "{contact_name} interview"
-5. **Industry publications**: Search in relevant trade publications
-6. **GitHub/technical**: For tech roles, search "{contact_name} github" or "{contact_name} developer"
-7. **Twitter/X**: Search for their professional social media presence
+| Priority | Search Query | What to Find |
+|----------|--------------|--------------|
+| 1 | "{company_name} team" OR "{company_name} leadership" | Company about/team page |
+| 2 | "{contact_name}" "{company_name}" | News, press releases, interviews |
+| 3 | "{contact_name}" speaker OR conference OR webinar | Speaking engagements |
+| 4 | "{contact_name}" podcast OR interview | Podcast appearances |
+| 5 | site:twitter.com OR site:x.com "{contact_name}" | Social media presence |
 
-**What to look for:**
-- Career background and achievements
-- Published articles or thought leadership
-- Speaking engagements or podcast appearances
-- Quotes in news articles
-- Professional interests and expertise areas
-- Communication style from public content
-- Recent news or announcements
+**What to extract:**
+- Career path and achievements
+- Communication style from public content (formal/casual/technical)
+- Areas of expertise and interests
+- Recent activities or announcements
+- Quotes that reveal priorities or concerns
 
-**LinkedIn URL for reference** (if available): {linkedin_url or 'Not provided'}
+**LinkedIn URL** (for reference): {linkedin_url or 'Not provided'}
 """
         
-        prompt = f"""You are a sales research assistant. {lang_instruction}
+        prompt = f"""You are a senior sales intelligence analyst preparing a contact brief.
+
+{lang_instruction}
 
 **CRITICAL OUTPUT RULES:**
 - Output ONLY the structured analysis below
-- Do NOT explain what you are searching for
-- Do NOT narrate your research process
-- Do NOT include phrases like "I'll search for...", "Let me...", "Based on my search..."
-- Start IMMEDIATELY with "## 1. PROFILE SUMMARY"
-- Be concrete and actionable, no vague generalities
+- Do NOT explain your search process
+- Do NOT include "I'll search...", "Let me...", "Based on..."
+- Start IMMEDIATELY with "## 1. RELEVANCE ASSESSMENT"
+- Be specific and actionable - no vague generalities
+- Ground every insight in evidence or clearly mark as inference
 
 {company_section}
-
 {seller_section}
 {user_info_section}
 {research_instruction}
 
-## CONTACT PERSON TO ANALYZE
+## CONTACT TO ANALYZE
 **Name**: {contact_name}
 **Role**: {contact_role or 'Not specified'}
 
 ---
 
-OUTPUT FORMAT (start directly with this, no introduction):
+# Contact Analysis: {contact_name}
+{contact_role or ''}
 
-## 1. PROFILE SUMMARY
-- Career background (if available)
-- Current responsibilities based on role
-- Areas of expertise
-- Education/certifications (if available)
+---
 
-## 2. COMMUNICATION STYLE
-Choose AND justify one of:
-- **Formal**: Business tone, titles important, structured communication
-- **Informal**: Casual, first-name basis, direct approach
-- **Technical**: Detail-oriented, data-driven, wants specs and proof
-- **Strategic**: Big-picture thinker, ROI-focused, wants business impact
+## 1. RELEVANCE ASSESSMENT
 
-## 3. DECISION AUTHORITY
-Classify AND justify:
-- **Decision Maker**: Has budget and final decision authority
-- **Influencer**: Influences decision, no final say
+| Dimension | Rating | Justification |
+|-----------|--------|---------------|
+| **Decision Power** | 🟢 High / 🟡 Medium / 🔴 Low | [Based on role and seniority] |
+| **Relevance to Our Solution** | 🟢 Direct Buyer / 🟡 Influencer / 🔴 Tangential | [Based on what we sell: {products_list}] |
+| **Engagement Priority** | 1-5 (1=contact first) | [Overall priority ranking] |
+
+**Bottom Line**: [One sentence: Should we prioritize this contact? Why?]
+
+---
+
+## 2. PROFILE SUMMARY
+- **Background**: [Career path if found, otherwise role-based inference]
+- **Current Focus**: [What this person likely spends their day on]
+- **Expertise Areas**: [Key skills and knowledge domains]
+- **Recent Activity**: [Any news, posts, or appearances found]
+
+---
+
+## 3. COMMUNICATION STYLE
+
+**Style**: Choose ONE and justify:
+- **Formal**: Prefers structured, professional communication
+- **Informal**: Direct, casual, relationship-focused  
+- **Technical**: Wants data, specs, proof points
+- **Strategic**: Big-picture, ROI-focused, business outcomes
+
+**Evidence**: [What signals led to this assessment?]
+
+---
+
+## 4. DECISION AUTHORITY
+
+**Role**: Choose ONE and justify:
+- **Decision Maker**: Controls budget and final decision
+- **Influencer**: Shapes decision but doesn't finalize
 - **Gatekeeper**: Controls access to decision makers
-- **User**: End user, no decision authority
+- **User/Champion**: Uses the solution, advocates internally
 
-## 4. PROBABLE DRIVERS
-What likely motivates this person? Choose 1-2:
-- **Making progress**: Wants to innovate, modernize, stay ahead
-- **Solving problems**: Wants to fix something that's not working
-- **Standing out**: Wants to perform, gain recognition, advance career
-- **Avoiding risk**: Wants stability, no hassle, safe choices
+**Evidence**: [Based on title, company size, or research findings]
 
-Support with concrete signals (if available).
+---
 
-## 5. ROLE-SPECIFIC PAIN POINTS
-What problems does someone in this role typically have?
-- List 3-5 specific pain points
-- Connect to what the seller offers: {", ".join(seller_context.get("products_services", [])[:3]) if seller_context else "not specified"}
+## 5. PROBABLE DRIVERS
 
-## 6. CONVERSATION ADVICE
+What motivates this person? Choose 1-2:
+- **Making Progress**: Innovation, modernization, staying ahead
+- **Solving Problems**: Fixing what's broken
+- **Standing Out**: Recognition, career advancement
+- **Avoiding Risk**: Stability, proven solutions
 
-### Approach
-How to best approach this person (1-2 sentences)
+**Evidence**: [Concrete signals if available]
+
+---
+
+## 6. PAIN POINTS WE CAN SOLVE
+
+| Pain Point | Evidence | How We Help |
+|------------|----------|-------------|
+| [Specific problem] | [Signal or role-based] | [Our relevant solution] |
+| [Specific problem] | [Signal or role-based] | [Our relevant solution] |
+| [Specific problem] | [Signal or role-based] | [Our relevant solution] |
+
+---
+
+## 7. CONVERSATION STRATEGY
+
+### Recommended Approach
+[1-2 sentences on how to engage this person]
 
 ### Opening Lines
-Provide EXACTLY 3 concrete opening lines you can use:
-1. [Line based on their role/responsibilities]
-2. [Line based on company situation or news]
-3. [Line based on what the seller can offer]
+1. [Based on their role/responsibilities]
+2. [Based on company situation or news from research]
+3. [Based on a specific pain point we can solve]
 
 ### Discovery Questions
-Provide EXACTLY 5 smart questions to uncover needs:
-1. [Question about current situation]
-2. [Question about pain points]
-3. [Question about decision process]
-4. [Question about timing/urgency]
-5. [Question about success criteria]
+1. [About their current situation]
+2. [About specific challenges]
+3. [About decision process]
+4. [About timing/urgency]
+5. [About success criteria]
 
-### Things to Avoid
-What should you NOT do with this person? (2-3 points)"""
+### What to Avoid
+- [Don't do this]
+- [Don't say this]
+- [Avoid this approach]
+
+---
+
+## 8. RESEARCH CONFIDENCE
+
+| Aspect | Status |
+|--------|--------|
+| **Information Found** | 🟢 Rich / 🟡 Basic / 🔴 Minimal |
+| **Primary Source** | [Where did info come from?] |
+| **Gaps to Validate** | [What should be confirmed in conversation?] |"""
 
         return prompt
     
@@ -310,47 +377,62 @@ What should you NOT do with this person? (2-3 points)"""
             "analysis_failed": False
         }
         
-        # Extract communication style
         text_lower = analysis_text.lower()
-        if "**formeel**" in text_lower or "formeel:" in text_lower:
+        
+        # Extract communication style (English keywords)
+        if "**formal**" in text_lower or "formal:" in text_lower or "style**: formal" in text_lower:
             result["communication_style"] = "formal"
-        elif "**informeel**" in text_lower or "informeel:" in text_lower:
+        elif "**informal**" in text_lower or "informal:" in text_lower or "style**: informal" in text_lower:
             result["communication_style"] = "informal"
-        elif "**technisch**" in text_lower or "technisch:" in text_lower:
+        elif "**technical**" in text_lower or "technical:" in text_lower or "style**: technical" in text_lower:
             result["communication_style"] = "technical"
-        elif "**strategisch**" in text_lower or "strategisch:" in text_lower:
+        elif "**strategic**" in text_lower or "strategic:" in text_lower or "style**: strategic" in text_lower:
             result["communication_style"] = "strategic"
         
-        # Extract decision authority
-        if "**decision maker**" in text_lower or "decision maker:" in text_lower:
+        # Extract decision authority (English keywords)
+        if "**decision maker**" in text_lower or "role**: decision maker" in text_lower:
             result["decision_authority"] = "decision_maker"
-        elif "**influencer**" in text_lower or "influencer:" in text_lower:
+        elif "**influencer**" in text_lower or "role**: influencer" in text_lower:
             result["decision_authority"] = "influencer"
-        elif "**gatekeeper**" in text_lower or "gatekeeper:" in text_lower:
+        elif "**gatekeeper**" in text_lower or "role**: gatekeeper" in text_lower:
             result["decision_authority"] = "gatekeeper"
-        elif "**gebruiker**" in text_lower or "gebruiker:" in text_lower:
+        elif "**user**" in text_lower or "**champion**" in text_lower or "role**: user" in text_lower:
             result["decision_authority"] = "user"
         
-        # Extract drivers
+        # Extract drivers (English keywords)
         drivers = []
-        if "vooruitgang" in text_lower:
+        if "making progress" in text_lower or "innovation" in text_lower or "modernization" in text_lower:
             drivers.append("progress")
-        if "problemen oplossen" in text_lower or "repareren" in text_lower:
+        if "solving problems" in text_lower or "fixing" in text_lower:
             drivers.append("fixing")
-        if "onderscheiden" in text_lower or "presteren" in text_lower:
+        if "standing out" in text_lower or "recognition" in text_lower or "career advancement" in text_lower:
             drivers.append("standing_out")
-        if "risico vermijden" in text_lower or "stabiliteit" in text_lower:
+        if "avoiding risk" in text_lower or "stability" in text_lower or "proven solutions" in text_lower:
             drivers.append("risk_averse")
         result["probable_drivers"] = ", ".join(drivers) if drivers else None
         
-        # Extract opening suggestions (simple extraction)
-        result["opening_suggestions"] = self._extract_list_items(analysis_text, "Openingszinnen", 3)
+        # Extract relevance score from the assessment table
+        if "🟢 high" in text_lower or "decision power** | 🟢" in text_lower:
+            result["relevance_score"] = "high"
+        elif "🟡 medium" in text_lower:
+            result["relevance_score"] = "medium"
+        elif "🔴 low" in text_lower:
+            result["relevance_score"] = "low"
+        
+        # Extract priority (1-5)
+        import re
+        priority_match = re.search(r'priority[^\d]*(\d)', text_lower)
+        if priority_match:
+            result["priority"] = int(priority_match.group(1))
+        
+        # Extract opening suggestions (English section names)
+        result["opening_suggestions"] = self._extract_list_items(analysis_text, "Opening Lines", 3)
         
         # Extract questions
-        result["questions_to_ask"] = self._extract_list_items(analysis_text, "Discovery Vragen", 5)
+        result["questions_to_ask"] = self._extract_list_items(analysis_text, "Discovery Questions", 5)
         
         # Extract things to avoid
-        result["topics_to_avoid"] = self._extract_list_items(analysis_text, "Te Vermijden", 3)
+        result["topics_to_avoid"] = self._extract_list_items(analysis_text, "What to Avoid", 3)
         
         return result
     
@@ -438,7 +520,9 @@ What should you NOT do with this person? (2-3 points)"""
             "company_name": None,
             "products_services": [],
             "value_propositions": [],
-            "target_market": None
+            "target_market": None,
+            "target_industries": [],
+            "ideal_customer_pain_points": []
         }
         
         try:
@@ -456,6 +540,8 @@ What should you NOT do with this person? (2-3 points)"""
                 context["products_services"] = company.get("products_services", [])
                 context["value_propositions"] = company.get("value_propositions", [])
                 context["target_market"] = company.get("target_market")
+                context["target_industries"] = company.get("target_industries", [])
+                context["ideal_customer_pain_points"] = company.get("ideal_customer_pain_points", [])
             
             return context
         except Exception as e:
