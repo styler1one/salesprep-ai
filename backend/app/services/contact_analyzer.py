@@ -88,15 +88,14 @@ class ContactAnalyzer:
                     if city:
                         user_location["city"] = city
             
-            # Build tools list with web search
-            tools = []
+            # Build tools list with web search (same format as claude_researcher)
+            tools = [{
+                "type": "web_search_20250305",
+                "name": "web_search",
+                "max_uses": 5,
+            }]
             if user_location:
-                tools.append({
-                    "type": "web_search",
-                    "web_search_20250305": {"user_location": user_location}
-                })
-            else:
-                tools.append({"type": "web_search"})
+                tools[0]["user_location"] = user_location
             
             has_user_info = bool(user_provided_context)
             logger.info(f"[CONTACT_ANALYZER] Analyzing {contact_name} - user-provided info: {has_user_info}")
