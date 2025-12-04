@@ -7,7 +7,7 @@ behavior and success patterns.
 
 Features:
 - Success pattern analysis
-- Claude AI insight generation
+- Claude AI insight generation with seller context (SPEC-033)
 - Personalized recommendations
 - Tip of the day
 """
@@ -305,21 +305,43 @@ class CoachInsightsService:
     ) -> Optional[Dict[str, Any]]:
         """
         Generate a personalized tip using Claude AI based on user context.
+        
+        SPEC-033: Enhanced with seller context for more relevant tips.
         """
         if not self.anthropic_client:
             return None
         
         try:
-            prompt = f"""You are Luna, an AI sales coach. Generate a brief, actionable tip for a sales rep based on their recent activity.
-
-Context:
+            # Build seller context section if available
+            seller_section = ""
+            if context.get("seller_context"):
+                seller = context["seller_context"]
+                seller_section = f"""
+## ABOUT THIS SALES REP:
+- Company: {seller.get('company_name', 'Unknown')}
+- Industry: {seller.get('industry', 'Unknown')}
+- Products/Services: {', '.join(seller.get('products_services', [])[:3]) or 'Not specified'}
+- Sales Methodology: {seller.get('sales_methodology', 'Not specified')}
+- Target Industries: {', '.join(seller.get('target_industries', [])[:3]) or 'Not specified'}
+- Communication Style: {seller.get('communication_style', 'Professional')}
+"""
+            
+            prompt = f"""You are Luna, an AI sales coach. Generate a brief, actionable tip for a sales rep based on their profile and recent activity.
+{seller_section}
+## RECENT ACTIVITY:
 - Research briefs completed: {context.get('research_count', 0)}
 - Preparations created: {context.get('prep_count', 0)}
 - Follow-ups completed: {context.get('followup_count', 0)}
 - Contacts added: {context.get('contact_count', 0)}
 - Days since last activity: {context.get('days_inactive', 0)}
 
-Generate a single, specific tip that would help this sales rep improve. Format as JSON:
+## INSTRUCTIONS:
+Generate a single, specific tip that would help this sales rep improve.
+- If seller context is provided, tailor the tip to their industry, products, or methodology.
+- Make it actionable and relevant to their current activity level.
+- Keep it brief but impactful.
+
+Format as JSON:
 {{
     "category": "research|contacts|preparation|followup|general",
     "title": "Short catchy title (max 5 words)",
@@ -463,6 +485,8 @@ Only output the JSON, nothing else."""
 async def get_user_activity_context(supabase, user_id: str, organization_ids: List[str]) -> Dict[str, Any]:
     """
     Get context about user's recent activity for personalization.
+    
+    SPEC-033: Enhanced with seller context (company, products, methodology).
     """
     context = {
         "research_count": 0,
@@ -470,6 +494,7 @@ async def get_user_activity_context(supabase, user_id: str, organization_ids: Li
         "followup_count": 0,
         "contact_count": 0,
         "days_inactive": 0,
+        "seller_context": None,  # SPEC-033: Added seller context
     }
     
     try:
@@ -512,8 +537,58 @@ async def get_user_activity_context(supabase, user_id: str, organization_ids: Li
             last_activity = datetime.fromisoformat(events.data[0]["created_at"].replace("Z", "+00:00"))
             context["days_inactive"] = (datetime.now(last_activity.tzinfo) - last_activity).days
         
+        # SPEC-033: Get seller context (sales profile + company profile)
+        context["seller_context"] = await _get_seller_context(supabase, user_id, organization_ids)
+        
     except Exception as e:
         logger.error(f"Error getting user activity context: {e}")
     
     return context
+
+
+async def _get_seller_context(supabase, user_id: str, organization_ids: List[str]) -> Optional[Dict[str, Any]]:
+    """
+    Get seller context (sales profile + company profile) for personalized tips.
+    
+    SPEC-033: Luna needs seller context to generate relevant coaching tips.
+    """
+    seller_context = {}
+    
+    try:
+        # Get sales profile
+        sales_result = supabase.table("sales_profiles") \
+            .select("full_name, role, sales_methodology, communication_style, target_industries, strengths") \
+            .eq("user_id", user_id) \
+            .limit(1) \
+            .execute()
+        
+        if sales_result.data:
+            profile = sales_result.data[0]
+            seller_context["full_name"] = profile.get("full_name")
+            seller_context["role"] = profile.get("role")
+            seller_context["sales_methodology"] = profile.get("sales_methodology")
+            seller_context["communication_style"] = profile.get("communication_style")
+            seller_context["target_industries"] = profile.get("target_industries") or []
+            seller_context["strengths"] = profile.get("strengths") or []
+        
+        # Get company profile (from first org)
+        if organization_ids:
+            company_result = supabase.table("company_profiles") \
+                .select("company_name, industry, products_services, core_value_props") \
+                .eq("organization_id", organization_ids[0]) \
+                .limit(1) \
+                .execute()
+            
+            if company_result.data:
+                company = company_result.data[0]
+                seller_context["company_name"] = company.get("company_name")
+                seller_context["industry"] = company.get("industry")
+                seller_context["products_services"] = company.get("products_services") or []
+                seller_context["core_value_props"] = company.get("core_value_props") or []
+        
+        return seller_context if seller_context else None
+        
+    except Exception as e:
+        logger.warning(f"Error getting seller context for Luna: {e}")
+        return None
 
