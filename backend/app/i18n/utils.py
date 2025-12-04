@@ -157,3 +157,83 @@ def suggest_language_from_country(country: Optional[str]) -> str:
         return "en"  # Default to English for international
     return COUNTRY_LANGUAGE_MAP.get(country, "en")
 
+
+# Country name to ISO 3166-1 alpha-2 code mapping
+COUNTRY_TO_ISO = {
+    # Common countries
+    "Netherlands": "NL", "Nederland": "NL",
+    "United States": "US", "USA": "US", "United States of America": "US",
+    "United Kingdom": "GB", "UK": "GB", "Great Britain": "GB", "England": "GB",
+    "Germany": "DE", "Deutschland": "DE",
+    "France": "FR",
+    "Spain": "ES", "España": "ES",
+    "Italy": "IT", "Italia": "IT",
+    "Belgium": "BE", "België": "BE", "Belgique": "BE",
+    "Austria": "AT", "Österreich": "AT",
+    "Switzerland": "CH", "Schweiz": "CH", "Suisse": "CH",
+    "Canada": "CA",
+    "Australia": "AU",
+    "New Zealand": "NZ",
+    "Ireland": "IE",
+    "India": "IN", "भारत": "IN",
+    "China": "CN", "中国": "CN",
+    "Japan": "JP", "日本": "JP",
+    "South Korea": "KR", "Korea": "KR",
+    "Singapore": "SG",
+    "Brazil": "BR", "Brasil": "BR",
+    "Mexico": "MX", "México": "MX",
+    "Argentina": "AR",
+    "Colombia": "CO",
+    "Chile": "CL",
+    "Peru": "PE", "Perú": "PE",
+    "Poland": "PL", "Polska": "PL",
+    "Sweden": "SE", "Sverige": "SE",
+    "Norway": "NO", "Norge": "NO",
+    "Denmark": "DK", "Danmark": "DK",
+    "Finland": "FI", "Suomi": "FI",
+    "Portugal": "PT",
+    "Greece": "GR", "Ελλάδα": "GR",
+    "Turkey": "TR", "Türkiye": "TR",
+    "Russia": "RU", "Россия": "RU",
+    "Ukraine": "UA", "Україна": "UA",
+    "Czech Republic": "CZ", "Czechia": "CZ",
+    "Hungary": "HU", "Magyarország": "HU",
+    "Romania": "RO", "România": "RO",
+    "South Africa": "ZA",
+    "Israel": "IL", "ישראל": "IL",
+    "Saudi Arabia": "SA", "المملكة العربية السعودية": "SA",
+    "UAE": "AE", "United Arab Emirates": "AE",
+    "Egypt": "EG", "مصر": "EG",
+    "Morocco": "MA", "المغرب": "MA",
+    "Qatar": "QA",
+    "Kuwait": "KW",
+    "Indonesia": "ID",
+    "Malaysia": "MY",
+    "Thailand": "TH", "ประเทศไทย": "TH",
+    "Vietnam": "VN", "Việt Nam": "VN",
+    "Philippines": "PH",
+    "Luxembourg": "LU",
+}
+
+
+def get_country_iso_code(country_name: Optional[str]) -> Optional[str]:
+    """
+    Convert a country name to its 2-letter ISO 3166-1 alpha-2 code.
+    
+    Used for Claude's web search tool which requires ISO country codes.
+    
+    Args:
+        country_name: Full country name or common variant
+        
+    Returns:
+        2-letter ISO code or None if not found
+    """
+    if not country_name:
+        return None
+    
+    # Check if it's already a 2-letter code
+    if len(country_name) == 2 and country_name.isupper():
+        return country_name
+    
+    # Look up in mapping
+    return COUNTRY_TO_ISO.get(country_name)
