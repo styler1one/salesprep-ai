@@ -1,10 +1,15 @@
 -- ============================================================
 -- SalesPrep-AI Complete Database Schema
--- Version: 3.1
+-- Version: 3.2
 -- Last Updated: 4 December 2025
 -- 
 -- This file consolidates ALL migrations into a single schema.
 -- Use this as reference documentation - DO NOT run on existing DB!
+-- 
+-- Changes in 3.2:
+-- - Updated get_style_guide_with_defaults with full derivation logic
+-- - Updated check_usage_limit with flow redirect and all metrics
+-- - Added storage policies for research-pdfs bucket
 -- 
 -- Changes in 3.1:
 -- - Added all missing functions (23 total)
@@ -878,6 +883,22 @@ INSERT INTO storage.buckets (id, name, public) VALUES
 ('research-pdfs', 'research-pdfs', false)
 ON CONFLICT (id) DO NOTHING;
 
+-- Storage policies for research PDFs
+CREATE POLICY "Users can upload research PDFs"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (bucket_id = 'research-pdfs');
+
+CREATE POLICY "Users can read research PDFs"
+  ON storage.objects FOR SELECT
+  TO authenticated
+  USING (bucket_id = 'research-pdfs');
+
+CREATE POLICY "Users can delete research PDFs"
+  ON storage.objects FOR DELETE
+  TO authenticated
+  USING (bucket_id = 'research-pdfs');
+
 -- ============================================================
 -- HELPER FUNCTIONS
 -- ============================================================
@@ -1057,18 +1078,50 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
--- Get style guide with defaults
+-- Get style guide with defaults (derives from profile if not set)
 CREATE OR REPLACE FUNCTION get_style_guide_with_defaults(profile_row sales_profiles)
 RETURNS JSONB AS $$
+DECLARE
+  result JSONB;
 BEGIN
-  RETURN COALESCE(profile_row.style_guide, '{}'::jsonb) || jsonb_build_object(
-    'tone', COALESCE(profile_row.email_tone, 'professional'),
-    'uses_emoji', COALESCE(profile_row.uses_emoji, false),
-    'signoff', profile_row.email_signoff,
-    'writing_length', profile_row.writing_length_preference
+  -- If style_guide exists, return it
+  IF profile_row.style_guide IS NOT NULL THEN
+    RETURN profile_row.style_guide;
+  END IF;
+  
+  -- Otherwise, derive from existing fields
+  result := jsonb_build_object(
+    'tone', COALESCE(
+      CASE 
+        WHEN profile_row.communication_style ILIKE '%direct%' THEN 'direct'
+        WHEN profile_row.communication_style ILIKE '%warm%' OR profile_row.communication_style ILIKE '%relationship%' THEN 'warm'
+        WHEN profile_row.communication_style ILIKE '%formal%' THEN 'formal'
+        WHEN profile_row.communication_style ILIKE '%casual%' OR profile_row.communication_style ILIKE '%informal%' THEN 'casual'
+        ELSE 'professional'
+      END,
+      'professional'
+    ),
+    'formality', 'professional',
+    'language_style', 'business',
+    'persuasion_style', COALESCE(
+      CASE 
+        WHEN profile_row.sales_methodology ILIKE '%challenger%' THEN 'logic'
+        WHEN profile_row.sales_methodology ILIKE '%story%' OR profile_row.sales_methodology ILIKE '%narrative%' THEN 'story'
+        WHEN profile_row.sales_methodology ILIKE '%reference%' OR profile_row.sales_methodology ILIKE '%social%' THEN 'reference'
+        ELSE 'logic'
+      END,
+      'logic'
+    ),
+    'emoji_usage', COALESCE(profile_row.uses_emoji, false),
+    'signoff', COALESCE(profile_row.email_signoff, 'Best regards'),
+    'writing_length', COALESCE(profile_row.writing_length_preference, 'concise'),
+    'generated_at', NULL,
+    'confidence_score', 0.5
   );
+  
+  RETURN result;
 END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+$$ LANGUAGE plpgsql;
 
 -- Cleanup old coach tips
 CREATE OR REPLACE FUNCTION cleanup_old_coach_tips()
@@ -1201,7 +1254,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
--- Check usage limit (legacy - supports individual metrics)
+-- Check usage limit (supports flow and individual metrics)
 CREATE OR REPLACE FUNCTION check_usage_limit(
   p_organization_id UUID,
   p_metric TEXT
@@ -1212,7 +1265,14 @@ DECLARE
   v_features JSONB;
   v_limit INTEGER;
   v_current INTEGER;
+  v_limit_key TEXT;
 BEGIN
+  -- For 'flow' metric, use dedicated function
+  IF p_metric = 'flow' THEN
+    RETURN check_flow_limit(p_organization_id);
+  END IF;
+
+  -- Get organization's plan
   SELECT plan_id INTO v_plan_id
   FROM organization_subscriptions
   WHERE organization_id = p_organization_id;
@@ -1222,17 +1282,31 @@ BEGIN
   SELECT features INTO v_features
   FROM subscription_plans WHERE id = v_plan_id;
   
-  v_limit := COALESCE((v_features->>p_metric || '_limit')::INTEGER, 10);
+  -- Build limit key (e.g., 'research' -> 'research_limit')
+  v_limit_key := p_metric || '_limit';
+  v_limit := (v_features->>v_limit_key)::INTEGER;
+  
+  -- If limit not found, check flow_limit for backwards compatibility
+  IF v_limit IS NULL THEN
+    IF p_metric IN ('research', 'preparation', 'followup') THEN
+      RETURN check_flow_limit(p_organization_id);
+    END IF;
+    -- Otherwise unlimited
+    RETURN jsonb_build_object('allowed', true, 'current', 0, 'limit', -1, 'unlimited', true);
+  END IF;
   
   IF v_limit = -1 THEN
     RETURN jsonb_build_object('allowed', true, 'current', 0, 'limit', -1, 'unlimited', true);
   END IF;
   
   SELECT COALESCE(
-    CASE 
-      WHEN p_metric = 'research' THEN research_count
-      WHEN p_metric = 'preparation' THEN preparation_count
-      WHEN p_metric = 'followup' THEN followup_count
+    CASE p_metric
+      WHEN 'research' THEN research_count
+      WHEN 'preparation' THEN preparation_count
+      WHEN 'followup' THEN followup_count
+      WHEN 'flow' THEN flow_count
+      WHEN 'transcription_seconds' THEN transcription_seconds
+      WHEN 'kb_document' THEN kb_document_count
       ELSE 0
     END, 0
   ) INTO v_current
@@ -1513,15 +1587,16 @@ JOIN prospects p ON p.id = d.prospect_id;
 -- ============================================================
 -- END OF SCHEMA
 -- ============================================================
--- Version: 3.1
+-- Version: 3.2
 -- Last Updated: 4 December 2025
 -- 
 -- Summary:
 -- - Tables: 25
 -- - Views: 2
--- - Functions: 23
+-- - Functions: 24 (with complete implementations)
 -- - Triggers: 17
--- - Storage Buckets: 3
+-- - Storage Buckets: 3 (with policies)
+-- - Indexes: 86
 -- 
 -- This file is for REFERENCE ONLY. Do not run on existing database!
 -- Use individual migration files for updates.
