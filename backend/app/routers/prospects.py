@@ -84,6 +84,34 @@ class ProspectListResponse(BaseModel):
     total: int
 
 
+class ProspectStatsResponse(BaseModel):
+    total: int
+    by_status: Dict[str, int]
+
+
+class StatusUpdate(BaseModel):
+    status: str = Field(..., pattern="^(new|researching|qualified|meeting_scheduled|proposal_sent|won|lost|inactive)$")
+
+
+class NoteCreate(BaseModel):
+    content: str = Field(..., min_length=1, max_length=5000)
+    is_pinned: bool = False
+
+
+class NoteUpdate(BaseModel):
+    content: Optional[str] = Field(None, min_length=1, max_length=5000)
+    is_pinned: Optional[bool] = None
+
+
+class ContactCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+    role: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    decision_authority: Optional[str] = Field(None, pattern="^(decision_maker|influencer|gatekeeper|end_user)$")
+
+
 def get_organization_id(current_user: dict) -> str:
     """Helper to get user's organization ID."""
     user_id = current_user.get("sub") or current_user.get("id")
@@ -98,10 +126,47 @@ def get_organization_id(current_user: dict) -> str:
     return org_response.data[0]["organization_id"]
 
 
+@router.get("/stats", response_model=ProspectStatsResponse)
+async def get_prospect_stats(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get prospect statistics (counts per status).
+    
+    Returns total count and breakdown by status.
+    """
+    try:
+        organization_id = get_organization_id(current_user)
+        
+        # Get all prospects with just status field
+        response = supabase.table("prospects").select(
+            "status"
+        ).eq("organization_id", organization_id).execute()
+        
+        # Count by status
+        by_status: Dict[str, int] = {}
+        for p in response.data or []:
+            status = p.get("status", "new")
+            by_status[status] = by_status.get(status, 0) + 1
+        
+        return {
+            "total": len(response.data or []),
+            "by_status": by_status
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting prospect stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("", response_model=ProspectListResponse)
 async def list_prospects(
     status: Optional[str] = None,
     search: Optional[str] = None,
+    sort_by: str = Query(default="last_activity_at", pattern="^(last_activity_at|company_name|created_at|status)$"),
+    sort_order: str = Query(default="desc", pattern="^(asc|desc)$"),
     limit: int = Query(default=50, le=100),
     offset: int = 0,
     current_user: dict = Depends(get_current_user)
@@ -112,15 +177,17 @@ async def list_prospects(
     Args:
         status: Filter by status (new, researching, qualified, etc.)
         search: Search by company name
+        sort_by: Sort field (last_activity_at, company_name, created_at, status)
+        sort_order: Sort order (asc, desc)
         limit: Max results (default 50, max 100)
         offset: Pagination offset
     """
     try:
         organization_id = get_organization_id(current_user)
         
-        # Build query
+        # Build query - also get contact count
         query = supabase.table("prospects").select(
-            "*, research_briefs(id), meeting_preps(id), followups(id)",
+            "*, research_briefs(id), meeting_preps(id), followups(id), prospect_contacts(id)",
             count="exact"
         ).eq("organization_id", organization_id)
         
@@ -130,7 +197,8 @@ async def list_prospects(
         if search and len(search) >= 2:
             query = query.ilike("company_name", f"%{search}%")
         
-        query = query.order("last_activity_at", desc=True).range(offset, offset + limit - 1)
+        # Apply sorting
+        query = query.order(sort_by, desc=(sort_order == "desc")).range(offset, offset + limit - 1)
         
         response = query.execute()
         
@@ -141,10 +209,12 @@ async def list_prospects(
             prospect["research_count"] = len(p.get("research_briefs", []) or [])
             prospect["prep_count"] = len(p.get("meeting_preps", []) or [])
             prospect["followup_count"] = len(p.get("followups", []) or [])
+            prospect["contact_count"] = len(p.get("prospect_contacts", []) or [])
             # Remove nested arrays
             prospect.pop("research_briefs", None)
             prospect.pop("meeting_preps", None)
             prospect.pop("followups", None)
+            prospect.pop("prospect_contacts", None)
             prospects.append(prospect)
         
         return {
@@ -459,6 +529,276 @@ async def get_prospect_timeline(
         raise
     except Exception as e:
         logger.error(f"Error getting prospect timeline: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =====================================================
+# Quick Status Update
+# =====================================================
+@router.patch("/{prospect_id}/status", response_model=Dict[str, Any])
+async def update_prospect_status(
+    prospect_id: str,
+    request: StatusUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Quick status update for a prospect (for drag & drop / quick actions).
+    """
+    try:
+        organization_id = get_organization_id(current_user)
+        
+        response = supabase.table("prospects").update({
+            "status": request.status
+        }).eq(
+            "id", prospect_id
+        ).eq(
+            "organization_id", organization_id
+        ).execute()
+        
+        if not response.data:
+            raise HTTPException(status_code=404, detail="Prospect not found")
+        
+        logger.info(f"Updated prospect {prospect_id} status to {request.status}")
+        
+        return response.data[0]
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating prospect status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =====================================================
+# Notes CRUD
+# =====================================================
+@router.get("/{prospect_id}/notes", response_model=List[Dict[str, Any]])
+async def list_prospect_notes(
+    prospect_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get all notes for a prospect, pinned first then by date.
+    """
+    try:
+        organization_id = get_organization_id(current_user)
+        
+        # Verify prospect exists
+        prospect = supabase.table("prospects").select("id").eq(
+            "id", prospect_id
+        ).eq(
+            "organization_id", organization_id
+        ).limit(1).execute()
+        
+        if not prospect.data:
+            raise HTTPException(status_code=404, detail="Prospect not found")
+        
+        # Get notes sorted by pinned then created_at
+        response = supabase.table("prospect_notes").select(
+            "*, auth_users:user_id(email)"
+        ).eq(
+            "prospect_id", prospect_id
+        ).order(
+            "is_pinned", desc=True
+        ).order(
+            "created_at", desc=True
+        ).execute()
+        
+        return response.data or []
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error listing prospect notes: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{prospect_id}/notes", response_model=Dict[str, Any], status_code=201)
+async def create_prospect_note(
+    prospect_id: str,
+    request: NoteCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Create a note for a prospect.
+    """
+    try:
+        organization_id = get_organization_id(current_user)
+        user_id = current_user.get("sub") or current_user.get("id")
+        
+        # Verify prospect exists
+        prospect = supabase.table("prospects").select("id").eq(
+            "id", prospect_id
+        ).eq(
+            "organization_id", organization_id
+        ).limit(1).execute()
+        
+        if not prospect.data:
+            raise HTTPException(status_code=404, detail="Prospect not found")
+        
+        # Create note
+        response = supabase.table("prospect_notes").insert({
+            "prospect_id": prospect_id,
+            "organization_id": organization_id,
+            "user_id": user_id,
+            "content": request.content,
+            "is_pinned": request.is_pinned
+        }).execute()
+        
+        if not response.data:
+            raise HTTPException(status_code=500, detail="Failed to create note")
+        
+        logger.info(f"Created note for prospect {prospect_id}")
+        
+        return response.data[0]
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating prospect note: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.patch("/{prospect_id}/notes/{note_id}", response_model=Dict[str, Any])
+async def update_prospect_note(
+    prospect_id: str,
+    note_id: str,
+    request: NoteUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Update a note (only the owner can update).
+    """
+    try:
+        user_id = current_user.get("sub") or current_user.get("id")
+        
+        # Build update data
+        update_data = request.model_dump(exclude_unset=True)
+        
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No fields to update")
+        
+        # Update note (RLS ensures only owner can update)
+        response = supabase.table("prospect_notes").update(update_data).eq(
+            "id", note_id
+        ).eq(
+            "prospect_id", prospect_id
+        ).eq(
+            "user_id", user_id
+        ).execute()
+        
+        if not response.data:
+            raise HTTPException(status_code=404, detail="Note not found or not authorized")
+        
+        logger.info(f"Updated note {note_id}")
+        
+        return response.data[0]
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating prospect note: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/{prospect_id}/notes/{note_id}", status_code=204)
+async def delete_prospect_note(
+    prospect_id: str,
+    note_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Delete a note (only the owner can delete).
+    """
+    try:
+        user_id = current_user.get("sub") or current_user.get("id")
+        
+        # Delete note (RLS ensures only owner can delete)
+        response = supabase.table("prospect_notes").delete().eq(
+            "id", note_id
+        ).eq(
+            "prospect_id", prospect_id
+        ).eq(
+            "user_id", user_id
+        ).execute()
+        
+        if not response.data:
+            raise HTTPException(status_code=404, detail="Note not found or not authorized")
+        
+        logger.info(f"Deleted note {note_id}")
+        
+        return None
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting prospect note: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =====================================================
+# Quick Contact Add
+# =====================================================
+@router.post("/{prospect_id}/contacts", response_model=Dict[str, Any], status_code=201)
+async def add_prospect_contact(
+    prospect_id: str,
+    request: ContactCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Quickly add a contact to a prospect (creates in prospect_contacts table).
+    """
+    try:
+        organization_id = get_organization_id(current_user)
+        
+        # Verify prospect exists
+        prospect = supabase.table("prospects").select("id").eq(
+            "id", prospect_id
+        ).eq(
+            "organization_id", organization_id
+        ).limit(1).execute()
+        
+        if not prospect.data:
+            raise HTTPException(status_code=404, detail="Prospect not found")
+        
+        # Check if contact already exists by name
+        existing = supabase.table("prospect_contacts").select("id").eq(
+            "prospect_id", prospect_id
+        ).eq(
+            "name", request.name
+        ).limit(1).execute()
+        
+        if existing.data:
+            raise HTTPException(status_code=409, detail=f"Contact '{request.name}' already exists for this prospect")
+        
+        # Create contact
+        contact_data = {
+            "prospect_id": prospect_id,
+            "organization_id": organization_id,
+            "name": request.name,
+            "role": request.role,
+            "email": request.email,
+            "phone": request.phone,
+            "linkedin_url": request.linkedin_url,
+            "decision_authority": request.decision_authority
+        }
+        
+        # Remove None values
+        contact_data = {k: v for k, v in contact_data.items() if v is not None}
+        
+        response = supabase.table("prospect_contacts").insert(contact_data).execute()
+        
+        if not response.data:
+            raise HTTPException(status_code=500, detail="Failed to create contact")
+        
+        logger.info(f"Added contact {request.name} to prospect {prospect_id}")
+        
+        return response.data[0]
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error adding prospect contact: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

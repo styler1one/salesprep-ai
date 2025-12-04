@@ -221,6 +221,27 @@ CREATE INDEX IF NOT EXISTS idx_prospect_contacts_primary ON prospect_contacts(pr
 CREATE INDEX IF NOT EXISTS idx_prospect_contacts_name ON prospect_contacts(organization_id, LOWER(name));
 
 -- ============================================================
+-- 6b. PROSPECT_NOTES (Notes for prospects)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS prospect_notes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  prospect_id UUID NOT NULL REFERENCES prospects(id) ON DELETE CASCADE,
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  
+  content TEXT NOT NULL,
+  is_pinned BOOLEAN DEFAULT false,
+  
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_prospect_notes_prospect ON prospect_notes(prospect_id);
+CREATE INDEX IF NOT EXISTS idx_prospect_notes_org ON prospect_notes(organization_id);
+CREATE INDEX IF NOT EXISTS idx_prospect_notes_user ON prospect_notes(user_id);
+CREATE INDEX IF NOT EXISTS idx_prospect_notes_pinned ON prospect_notes(prospect_id, is_pinned DESC, created_at DESC);
+
+-- ============================================================
 -- 7. SALES_PROFILES (Per user sales profile)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS sales_profiles (
@@ -1707,6 +1728,8 @@ CREATE TRIGGER trigger_user_settings_updated_at BEFORE UPDATE ON user_settings
   FOR EACH ROW EXECUTE FUNCTION update_user_settings_updated_at();
 CREATE TRIGGER trigger_prospect_contacts_updated_at BEFORE UPDATE ON prospect_contacts
   FOR EACH ROW EXECUTE FUNCTION update_prospect_contacts_updated_at();
+CREATE TRIGGER trigger_prospect_notes_updated_at BEFORE UPDATE ON prospect_notes
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER trigger_followup_actions_updated_at BEFORE UPDATE ON followup_actions
   FOR EACH ROW EXECUTE FUNCTION update_followup_actions_updated_at();
 
@@ -1767,6 +1790,7 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prospects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prospect_contacts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE prospect_notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sales_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE company_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profile_versions ENABLE ROW LEVEL SECURITY;

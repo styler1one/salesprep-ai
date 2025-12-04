@@ -98,7 +98,7 @@ export default function ProspectHubPage() {
     return (
       <DashboardLayout user={user}>
         <div className="flex items-center justify-center h-96">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
         </div>
       </DashboardLayout>
     )
@@ -124,7 +124,7 @@ export default function ProspectHubPage() {
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
               <Building2 className="w-8 h-8 text-white" />
             </div>
             <div>
