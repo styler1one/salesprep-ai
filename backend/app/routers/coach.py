@@ -762,8 +762,20 @@ async def get_inline_suggestions(
 
 @router.get("/insights/tip")
 @limiter.limit("30/minute")
-async def get_tip_of_day(request: Request, current_user: dict = Depends(get_current_user)):
-    """Get the personalized tip of the day. Rate limited to 30/minute."""
+async def get_tip_of_day(
+    request: Request, 
+    current_user: dict = Depends(get_current_user),
+    force_ai: bool = False
+):
+    """
+    Get the tip of the day.
+    
+    TASK-038: Token optimization - AI tips cached 1x per day.
+    - Default: Returns curated tip (no AI tokens)
+    - force_ai=true: Generates new AI tip (uses tokens, cached for day)
+    
+    Rate limited to 30/minute.
+    """
     from app.services.coach_insights import CoachInsightsService, get_user_activity_context
     
     supabase = get_supabase_service()
@@ -789,12 +801,12 @@ async def get_tip_of_day(request: Request, current_user: dict = Depends(get_curr
             if member["organization_id"] not in organization_ids:
                 organization_ids.append(member["organization_id"])
         
-        # Get user activity context
+        # Get user activity context (includes seller context)
         context = await get_user_activity_context(supabase, user_id, organization_ids)
         
-        # Generate tip
+        # Generate tip (cached or curated, AI only if force_ai=true)
         insights_service = CoachInsightsService(supabase)
-        tip = await insights_service.generate_tip_of_day(user_id, context)
+        tip = await insights_service.generate_tip_of_day(user_id, context, force_ai=force_ai)
         
         return tip
         

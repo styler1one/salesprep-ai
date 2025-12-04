@@ -190,66 +190,144 @@ class CoachInsightsService:
                 "recommendations": [],
             }
     
+    # Curated tips library - used when no AI tip is cached
+    CURATED_TIPS = [
+        {
+            "category": "research",
+            "title": "Power of Preparation",
+            "content": "Studies show that sales reps who research their prospects for at least 15 minutes before a call are 30% more likely to schedule a follow-up meeting.",
+            "icon": "📚",
+        },
+        {
+            "category": "contacts",
+            "title": "Multi-Threading Matters",
+            "content": "Deals with 3+ contacts in the buying committee close 40% faster. Try adding multiple stakeholders to your prospect research.",
+            "icon": "👥",
+        },
+        {
+            "category": "followup",
+            "title": "Speed to Lead",
+            "content": "Following up within 1 hour of a meeting increases your chances of advancing the deal by 7x compared to waiting 24 hours.",
+            "icon": "⚡",
+        },
+        {
+            "category": "preparation",
+            "title": "Personalized Openings",
+            "content": "Starting with a personalized observation about the prospect's company or recent news creates 3x more engagement than generic introductions.",
+            "icon": "🎯",
+        },
+        {
+            "category": "actions",
+            "title": "Customer Reports Win",
+            "content": "Sharing a professional customer report after meetings increases response rates by 60% compared to simple thank-you emails.",
+            "icon": "📊",
+        },
+        {
+            "category": "timing",
+            "title": "Best Prep Timing",
+            "content": "The sweet spot for preparation is 1-2 days before the meeting. Too early and you forget details, too late and you're rushed.",
+            "icon": "⏰",
+        },
+    ]
+    
     async def generate_tip_of_day(
         self, 
         user_id: str,
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
+        force_ai: bool = False
     ) -> Dict[str, Any]:
         """
-        Generate a personalized tip of the day using Claude AI.
+        Generate a personalized tip of the day.
+        
+        TASK-038: Token optimization - AI tips cached 1x per day.
+        
+        Flow:
+        1. Check database for cached AI tip from today
+        2. If cached → return it (no AI call)
+        3. If not cached + force_ai → generate new AI tip + cache it
+        4. Otherwise → return curated tip (no AI call)
         
         Args:
             user_id: The user ID
             context: Optional context about user's recent activity
+            force_ai: If True, generate new AI tip even if curated available
             
         Returns:
             Dict with tip content and metadata.
         """
-        # Curated tips library (fallback if Claude unavailable)
-        curated_tips = [
-            {
-                "category": "research",
-                "title": "Power of Preparation",
-                "content": "Studies show that sales reps who research their prospects for at least 15 minutes before a call are 30% more likely to schedule a follow-up meeting.",
-                "icon": "📚",
-            },
-            {
-                "category": "contacts",
-                "title": "Multi-Threading Matters",
-                "content": "Deals with 3+ contacts in the buying committee close 40% faster. Try adding multiple stakeholders to your prospect research.",
-                "icon": "👥",
-            },
-            {
-                "category": "followup",
-                "title": "Speed to Lead",
-                "content": "Following up within 1 hour of a meeting increases your chances of advancing the deal by 7x compared to waiting 24 hours.",
-                "icon": "⚡",
-            },
-            {
-                "category": "preparation",
-                "title": "Personalized Openings",
-                "content": "Starting with a personalized observation about the prospect's company or recent news creates 3x more engagement than generic introductions.",
-                "icon": "🎯",
-            },
-            {
-                "category": "actions",
-                "title": "Customer Reports Win",
-                "content": "Sharing a professional customer report after meetings increases response rates by 60% compared to simple thank-you emails.",
-                "icon": "📊",
-            },
-            {
-                "category": "timing",
-                "title": "Best Prep Timing",
-                "content": "The sweet spot for preparation is 1-2 days before the meeting. Too early and you forget details, too late and you're rushed.",
-                "icon": "⏰",
-            },
-        ]
-        
-        # Check if we've shown tips today
         today = datetime.now().date().isoformat()
         
         try:
-            # Get previously shown tips
+            # Step 1: Check for cached AI tip from today
+            cached_tip = await self._get_cached_tip(user_id, today)
+            if cached_tip:
+                logger.debug(f"Returning cached AI tip for user {user_id}")
+                return cached_tip
+            
+            # Step 2: If force_ai or first time today, try to generate AI tip
+            if force_ai and self.anthropic_client and context:
+                try:
+                    personalized_tip = await self._generate_personalized_tip(context)
+                    if personalized_tip:
+                        # Cache the AI tip for today
+                        await self._cache_tip(user_id, today, personalized_tip)
+                        logger.info(f"Generated and cached new AI tip for user {user_id}")
+                        return personalized_tip
+                except Exception as e:
+                    logger.warning(f"AI tip generation failed, using curated: {e}")
+            
+            # Step 3: Return curated tip (no AI tokens used)
+            return self._get_curated_tip(user_id, today)
+            
+        except Exception as e:
+            logger.error(f"Error generating tip of day: {e}")
+            # Return a safe default
+            return {
+                "id": "fallback_0",
+                "category": self.CURATED_TIPS[0]["category"],
+                "title": self.CURATED_TIPS[0]["title"],
+                "content": self.CURATED_TIPS[0]["content"],
+                "icon": self.CURATED_TIPS[0]["icon"],
+                "is_personalized": False,
+            }
+    
+    async def _get_cached_tip(self, user_id: str, tip_date: str) -> Optional[Dict[str, Any]]:
+        """Get cached AI tip from database for today."""
+        try:
+            result = self.supabase.table("coach_daily_tips") \
+                .select("tip_data") \
+                .eq("user_id", user_id) \
+                .eq("tip_date", tip_date) \
+                .limit(1) \
+                .execute()
+            
+            if result.data and len(result.data) > 0:
+                return result.data[0]["tip_data"]
+            return None
+        except Exception as e:
+            logger.warning(f"Error getting cached tip: {e}")
+            return None
+    
+    async def _cache_tip(self, user_id: str, tip_date: str, tip_data: Dict[str, Any]) -> bool:
+        """Cache AI tip in database for today."""
+        try:
+            self.supabase.table("coach_daily_tips") \
+                .upsert({
+                    "user_id": user_id,
+                    "tip_date": tip_date,
+                    "tip_data": tip_data,
+                    "is_personalized": tip_data.get("is_personalized", True),
+                }) \
+                .execute()
+            return True
+        except Exception as e:
+            logger.warning(f"Error caching tip: {e}")
+            return False
+    
+    def _get_curated_tip(self, user_id: str, today: str) -> Dict[str, Any]:
+        """Get a curated tip (no AI tokens)."""
+        try:
+            # Get previously shown tips today
             shown_result = self.supabase.table("coach_behavior_events") \
                 .select("event_data") \
                 .eq("user_id", user_id) \
@@ -265,39 +343,37 @@ class CoachInsightsService:
                         shown_tip_ids.append(tip_id)
             
             # Filter out already shown tips
-            available_tips = [t for i, t in enumerate(curated_tips) if str(i) not in shown_tip_ids]
+            available_tips = [
+                (i, t) for i, t in enumerate(self.CURATED_TIPS) 
+                if str(i) not in shown_tip_ids
+            ]
             
             if not available_tips:
                 # All tips shown, reset
-                available_tips = curated_tips
-            
-            # Try to generate a personalized tip with Claude if available
-            if self.anthropic_client and context:
-                try:
-                    personalized_tip = await self._generate_personalized_tip(context)
-                    if personalized_tip:
-                        return personalized_tip
-                except Exception as e:
-                    logger.warning(f"Claude tip generation failed, using curated: {e}")
+                available_tips = list(enumerate(self.CURATED_TIPS))
             
             # Select a random curated tip
             import random
-            tip = random.choice(available_tips)
-            tip_index = curated_tips.index(tip)
+            tip_index, tip = random.choice(available_tips)
             
             return {
-                "id": str(tip_index),
+                "id": f"curated_{tip_index}",
                 "category": tip["category"],
                 "title": tip["title"],
                 "content": tip["content"],
                 "icon": tip["icon"],
                 "is_personalized": False,
             }
-            
         except Exception as e:
-            logger.error(f"Error generating tip of day: {e}")
-            # Return a safe default
-            return curated_tips[0]
+            logger.warning(f"Error getting curated tip: {e}")
+            return {
+                "id": "fallback_0",
+                "category": self.CURATED_TIPS[0]["category"],
+                "title": self.CURATED_TIPS[0]["title"],
+                "content": self.CURATED_TIPS[0]["content"],
+                "icon": self.CURATED_TIPS[0]["icon"],
+                "is_personalized": False,
+            }
     
     async def _generate_personalized_tip(
         self, 

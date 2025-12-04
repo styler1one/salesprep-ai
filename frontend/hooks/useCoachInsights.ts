@@ -16,6 +16,57 @@ export interface TipOfDay {
 }
 
 /**
+ * TASK-038: LocalStorage cache for tips
+ * Reduces API calls and token usage
+ */
+const TIP_CACHE_KEY = 'luna_tip_cache'
+
+interface TipCache {
+  date: string  // YYYY-MM-DD
+  tip: TipOfDay
+}
+
+function getTodayString(): string {
+  return new Date().toISOString().split('T')[0]
+}
+
+function getCachedTip(): TipOfDay | null {
+  if (typeof window === 'undefined') return null
+  
+  try {
+    const cached = localStorage.getItem(TIP_CACHE_KEY)
+    if (!cached) return null
+    
+    const { date, tip } = JSON.parse(cached) as TipCache
+    
+    // Check if cache is from today
+    if (date === getTodayString()) {
+      return tip
+    }
+    
+    // Cache expired, remove it
+    localStorage.removeItem(TIP_CACHE_KEY)
+    return null
+  } catch {
+    return null
+  }
+}
+
+function setCachedTip(tip: TipOfDay): void {
+  if (typeof window === 'undefined') return
+  
+  try {
+    const cache: TipCache = {
+      date: getTodayString(),
+      tip
+    }
+    localStorage.setItem(TIP_CACHE_KEY, JSON.stringify(cache))
+  } catch {
+    // Ignore localStorage errors
+  }
+}
+
+/**
  * Pattern analysis structure
  */
 export interface PatternAnalysis {
@@ -62,6 +113,11 @@ export interface Prediction {
 
 /**
  * Hook for fetching AI insights from the coach
+ * 
+ * TASK-038: Token optimization
+ * - Uses localStorage cache for tips
+ * - Only calls API if no cached tip for today
+ * - force_ai parameter triggers new AI generation
  */
 export function useCoachInsights() {
   const [tip, setTip] = useState<TipOfDay | null>(null)
@@ -74,12 +130,30 @@ export function useCoachInsights() {
 
   /**
    * Fetch tip of the day
+   * 
+   * @param forceAI - If true, generates new AI tip (uses tokens)
    */
-  const fetchTip = useCallback(async () => {
+  const fetchTip = useCallback(async (forceAI: boolean = false) => {
     try {
-      const { data, error: apiError } = await api.get<TipOfDay>('/api/v1/coach/insights/tip')
+      // Check localStorage cache first (unless forcing AI)
+      if (!forceAI) {
+        const cachedTip = getCachedTip()
+        if (cachedTip) {
+          setTip(cachedTip)
+          return
+        }
+      }
+      
+      // Fetch from API
+      const url = forceAI 
+        ? '/api/v1/coach/insights/tip?force_ai=true'
+        : '/api/v1/coach/insights/tip'
+      
+      const { data, error: apiError } = await api.get<TipOfDay>(url)
       if (!apiError && data) {
         setTip(data)
+        // Cache the tip for today
+        setCachedTip(data)
       }
     } catch (err) {
       console.error('Failed to fetch tip:', err)
@@ -126,7 +200,7 @@ export function useCoachInsights() {
   }, [])
 
   /**
-   * Refresh all insights
+   * Refresh all insights (uses cached tip if available)
    */
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -134,7 +208,7 @@ export function useCoachInsights() {
     
     try {
       await Promise.all([
-        fetchTip(),
+        fetchTip(false),  // Use cache
         fetchPatterns(),
         fetchPredictions(),
       ])
@@ -144,6 +218,19 @@ export function useCoachInsights() {
       setLoading(false)
     }
   }, [fetchTip, fetchPatterns, fetchPredictions])
+
+  /**
+   * Generate a new AI tip (uses tokens, ignores cache)
+   * TASK-038: Only use when user explicitly requests new tip
+   */
+  const generateNewAITip = useCallback(async () => {
+    setLoading(true)
+    try {
+      await fetchTip(true)  // Force AI generation
+    } finally {
+      setLoading(false)
+    }
+  }, [fetchTip])
 
   // Initial load
   useEffect(() => {
@@ -159,6 +246,7 @@ export function useCoachInsights() {
     loading,
     error,
     refresh,
+    generateNewAITip,  // TASK-038: New function for AI tips
     fetchTip,
     fetchPatterns,
     fetchPredictions,
