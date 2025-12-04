@@ -854,7 +854,7 @@ export default function ResearchBriefPage() {
             onClick={() => { setSelectedContact(null); setIsEditingContact(false); setEditedContactBrief(''); }}
           >
             <div 
-              className="bg-white dark:bg-slate-900 rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-xl border border-slate-200 dark:border-slate-700"
+              className="bg-white dark:bg-slate-900 rounded-xl max-w-4xl w-full max-h-[85vh] overflow-y-auto shadow-xl border border-slate-200 dark:border-slate-700"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between z-10">
@@ -925,11 +925,24 @@ export default function ResearchBriefPage() {
                           remarkPlugins={[remarkGfm]}
                           components={{
                             h1: ({ node, ...props }) => <h1 className="text-xl font-bold mb-3 text-slate-900 dark:text-white" {...props} />,
-                            h2: ({ node, ...props }) => <h2 className="text-lg font-bold mt-4 mb-2 text-slate-900 dark:text-white" {...props} />,
-                            h3: ({ node, ...props }) => <h3 className="text-base font-semibold mt-3 mb-2 text-slate-900 dark:text-white" {...props} />,
-                            p: ({ node, ...props }) => <p className="mb-2 text-sm text-slate-700 dark:text-slate-300" {...props} />,
-                            ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-2 space-y-1 text-sm" {...props} />,
+                            h2: ({ node, ...props }) => <h2 className="text-lg font-bold mt-5 mb-3 text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700 pb-2" {...props} />,
+                            h3: ({ node, ...props }) => <h3 className="text-base font-semibold mt-4 mb-2 text-slate-900 dark:text-white" {...props} />,
+                            p: ({ node, ...props }) => <p className="mb-3 text-sm text-slate-700 dark:text-slate-300 leading-relaxed" {...props} />,
+                            ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-3 space-y-1.5 text-sm" {...props} />,
+                            ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-3 space-y-1.5 text-sm" {...props} />,
                             li: ({ node, ...props }) => <li className="ml-2 text-slate-700 dark:text-slate-300" {...props} />,
+                            strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900 dark:text-white" {...props} />,
+                            hr: ({ node, ...props }) => <hr className="my-4 border-slate-200 dark:border-slate-700" {...props} />,
+                            table: ({ node, ...props }) => (
+                              <div className="overflow-x-auto my-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                                <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700 text-sm" {...props} />
+                              </div>
+                            ),
+                            thead: ({ node, ...props }) => <thead className="bg-slate-50 dark:bg-slate-800" {...props} />,
+                            tbody: ({ node, ...props }) => <tbody className="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900" {...props} />,
+                            tr: ({ node, ...props }) => <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50" {...props} />,
+                            th: ({ node, ...props }) => <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider" {...props} />,
+                            td: ({ node, ...props }) => <td className="px-4 py-3 text-slate-700 dark:text-slate-300 whitespace-normal" {...props} />,
                           }}
                         >
                           {selectedContact.profile_brief}
@@ -937,35 +950,8 @@ export default function ResearchBriefPage() {
                       </div>
                     )}
                     
-                    {/* Quick Tips */}
-                    {((selectedContact.opening_suggestions?.length ?? 0) > 0 || (selectedContact.questions_to_ask?.length ?? 0) > 0) && (
-                      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                        {selectedContact.opening_suggestions && selectedContact.opening_suggestions.length > 0 && (
-                          <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
-                            <h4 className="font-semibold text-green-700 dark:text-green-300 mb-2 text-sm">
-                              💬 {t('contacts.openingLines')}
-                            </h4>
-                            <ul className="space-y-2">
-                              {selectedContact.opening_suggestions.map((s, i) => (
-                                <li key={i} className="text-sm text-green-800 dark:text-green-200">"{s}"</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        {selectedContact.questions_to_ask && selectedContact.questions_to_ask.length > 0 && (
-                          <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
-                            <h4 className="font-semibold text-blue-700 dark:text-blue-300 mb-2 text-sm">
-                              ❓ {t('detail.discoveryQuestions')}
-                            </h4>
-                            <ul className="space-y-2">
-                              {selectedContact.questions_to_ask.map((q, i) => (
-                                <li key={i} className="text-sm text-blue-800 dark:text-blue-200">{q}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    {/* Note: Opening lines and discovery questions are now 
+                        generated in the Preparation phase, not here */}
                   </>
                 )}
               </div>
