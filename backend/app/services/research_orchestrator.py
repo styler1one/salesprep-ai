@@ -168,6 +168,7 @@ class ResearchOrchestrator:
         Get seller context: who is selling, what are they selling.
         
         This context makes research prompts highly personalized.
+        Extracts and flattens fields from company_profile and sales_profile.
         """
         context = {
             "has_context": False,
@@ -175,7 +176,8 @@ class ResearchOrchestrator:
             "industry": None,
             "products_services": [],
             "value_propositions": [],
-            "target_market": None,
+            "target_market": "B2B",
+            "target_industries": [],
             "differentiators": [],
             "sales_person": None,
             "sales_strengths": [],
@@ -199,11 +201,27 @@ class ResearchOrchestrator:
                 context["has_context"] = True
                 context["company_name"] = company.get("company_name")
                 context["industry"] = company.get("industry")
-                context["products_services"] = company.get("products_services", [])
-                context["value_propositions"] = company.get("value_propositions", [])
-                context["target_market"] = company.get("target_market")
-                context["differentiators"] = company.get("differentiators", [])
+                
+                # Products: extract names from products array
+                products = company.get("products", []) or []
+                context["products_services"] = [
+                    p.get("name") for p in products 
+                    if isinstance(p, dict) and p.get("name")
+                ]
+                
+                # Value propositions from core_value_props
+                context["value_propositions"] = company.get("core_value_props", []) or []
+                
+                # Differentiators (this field exists directly)
+                context["differentiators"] = company.get("differentiators", []) or []
+                
+                # Target industries from Ideal Customer Profile
+                icp = company.get("ideal_customer_profile", {}) or {}
+                context["target_industries"] = icp.get("industries", []) or []
+                
                 context["company_narrative"] = company.get("company_narrative")
+                
+                logger.info(f"Seller context from company_profile: {context['company_name']}, products={len(context['products_services'])}")
             
             # Get sales profile
             if user_id:
@@ -216,8 +234,20 @@ class ResearchOrchestrator:
                 if sales_response.data:
                     sales = sales_response.data[0]
                     context["sales_person"] = sales.get("full_name")
-                    context["sales_strengths"] = sales.get("strengths", [])
+                    context["sales_strengths"] = sales.get("strengths", []) or []
                     context["sales_narrative"] = sales.get("sales_narrative")
+                    
+                    # Fallback: extract company name from role if not set
+                    if not context.get("company_name"):
+                        role = sales.get("role", "") or ""
+                        if " at " in role:
+                            context["company_name"] = role.split(" at ")[-1].strip()
+                            context["has_context"] = True
+                            logger.info(f"Extracted company from sales_profile role: {context['company_name']}")
+                    
+                    # Fallback: target industries from sales profile
+                    if not context.get("target_industries"):
+                        context["target_industries"] = sales.get("target_industries", []) or []
             
             logger.info(f"Loaded seller context: {context['company_name']}, has_context={context['has_context']}")
             

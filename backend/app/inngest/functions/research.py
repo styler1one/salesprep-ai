@@ -147,16 +147,20 @@ async def update_research_status(research_id: str, status: str) -> dict:
 
 
 async def get_seller_context(organization_id: Optional[str], user_id: Optional[str]) -> dict:
-    """Get seller context for personalized research."""
+    """
+    Get seller context for personalized research.
+    
+    Extracts and flattens relevant fields from company_profile and sales_profile
+    so they can be directly used in research prompts.
+    """
     if not organization_id:
-        return {}
+        return {"has_context": False}
     
     try:
         # Get company profile
         company_response = supabase.table("company_profiles").select("*").eq(
             "organization_id", organization_id
         ).limit(1).execute()
-        
         company_profile = company_response.data[0] if company_response.data else None
         
         # Get sales profile
@@ -167,14 +171,73 @@ async def get_seller_context(organization_id: Optional[str], user_id: Optional[s
             ).limit(1).execute()
             sales_profile = profile_response.data[0] if profile_response.data else None
         
-        return {
+        # Build flattened context with extracted fields
+        context = {
+            "has_context": bool(company_profile or sales_profile),
+            # Keep raw profiles for debugging/logging
             "company_profile": company_profile,
             "sales_profile": sales_profile,
-            "has_context": bool(company_profile or sales_profile)
+            # Initialize extracted fields
+            "company_name": None,
+            "products_services": [],
+            "value_propositions": [],
+            "target_industries": [],
+            "target_market": "B2B",
         }
+        
+        # Extract from company_profile (primary source)
+        if company_profile:
+            context["company_name"] = company_profile.get("company_name")
+            
+            # Products: extract names from products array
+            products = company_profile.get("products", []) or []
+            context["products_services"] = [
+                p.get("name") for p in products 
+                if isinstance(p, dict) and p.get("name")
+            ]
+            
+            # Value propositions from core_value_props
+            context["value_propositions"] = company_profile.get("core_value_props", []) or []
+            
+            # Add differentiators to value props if available
+            differentiators = company_profile.get("differentiators", []) or []
+            if differentiators:
+                context["value_propositions"] = context["value_propositions"] + differentiators
+            
+            # Target industries from Ideal Customer Profile
+            icp = company_profile.get("ideal_customer_profile", {}) or {}
+            context["target_industries"] = icp.get("industries", []) or []
+            
+            logger.info(f"Seller context from company_profile: company={context['company_name']}, products={len(context['products_services'])}")
+        
+        # Fallback/supplement from sales_profile
+        if sales_profile:
+            # Company name fallback: extract from role "Sales Director at Cmotions"
+            if not context.get("company_name"):
+                role = sales_profile.get("role", "") or ""
+                if " at " in role:
+                    context["company_name"] = role.split(" at ")[-1].strip()
+                    logger.info(f"Extracted company name from sales_profile role: {context['company_name']}")
+            
+            # Target industries fallback
+            if not context.get("target_industries"):
+                context["target_industries"] = sales_profile.get("target_industries", []) or []
+            
+            # If still no products, try to derive from ai_summary or role
+            if not context.get("products_services"):
+                ai_summary = sales_profile.get("ai_summary", "") or ""
+                # Look for common patterns in the summary
+                if "data" in ai_summary.lower() and "ai" in ai_summary.lower():
+                    context["products_services"] = ["data and AI solutions"]
+                elif "crm" in ai_summary.lower():
+                    context["products_services"] = ["CRM solutions"]
+                logger.info(f"Derived products from ai_summary: {context['products_services']}")
+        
+        return context
+        
     except Exception as e:
         logger.warning(f"Failed to get seller context: {e}")
-        return {}
+        return {"has_context": False}
 
 
 async def run_claude_research(
