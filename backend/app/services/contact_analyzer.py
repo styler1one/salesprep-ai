@@ -231,17 +231,21 @@ Search for information about **{contact_name}** at **{company_name}**.
 **LinkedIn URL** (for reference): {linkedin_url or 'Not provided'}
 """
         
-        prompt = f"""You are a senior sales intelligence analyst preparing a contact brief.
+        prompt = f"""You are a senior sales intelligence analyst creating a contact research profile.
 
 {lang_instruction}
+
+**YOUR GOAL**: Help the sales rep truly UNDERSTAND this person - their background, motivations, 
+communication preferences, and role in decision-making. This is RESEARCH, not meeting preparation.
 
 **CRITICAL OUTPUT RULES:**
 - Output ONLY the structured analysis below
 - Do NOT explain your search process
 - Do NOT include "I'll search...", "Let me...", "Based on..."
 - Start IMMEDIATELY with "## 1. RELEVANCE ASSESSMENT"
-- Be specific and actionable - no vague generalities
+- Focus on WHO this person is, not on WHAT TO SAY to them
 - Ground every insight in evidence or clearly mark as inference
+- Do NOT include opening lines, discovery questions, or scripts (those come later in meeting prep)
 
 {company_section}
 {seller_section}
@@ -315,37 +319,28 @@ What motivates this person? Choose 1-2:
 
 ---
 
-## 6. PAIN POINTS WE CAN SOLVE
+## 6. ROLE-SPECIFIC CHALLENGES
 
-| Pain Point | Evidence | How We Help |
-|------------|----------|-------------|
-| [Specific problem] | [Signal or role-based] | [Our relevant solution] |
-| [Specific problem] | [Signal or role-based] | [Our relevant solution] |
-| [Specific problem] | [Signal or role-based] | [Our relevant solution] |
+What challenges does someone in this role typically face?
+
+| Challenge | Why It Matters | Connection to Our Solution |
+|-----------|----------------|---------------------------|
+| [Typical challenge for this role] | [Business impact] | [How we can help - if relevant] |
+| [Typical challenge for this role] | [Business impact] | [How we can help - if relevant] |
+| [Typical challenge for this role] | [Business impact] | [How we can help - if relevant] |
 
 ---
 
-## 7. CONVERSATION STRATEGY
+## 7. PERSONALITY & WORKING STYLE
 
-### Recommended Approach
-[1-2 sentences on how to engage this person]
+Based on available information:
 
-### Opening Lines
-1. [Based on their role/responsibilities]
-2. [Based on company situation or news from research]
-3. [Based on a specific pain point we can solve]
+- **Preferred Communication**: [Email / Phone / In-person / Video]
+- **Meeting Style**: [Prefers agendas / Likes to explore / Time-conscious / Detail-oriented]
+- **Decision Making**: [Data-driven / Relationship-driven / Consensus-builder / Quick decider]
+- **What They Value**: [Innovation / Stability / Efficiency / Relationships / Results]
 
-### Discovery Questions
-1. [About their current situation]
-2. [About specific challenges]
-3. [About decision process]
-4. [About timing/urgency]
-5. [About success criteria]
-
-### What to Avoid
-- [Don't do this]
-- [Don't say this]
-- [Avoid this approach]
+**Key Insight**: [One sentence about what makes this person tick]
 
 ---
 
@@ -355,7 +350,11 @@ What motivates this person? Choose 1-2:
 |--------|--------|
 | **Information Found** | 🟢 Rich / 🟡 Basic / 🔴 Minimal |
 | **Primary Source** | [Where did info come from?] |
-| **Gaps to Validate** | [What should be confirmed in conversation?] |"""
+| **Gaps to Validate** | [What should be confirmed in first conversation?] |
+
+---
+
+**NOTE: This is a research profile to understand the contact. Specific talking points, opening lines, and discovery questions will be generated in the Meeting Preparation phase when there is a specific meeting context.**"""
 
         return prompt
     
@@ -424,14 +423,19 @@ What motivates this person? Choose 1-2:
         if priority_match:
             result["priority"] = int(priority_match.group(1))
         
-        # Extract opening suggestions (English section names)
-        result["opening_suggestions"] = self._extract_list_items(analysis_text, "Opening Lines", 3)
+        # Extract research confidence
+        if "🟢 rich" in text_lower or "information found** | 🟢" in text_lower:
+            result["research_confidence"] = "rich"
+        elif "🟡 basic" in text_lower:
+            result["research_confidence"] = "basic"
+        elif "🔴 minimal" in text_lower:
+            result["research_confidence"] = "minimal"
         
-        # Extract questions
-        result["questions_to_ask"] = self._extract_list_items(analysis_text, "Discovery Questions", 5)
-        
-        # Extract things to avoid
-        result["topics_to_avoid"] = self._extract_list_items(analysis_text, "What to Avoid", 3)
+        # Note: Opening lines, discovery questions, and things to avoid
+        # are now generated in the Preparation phase, not in contact research
+        result["opening_suggestions"] = None
+        result["questions_to_ask"] = None
+        result["topics_to_avoid"] = None
         
         return result
     
