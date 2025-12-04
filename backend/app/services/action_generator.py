@@ -170,11 +170,23 @@ class ActionGeneratorService:
         # Company Profile
         company = context.get("company_profile", {})
         if company:
+            # Extract products from products array
+            products_list = []
+            for p in (company.get('products', []) or []):
+                if isinstance(p, dict) and p.get('name'):
+                    products_list.append(p.get('name'))
+            products_str = ', '.join(products_list[:5]) or 'Not specified'
+            
+            # Extract value propositions
+            value_props = (company.get('core_value_props', []) or [])[:3]
+            value_props_str = ', '.join(value_props) or 'Not specified'
+            
             parts.append(f"""
 ## Company Profile (Seller)
 - Company: {company.get('company_name', 'Unknown')}
 - Industry: {company.get('industry', 'Unknown')}
-- Value Proposition: {company.get('value_proposition', 'Unknown')}
+- Products/Services: {products_str}
+- Value Propositions: {value_props_str}
 """)
         
         # Research Brief - include full BANT, leadership, entry strategy

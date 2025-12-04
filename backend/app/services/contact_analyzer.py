@@ -517,13 +517,17 @@ Based on available information:
         organization_id: str,
         user_id: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Get seller context from profiles."""
+        """
+        Get seller context from profiles.
+        
+        Extracts and flattens relevant fields from company_profile.
+        """
         context = {
             "has_context": False,
             "company_name": None,
             "products_services": [],
             "value_propositions": [],
-            "target_market": None,
+            "target_market": "B2B",
             "target_industries": [],
             "ideal_customer_pain_points": []
         }
@@ -540,11 +544,24 @@ Based on available information:
                 company = company_response.data[0]
                 context["has_context"] = True
                 context["company_name"] = company.get("company_name")
-                context["products_services"] = company.get("products_services", [])
-                context["value_propositions"] = company.get("value_propositions", [])
-                context["target_market"] = company.get("target_market")
-                context["target_industries"] = company.get("target_industries", [])
-                context["ideal_customer_pain_points"] = company.get("ideal_customer_pain_points", [])
+                
+                # Products: extract names from products array
+                products = company.get("products", []) or []
+                context["products_services"] = [
+                    p.get("name") for p in products 
+                    if isinstance(p, dict) and p.get("name")
+                ]
+                
+                # Value propositions from core_value_props + differentiators
+                context["value_propositions"] = (company.get("core_value_props", []) or []) + \
+                                                (company.get("differentiators", []) or [])
+                
+                # Target industries from ideal_customer_profile
+                icp = company.get("ideal_customer_profile", {}) or {}
+                context["target_industries"] = icp.get("industries", []) or []
+                context["ideal_customer_pain_points"] = icp.get("pain_points", []) or []
+                
+                logger.info(f"Seller context loaded: {context['company_name']}, products={len(context['products_services'])}")
             
             return context
         except Exception as e:

@@ -8,7 +8,7 @@ SPEC: SPEC-032-Seller-Context-Prompt-Architecture
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from datetime import datetime
 from supabase import Client
 from app.database import get_supabase_service
@@ -186,8 +186,8 @@ Not generic AI text - THEIR voice, THEIR style, THEIR personality.
             "role": sales_profile.get("role") if sales_profile else None,
             "company_name": company_profile.get("company_name") if company_profile else None,
             "style_guide": style_guide,
-            "products_services": company_profile.get("products_services", []) if company_profile else [],
-            "value_propositions": company_profile.get("value_propositions", []) if company_profile else []
+            "products_services": self._extract_products(company_profile) if company_profile else [],
+            "value_propositions": self._extract_value_props(company_profile) if company_profile else []
         }
     
     # ==========================================
@@ -296,8 +296,8 @@ Not generic AI text - THEIR voice, THEIR style, THEIR personality.
         
         # Company section
         if company_profile:
-            products = ', '.join(company_profile.get('products_services', [])[:5]) or 'Not specified'
-            value_props = ', '.join(company_profile.get('value_propositions', [])[:3]) or 'Not specified'
+            products = ', '.join(self._extract_products(company_profile)[:5]) or 'Not specified'
+            value_props = ', '.join(self._extract_value_props(company_profile)[:3]) or 'Not specified'
             
             company = f"""## YOUR COMPANY
 
@@ -305,7 +305,7 @@ Not generic AI text - THEIR voice, THEIR style, THEIR personality.
 - **Industry**: {company_profile.get('industry', 'Technology')}
 - **Products/Services**: {products}
 - **Value Propositions**: {value_props}
-- **Target Market**: {company_profile.get('target_market', 'B2B')}"""
+- **Target Market**: B2B"""
             
             # Add narrative if available
             if company_profile.get('company_narrative'):
@@ -338,7 +338,7 @@ Not generic AI text - THEIR voice, THEIR style, THEIR personality.
             parts.append(f"**Style**: {sales_profile.get('communication_style', 'Professional')}, {style_guide.get('tone', 'professional')} tone")
         
         if company_profile:
-            products = ', '.join(company_profile.get('products_services', [])[:3])
+            products = ', '.join(self._extract_products(company_profile)[:3])
             if products:
                 parts.append(f"**Selling**: {products}")
         
@@ -359,6 +359,35 @@ Not generic AI text - THEIR voice, THEIR style, THEIR personality.
         company = company_profile.get('company_name', 'Company') if company_profile else 'Company'
         
         return f"Seller: {name} from {company}"
+    
+    def _extract_products(self, company_profile: Dict[str, Any]) -> List[str]:
+        """
+        Extract product names from company_profile.products array.
+        
+        The products field is an array of objects with 'name' field.
+        """
+        products = company_profile.get("products", []) or []
+        return [
+            p.get("name") for p in products 
+            if isinstance(p, dict) and p.get("name")
+        ]
+    
+    def _extract_value_props(self, company_profile: Dict[str, Any]) -> List[str]:
+        """
+        Extract value propositions from company_profile.
+        
+        Combines core_value_props and differentiators.
+        """
+        value_props = company_profile.get("core_value_props", []) or []
+        differentiators = company_profile.get("differentiators", []) or []
+        return value_props + differentiators
+    
+    def _extract_target_industries(self, company_profile: Dict[str, Any]) -> List[str]:
+        """
+        Extract target industries from ideal_customer_profile.industries.
+        """
+        icp = company_profile.get("ideal_customer_profile", {}) or {}
+        return icp.get("industries", []) or []
     
     def _get_fallback_context(self) -> str:
         """Fallback when no profile data available."""
