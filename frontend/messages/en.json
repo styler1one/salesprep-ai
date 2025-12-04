@@ -53,6 +53,22 @@
       "complete": "Complete",
       "incomplete": "Incomplete",
       "documentsCount": "{count} documents"
+    },
+    "luna": {
+      "title": "Luna • AI Sales Coach"
+    },
+    "flowUsage": {
+      "title": "Flow Usage",
+      "unlimited": "Unlimited",
+      "remaining": "{remaining} flows remaining",
+      "upgrade": "Upgrade Plan"
+    },
+    "activity": {
+      "title": "Recent Activity",
+      "research_completed": "Research completed: {company}",
+      "prep_generated": "Prep generated: {company}",
+      "followup_created": "Follow-up created: {company}",
+      "contact_added": "Contact added: {company}"
     }
   },
   "common": {

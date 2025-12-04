@@ -8,8 +8,20 @@ import { Icons } from '@/components/icons'
 import { DashboardLayout } from '@/components/layout'
 import { useTranslations, useLocale } from 'next-intl'
 import { api } from '@/lib/api'
+import { useBilling } from '@/lib/billing-context'
 import type { User } from '@supabase/supabase-js'
 import type { SalesProfile, CompanyProfile, KBFile, ResearchBrief, MeetingPrep, Followup } from '@/types'
+
+// Activity type from backend
+interface Activity {
+    id: string
+    type: 'research_completed' | 'prep_generated' | 'followup_created' | 'contact_added'
+    company: string
+    contact_name?: string
+    timestamp: string
+    icon: string
+    color: string
+}
 
 // Helper function for relative time (locale-aware)
 function getRelativeTime(dateString: string, locale: string): string {
@@ -70,6 +82,10 @@ export default function DashboardPage() {
     const [researchBriefs, setResearchBriefs] = useState<ResearchBrief[]>([])
     const [meetingPreps, setMeetingPreps] = useState<MeetingPrep[]>([])
     const [followups, setFollowups] = useState<Followup[]>([])
+    const [activities, setActivities] = useState<Activity[]>([])
+    
+    // Billing context for flow usage
+    const { subscription, usage, loading: billingLoading } = useBilling()
 
     useEffect(() => {
         const loadData = async () => {
@@ -79,13 +95,14 @@ export default function DashboardPage() {
             if (user) {
                 try {
                     // Fetch all data in parallel using centralized API client
-                    const [profileRes, companyRes, kbRes, researchRes, prepsRes, followupsRes] = await Promise.all([
+                    const [profileRes, companyRes, kbRes, researchRes, prepsRes, followupsRes, activityRes] = await Promise.all([
                         api.get<SalesProfile>('/api/v1/profile/sales'),
                         api.get<CompanyProfile>('/api/v1/profile/company'),
                         api.get<{ files: KBFile[] }>('/api/v1/knowledge-base/files'),
                         api.get<{ briefs: ResearchBrief[] }>('/api/v1/research/briefs'),
                         api.get<{ preps: MeetingPrep[] }>('/api/v1/prep/briefs'),
                         api.get<Followup[]>('/api/v1/followup/list'),
+                        api.get<{ activities: Activity[] }>('/api/v1/dashboard/activity?limit=5'),
                     ])
 
                     if (!profileRes.error && profileRes.data) setProfile(profileRes.data)
@@ -94,6 +111,7 @@ export default function DashboardPage() {
                     if (!researchRes.error && researchRes.data) setResearchBriefs(researchRes.data.briefs || [])
                     if (!prepsRes.error && prepsRes.data) setMeetingPreps(prepsRes.data.preps || [])
                     if (!followupsRes.error && followupsRes.data) setFollowups(followupsRes.data || [])
+                    if (!activityRes.error && activityRes.data) setActivities(activityRes.data.activities || [])
                 } catch (error) {
                     console.error('Failed to load data:', error)
                 }
@@ -227,21 +245,18 @@ export default function DashboardPage() {
             action: '/onboarding', 
             actionText: t('actions.createProfile'),
             icon: Icons.user,
-            color: 'violet'
         }
         if (!companyProfile?.company_name) return { 
             text: t('suggestions.addCompany'), 
             action: '/onboarding/company', 
             actionText: t('actions.addCompany'),
             icon: Icons.building,
-            color: 'indigo'
         }
         if (researchBriefs.length === 0) return { 
             text: t('suggestions.startResearch'), 
             action: '/dashboard/research', 
             actionText: t('actions.startResearch'),
             icon: Icons.search,
-            color: 'blue'
         }
         // Find a completed research without contacts to suggest adding contacts first
         const completedResearch = researchBriefs.find(b => b.status === 'completed')
@@ -250,14 +265,12 @@ export default function DashboardPage() {
             action: `/dashboard/research/${completedResearch.id}`, 
             actionText: t('actions.addContact'),
             icon: Icons.userPlus,
-            color: 'amber'
         }
         if (followups.length === 0 && meetingPreps.some(p => p.status === 'completed')) return { 
             text: t('suggestions.uploadMeeting'), 
             action: '/dashboard/followup', 
             actionText: t('actions.uploadMeeting'),
             icon: Icons.mic,
-            color: 'orange'
         }
         
         // Check for prospects that need attention - first add contact, then prep
@@ -267,7 +280,6 @@ export default function DashboardPage() {
             action: `/dashboard/research/${needsContact.researchId}`,
             actionText: t('actions.addContact'),
             icon: Icons.userPlus,
-            color: 'amber'
         }
         
         const needsFollowup = prospects.find(p => p.hasPrep && p.prepStatus === 'completed' && !p.hasFollowup)
@@ -276,7 +288,6 @@ export default function DashboardPage() {
             action: '/dashboard/followup',
             actionText: t('actions.followup'),
             icon: Icons.mic,
-            color: 'orange'
         }
 
         return { 
@@ -284,26 +295,12 @@ export default function DashboardPage() {
             action: '/dashboard/research', 
             actionText: t('actions.newProspect'),
             icon: Icons.sparkles,
-            color: 'emerald'
         }
     }
     
     const suggestion = getSuggestion()
     const { key: greetingKey, emoji } = getGreetingKey()
     const greeting = t(`greeting.${greetingKey}`)
-
-    const colorClasses: Record<string, { bg: string; text: string; border: string; gradient: string }> = {
-        blue: { bg: 'bg-blue-50 dark:bg-blue-950', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800', gradient: 'from-blue-500 to-blue-600' },
-        green: { bg: 'bg-green-50 dark:bg-green-950', text: 'text-green-600 dark:text-green-400', border: 'border-green-200 dark:border-green-800', gradient: 'from-green-500 to-green-600' },
-        orange: { bg: 'bg-orange-50 dark:bg-orange-950', text: 'text-orange-600 dark:text-orange-400', border: 'border-orange-200 dark:border-orange-800', gradient: 'from-orange-500 to-orange-600' },
-        amber: { bg: 'bg-amber-50 dark:bg-amber-950', text: 'text-amber-600 dark:text-amber-400', border: 'border-amber-200 dark:border-amber-800', gradient: 'from-amber-500 to-amber-600' },
-        purple: { bg: 'bg-purple-50 dark:bg-purple-950', text: 'text-purple-600 dark:text-purple-400', border: 'border-purple-200 dark:border-purple-800', gradient: 'from-purple-500 to-purple-600' },
-        violet: { bg: 'bg-violet-50 dark:bg-violet-950', text: 'text-violet-600 dark:text-violet-400', border: 'border-violet-200 dark:border-violet-800', gradient: 'from-violet-500 to-violet-600' },
-        indigo: { bg: 'bg-indigo-50 dark:bg-indigo-950', text: 'text-indigo-600 dark:text-indigo-400', border: 'border-indigo-200 dark:border-indigo-800', gradient: 'from-indigo-500 to-indigo-600' },
-        emerald: { bg: 'bg-emerald-50 dark:bg-emerald-950', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-200 dark:border-emerald-800', gradient: 'from-emerald-500 to-emerald-600' },
-    }
-
-    const suggestionColors = colorClasses[suggestion.color] || colorClasses.blue
     const SuggestionIcon = suggestion.icon
 
     const getNextActionButton = (prospect: ProspectWithStatus) => {
@@ -359,11 +356,26 @@ export default function DashboardPage() {
         }
         return null
     }
+    
+    // Activity icon mapper
+    const getActivityIcon = (iconName: string) => {
+        switch (iconName) {
+            case 'search': return Icons.search
+            case 'fileText': return Icons.fileText
+            case 'mail': return Icons.mail
+            case 'userPlus': return Icons.userPlus
+            default: return Icons.check
+        }
+    }
+    
+    // Flow usage calculation
+    const flowUsage = usage?.flow
+    const flowPercentage = flowUsage ? (flowUsage.unlimited ? 100 : Math.round((flowUsage.used / flowUsage.limit) * 100)) : 0
 
     return (
         <DashboardLayout user={user}>
             <div className="p-4 lg:p-6">
-                {/* Welcome + Suggestion */}
+                {/* Welcome + Luna Insight */}
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
                         {greeting}{typeof profile?.full_name === 'string' && profile.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! {emoji}
@@ -372,162 +384,238 @@ export default function DashboardPage() {
                         {t('title')}
                     </p>
                     
-                    {/* Smart Suggestion - Prominent */}
-                    <div className={`flex items-center gap-4 p-4 rounded-xl border-2 ${suggestionColors.border} ${suggestionColors.bg}`}>
-                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${suggestionColors.gradient} flex items-center justify-center flex-shrink-0 shadow-lg`}>
-                            <SuggestionIcon className="h-6 w-6 text-white" />
+                    {/* Luna Insight Card - Purple Gradient */}
+                    <div className="bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl p-5 shadow-lg">
+                        <div className="flex items-start gap-4">
+                            {/* Luna Avatar */}
+                            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                                <Icons.sparkles className="h-6 w-6 text-white" />
+                            </div>
+                            
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm text-white/70 mb-1">{t('luna.title')}</p>
+                                <p className="font-medium text-white">{suggestion.text}</p>
+                            </div>
+                            
+                            {/* Action Button */}
+                            {suggestion.action && (
+                                <Button 
+                                    onClick={() => router.push(suggestion.action!)} 
+                                    variant="secondary"
+                                    className="flex-shrink-0 bg-white/20 hover:bg-white/30 text-white border-0"
+                                >
+                                    {suggestion.actionText}
+                                    <Icons.arrowRight className="h-4 w-4 ml-2" />
+                                </Button>
+                            )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="font-medium text-slate-900 dark:text-white">{suggestion.text}</p>
-                        </div>
-                        {suggestion.action && (
-                            <Button 
-                                onClick={() => router.push(suggestion.action!)} 
-                                className={`flex-shrink-0 bg-gradient-to-r ${suggestionColors.gradient} hover:opacity-90`}
-                            >
-                                {suggestion.actionText}
-                                <Icons.arrowRight className="h-4 w-4 ml-2" />
-                            </Button>
-                        )}
                     </div>
                 </div>
 
                 {/* Two Column Layout */}
-                <div className="flex gap-6">
-                    {/* Left: Prospects */}
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                                <Icons.users className="h-5 w-5 text-slate-400" />
-                                {t('prospects.title')}
-                                <span className="text-sm font-normal text-slate-400">({prospects.length})</span>
-                            </h2>
-                            <Button size="sm" onClick={() => router.push('/dashboard/research')}>
-                                <Icons.plus className="h-4 w-4 mr-1" />
-                                {t('actions.newProspect')}
-                            </Button>
-                        </div>
-
-                        {prospects.length === 0 ? (
-                            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center">
-                                <Icons.users className="h-16 w-16 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
-                                <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-2">{t('prospects.empty')}</h3>
-                                <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
-                                    {t('prospects.emptyDescription')}
-                                </p>
-                                <Button onClick={() => router.push('/dashboard/research')}>
-                                    <Icons.search className="h-4 w-4 mr-2" />
-                                    {t('actions.startResearch')}
+                <div className="flex flex-col lg:flex-row gap-6">
+                    {/* Left: Prospects + Activity */}
+                    <div className="flex-1 min-w-0 space-y-6">
+                        {/* Prospects Section */}
+                        <div>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                    <Icons.users className="h-5 w-5 text-slate-400" />
+                                    {t('prospects.title')}
+                                    <span className="text-sm font-normal text-slate-400">({prospects.length})</span>
+                                </h2>
+                                <Button size="sm" onClick={() => router.push('/dashboard/research')}>
+                                    <Icons.plus className="h-4 w-4 mr-1" />
+                                    {t('actions.newProspect')}
                                 </Button>
                             </div>
-                        ) : (
-                            <div className="space-y-3">
-                                {prospects.slice(0, 8).map((prospect) => {
-                                    const link = getProspectLink(prospect)
-                                    return (
-                                        <div
-                                            key={prospect.id}
-                                            className={`bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 hover:shadow-md dark:hover:shadow-slate-800/50 transition-all ${link ? 'cursor-pointer' : ''}`}
-                                            onClick={() => link && router.push(link)}
-                                        >
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-4 min-w-0 flex-1">
-                                                    {/* Company Initial */}
-                                                    <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
-                                                        <span className="font-bold text-slate-600 dark:text-slate-300">
-                                                            {prospect.company_name.charAt(0).toUpperCase()}
-                                                        </span>
-                                                    </div>
-                                                    
-                                                    {/* Company Info */}
-                                                    <div className="min-w-0 flex-1">
-                                                        <h3 className="font-semibold text-slate-900 dark:text-white truncate">{prospect.company_name}</h3>
-                                                        <p className="text-xs text-slate-500 dark:text-slate-400">{getRelativeTime(prospect.lastActivity, locale)}</p>
-                                                    </div>
 
-                                                    {/* Status Indicators */}
-                                                    <div className="flex items-center gap-2">
-                                                        {/* Research */}
-                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                                            prospect.hasResearch && prospect.researchStatus === 'completed' 
-                                                                ? 'bg-blue-100 dark:bg-blue-900' 
-                                                                : prospect.hasResearch 
-                                                                    ? 'bg-blue-50 dark:bg-blue-950' 
-                                                                    : 'bg-slate-100 dark:bg-slate-800'
-                                                        }`} title={tNavigation('research')}>
-                                                            {prospect.hasResearch && prospect.researchStatus === 'completed' ? (
-                                                                <Icons.check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                                            ) : prospect.hasResearch ? (
-                                                                <Icons.spinner className="h-4 w-4 text-blue-400 animate-spin" />
-                                                            ) : (
-                                                                <Icons.search className="h-4 w-4 text-slate-300 dark:text-slate-600" />
-                                                            )}
+                            {prospects.length === 0 ? (
+                                <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center">
+                                    <Icons.users className="h-16 w-16 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
+                                    <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-2">{t('prospects.empty')}</h3>
+                                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
+                                        {t('prospects.emptyDescription')}
+                                    </p>
+                                    <Button onClick={() => router.push('/dashboard/research')}>
+                                        <Icons.search className="h-4 w-4 mr-2" />
+                                        {t('actions.startResearch')}
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {prospects.slice(0, 6).map((prospect) => {
+                                        const link = getProspectLink(prospect)
+                                        return (
+                                            <div
+                                                key={prospect.id}
+                                                className={`bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 hover:shadow-md dark:hover:shadow-slate-800/50 transition-all ${link ? 'cursor-pointer' : ''}`}
+                                                onClick={() => link && router.push(link)}
+                                            >
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                                                        {/* Company Initial */}
+                                                        <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
+                                                            <span className="font-bold text-slate-600 dark:text-slate-300">
+                                                                {prospect.company_name.charAt(0).toUpperCase()}
+                                                            </span>
                                                         </div>
                                                         
-                                                        {/* Prep */}
-                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                                            prospect.hasPrep && prospect.prepStatus === 'completed' 
-                                                                ? 'bg-green-100 dark:bg-green-900' 
-                                                                : prospect.hasPrep 
-                                                                    ? 'bg-green-50 dark:bg-green-950' 
-                                                                    : 'bg-slate-100 dark:bg-slate-800'
-                                                        }`} title={tNavigation('preparation')}>
-                                                            {prospect.hasPrep && prospect.prepStatus === 'completed' ? (
-                                                                <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                                            ) : prospect.hasPrep ? (
-                                                                <Icons.spinner className="h-4 w-4 text-green-400 animate-spin" />
-                                                            ) : (
-                                                                <Icons.fileText className="h-4 w-4 text-slate-300 dark:text-slate-600" />
-                                                            )}
+                                                        {/* Company Info */}
+                                                        <div className="min-w-0 flex-1">
+                                                            <h3 className="font-semibold text-slate-900 dark:text-white truncate">{prospect.company_name}</h3>
+                                                            <p className="text-xs text-slate-500 dark:text-slate-400">{getRelativeTime(prospect.lastActivity, locale)}</p>
                                                         </div>
-                                                        
-                                                        {/* Follow-up */}
-                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                                            prospect.hasFollowup && prospect.followupStatus === 'completed' 
-                                                                ? 'bg-orange-100 dark:bg-orange-900' 
-                                                                : prospect.hasFollowup 
-                                                                    ? 'bg-orange-50 dark:bg-orange-950' 
-                                                                    : 'bg-slate-100 dark:bg-slate-800'
-                                                        }`} title={tNavigation('followup')}>
-                                                            {prospect.hasFollowup && prospect.followupStatus === 'completed' ? (
-                                                                <Icons.check className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                                                            ) : prospect.hasFollowup ? (
-                                                                <Icons.spinner className="h-4 w-4 text-orange-400 animate-spin" />
-                                                            ) : (
-                                                                <Icons.mail className="h-4 w-4 text-slate-300 dark:text-slate-600" />
-                                                            )}
+
+                                                        {/* Status Indicators */}
+                                                        <div className="flex items-center gap-2">
+                                                            {/* Research */}
+                                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                                                prospect.hasResearch && prospect.researchStatus === 'completed' 
+                                                                    ? 'bg-blue-100 dark:bg-blue-900' 
+                                                                    : prospect.hasResearch 
+                                                                        ? 'bg-blue-50 dark:bg-blue-950' 
+                                                                        : 'bg-slate-100 dark:bg-slate-800'
+                                                            }`} title={tNavigation('research')}>
+                                                                {prospect.hasResearch && prospect.researchStatus === 'completed' ? (
+                                                                    <Icons.check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                                                ) : prospect.hasResearch ? (
+                                                                    <Icons.spinner className="h-4 w-4 text-blue-400 animate-spin" />
+                                                                ) : (
+                                                                    <Icons.search className="h-4 w-4 text-slate-300 dark:text-slate-600" />
+                                                                )}
+                                                            </div>
+                                                            
+                                                            {/* Prep */}
+                                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                                                prospect.hasPrep && prospect.prepStatus === 'completed' 
+                                                                    ? 'bg-green-100 dark:bg-green-900' 
+                                                                    : prospect.hasPrep 
+                                                                        ? 'bg-green-50 dark:bg-green-950' 
+                                                                        : 'bg-slate-100 dark:bg-slate-800'
+                                                            }`} title={tNavigation('preparation')}>
+                                                                {prospect.hasPrep && prospect.prepStatus === 'completed' ? (
+                                                                    <Icons.check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                                                ) : prospect.hasPrep ? (
+                                                                    <Icons.spinner className="h-4 w-4 text-green-400 animate-spin" />
+                                                                ) : (
+                                                                    <Icons.fileText className="h-4 w-4 text-slate-300 dark:text-slate-600" />
+                                                                )}
+                                                            </div>
+                                                            
+                                                            {/* Follow-up */}
+                                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                                                prospect.hasFollowup && prospect.followupStatus === 'completed' 
+                                                                    ? 'bg-orange-100 dark:bg-orange-900' 
+                                                                    : prospect.hasFollowup 
+                                                                        ? 'bg-orange-50 dark:bg-orange-950' 
+                                                                        : 'bg-slate-100 dark:bg-slate-800'
+                                                            }`} title={tNavigation('followup')}>
+                                                                {prospect.hasFollowup && prospect.followupStatus === 'completed' ? (
+                                                                    <Icons.check className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                                                                ) : prospect.hasFollowup ? (
+                                                                    <Icons.spinner className="h-4 w-4 text-orange-400 animate-spin" />
+                                                                ) : (
+                                                                    <Icons.mail className="h-4 w-4 text-slate-300 dark:text-slate-600" />
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
 
-                                                {/* Next Action */}
-                                                <div className="ml-4 flex-shrink-0">
-                                                    {getNextActionButton(prospect)}
+                                                    {/* Next Action */}
+                                                    <div className="ml-4 flex-shrink-0">
+                                                        {getNextActionButton(prospect)}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    )
-                                })}
-                                
-                                {prospects.length > 8 && (
-                                    <button 
-                                        className="w-full py-3 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center gap-2"
-                                        onClick={() => router.push('/dashboard/research')}
-                                    >
-                                        {t('prospects.viewAll', { count: prospects.length })}
-                                        <Icons.arrowRight className="h-4 w-4" />
-                                    </button>
-                                )}
+                                        )
+                                    })}
+                                    
+                                    {prospects.length > 6 && (
+                                        <button 
+                                            className="w-full py-3 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center gap-2"
+                                            onClick={() => router.push('/dashboard/prospects')}
+                                        >
+                                            {t('prospects.viewAll', { count: prospects.length })}
+                                            <Icons.arrowRight className="h-4 w-4" />
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                        
+                        {/* Activity Feed */}
+                        {activities.length > 0 && (
+                            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                                <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                    <Icons.clock className="h-4 w-4 text-slate-400" />
+                                    {t('activity.title')}
+                                </h3>
+                                <div className="space-y-3">
+                                    {activities.map((activity) => {
+                                        const ActivityIcon = getActivityIcon(activity.icon)
+                                        const colorClasses: Record<string, string> = {
+                                            blue: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/50',
+                                            green: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/50',
+                                            orange: 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/50',
+                                            purple: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/50',
+                                        }
+                                        return (
+                                            <div key={activity.id} className="flex items-center gap-3">
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${colorClasses[activity.color] || colorClasses.blue}`}>
+                                                    <ActivityIcon className="h-4 w-4" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm text-slate-700 dark:text-slate-200 truncate">
+                                                        {t(`activity.${activity.type}`, { company: activity.company })}
+                                                    </p>
+                                                </div>
+                                                <span className="text-xs text-slate-400 flex-shrink-0">
+                                                    {getRelativeTime(activity.timestamp, locale)}
+                                                </span>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
                             </div>
                         )}
                     </div>
 
                     {/* Right: Sidebar */}
-                    <div className="w-80 flex-shrink-0 hidden lg:block">
-                        <div className="sticky top-4 space-y-4">
+                    <div className="w-full lg:w-80 flex-shrink-0">
+                        <div className="lg:sticky lg:top-4 space-y-4">
                             
-                            {/* Stats */}
-                            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                            {/* Mobile: Stats in horizontal scroll */}
+                            <div className="lg:hidden flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
+                                <div className="flex-shrink-0 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-3 min-w-[100px] text-center">
+                                    <Icons.search className="h-5 w-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                                    <p className="text-lg font-bold text-slate-900 dark:text-white">{researchBriefs.length}</p>
+                                    <p className="text-xs text-slate-500">{t('stats.research')}</p>
+                                </div>
+                                <div className="flex-shrink-0 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-3 min-w-[100px] text-center">
+                                    <Icons.fileText className="h-5 w-5 text-green-600 dark:text-green-400 mx-auto mb-1" />
+                                    <p className="text-lg font-bold text-slate-900 dark:text-white">{meetingPreps.length}</p>
+                                    <p className="text-xs text-slate-500">{t('stats.preparations')}</p>
+                                </div>
+                                <div className="flex-shrink-0 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-3 min-w-[100px] text-center">
+                                    <Icons.mail className="h-5 w-5 text-orange-600 dark:text-orange-400 mx-auto mb-1" />
+                                    <p className="text-lg font-bold text-slate-900 dark:text-white">{followups.length}</p>
+                                    <p className="text-xs text-slate-500">{t('stats.followups')}</p>
+                                </div>
+                                {flowUsage && (
+                                    <div className="flex-shrink-0 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-3 min-w-[100px] text-center">
+                                        <Icons.barChart className="h-5 w-5 text-purple-600 dark:text-purple-400 mx-auto mb-1" />
+                                        <p className="text-lg font-bold text-slate-900 dark:text-white">
+                                            {flowUsage.unlimited ? '∞' : `${flowUsage.used}/${flowUsage.limit}`}
+                                        </p>
+                                        <p className="text-xs text-slate-500">{t('flowUsage.title')}</p>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {/* Desktop: Stats Widget */}
+                            <div className="hidden lg:block rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                                 <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                                     <Icons.barChart className="h-4 w-4 text-slate-400" />
                                     {t('stats.thisWeek')}
@@ -583,6 +671,54 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
                             </div>
+                            
+                            {/* Flow Usage Widget */}
+                            {flowUsage && (
+                                <div className="hidden lg:block rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                                    <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                        <Icons.zap className="h-4 w-4 text-purple-600" />
+                                        {t('flowUsage.title')}
+                                    </h3>
+                                    
+                                    {flowUsage.unlimited ? (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-2xl font-bold text-purple-600">∞</span>
+                                            <span className="text-sm text-slate-600 dark:text-slate-400">{t('flowUsage.unlimited')}</span>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="flex items-baseline gap-1 mb-2">
+                                                <span className="text-2xl font-bold text-slate-900 dark:text-white">{flowUsage.used}</span>
+                                                <span className="text-slate-400">/ {flowUsage.limit}</span>
+                                            </div>
+                                            <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-2">
+                                                <div 
+                                                    className={`h-full rounded-full transition-all ${flowPercentage > 80 ? 'bg-orange-500' : 'bg-purple-600'}`}
+                                                    style={{ width: `${Math.min(flowPercentage, 100)}%` }}
+                                                />
+                                            </div>
+                                            <p className="text-xs text-slate-500">
+                                                {t('flowUsage.remaining', { remaining: flowUsage.limit - flowUsage.used })}
+                                            </p>
+                                        </>
+                                    )}
+                                    
+                                    {subscription && (
+                                        <p className="text-xs text-slate-400 mt-2">{subscription.plan_name}</p>
+                                    )}
+                                    
+                                    {!flowUsage.unlimited && flowPercentage > 80 && (
+                                        <Button 
+                                            size="sm" 
+                                            variant="outline" 
+                                            className="w-full mt-3 text-purple-600 border-purple-200 hover:bg-purple-50"
+                                            onClick={() => router.push('/dashboard/settings')}
+                                        >
+                                            {t('flowUsage.upgrade')}
+                                        </Button>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Quick Actions */}
                             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
