@@ -369,6 +369,126 @@ async def get_prospect(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/{prospect_id}/hub", response_model=Dict[str, Any])
+async def get_prospect_hub(
+    prospect_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get complete prospect hub data for the Prospect Hub page.
+    Returns prospect, research, contacts, stats, and recent activities.
+    """
+    try:
+        organization_id = get_organization_id(current_user)
+        
+        # Get prospect basic info
+        prospect_response = supabase.table("prospects").select("*").eq(
+            "id", prospect_id
+        ).eq(
+            "organization_id", organization_id
+        ).limit(1).execute()
+        
+        if not prospect_response.data:
+            raise HTTPException(status_code=404, detail="Prospect not found")
+        
+        prospect = prospect_response.data[0]
+        
+        # Get latest completed research for this prospect
+        research_response = supabase.table("research_briefs").select(
+            "id, company_name, brief_content, status, created_at, completed_at"
+        ).eq(
+            "prospect_id", prospect_id
+        ).eq(
+            "status", "completed"
+        ).order(
+            "created_at", desc=True
+        ).limit(1).execute()
+        
+        research = research_response.data[0] if research_response.data else None
+        
+        # Get contacts for this prospect
+        contacts_response = supabase.table("prospect_contacts").select(
+            "id, name, role, email, linkedin_url, communication_style, decision_authority, is_primary"
+        ).eq(
+            "prospect_id", prospect_id
+        ).order(
+            "is_primary", desc=True
+        ).order(
+            "created_at", desc=True
+        ).execute()
+        
+        contacts = contacts_response.data or []
+        
+        # Get deals for this prospect
+        deals_response = supabase.table("deals").select(
+            "id, name, is_active, created_at"
+        ).eq(
+            "prospect_id", prospect_id
+        ).eq(
+            "is_active", True
+        ).execute()
+        
+        deals = deals_response.data or []
+        
+        # Count preps and followups linked to this prospect
+        preps_response = supabase.table("meeting_preps").select(
+            "id", count="exact"
+        ).eq(
+            "prospect_id", prospect_id
+        ).eq(
+            "status", "completed"
+        ).execute()
+        
+        followups_response = supabase.table("followups").select(
+            "id", count="exact"
+        ).eq(
+            "prospect_id", prospect_id
+        ).eq(
+            "status", "completed"
+        ).execute()
+        
+        # Get recent activities
+        activities_response = supabase.table("prospect_activities").select(
+            "id, activity_type, title, description, created_at"
+        ).eq(
+            "prospect_id", prospect_id
+        ).order(
+            "created_at", desc=True
+        ).limit(10).execute()
+        
+        recent_activities = activities_response.data or []
+        
+        # Build stats
+        stats = {
+            "prospect_id": prospect_id,
+            "company_name": prospect.get("company_name"),
+            "status": prospect.get("status"),
+            "research_count": 1 if research else 0,
+            "contact_count": len(contacts),
+            "active_deal_count": len(deals),
+            "meeting_count": 0,  # Not tracking meetings separately for now
+            "prep_count": preps_response.count or 0,
+            "followup_count": followups_response.count or 0,
+            "created_at": prospect.get("created_at"),
+            "last_activity_at": prospect.get("last_activity_at")
+        }
+        
+        return {
+            "prospect": prospect,
+            "research": research,
+            "contacts": contacts,
+            "deals": deals,
+            "recent_activities": recent_activities,
+            "stats": stats
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting prospect hub: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.patch("/{prospect_id}", response_model=Dict[str, Any])
 async def update_prospect(
     prospect_id: str,
@@ -595,7 +715,7 @@ async def list_prospect_notes(
         
         # Get notes sorted by pinned then created_at
         response = supabase.table("prospect_notes").select(
-            "*, auth_users:user_id(email)"
+            "id, prospect_id, user_id, content, is_pinned, created_at, updated_at"
         ).eq(
             "prospect_id", prospect_id
         ).order(
