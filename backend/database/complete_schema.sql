@@ -1,10 +1,16 @@
 -- ============================================================
 -- SalesPrep-AI Complete Database Schema
--- Version: 3.2
+-- Version: 3.3
 -- Last Updated: 4 December 2025
 -- 
 -- This file consolidates ALL migrations into a single schema.
 -- Use this as reference documentation - DO NOT run on existing DB!
+-- 
+-- Changes in 3.3:
+-- - Added 5 coach tables (behavior_events, user_patterns, suggestions, success_patterns, settings)
+-- - Added 3 legacy/future tables (products, icps, personas)
+-- - Added RLS for all new tables
+-- - Total: 33 tables
 -- 
 -- Changes in 3.2:
 -- - Updated get_style_guide_with_defaults with full derivation logic
@@ -874,6 +880,141 @@ CREATE INDEX IF NOT EXISTS idx_coach_daily_tips_user_date ON coach_daily_tips(us
 CREATE INDEX IF NOT EXISTS idx_coach_daily_tips_created ON coach_daily_tips(created_at);
 
 -- ============================================================
+-- 26. COACH_BEHAVIOR_EVENTS (User activity tracking for Luna)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS coach_behavior_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  event_type TEXT NOT NULL,            -- 'tip_shown', 'action_taken', 'page_view', etc.
+  event_data JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_coach_behavior_events_user ON coach_behavior_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_coach_behavior_events_org ON coach_behavior_events(organization_id);
+CREATE INDEX IF NOT EXISTS idx_coach_behavior_events_type ON coach_behavior_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_coach_behavior_events_created ON coach_behavior_events(user_id, created_at);
+
+-- ============================================================
+-- 27. COACH_USER_PATTERNS (Learned user behavior patterns)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS coach_user_patterns (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  pattern_type TEXT NOT NULL,          -- 'work_hours', 'step_timing', 'dismiss_pattern', etc.
+  pattern_data JSONB NOT NULL,
+  confidence FLOAT DEFAULT 0.5,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  UNIQUE(user_id, pattern_type)
+);
+
+CREATE INDEX IF NOT EXISTS idx_coach_user_patterns_user ON coach_user_patterns(user_id);
+CREATE INDEX IF NOT EXISTS idx_coach_user_patterns_org ON coach_user_patterns(organization_id);
+
+-- ============================================================
+-- 28. COACH_SUGGESTIONS (Suggestion tracking)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS coach_suggestions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  suggestion_type TEXT NOT NULL,       -- Suggestion category
+  suggestion_data JSONB,
+  action_taken TEXT,                   -- NULL, 'accepted', 'dismissed', 'deferred'
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  acted_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_coach_suggestions_user ON coach_suggestions(user_id);
+CREATE INDEX IF NOT EXISTS idx_coach_suggestions_org ON coach_suggestions(organization_id);
+CREATE INDEX IF NOT EXISTS idx_coach_suggestions_type ON coach_suggestions(suggestion_type);
+
+-- ============================================================
+-- 29. COACH_SUCCESS_PATTERNS (Organization-wide success patterns)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS coach_success_patterns (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  pattern_type TEXT NOT NULL,          -- Insight type
+  pattern_data JSONB NOT NULL,
+  sample_size INTEGER DEFAULT 0,
+  confidence FLOAT DEFAULT 0.5,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_coach_success_patterns_org ON coach_success_patterns(organization_id);
+CREATE INDEX IF NOT EXISTS idx_coach_success_patterns_type ON coach_success_patterns(pattern_type);
+
+-- ============================================================
+-- 30. COACH_SETTINGS (Per-user coach preferences)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS coach_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  settings JSONB DEFAULT '{}',         -- {notification_frequency, preferred_focus_areas, etc.}
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  UNIQUE(user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_coach_settings_user ON coach_settings(user_id);
+
+-- ============================================================
+-- LEGACY/FUTURE TABLES (referenced in indexes, not in code)
+-- ============================================================
+-- Note: These tables exist in the database but are not actively used.
+-- They may be for future features or legacy functionality.
+
+-- 31. PRODUCTS (Future: Product catalog)
+CREATE TABLE IF NOT EXISTS products (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  features JSONB DEFAULT '[]',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_products_org ON products(org_id);
+
+-- 32. ICPS (Future: Ideal Customer Profiles - detailed)
+CREATE TABLE IF NOT EXISTS icps (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES products(id) ON DELETE SET NULL,
+  name TEXT NOT NULL,
+  criteria JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_icps_org ON icps(org_id);
+CREATE INDEX IF NOT EXISTS idx_icps_product ON icps(product_id);
+
+-- 33. PERSONAS (Future: Buyer personas)
+CREATE TABLE IF NOT EXISTS personas (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  icp_id UUID REFERENCES icps(id) ON DELETE SET NULL,
+  name TEXT NOT NULL,
+  role TEXT,
+  pain_points TEXT[],
+  goals TEXT[],
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_personas_org ON personas(org_id);
+CREATE INDEX IF NOT EXISTS idx_personas_icp ON personas(icp_id);
+
+-- ============================================================
 -- STORAGE BUCKETS
 -- ============================================================
 
@@ -1538,6 +1679,14 @@ ALTER TABLE usage_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payment_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE stripe_webhook_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE coach_daily_tips ENABLE ROW LEVEL SECURITY;
+ALTER TABLE coach_behavior_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE coach_user_patterns ENABLE ROW LEVEL SECURITY;
+ALTER TABLE coach_suggestions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE coach_success_patterns ENABLE ROW LEVEL SECURITY;
+ALTER TABLE coach_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE icps ENABLE ROW LEVEL SECURITY;
+ALTER TABLE personas ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
 -- VIEWS
@@ -1587,16 +1736,16 @@ JOIN prospects p ON p.id = d.prospect_id;
 -- ============================================================
 -- END OF SCHEMA
 -- ============================================================
--- Version: 3.2
+-- Version: 3.3
 -- Last Updated: 4 December 2025
 -- 
 -- Summary:
--- - Tables: 25
+-- - Tables: 33 (25 core + 5 coach + 3 legacy/future)
 -- - Views: 2
 -- - Functions: 24 (with complete implementations)
 -- - Triggers: 17
 -- - Storage Buckets: 3 (with policies)
--- - Indexes: 86
+-- - Indexes: 100+
 -- 
 -- This file is for REFERENCE ONLY. Do not run on existing database!
 -- Use individual migration files for updates.
