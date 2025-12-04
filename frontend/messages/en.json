@@ -1168,101 +1168,66 @@
     }
   },
   "prospectHub": {
-    "journey": {
-      "nextStep": "Your Next Step",
-      "completed": "Completed",
-      "upcoming": "Upcoming",
-      "view": "View",
-      "viewFull": "View full research",
-      "items": {
-        "research": "Research",
-        "contacts": "contacts added",
-        "preparation": "Meeting Preparation",
-        "followup": "Follow-up"
-      },
-      "locked": {
-        "needsContacts": "Add contacts first",
-        "needsMeeting": "Have your meeting first"
-      },
-      "steps": {
-        "addContacts": {
-          "title": "Add Key Decision Makers",
-          "description": "Identify the people you need to talk to for a successful sale.",
-          "tip": "Focus on the economic buyer and champions first.",
-          "action": "Add Contact"
-        },
-        "createPrep": {
-          "title": "Prepare for Your Meeting",
-          "description": "Create a meeting preparation brief with personalized talking points.",
-          "action": "Create Preparation"
-        },
-        "processFollowup": {
-          "title": "Process Your Meeting",
-          "description": "Upload the recording or notes to get AI-powered action items.",
-          "action": "Upload Recording",
-          "secondaryAction": "Paste Transcript"
-        },
-        "executeActions": {
-          "title": "Execute Your Action Items",
-          "description": "You have {count} follow-up(s) with action items to complete.",
-          "action": "View Follow-ups"
-        },
-        "dealWon": {
-          "title": "Deal Won! 🎉",
-          "description": "Congratulations! You've successfully closed this deal.",
-          "action": "Back to Prospects"
-        },
-        "dealLost": {
-          "title": "Deal Lost",
-          "description": "This deal didn't work out. Review what happened and learn for next time.",
-          "action": "Back to Prospects"
-        }
-      }
+    "sections": {
+      "keyInsights": "Key Insights",
+      "people": "People",
+      "documents": "Documents",
+      "journey": "Sales Journey",
+      "timeline": "Recent Activity",
+      "notes": "Quick Notes"
     },
-    "sidebar": {
-      "keyContacts": "Key Contacts",
-      "quickNotes": "Quick Notes",
-      "addNotePlaceholder": "Add a quick note...",
-      "viewAllNotes": "View all {count} notes"
+    "journey": {
+      "research": "Research",
+      "contacts": "Contacts",
+      "preparation": "Preparation",
+      "followup": "Follow-up"
+    },
+    "documents": {
+      "research": "Company Research",
+      "preparation": "Meeting Preparations",
+      "followup": "Follow-up Summaries"
+    },
+    "nextAction": {
+      "label": "Next Step",
+      "startResearch": "Start Research",
+      "startResearchDesc": "Begin by researching this company",
+      "startResearchBtn": "Start Research",
+      "addContacts": "Add Contacts",
+      "addContactsDesc": "Add the people you'll be meeting with",
+      "addContactsBtn": "Add Contact",
+      "createPrep": "Create Preparation",
+      "createPrepDesc": "Prepare for your upcoming meeting",
+      "createPrepBtn": "Create Prep",
+      "addFollowup": "Process Meeting",
+      "addFollowupDesc": "Upload your meeting recording for analysis",
+      "addFollowupBtn": "Upload Recording",
+      "allDone": "On Track",
+      "allDoneDesc": "Review your latest follow-ups and action items",
+      "viewFollowups": "View Follow-ups"
+    },
+    "notes": {
+      "placeholder": "Add a quick note...",
+      "empty": "No notes yet"
     },
     "actions": {
       "backToProspects": "Back to Prospects",
-      "addContact": "Add Contact"
+      "viewFullResearch": "View full research",
+      "manage": "Manage",
+      "addContact": "Add Contact",
+      "create": "Create"
     },
-    "modal": {
-      "addContactTitle": "Add Contact",
-      "addContactDescription": "Add a new contact for this prospect",
-      "contactName": "Name",
-      "contactRole": "Role / Title",
-      "contactEmail": "Email",
-      "contactLinkedIn": "LinkedIn URL",
-      "contactAuthority": "Decision Authority",
-      "selectAuthority": "Select authority level",
-      "decisionMaker": "Decision Maker",
-      "influencer": "Influencer",
-      "gatekeeper": "Gatekeeper",
-      "endUser": "End User"
+    "empty": {
+      "noContacts": "No contacts added yet"
     },
+    "more": "more",
     "confirm": {
       "deleteNoteTitle": "Delete Note",
       "deleteNoteDescription": "Are you sure you want to delete this note? This cannot be undone."
     },
-    "toast": {
-      "statusUpdated": "Status updated",
-      "noteAdded": "Note added",
-      "noteDeleted": "Note deleted",
-      "contactAdded": "Contact added"
-    },
-    "empty": {
-      "noContacts": "No contacts yet",
-      "noNotes": "No notes yet"
-    },
     "errors": {
       "loadFailed": "Failed to load prospect data",
       "notFound": "Prospect not found",
-      "updateFailed": "Failed to update",
-      "noteSaveFailed": "Failed to save note",
-      "contactSaveFailed": "Failed to add contact"
+      "noteSaveFailed": "Failed to save note"
     }
   },
   "billing": {
