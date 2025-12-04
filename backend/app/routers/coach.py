@@ -177,31 +177,17 @@ async def get_suggestions(
     
     try:
         # Collect ALL organization IDs the user belongs to
-        # This is needed because data may be spread across multiple orgs
+        # Get organization from organization_members (single source of truth)
         organization_ids = []
         primary_org_id = None
         
-        # 1. Check JWT token
+        # 1. Check JWT token first
         jwt_org_id = current_user.get("organization_id")
         if jwt_org_id:
             organization_ids.append(jwt_org_id)
             primary_org_id = jwt_org_id
         
-        # 2. Check "Personal - {email}" organization (for company profile)
-        email = current_user.get("email", "")
-        personal_org = supabase.table("organizations") \
-            .select("id") \
-            .eq("name", f"Personal - {email}") \
-            .execute()
-        
-        if personal_org.data:
-            personal_org_id = personal_org.data[0]["id"]
-            if personal_org_id not in organization_ids:
-                organization_ids.append(personal_org_id)
-            if not primary_org_id:
-                primary_org_id = personal_org_id
-        
-        # 3. Check organization_members (for research/preps/followups)
+        # 2. Get from organization_members (primary source)
         org_members_result = supabase.table("organization_members") \
             .select("organization_id") \
             .eq("user_id", user_id) \
@@ -782,16 +768,8 @@ async def get_tip_of_day(
     user_id = current_user["sub"]
     
     try:
-        # Get organization IDs
-        email = current_user.get("email", "")
+        # Get organization IDs from organization_members (single source of truth)
         organization_ids = []
-        
-        personal_org = supabase.table("organizations") \
-            .select("id") \
-            .eq("name", f"Personal - {email}") \
-            .execute()
-        if personal_org.data:
-            organization_ids.append(personal_org.data[0]["id"])
         
         org_members = supabase.table("organization_members") \
             .select("organization_id") \
@@ -825,24 +803,16 @@ async def get_success_patterns(request: Request, current_user: dict = Depends(ge
     user_id = current_user["sub"]
     
     try:
-        # Get primary organization ID
-        email = current_user.get("email", "")
+        # Get primary organization ID from organization_members (single source of truth)
         organization_id = None
         
-        personal_org = supabase.table("organizations") \
-            .select("id") \
-            .eq("name", f"Personal - {email}") \
+        org_members = supabase.table("organization_members") \
+            .select("organization_id") \
+            .eq("user_id", user_id) \
+            .limit(1) \
             .execute()
-        if personal_org.data:
-            organization_id = personal_org.data[0]["id"]
-        
-        if not organization_id:
-            org_members = supabase.table("organization_members") \
-                .select("organization_id") \
-                .eq("user_id", user_id) \
-                .execute()
-            if org_members.data:
-                organization_id = org_members.data[0]["organization_id"]
+        if org_members.data:
+            organization_id = org_members.data[0]["organization_id"]
         
         if not organization_id:
             return {"patterns": {}, "score": 0, "recommendations": []}
@@ -876,16 +846,8 @@ async def get_predictions(request: Request, current_user: dict = Depends(get_cur
     user_id = current_user["sub"]
     
     try:
-        # Get organization IDs
-        email = current_user.get("email", "")
+        # Get organization IDs from organization_members (single source of truth)
         organization_ids = []
-        
-        personal_org = supabase.table("organizations") \
-            .select("id") \
-            .eq("name", f"Personal - {email}") \
-            .execute()
-        if personal_org.data:
-            organization_ids.append(personal_org.data[0]["id"])
         
         org_members = supabase.table("organization_members") \
             .select("organization_id") \

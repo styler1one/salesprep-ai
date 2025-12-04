@@ -176,6 +176,8 @@ def check_admin_access(current_user: dict) -> str:
     """
     Check if user is admin and return organization_id.
     
+    Uses organization_members table as single source of truth.
+    
     Args:
         current_user: Current user dict
         
@@ -187,11 +189,12 @@ def check_admin_access(current_user: dict) -> str:
     """
     organization_id = current_user.get("organization_id")
     
-    # If no org_id in token, try to find user's organization
+    # If no org_id in token, get from organization_members (single source of truth)
     if not organization_id:
-        result = supabase.table("organizations").select("id").eq("name", f"Personal - {current_user.get('email', '')}").execute()
+        user_id = current_user.get("sub")
+        result = supabase.table("organization_members").select("organization_id").eq("user_id", user_id).limit(1).execute()
         if result.data and len(result.data) > 0:
-            organization_id = result.data[0]["id"]
+            organization_id = result.data[0]["organization_id"]
         else:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -296,16 +299,17 @@ async def complete_company_interview(
         print(f"DEBUG: Analyzing company interview for user {current_user['sub']}")
         profile_data = await interview_service.analyze_responses(responses)
         
-        # Get or create organization for user
+        # Get organization for user from organization_members (single source of truth)
+        user_id = current_user.get("sub")
         organization_id = current_user.get("organization_id")
         if not organization_id:
-            # Try to find existing org for user
-            result = supabase.table("organizations").select("id").eq("name", f"Personal - {current_user['email']}").execute()
+            # Get from organization_members
+            org_member_result = supabase.table("organization_members").select("organization_id").eq("user_id", user_id).limit(1).execute()
             
-            if result.data and len(result.data) > 0:
-                organization_id = result.data[0]["id"]
+            if org_member_result.data and len(org_member_result.data) > 0:
+                organization_id = org_member_result.data[0]["organization_id"]
             else:
-                # Create new organization
+                # User not in any organization - create one and add them
                 email = current_user.get('email', 'User')
                 slug = email.split('@')[0].lower().replace('.', '-').replace('_', '-')
                 
@@ -318,6 +322,14 @@ async def complete_company_interview(
                 }
                 org_result = supabase.table("organizations").insert(org_data).execute()
                 organization_id = org_result.data[0]["id"] if org_result.data else str(uuid.uuid4())
+                
+                # Add user to the new organization
+                supabase.table("organization_members").insert({
+                    "user_id": user_id,
+                    "organization_id": organization_id,
+                    "role": "owner"
+                }).execute()
+                print(f"DEBUG: Created organization {organization_id} and added user {user_id}")
         
         # Check if company profile exists - upsert logic
         existing = profile_service.get_company_profile(organization_id)
@@ -440,12 +452,12 @@ async def get_company_profile(
     try:
         organization_id = current_user.get("organization_id")
         
-        # If no org_id in token, try to find user's organization
+        # If no org_id in token, get from organization_members (single source of truth)
         if not organization_id:
-            # Try to find existing org for user
-            result = supabase.table("organizations").select("id").eq("name", f"Personal - {current_user.get('email', '')}").execute()
+            user_id = current_user.get("sub")
+            result = supabase.table("organization_members").select("organization_id").eq("user_id", user_id).limit(1).execute()
             if result.data and len(result.data) > 0:
-                organization_id = result.data[0]["id"]
+                organization_id = result.data[0]["organization_id"]
             else:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -583,11 +595,12 @@ async def check_company_profile_exists(
     try:
         organization_id = current_user.get("organization_id")
         
-        # If no org_id in token, try to find user's organization
+        # If no org_id in token, get from organization_members (single source of truth)
         if not organization_id:
-            result = supabase.table("organizations").select("id").eq("name", f"Personal - {current_user.get('email', '')}").execute()
+            user_id = current_user.get("sub")
+            result = supabase.table("organization_members").select("organization_id").eq("user_id", user_id).limit(1).execute()
             if result.data and len(result.data) > 0:
-                organization_id = result.data[0]["id"]
+                organization_id = result.data[0]["organization_id"]
             else:
                 return {
                     "exists": False,

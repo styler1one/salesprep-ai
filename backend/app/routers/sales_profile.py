@@ -195,19 +195,17 @@ async def complete_interview(
         personalization = await interview_service.generate_personalization_settings(profile_data)
         profile_data["personalization_settings"] = personalization
         
-        # Get user's organization
-        # In production, get from organization_members table
-        # For now, create a default organization if none exists
+        # Get user's organization from organization_members (single source of truth)
+        user_id = current_user.get("sub")
         organization_id = current_user.get("organization_id")
         if not organization_id:
-            # Create or get default organization for this user
-            # Try to find existing default org for user
-            result = supabase.table("organizations").select("id").eq("name", f"Personal - {current_user['email']}").execute()
+            # Get from organization_members
+            org_member_result = supabase.table("organization_members").select("organization_id").eq("user_id", user_id).limit(1).execute()
             
-            if result.data and len(result.data) > 0:
-                organization_id = result.data[0]["id"]
+            if org_member_result.data and len(org_member_result.data) > 0:
+                organization_id = org_member_result.data[0]["organization_id"]
             else:
-                # Create new default organization
+                # User not in any organization - create one and add them
                 email = current_user.get('email', 'User')
                 # Generate slug from email (remove special chars, lowercase)
                 slug = email.split('@')[0].lower().replace('.', '-').replace('_', '-')
@@ -221,6 +219,14 @@ async def complete_interview(
                 }
                 org_result = supabase.table("organizations").insert(org_data).execute()
                 organization_id = org_result.data[0]["id"] if org_result.data else str(uuid.uuid4())
+                
+                # Add user to the new organization
+                supabase.table("organization_members").insert({
+                    "user_id": user_id,
+                    "organization_id": organization_id,
+                    "role": "owner"
+                }).execute()
+                print(f"DEBUG: Created organization {organization_id} and added user {user_id}")
         
         # Create profile
         print(f"DEBUG: Creating sales profile for user {current_user['sub']}")

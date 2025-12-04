@@ -295,9 +295,9 @@ async def build_user_context(
     Build the user context by gathering all relevant data.
     This is used by the rule engine to evaluate suggestions.
     
-    Note: organization_ids is a list because data may be spread across
-    multiple organizations (e.g., "Personal - email" org for company profile,
-    organization_members org for research/preps).
+    Note: organization_ids is a list to support users who may be members
+    of multiple organizations. All data should be stored under the user's
+    primary organization from organization_members table.
     """
     
     # Use first org as primary for backward compatibility
