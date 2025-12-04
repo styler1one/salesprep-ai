@@ -155,8 +155,8 @@ IMPORTANT:
             return ""
         
         context = "## Contact Persons for This Meeting\n\n"
-        context += "**IMPORTANT**: Personalize the meeting brief for these specific people. "
-        context += "Use their communication style, role-specific pain points, and suggested approach.\n\n"
+        context += "**CRITICAL**: You MUST personalize the meeting brief for these specific people.\n"
+        context += "Use their full profile analysis to create tailored opening lines, discovery questions, and approach strategy.\n\n"
         
         for i, contact in enumerate(contacts, 1):
             context += f"### Contact {i}: {contact.get('name', 'Unknown')}\n"
@@ -166,51 +166,61 @@ IMPORTANT:
             
             if contact.get('decision_authority'):
                 authority_labels = {
-                    'decision_maker': '🟢 Decision Maker',
-                    'influencer': '🔵 Influencer',
-                    'gatekeeper': '🟡 Gatekeeper',
-                    'user': '⚪ End User'
+                    'decision_maker': '🟢 Decision Maker - Controls budget and final decision',
+                    'influencer': '🔵 Influencer - Shapes decision but doesn\'t finalize',
+                    'gatekeeper': '🟡 Gatekeeper - Controls access to decision makers',
+                    'user': '⚪ End User/Champion - Uses the solution, advocates internally'
                 }
                 context += f"**Decision Authority**: {authority_labels.get(contact['decision_authority'], contact['decision_authority'])}\n"
             
             if contact.get('communication_style'):
-                context += f"**Communication Style**: {contact['communication_style']}\n"
+                style_labels = {
+                    'formal': 'Formal - Prefers structured, professional communication',
+                    'informal': 'Informal - Direct, casual, relationship-focused',
+                    'technical': 'Technical - Wants data, specs, proof points',
+                    'strategic': 'Strategic - Big-picture, ROI-focused, business outcomes'
+                }
+                context += f"**Communication Style**: {style_labels.get(contact['communication_style'], contact['communication_style'])}\n"
             
             if contact.get('probable_drivers'):
-                context += f"**Motivations**: {contact['probable_drivers']}\n"
+                context += f"**Key Motivations**: {contact['probable_drivers']}\n"
             
             if contact.get('profile_brief'):
-                # Include a condensed version of the profile brief
+                # Include the FULL profile brief - this contains rich analysis
+                # (Relevance Assessment, Profile Summary, Role Challenges, Personality)
                 brief = contact['profile_brief']
-                if len(brief) > 500:
-                    brief = brief[:500] + "..."
-                context += f"\n**Profile Summary**:\n{brief}\n"
+                # Increase limit to capture the rich analysis
+                if len(brief) > 2000:
+                    brief = brief[:2000] + "\n\n[Profile continues with additional insights...]"
+                context += f"\n**Full Contact Profile**:\n{brief}\n"
             
-            if contact.get('opening_suggestions') and len(contact['opening_suggestions']) > 0:
-                context += "\n**Suggested Opening Lines**:\n"
-                for suggestion in contact['opening_suggestions'][:3]:
-                    context += f"- \"{suggestion}\"\n"
-            
-            if contact.get('questions_to_ask') and len(contact['questions_to_ask']) > 0:
-                context += "\n**Recommended Questions**:\n"
-                for question in contact['questions_to_ask'][:3]:
-                    context += f"- {question}\n"
-            
-            if contact.get('topics_to_avoid') and len(contact['topics_to_avoid']) > 0:
-                context += "\n**Topics to Avoid**:\n"
-                for topic in contact['topics_to_avoid']:
-                    context += f"- {topic}\n"
-            
-            context += "\n"
+            context += "\n---\n\n"
         
         context += """
-When generating the meeting brief:
-1. Tailor talking points to these specific people's roles and styles
-2. Use their suggested opening lines in the Opening section
-3. Include their recommended questions in the Discovery section
-4. Mention their decision authority when discussing next steps
-5. Avoid topics they might be sensitive about
-6. Match communication style (formal/informal/technical)
+## YOUR TASKS FOR THESE CONTACTS:
+
+Since contact research provides WHO they are (not WHAT to say), you MUST generate:
+
+1. **Personalized Opening Lines** for each contact based on:
+   - Their role and responsibilities
+   - Their communication style preference
+   - Recent company news or developments
+   - Their probable motivations
+
+2. **Tailored Discovery Questions** based on:
+   - Their role-specific challenges
+   - Their decision authority (different questions for DM vs Influencer)
+   - What they personally care about
+
+3. **Approach Strategy** for each person:
+   - How to engage them based on their style
+   - Topics that will resonate with their motivations
+   - Potential sensitivities to avoid
+
+4. **DMU (Decision Making Unit) Analysis**:
+   - Map the contacts by their authority
+   - Identify who to prioritize
+   - Understand the decision dynamics
 
 """
         return context

@@ -222,8 +222,16 @@ class RAGService:
         formatted += f"**Company**: {research.get('company_name', 'Unknown')}\n\n"
         
         if research.get('brief_content'):
-            # Include more of the brief content since it contains all the research
-            formatted += f"**Research Brief**:\n{research['brief_content'][:2000]}...\n\n"
+            # Include FULL research brief - it contains critical BANT signals, 
+            # leadership team, entry strategy, and timing assessment
+            # Don't truncate as this intelligence is essential for preparation
+            brief_content = research['brief_content']
+            
+            # Only truncate if extremely long (> 6000 chars)
+            if len(brief_content) > 6000:
+                formatted += f"**Research Brief**:\n{brief_content[:6000]}\n\n[Research continues...]\n\n"
+            else:
+                formatted += f"**Research Brief**:\n{brief_content}\n\n"
         
         return formatted
     

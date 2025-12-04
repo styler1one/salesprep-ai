@@ -203,9 +203,13 @@ Value Propositions: {', '.join(company.get('value_propositions', [])[:3])}""")
         # 3. Research Data - Prospect intelligence
         if context.get("research"):
             research = context["research"]
-            # Use more of the brief_content since it contains all research data
+            # Use FULL brief_content - contains BANT signals, leadership, entry strategy
+            brief_content = research.get('brief_content', 'No research available')
+            # Only truncate if extremely long
+            if len(brief_content) > 5000:
+                brief_content = brief_content[:5000] + "\n\n[Research continues with additional insights...]"
             sections.append(f"""## PROSPECT RESEARCH ({context['prospect_company']}):
-{research.get('brief_content', 'No research available')[:3000]}""")
+{brief_content}""")
         
         # 4. Meeting Prep Context - What was prepared
         if context.get("meeting_preps") and focus in ["followup", "general"]:
