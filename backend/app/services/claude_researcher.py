@@ -16,6 +16,69 @@ from app.i18n.config import DEFAULT_LANGUAGE
 
 logger = logging.getLogger(__name__)
 
+# Country name to ISO 3166-1 alpha-2 code mapping
+COUNTRY_TO_ISO = {
+    # Common countries
+    "netherlands": "NL", "nederland": "NL", "the netherlands": "NL",
+    "united states": "US", "usa": "US", "united states of america": "US", "america": "US",
+    "united kingdom": "GB", "uk": "GB", "great britain": "GB", "england": "GB",
+    "germany": "DE", "deutschland": "DE",
+    "france": "FR",
+    "belgium": "BE", "belgie": "BE", "belgië": "BE",
+    "spain": "ES", "españa": "ES",
+    "italy": "IT", "italia": "IT",
+    "portugal": "PT",
+    "switzerland": "CH", "schweiz": "CH", "suisse": "CH",
+    "austria": "AT", "österreich": "AT",
+    "sweden": "SE", "sverige": "SE",
+    "norway": "NO", "norge": "NO",
+    "denmark": "DK", "danmark": "DK",
+    "finland": "FI", "suomi": "FI",
+    "poland": "PL", "polska": "PL",
+    "ireland": "IE",
+    "canada": "CA",
+    "australia": "AU",
+    "new zealand": "NZ",
+    "japan": "JP",
+    "china": "CN",
+    "india": "IN",
+    "brazil": "BR", "brasil": "BR",
+    "mexico": "MX", "méxico": "MX",
+    "south africa": "ZA",
+    "singapore": "SG",
+    "hong kong": "HK",
+    "south korea": "KR", "korea": "KR",
+    "united arab emirates": "AE", "uae": "AE",
+    "saudi arabia": "SA",
+    "israel": "IL",
+    "russia": "RU",
+    "turkey": "TR", "türkiye": "TR",
+    "greece": "GR",
+    "czech republic": "CZ", "czechia": "CZ",
+    "hungary": "HU",
+    "romania": "RO",
+    "luxembourg": "LU",
+}
+
+
+def get_country_iso_code(country: str) -> Optional[str]:
+    """Convert country name to ISO 3166-1 alpha-2 code.
+    
+    Returns the 2-letter ISO code or None if not found.
+    If already a 2-letter code, returns as-is.
+    """
+    if not country:
+        return None
+    
+    country_clean = country.strip().lower()
+    
+    # Already an ISO code?
+    if len(country_clean) == 2:
+        return country_clean.upper()
+    
+    # Look up in mapping
+    return COUNTRY_TO_ISO.get(country_clean)
+
 
 class ClaudeResearcher:
     """Research using Claude with web search capabilities."""
@@ -72,14 +135,20 @@ class ClaudeResearcher:
         )
         
         # Build user location for localized search results
+        # Claude API requires ISO 3166-1 alpha-2 country codes (2 letters)
         user_location = None
         if country:
-            user_location = {
-                "type": "approximate",
-                "country": country,
-            }
-            if city:
-                user_location["city"] = city
+            country_iso = get_country_iso_code(country)
+            if country_iso:
+                user_location = {
+                    "type": "approximate",
+                    "country": country_iso,
+                }
+                if city:
+                    user_location["city"] = city
+                logger.debug(f"Using user_location: {user_location}")
+            else:
+                logger.warning(f"Could not convert country '{country}' to ISO code, skipping user_location")
         
         # Build seller context section if available
         seller_section = ""
