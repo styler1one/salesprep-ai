@@ -10,6 +10,8 @@ import type {
   AdminCheckResponse,
   DashboardMetrics,
   DashboardTrends,
+  HealthDistribution,
+  RecentActivityItem,
   UserListResponse,
   AdminUserDetail,
   UserActivityResponse,
@@ -57,6 +59,18 @@ export const adminApi = {
   getTrends: async (days = 7): Promise<DashboardTrends> => {
     const response = await api.get<DashboardTrends>(`${BASE}/dashboard/trends?days=${days}`)
     return response.data as DashboardTrends
+  },
+
+  // Get health distribution (for pie chart)
+  getHealthDistribution: async (): Promise<HealthDistribution> => {
+    const response = await api.get<HealthDistribution>(`${BASE}/dashboard/health-distribution`)
+    return response.data as HealthDistribution
+  },
+
+  // Get recent activity feed
+  getRecentActivity: async (limit = 10): Promise<{ activities: RecentActivityItem[] }> => {
+    const response = await api.get<{ activities: RecentActivityItem[] }>(`${BASE}/dashboard/recent-activity?limit=${limit}`)
+    return response.data as { activities: RecentActivityItem[] }
   },
 
   // ============================================================

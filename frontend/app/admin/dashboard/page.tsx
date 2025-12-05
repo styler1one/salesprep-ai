@@ -8,12 +8,14 @@ import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
-import type { DashboardMetrics, DashboardTrends, AdminAlert } from '@/types/admin'
+import type { DashboardMetrics, DashboardTrends, AdminAlert, HealthDistribution, RecentActivityItem } from '@/types/admin'
 
 export default function AdminDashboardPage() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null)
   const [trends, setTrends] = useState<DashboardTrends | null>(null)
   const [alerts, setAlerts] = useState<AdminAlert[]>([])
+  const [healthDist, setHealthDist] = useState<HealthDistribution | null>(null)
+  const [recentActivity, setRecentActivity] = useState<RecentActivityItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -21,15 +23,19 @@ export default function AdminDashboardPage() {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const [metricsData, trendsData, alertsData] = await Promise.all([
+        const [metricsData, trendsData, alertsData, healthDistData, activityData] = await Promise.all([
           adminApi.getMetrics(),
           adminApi.getTrends(7),
           adminApi.listAlerts({ status: 'active', limit: 5 }),
+          adminApi.getHealthDistribution(),
+          adminApi.getRecentActivity(10),
         ])
         
         setMetrics(metricsData)
         setTrends(trendsData)
         setAlerts(alertsData.alerts)
+        setHealthDist(healthDistData)
+        setRecentActivity(activityData.activities)
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err)
         setError('Failed to load dashboard data')
@@ -89,8 +95,8 @@ export default function AdminDashboardPage() {
         </Button>
       </div>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Metrics Grid - 5 cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatsCard
           title="Total Users"
           value={metrics?.totalUsers || 0}
@@ -107,14 +113,25 @@ export default function AdminDashboardPage() {
           value={metrics?.activeUsers7d || 0}
           icon="activity"
           iconColor="text-green-500"
-          description="Users with activity in last 7 days"
+          description="With activity in last 7 days"
         />
         <StatsCard
           title="MRR"
           value={formatCurrency(metrics?.mrrCents || 0)}
           icon="creditCard"
           iconColor="text-purple-500"
-          description={`${metrics?.paidUsers || 0} paying customers`}
+          trend={{
+            value: metrics?.mrrChangePercent || 0,
+            label: '% vs last month',
+            isPositive: (metrics?.mrrChangePercent || 0) >= 0,
+          }}
+        />
+        <StatsCard
+          title="Error Rate (24h)"
+          value={`${metrics?.errorRate24h || 0}%`}
+          icon="alertCircle"
+          iconColor={(metrics?.errorRate24h || 0) > 5 ? 'text-red-500' : 'text-green-500'}
+          description={(metrics?.errorRate24h || 0) > 5 ? 'Above threshold' : 'Within limits'}
         />
         <StatsCard
           title="Active Alerts"
@@ -125,8 +142,8 @@ export default function AdminDashboardPage() {
         />
       </div>
 
-      {/* Charts and Alerts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Usage Trends */}
         <Card className="lg:col-span-2">
           <CardHeader>
@@ -230,6 +247,112 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Customer Health Distribution - Pie Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Customer Health</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {healthDist && healthDist.total > 0 ? (
+              <div className="space-y-4">
+                {/* Pie chart visualization */}
+                <div className="relative w-32 h-32 mx-auto">
+                  <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
+                    {/* Calculate percentages */}
+                    {(() => {
+                      const total = healthDist.total || 1
+                      const healthyPct = (healthDist.healthy / total) * 100
+                      const atRiskPct = (healthDist.atRisk / total) * 100
+                      const criticalPct = (healthDist.critical / total) * 100
+                      
+                      const healthyDash = healthyPct
+                      const atRiskDash = atRiskPct
+                      const criticalDash = criticalPct
+                      
+                      const healthyOffset = 0
+                      const atRiskOffset = 100 - healthyPct
+                      const criticalOffset = 100 - healthyPct - atRiskPct
+                      
+                      return (
+                        <>
+                          {/* Healthy - Green */}
+                          {healthyPct > 0 && (
+                            <circle
+                              cx="18" cy="18" r="15.9155"
+                              fill="none"
+                              stroke="#22c55e"
+                              strokeWidth="3.8"
+                              strokeDasharray={`${healthyDash} ${100 - healthyDash}`}
+                              strokeDashoffset={healthyOffset}
+                            />
+                          )}
+                          {/* At Risk - Yellow */}
+                          {atRiskPct > 0 && (
+                            <circle
+                              cx="18" cy="18" r="15.9155"
+                              fill="none"
+                              stroke="#eab308"
+                              strokeWidth="3.8"
+                              strokeDasharray={`${atRiskDash} ${100 - atRiskDash}`}
+                              strokeDashoffset={atRiskOffset}
+                            />
+                          )}
+                          {/* Critical - Red */}
+                          {criticalPct > 0 && (
+                            <circle
+                              cx="18" cy="18" r="15.9155"
+                              fill="none"
+                              stroke="#ef4444"
+                              strokeWidth="3.8"
+                              strokeDasharray={`${criticalDash} ${100 - criticalDash}`}
+                              strokeDashoffset={criticalOffset}
+                            />
+                          )}
+                        </>
+                      )
+                    })()}
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-2xl font-bold text-slate-900 dark:text-white">
+                      {healthDist.total}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Legend */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                      <span className="text-slate-600 dark:text-slate-400">Healthy (80-100)</span>
+                    </div>
+                    <span className="font-medium text-slate-900 dark:text-white">{healthDist.healthy}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                      <span className="text-slate-600 dark:text-slate-400">At Risk (50-79)</span>
+                    </div>
+                    <span className="font-medium text-slate-900 dark:text-white">{healthDist.atRisk}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <span className="text-slate-600 dark:text-slate-400">Critical (0-49)</span>
+                    </div>
+                    <span className="font-medium text-slate-900 dark:text-white">{healthDist.critical}</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-slate-500">
+                <Icons.users className="h-8 w-8 mb-2" />
+                <span className="text-sm">No users yet</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Active Alerts */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -287,12 +410,84 @@ export default function AdminDashboardPage() {
             ) : (
               <div className="flex flex-col items-center justify-center py-8 text-slate-500">
                 <Icons.checkCircle className="h-8 w-8 text-green-500 mb-2" />
-                <span className="text-sm">All clear! No active alerts.</span>
+                <span className="text-sm">All clear!</span>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Recent Activity Feed */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-lg">Recent Activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {recentActivity.length > 0 ? (
+            <div className="space-y-3">
+              {recentActivity.map((activity) => (
+                <div 
+                  key={activity.id}
+                  className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50"
+                >
+                  <div className={cn(
+                    'p-2 rounded-full',
+                    activity.type === 'research' ? 'bg-blue-100 dark:bg-blue-900/30' :
+                    activity.type === 'preparation' ? 'bg-green-100 dark:bg-green-900/30' :
+                    'bg-orange-100 dark:bg-orange-900/30'
+                  )}>
+                    {activity.type === 'research' ? (
+                      <Icons.search className="h-4 w-4 text-blue-500" />
+                    ) : activity.type === 'preparation' ? (
+                      <Icons.fileText className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Icons.mail className="h-4 w-4 text-orange-500" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm text-slate-900 dark:text-white truncate">
+                        {activity.userName}
+                      </span>
+                      <span className={cn(
+                        'text-xs px-1.5 py-0.5 rounded',
+                        activity.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                        activity.status === 'failed' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                        'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                      )}>
+                        {activity.status}
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-500 truncate">
+                      {activity.type === 'research' ? 'Researched' :
+                       activity.type === 'preparation' ? 'Prepared for' :
+                       'Follow-up for'} <strong>{activity.title}</strong>
+                    </div>
+                    <div className="text-xs text-slate-400 mt-0.5">
+                      {new Date(activity.createdAt).toLocaleString('en', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  </div>
+                  <Link href={`/admin/users/${activity.userId}`}>
+                    <Button variant="ghost" size="sm" className="text-xs">
+                      View User
+                    </Button>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 text-slate-500">
+              <Icons.inbox className="h-8 w-8 mb-2" />
+              <span className="text-sm">No recent activity</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Quick Actions */}
       <Card>

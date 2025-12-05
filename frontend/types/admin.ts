@@ -151,9 +151,30 @@ export interface DashboardMetrics {
   usersGrowthWeek: number
   activeUsers7d: number
   mrrCents: number
+  mrrChangePercent: number  // % change vs last month
   paidUsers: number
   activeAlerts: number
   errorRate24h: number
+}
+
+// Health Distribution (for pie chart)
+export interface HealthDistribution {
+  healthy: number      // 80-100 score
+  atRisk: number       // 50-79 score  
+  critical: number     // 0-49 score
+  total: number
+}
+
+// Recent Activity (for activity feed)
+export interface RecentActivityItem {
+  id: string
+  type: 'research' | 'preparation' | 'followup'
+  userName: string
+  userEmail: string
+  userId: string
+  title: string        // Company name or description
+  status: string
+  createdAt: string
 }
 
 export interface TrendDataPoint {

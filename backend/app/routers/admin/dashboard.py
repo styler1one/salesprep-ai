@@ -5,14 +5,16 @@ Admin Dashboard Router
 Endpoints for admin dashboard metrics and trends.
 """
 
-from fastapi import APIRouter, Depends, HTTPException
-from typing import Optional, List
+from fastapi import APIRouter, Depends
+from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
+import logging
 
 from app.deps import get_admin_user, AdminContext
 from app.database import get_supabase_service
 from .models import CamelModel
-from .utils import log_admin_action
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/dashboard", tags=["admin-dashboard"])
 
@@ -26,9 +28,35 @@ class DashboardMetrics(CamelModel):
     users_growth_week: int
     active_users_7d: int
     mrr_cents: int
+    mrr_change_percent: float = 0.0  # % change vs last month
     paid_users: int
     active_alerts: int
     error_rate_24h: Optional[float] = 0.0
+
+
+class HealthDistribution(CamelModel):
+    """Health score distribution for pie chart."""
+    healthy: int      # 80-100 score
+    at_risk: int      # 50-79 score
+    critical: int     # 0-49 score
+    total: int
+
+
+class RecentActivityItem(CamelModel):
+    """Single activity item for the feed."""
+    id: str
+    type: str  # 'research', 'preparation', 'followup'
+    user_name: str
+    user_email: str
+    user_id: str
+    title: str  # Company name or description
+    status: str
+    created_at: str
+
+
+class RecentActivityResponse(CamelModel):
+    """Response for recent activities."""
+    activities: List[RecentActivityItem]
 
 
 class TrendDataPoint(CamelModel):
@@ -106,11 +134,15 @@ async def get_dashboard_metrics(
                 total = research_stats.data.get("total", 1)
                 error_rate = round((failed / total) * 100, 1)
             
+            # Calculate MRR change percent
+            mrr_change = await _calculate_mrr_change(supabase)
+            
             return DashboardMetrics(
                 total_users=metrics.get("total_users", 0),
                 users_growth_week=metrics.get("users_growth_week", 0),
                 active_users_7d=metrics.get("active_users_7d", 0),
                 mrr_cents=metrics.get("mrr_cents", 0),
+                mrr_change_percent=mrr_change,
                 paid_users=metrics.get("paid_users", 0),
                 active_alerts=metrics.get("active_alerts", 0),
                 error_rate_24h=error_rate
@@ -120,8 +152,69 @@ async def get_dashboard_metrics(
         return await _calculate_metrics_fallback(supabase)
         
     except Exception as e:
-        print(f"Error getting dashboard metrics: {e}")
+        logger.error(f"Error getting dashboard metrics: {e}")
         return await _calculate_metrics_fallback(supabase)
+
+
+async def _calculate_mrr_change(supabase) -> float:
+    """Calculate MRR change percentage vs previous month from REAL payment data."""
+    try:
+        now = datetime.utcnow()
+        
+        # Current month start/end
+        current_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        # Previous month start/end
+        if now.month == 1:
+            prev_month_start = current_month_start.replace(year=now.year - 1, month=12)
+        else:
+            prev_month_start = current_month_start.replace(month=now.month - 1)
+        
+        # Get current month subscriptions revenue
+        current_subs = supabase.table("organization_subscriptions") \
+            .select("plan_id, subscription_plans(price_monthly_cents)") \
+            .in_("status", ["active", "trialing"]) \
+            .execute()
+        
+        current_mrr = 0
+        for sub in (current_subs.data or []):
+            if sub.get("subscription_plans"):
+                current_mrr += sub["subscription_plans"].get("price_monthly_cents", 0) or 0
+        
+        # Get previous month's payments total (approximation of previous MRR)
+        prev_payments = supabase.table("payment_history") \
+            .select("amount_cents") \
+            .gte("paid_at", prev_month_start.isoformat()) \
+            .lt("paid_at", current_month_start.isoformat()) \
+            .eq("status", "paid") \
+            .execute()
+        
+        prev_mrr = sum(p.get("amount_cents", 0) for p in (prev_payments.data or []))
+        
+        # If no previous data, check if we have active subs that existed last month
+        if prev_mrr == 0:
+            prev_subs = supabase.table("organization_subscriptions") \
+                .select("plan_id, subscription_plans(price_monthly_cents), created_at") \
+                .in_("status", ["active", "trialing", "canceled"]) \
+                .lt("created_at", current_month_start.isoformat()) \
+                .execute()
+            
+            for sub in (prev_subs.data or []):
+                if sub.get("subscription_plans"):
+                    prev_mrr += sub["subscription_plans"].get("price_monthly_cents", 0) or 0
+        
+        # Calculate percentage change
+        if prev_mrr > 0:
+            change_percent = ((current_mrr - prev_mrr) / prev_mrr) * 100
+            return round(change_percent, 1)
+        elif current_mrr > 0:
+            return 100.0  # New revenue from zero
+        else:
+            return 0.0
+            
+    except Exception as e:
+        logger.warning(f"Error calculating MRR change: {e}")
+        return 0.0
 
 
 async def _calculate_metrics_fallback(supabase) -> DashboardMetrics:
@@ -238,11 +331,15 @@ async def _calculate_metrics_fallback(supabase) -> DashboardMetrics:
     except Exception:
         pass
     
+    # Calculate MRR change
+    mrr_change = await _calculate_mrr_change(supabase)
+    
     return DashboardMetrics(
         total_users=total_users,
         users_growth_week=users_growth_week,
         active_users_7d=active_users_7d,
         mrr_cents=mrr_cents,
+        mrr_change_percent=mrr_change,
         paid_users=paid_users,
         active_alerts=active_alerts,
         error_rate_24h=error_rate_24h
@@ -288,7 +385,7 @@ async def get_usage_trends(
         return await _calculate_trends_fallback(supabase, days)
         
     except Exception as e:
-        print(f"Error getting usage trends: {e}")
+        logger.error(f"Error getting usage trends: {e}")
         return await _calculate_trends_fallback(supabase, days)
 
 
@@ -359,4 +456,314 @@ async def _calculate_trends_fallback(supabase, days: int) -> DashboardTrends:
         ))
     
     return DashboardTrends(trends=trends, period_days=days)
+
+
+@router.get("/health-distribution", response_model=HealthDistribution)
+async def get_health_distribution(
+    admin: AdminContext = Depends(get_admin_user)
+):
+    """
+    Get customer health score distribution for pie chart.
+    
+    Calculates health scores for all users and buckets them into:
+    - Healthy (80-100)
+    - At Risk (50-79)
+    - Critical (0-49)
+    
+    Uses REAL data from database with BATCH queries to avoid N+1 problem.
+    """
+    supabase = get_supabase_service()
+    
+    try:
+        # Pre-fetch all data in batch queries (avoiding N+1 problem)
+        user_health_data = await _batch_fetch_user_health_data(supabase)
+        
+        healthy = 0
+        at_risk = 0
+        critical = 0
+        
+        for user_id, data in user_health_data.items():
+            health_score = _calculate_health_score_from_data(data)
+            
+            if health_score >= 80:
+                healthy += 1
+            elif health_score >= 50:
+                at_risk += 1
+            else:
+                critical += 1
+        
+        total = healthy + at_risk + critical
+        
+        return HealthDistribution(
+            healthy=healthy,
+            at_risk=at_risk,
+            critical=critical,
+            total=total
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting health distribution: {e}")
+        return HealthDistribution(healthy=0, at_risk=0, critical=0, total=0)
+
+
+async def _batch_fetch_user_health_data(supabase) -> Dict[str, Dict[str, Any]]:
+    """
+    Fetch all user health data in batch queries.
+    
+    This avoids the N+1 query problem by fetching all data upfront
+    and then calculating health scores in memory.
+    
+    Returns: Dict[user_id, {last_activity, error_count, total_count, org_id, flow_count, flow_limit, profile_completeness, has_failed_payment}]
+    """
+    user_data: Dict[str, Dict[str, Any]] = {}
+    month_ago = datetime.utcnow() - timedelta(days=30)
+    
+    # 1. Get all users
+    users_result = supabase.table("users").select("id").execute()
+    for user in (users_result.data or []):
+        user_data[user["id"]] = {
+            "last_activity": None,
+            "error_count": 0,
+            "total_count": 0,
+            "org_id": None,
+            "flow_count": 0,
+            "flow_limit": 0,
+            "profile_completeness": 0,
+            "has_failed_payment": False
+        }
+    
+    if not user_data:
+        return user_data
+    
+    # 2. Get last activity per user (single query)
+    activities = supabase.table("research_briefs") \
+        .select("user_id, created_at, status") \
+        .gte("created_at", month_ago.isoformat()) \
+        .order("created_at", desc=True) \
+        .execute()
+    
+    for activity in (activities.data or []):
+        uid = activity.get("user_id")
+        if uid and uid in user_data:
+            # Update last activity (first one we see is the most recent due to ordering)
+            if user_data[uid]["last_activity"] is None:
+                user_data[uid]["last_activity"] = activity.get("created_at")
+            # Count totals and errors
+            user_data[uid]["total_count"] += 1
+            if activity.get("status") == "failed":
+                user_data[uid]["error_count"] += 1
+    
+    # 3. Get organization membership (single query)
+    org_members = supabase.table("organization_members") \
+        .select("user_id, organization_id") \
+        .execute()
+    
+    org_ids = set()
+    for member in (org_members.data or []):
+        uid = member.get("user_id")
+        org_id = member.get("organization_id")
+        if uid and uid in user_data:
+            user_data[uid]["org_id"] = org_id
+            if org_id:
+                org_ids.add(org_id)
+    
+    # 4. Get organization flow data (single query)
+    if org_ids:
+        orgs = supabase.table("organizations") \
+            .select("id, flow_count, flow_limit") \
+            .in_("id", list(org_ids)) \
+            .execute()
+        
+        org_flow_map = {org["id"]: org for org in (orgs.data or [])}
+        
+        for uid, data in user_data.items():
+            org_id = data.get("org_id")
+            if org_id and org_id in org_flow_map:
+                org = org_flow_map[org_id]
+                user_data[uid]["flow_count"] = org.get("flow_count", 0) or 0
+                user_data[uid]["flow_limit"] = org.get("flow_limit", 0) or 0
+    
+    # 5. Get profile completeness (single query)
+    profiles = supabase.table("sales_profiles") \
+        .select("user_id, profile_completeness") \
+        .execute()
+    
+    for profile in (profiles.data or []):
+        uid = profile.get("user_id")
+        if uid and uid in user_data:
+            user_data[uid]["profile_completeness"] = profile.get("profile_completeness", 0) or 0
+    
+    # 6. Get failed payments per org (single query)
+    if org_ids:
+        failed_payments = supabase.table("payment_history") \
+            .select("organization_id") \
+            .eq("status", "failed") \
+            .gte("created_at", month_ago.isoformat()) \
+            .in_("organization_id", list(org_ids)) \
+            .execute()
+        
+        orgs_with_failed = {fp.get("organization_id") for fp in (failed_payments.data or [])}
+        
+        for uid, data in user_data.items():
+            if data.get("org_id") in orgs_with_failed:
+                user_data[uid]["has_failed_payment"] = True
+    
+    return user_data
+
+
+def _calculate_health_score_from_data(data: Dict[str, Any]) -> int:
+    """
+    Calculate health score from pre-fetched data.
+    
+    Scoring (start at 100, deduct for issues):
+    - Inactivity: -10 (7d), -20 (14d), -30 (30d+)
+    - Errors: -10 per 10% error rate (max -25)
+    - Low usage: -15 if <10% of limit used
+    - Incomplete profile: -10 if <50%, -5 if <80%
+    - Payment issues: -20 if has failed payment
+    """
+    score = 100
+    now = datetime.utcnow()
+    week_ago = now - timedelta(days=7)
+    two_weeks_ago = now - timedelta(days=14)
+    month_ago = now - timedelta(days=30)
+    
+    # Activity penalty
+    last_activity_str = data.get("last_activity")
+    if last_activity_str:
+        try:
+            last_active = datetime.fromisoformat(last_activity_str.replace("Z", "+00:00")).replace(tzinfo=None)
+            if last_active < month_ago:
+                score -= 30
+            elif last_active < two_weeks_ago:
+                score -= 20
+            elif last_active < week_ago:
+                score -= 10
+        except (ValueError, TypeError):
+            score -= 30  # Can't parse = assume inactive
+    else:
+        score -= 30  # No activity
+    
+    # Error rate penalty
+    total_count = data.get("total_count", 0)
+    error_count = data.get("error_count", 0)
+    if total_count > 0:
+        error_rate = error_count / total_count
+        if error_rate > 0.3:
+            score -= 25
+        elif error_rate > 0.2:
+            score -= 15
+        elif error_rate > 0.1:
+            score -= 10
+    
+    # Usage penalty
+    flow_limit = data.get("flow_limit", 0)
+    flow_count = data.get("flow_count", 0)
+    if flow_limit > 0:
+        usage_pct = flow_count / flow_limit
+        if usage_pct < 0.1:
+            score -= 15
+        elif usage_pct < 0.3:
+            score -= 10
+    
+    # Profile penalty
+    completeness = data.get("profile_completeness", 0)
+    if completeness < 50:
+        score -= 10
+    elif completeness < 80:
+        score -= 5
+    
+    # Payment penalty
+    if data.get("has_failed_payment"):
+        score -= 20
+    
+    return max(0, min(100, score))
+
+
+@router.get("/recent-activity", response_model=RecentActivityResponse)
+async def get_recent_activity(
+    limit: int = 10,
+    admin: AdminContext = Depends(get_admin_user)
+):
+    # Validate limit (prevent excessive queries)
+    limit = min(max(limit, 1), 50)
+    """
+    Get recent activity feed from REAL database data.
+    
+    Returns the most recent researches, preparations, and follow-ups
+    with user info.
+    """
+    supabase = get_supabase_service()
+    activities = []
+    
+    try:
+        # Get recent research briefs
+        researches = supabase.table("research_briefs") \
+            .select("id, user_id, company_name, status, created_at, users(email, full_name)") \
+            .order("created_at", desc=True) \
+            .limit(limit) \
+            .execute()
+        
+        for r in (researches.data or []):
+            user_data = r.get("users") or {}
+            activities.append(RecentActivityItem(
+                id=r["id"],
+                type="research",
+                user_name=user_data.get("full_name") or "Unknown",
+                user_email=user_data.get("email") or "",
+                user_id=r.get("user_id") or "",
+                title=r.get("company_name") or "Unknown Company",
+                status=r.get("status") or "unknown",
+                created_at=r.get("created_at") or ""
+            ))
+        
+        # Get recent meeting preps
+        preps = supabase.table("meeting_preps") \
+            .select("id, user_id, prospect_company_name, status, created_at, users(email, full_name)") \
+            .order("created_at", desc=True) \
+            .limit(limit) \
+            .execute()
+        
+        for p in (preps.data or []):
+            user_data = p.get("users") or {}
+            activities.append(RecentActivityItem(
+                id=p["id"],
+                type="preparation",
+                user_name=user_data.get("full_name") or "Unknown",
+                user_email=user_data.get("email") or "",
+                user_id=p.get("user_id") or "",
+                title=p.get("prospect_company_name") or "Meeting Prep",
+                status=p.get("status") or "unknown",
+                created_at=p.get("created_at") or ""
+            ))
+        
+        # Get recent followups
+        followups = supabase.table("followups") \
+            .select("id, user_id, prospect_company_name, status, created_at, users(email, full_name)") \
+            .order("created_at", desc=True) \
+            .limit(limit) \
+            .execute()
+        
+        for f in (followups.data or []):
+            user_data = f.get("users") or {}
+            activities.append(RecentActivityItem(
+                id=f["id"],
+                type="followup",
+                user_name=user_data.get("full_name") or "Unknown",
+                user_email=user_data.get("email") or "",
+                user_id=f.get("user_id") or "",
+                title=f.get("prospect_company_name") or "Follow-up",
+                status=f.get("status") or "unknown",
+                created_at=f.get("created_at") or ""
+            ))
+        
+        # Sort all by created_at and take top N
+        activities.sort(key=lambda x: x.created_at, reverse=True)
+        activities = activities[:limit]
+        
+        return RecentActivityResponse(activities=activities)
+        
+    except Exception as e:
+        logger.error(f"Error getting recent activity: {e}")
+        return RecentActivityResponse(activities=[])
 
