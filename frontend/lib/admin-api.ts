@@ -13,6 +13,9 @@ import type {
   UserListResponse,
   AdminUserDetail,
   UserActivityResponse,
+  UserBillingResponse,
+  UserErrorsResponse,
+  HealthBreakdown,
   AlertListResponse,
   AdminAlert,
   HealthOverview,
@@ -117,6 +120,24 @@ export const adminApi = {
   exportUser: async (userId: string): Promise<Record<string, unknown>> => {
     const response = await api.get<Record<string, unknown>>(`${BASE}/users/${userId}/export`)
     return response.data as Record<string, unknown>
+  },
+
+  // Get user billing history
+  getUserBilling: async (userId: string): Promise<UserBillingResponse> => {
+    const response = await api.get<UserBillingResponse>(`${BASE}/users/${userId}/billing`)
+    return response.data as UserBillingResponse
+  },
+
+  // Get user errors
+  getUserErrors: async (userId: string, limit = 50): Promise<UserErrorsResponse> => {
+    const response = await api.get<UserErrorsResponse>(`${BASE}/users/${userId}/errors?limit=${limit}`)
+    return response.data as UserErrorsResponse
+  },
+
+  // Get user health breakdown
+  getUserHealthBreakdown: async (userId: string): Promise<HealthBreakdown> => {
+    const response = await api.get<HealthBreakdown>(`${BASE}/users/${userId}/health-breakdown`)
+    return response.data as HealthBreakdown
   },
 
   // ============================================================

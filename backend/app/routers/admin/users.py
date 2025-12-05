@@ -93,6 +93,55 @@ class UserActivityResponse(CamelModel):
     total: int
 
 
+class BillingItem(CamelModel):
+    id: str
+    amount_cents: int
+    currency: str
+    status: str
+    invoice_number: Optional[str] = None
+    invoice_pdf_url: Optional[str] = None
+    paid_at: Optional[datetime] = None
+    failed_at: Optional[datetime] = None
+    created_at: datetime
+
+
+class UserBillingResponse(CamelModel):
+    subscription_status: Optional[str] = None
+    plan: str
+    current_period_start: Optional[datetime] = None
+    current_period_end: Optional[datetime] = None
+    trial_end: Optional[datetime] = None
+    cancel_at_period_end: bool = False
+    payments: List[BillingItem]
+    total_paid_cents: int
+    total_payments: int
+
+
+class ErrorItem(CamelModel):
+    id: str
+    type: str  # research, preparation, followup, knowledge_base
+    title: str
+    error_message: Optional[str] = None
+    created_at: datetime
+
+
+class UserErrorsResponse(CamelModel):
+    errors: List[ErrorItem]
+    total: int
+    error_rate_7d: float
+    error_rate_30d: float
+
+
+class HealthBreakdown(CamelModel):
+    activity_score: int  # 0-30 points
+    error_score: int  # 0-25 points
+    usage_score: int  # 0-15 points
+    profile_score: int  # 0-10 points
+    payment_score: int  # 0-20 points
+    total_score: int
+    status: str
+
+
 # Request Models
 
 class ResetFlowsRequest(BaseModel):
@@ -682,6 +731,336 @@ async def export_user_data(
     )
     
     return export_data
+
+
+@router.get("/{user_id}/billing", response_model=UserBillingResponse)
+async def get_user_billing(
+    user_id: str,
+    admin: AdminContext = Depends(require_admin_role("super_admin", "admin"))
+):
+    """Get billing/payment history for a user."""
+    supabase = get_supabase_service()
+    
+    # Get organization
+    org_result = supabase.table("organization_members") \
+        .select("organization_id") \
+        .eq("user_id", user_id) \
+        .maybe_single() \
+        .execute()
+    
+    if not org_result.data:
+        return UserBillingResponse(
+            plan="free",
+            payments=[],
+            total_paid_cents=0,
+            total_payments=0
+        )
+    
+    org_id = org_result.data["organization_id"]
+    
+    # Get subscription details
+    sub_result = supabase.table("organization_subscriptions") \
+        .select("plan_id, status, current_period_start, current_period_end, trial_end, cancel_at_period_end") \
+        .eq("organization_id", org_id) \
+        .maybe_single() \
+        .execute()
+    
+    subscription_status = None
+    plan = "free"
+    current_period_start = None
+    current_period_end = None
+    trial_end = None
+    cancel_at_period_end = False
+    
+    if sub_result.data:
+        subscription_status = sub_result.data.get("status")
+        plan = sub_result.data.get("plan_id", "free")
+        current_period_start = sub_result.data.get("current_period_start")
+        current_period_end = sub_result.data.get("current_period_end")
+        trial_end = sub_result.data.get("trial_end")
+        cancel_at_period_end = sub_result.data.get("cancel_at_period_end", False)
+    
+    # Get payment history
+    payments_result = supabase.table("payment_history") \
+        .select("id, amount_cents, currency, status, invoice_number, invoice_pdf_url, paid_at, failed_at, created_at") \
+        .eq("organization_id", org_id) \
+        .order("created_at", desc=True) \
+        .limit(50) \
+        .execute()
+    
+    payments = []
+    total_paid_cents = 0
+    for p in (payments_result.data or []):
+        payments.append(BillingItem(
+            id=p["id"],
+            amount_cents=p["amount_cents"],
+            currency=p.get("currency", "eur"),
+            status=p["status"],
+            invoice_number=p.get("invoice_number"),
+            invoice_pdf_url=p.get("invoice_pdf_url"),
+            paid_at=p.get("paid_at"),
+            failed_at=p.get("failed_at"),
+            created_at=p["created_at"]
+        ))
+        if p["status"] == "paid":
+            total_paid_cents += p["amount_cents"]
+    
+    return UserBillingResponse(
+        subscription_status=subscription_status,
+        plan=plan,
+        current_period_start=current_period_start,
+        current_period_end=current_period_end,
+        trial_end=trial_end,
+        cancel_at_period_end=cancel_at_period_end,
+        payments=payments,
+        total_paid_cents=total_paid_cents,
+        total_payments=len(payments)
+    )
+
+
+@router.get("/{user_id}/errors", response_model=UserErrorsResponse)
+async def get_user_errors(
+    user_id: str,
+    limit: int = Query(50, ge=1, le=200),
+    admin: AdminContext = Depends(get_admin_user)
+):
+    """Get failed jobs/errors for a user."""
+    supabase = get_supabase_service()
+    from datetime import timedelta
+    
+    # Get organization
+    org_result = supabase.table("organization_members") \
+        .select("organization_id") \
+        .eq("user_id", user_id) \
+        .maybe_single() \
+        .execute()
+    
+    if not org_result.data:
+        return UserErrorsResponse(errors=[], total=0, error_rate_7d=0.0, error_rate_30d=0.0)
+    
+    org_id = org_result.data["organization_id"]
+    errors = []
+    
+    # Date thresholds
+    now = datetime.utcnow()
+    seven_days_ago = (now - timedelta(days=7)).isoformat()
+    thirty_days_ago = (now - timedelta(days=30)).isoformat()
+    
+    # Track counts for error rates
+    total_7d = 0
+    failed_7d = 0
+    total_30d = 0
+    failed_30d = 0
+    
+    # Get failed research briefs
+    try:
+        research_result = supabase.table("research_briefs") \
+            .select("id, company_name, status, created_at") \
+            .eq("organization_id", org_id) \
+            .eq("status", "failed") \
+            .order("created_at", desc=True) \
+            .limit(limit // 4) \
+            .execute()
+        
+        for r in (research_result.data or []):
+            errors.append(ErrorItem(
+                id=r["id"],
+                type="research",
+                title=f"Research: {r.get('company_name', 'Unknown')}",
+                error_message=None,  # research_briefs doesn't have error_message column
+                created_at=r["created_at"]
+            ))
+    except Exception as e:
+        print(f"Error fetching failed research: {e}")
+    
+    # Get failed meeting preps
+    try:
+        prep_result = supabase.table("meeting_preps") \
+            .select("id, prospect_company_name, status, error_message, created_at") \
+            .eq("organization_id", org_id) \
+            .eq("status", "failed") \
+            .order("created_at", desc=True) \
+            .limit(limit // 4) \
+            .execute()
+        
+        for p in (prep_result.data or []):
+            errors.append(ErrorItem(
+                id=p["id"],
+                type="preparation",
+                title=f"Preparation: {p.get('prospect_company_name', 'Unknown')}",
+                error_message=p.get("error_message"),
+                created_at=p["created_at"]
+            ))
+    except Exception as e:
+        print(f"Error fetching failed preps: {e}")
+    
+    # Get failed followups
+    try:
+        followup_result = supabase.table("followups") \
+            .select("id, prospect_company_name, status, error_message, created_at") \
+            .eq("organization_id", org_id) \
+            .eq("status", "failed") \
+            .order("created_at", desc=True) \
+            .limit(limit // 4) \
+            .execute()
+        
+        for f in (followup_result.data or []):
+            errors.append(ErrorItem(
+                id=f["id"],
+                type="followup",
+                title=f"Follow-up: {f.get('prospect_company_name', 'Unknown')}",
+                error_message=f.get("error_message"),
+                created_at=f["created_at"]
+            ))
+    except Exception as e:
+        print(f"Error fetching failed followups: {e}")
+    
+    # Get failed knowledge base files
+    try:
+        kb_result = supabase.table("knowledge_base_files") \
+            .select("id, file_name, status, error_message, created_at") \
+            .eq("organization_id", org_id) \
+            .eq("status", "failed") \
+            .order("created_at", desc=True) \
+            .limit(limit // 4) \
+            .execute()
+        
+        for k in (kb_result.data or []):
+            errors.append(ErrorItem(
+                id=k["id"],
+                type="knowledge_base",
+                title=f"KB File: {k.get('file_name', 'Unknown')}",
+                error_message=k.get("error_message"),
+                created_at=k["created_at"]
+            ))
+    except Exception as e:
+        print(f"Error fetching failed KB files: {e}")
+    
+    # Calculate error rates
+    try:
+        # 7 day stats
+        for table in ["research_briefs", "meeting_preps", "followups"]:
+            try:
+                result = supabase.table(table) \
+                    .select("status", count="exact") \
+                    .eq("organization_id", org_id) \
+                    .gte("created_at", seven_days_ago) \
+                    .execute()
+                total_7d += result.count or 0
+                
+                failed_result = supabase.table(table) \
+                    .select("id", count="exact") \
+                    .eq("organization_id", org_id) \
+                    .eq("status", "failed") \
+                    .gte("created_at", seven_days_ago) \
+                    .execute()
+                failed_7d += failed_result.count or 0
+            except Exception:
+                pass
+        
+        # 30 day stats
+        for table in ["research_briefs", "meeting_preps", "followups"]:
+            try:
+                result = supabase.table(table) \
+                    .select("status", count="exact") \
+                    .eq("organization_id", org_id) \
+                    .gte("created_at", thirty_days_ago) \
+                    .execute()
+                total_30d += result.count or 0
+                
+                failed_result = supabase.table(table) \
+                    .select("id", count="exact") \
+                    .eq("organization_id", org_id) \
+                    .eq("status", "failed") \
+                    .gte("created_at", thirty_days_ago) \
+                    .execute()
+                failed_30d += failed_result.count or 0
+            except Exception:
+                pass
+    except Exception as e:
+        print(f"Error calculating error rates: {e}")
+    
+    error_rate_7d = (failed_7d / total_7d * 100) if total_7d > 0 else 0.0
+    error_rate_30d = (failed_30d / total_30d * 100) if total_30d > 0 else 0.0
+    
+    # Sort by created_at
+    errors.sort(key=lambda x: x.created_at, reverse=True)
+    
+    return UserErrorsResponse(
+        errors=errors[:limit],
+        total=len(errors),
+        error_rate_7d=round(error_rate_7d, 1),
+        error_rate_30d=round(error_rate_30d, 1)
+    )
+
+
+@router.get("/{user_id}/health-breakdown", response_model=HealthBreakdown)
+async def get_user_health_breakdown(
+    user_id: str,
+    admin: AdminContext = Depends(get_admin_user)
+):
+    """Get detailed health score breakdown for a user."""
+    supabase = get_supabase_service()
+    
+    health_data = await _get_health_data(supabase, user_id)
+    
+    # Calculate individual components (same logic as calculate_health_score but separated)
+    activity_score = 30  # Base: 30 points
+    error_score = 25  # Base: 25 points
+    usage_score = 15  # Base: 15 points
+    profile_score = 10  # Base: 10 points
+    payment_score = 20  # Base: 20 points
+    
+    # Inactivity penalty (max -30)
+    days_inactive = health_data.get("days_since_last_activity", 0)
+    if days_inactive > 30:
+        activity_score = 0
+    elif days_inactive > 14:
+        activity_score = 10
+    elif days_inactive > 7:
+        activity_score = 20
+    
+    # Error rate penalty (max -25)
+    error_rate = health_data.get("error_rate_30d", 0)
+    if error_rate > 0.3:
+        error_score = 0
+    elif error_rate > 0.2:
+        error_score = 10
+    elif error_rate > 0.1:
+        error_score = 15
+    
+    # Low usage penalty (max -15) - only for paid plans
+    if health_data.get("plan") != "free":
+        usage_percent = health_data.get("flow_usage_percent", 0)
+        if usage_percent < 0.1:
+            usage_score = 0
+        elif usage_percent < 0.3:
+            usage_score = 5
+    
+    # Incomplete profile penalty (max -10)
+    profile_completeness = health_data.get("profile_completeness", 0)
+    if profile_completeness < 50:
+        profile_score = 0
+    elif profile_completeness < 80:
+        profile_score = 5
+    
+    # Payment issues penalty (max -20)
+    if health_data.get("has_failed_payment"):
+        payment_score = 0
+    
+    total_score = activity_score + error_score + usage_score + profile_score + payment_score
+    
+    status = "healthy" if total_score >= 80 else "at_risk" if total_score >= 50 else "critical"
+    
+    return HealthBreakdown(
+        activity_score=activity_score,
+        error_score=error_score,
+        usage_score=usage_score,
+        profile_score=profile_score,
+        payment_score=payment_score,
+        total_score=total_score,
+        status=status
+    )
 
 
 # ============================================================

@@ -90,6 +90,58 @@ export interface UserActivityResponse {
   total: number
 }
 
+// Billing types for user detail
+export interface BillingItem {
+  id: string
+  amountCents: number
+  currency: string
+  status: string
+  invoiceNumber?: string
+  invoicePdfUrl?: string
+  paidAt?: string
+  failedAt?: string
+  createdAt: string
+}
+
+export interface UserBillingResponse {
+  subscriptionStatus?: string
+  plan: string
+  currentPeriodStart?: string
+  currentPeriodEnd?: string
+  trialEnd?: string
+  cancelAtPeriodEnd: boolean
+  payments: BillingItem[]
+  totalPaidCents: number
+  totalPayments: number
+}
+
+// Error types for user detail
+export interface ErrorItem {
+  id: string
+  type: string  // research, preparation, followup, knowledge_base
+  title: string
+  errorMessage?: string
+  createdAt: string
+}
+
+export interface UserErrorsResponse {
+  errors: ErrorItem[]
+  total: number
+  errorRate7d: number
+  errorRate30d: number
+}
+
+// Health breakdown for user detail
+export interface HealthBreakdown {
+  activityScore: number
+  errorScore: number
+  usageScore: number
+  profileScore: number
+  paymentScore: number
+  totalScore: number
+  status: HealthStatus
+}
+
 // ============================================================
 // Dashboard Types
 // ============================================================

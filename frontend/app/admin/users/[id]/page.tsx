@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Icons } from '@/components/icons'
 import { cn } from '@/lib/utils'
-import type { AdminUserDetail, ActivityItem } from '@/types/admin'
+import type { AdminUserDetail, ActivityItem, UserBillingResponse, UserErrorsResponse, HealthBreakdown } from '@/types/admin'
 
 // Simple toast notification component
 function Toast({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) {
@@ -37,6 +37,9 @@ export default function AdminUserDetailPage() {
 
   const [user, setUser] = useState<AdminUserDetail | null>(null)
   const [activities, setActivities] = useState<ActivityItem[]>([])
+  const [billingData, setBillingData] = useState<UserBillingResponse | null>(null)
+  const [errorsData, setErrorsData] = useState<UserErrorsResponse | null>(null)
+  const [healthBreakdown, setHealthBreakdown] = useState<HealthBreakdown | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   
@@ -68,12 +71,14 @@ export default function AdminUserDetailPage() {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const [userData, activityData] = await Promise.all([
+        const [userData, activityData, healthData] = await Promise.all([
           adminApi.getUser(userId),
           adminApi.getUserActivity(userId, 20),
+          adminApi.getUserHealthBreakdown(userId).catch(() => null),
         ])
         setUser(userData)
         setActivities(activityData.activities)
+        setHealthBreakdown(healthData)
       } catch (err) {
         console.error('Failed to fetch user:', err)
         showToast('Failed to load user data', 'error')
@@ -84,6 +89,16 @@ export default function AdminUserDetailPage() {
 
     fetchData()
   }, [userId])
+
+  // Lazy load billing and errors data when tab is selected
+  useEffect(() => {
+    if (activeTab === 'billing' && !billingData) {
+      adminApi.getUserBilling(userId).then(setBillingData).catch(console.error)
+    }
+    if (activeTab === 'errors' && !errorsData) {
+      adminApi.getUserErrors(userId).then(setErrorsData).catch(console.error)
+    }
+  }, [activeTab, userId, billingData, errorsData])
 
   const refreshUserData = async () => {
     try {
@@ -277,8 +292,24 @@ export default function AdminUserDetailPage() {
     { key: 'overview', label: 'Overview', icon: Icons.user },
     { key: 'activity', label: 'Activity', icon: Icons.activity },
     { key: 'flow_packs', label: 'Flow Packs', icon: Icons.package },
-    { key: 'notes', label: 'Notes', icon: Icons.fileText, badge: user.adminNotes.length },
+    { key: 'billing', label: 'Billing', icon: Icons.creditCard },
+    { key: 'errors', label: 'Errors', icon: Icons.alertTriangle, badge: user.errorCount30d > 0 ? user.errorCount30d : undefined },
+    { key: 'notes', label: 'Notes', icon: Icons.fileText, badge: user.adminNotes.length > 0 ? user.adminNotes.length : undefined },
   ]
+
+  const getInitials = (name?: string, email?: string) => {
+    if (name) {
+      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    }
+    return email?.slice(0, 2).toUpperCase() || '?'
+  }
+
+  const formatCurrency = (cents: number, currency = 'eur') => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency.toUpperCase(),
+    }).format(cents / 100)
+  }
 
   return (
     <div className="space-y-6">
@@ -293,19 +324,30 @@ export default function AdminUserDetailPage() {
 
       {/* Header */}
       <div className="flex items-start justify-between">
-        <div>
-          <Button 
-            variant="ghost" 
-            className="mb-2"
-            onClick={() => router.push('/admin/users')}
-          >
-            <Icons.arrowLeft className="h-4 w-4 mr-2" />
-            Back to Users
-          </Button>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-            {user.fullName || user.email}
-          </h1>
-          <p className="text-slate-500">{user.email}</p>
+        <div className="flex items-start gap-4">
+          {/* Avatar */}
+          <div className={cn(
+            'w-16 h-16 rounded-full flex items-center justify-center text-xl font-semibold',
+            user.plan === 'unlimited_solo' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
+            user.plan === 'pro_solo' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+            'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+          )}>
+            {getInitials(user.fullName, user.email)}
+          </div>
+          <div>
+            <Button 
+              variant="ghost" 
+              className="mb-1 -ml-3 h-auto p-1"
+              onClick={() => router.push('/admin/users')}
+            >
+              <Icons.arrowLeft className="h-4 w-4 mr-1" />
+              Back to Users
+            </Button>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+              {user.fullName || user.email}
+            </h1>
+            <p className="text-slate-500">{user.email}</p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExport}>
@@ -624,6 +666,196 @@ export default function AdminUserDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          {activeTab === 'billing' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Billing & Payments</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {!billingData ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Icons.spinner className="h-6 w-6 animate-spin text-teal-500" />
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Subscription Summary */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <div className="text-sm text-slate-500">Plan</div>
+                        <div className="font-semibold capitalize">{billingData.plan.replace('_', ' ')}</div>
+                      </div>
+                      <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <div className="text-sm text-slate-500">Status</div>
+                        <div className={cn(
+                          'font-semibold capitalize',
+                          billingData.subscriptionStatus === 'active' ? 'text-green-500' :
+                          billingData.subscriptionStatus === 'past_due' ? 'text-red-500' :
+                          'text-slate-500'
+                        )}>
+                          {billingData.subscriptionStatus || 'None'}
+                        </div>
+                      </div>
+                      <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <div className="text-sm text-slate-500">Total Paid</div>
+                        <div className="font-semibold text-green-500">{formatCurrency(billingData.totalPaidCents)}</div>
+                      </div>
+                      <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <div className="text-sm text-slate-500">Payments</div>
+                        <div className="font-semibold">{billingData.totalPayments}</div>
+                      </div>
+                    </div>
+
+                    {billingData.currentPeriodEnd && (
+                      <div className="text-sm text-slate-500">
+                        Current period ends: {new Date(billingData.currentPeriodEnd).toLocaleDateString()}
+                        {billingData.cancelAtPeriodEnd && (
+                          <span className="ml-2 text-amber-500">(Cancelling at period end)</span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Payment History */}
+                    <div>
+                      <h4 className="font-medium mb-3">Payment History</h4>
+                      {billingData.payments.length > 0 ? (
+                        <div className="space-y-2">
+                          {billingData.payments.map((payment) => (
+                            <div key={payment.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <div className={cn(
+                                  'p-2 rounded-full',
+                                  payment.status === 'paid' ? 'bg-green-100 text-green-500 dark:bg-green-900/30' :
+                                  payment.status === 'failed' ? 'bg-red-100 text-red-500 dark:bg-red-900/30' :
+                                  'bg-slate-100 text-slate-500 dark:bg-slate-700'
+                                )}>
+                                  {payment.status === 'paid' ? <Icons.checkCircle className="h-4 w-4" /> :
+                                   payment.status === 'failed' ? <Icons.xCircle className="h-4 w-4" /> :
+                                   <Icons.clock className="h-4 w-4" />}
+                                </div>
+                                <div>
+                                  <div className="font-medium">{formatCurrency(payment.amountCents, payment.currency)}</div>
+                                  <div className="text-xs text-slate-500">
+                                    {payment.invoiceNumber || 'Invoice'} • {new Date(payment.createdAt).toLocaleDateString()}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={cn(
+                                  'px-2 py-0.5 rounded-full text-xs font-medium capitalize',
+                                  payment.status === 'paid' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                                  payment.status === 'failed' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                  'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
+                                )}>
+                                  {payment.status}
+                                </span>
+                                {payment.invoicePdfUrl && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => window.open(payment.invoicePdfUrl, '_blank')}
+                                  >
+                                    <Icons.download className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-slate-500">
+                          <Icons.creditCard className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          No payment history
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {activeTab === 'errors' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Errors & Failed Jobs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {!errorsData ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Icons.spinner className="h-6 w-6 animate-spin text-teal-500" />
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Error Rate Summary */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <div className="text-sm text-slate-500">Error Rate (7 days)</div>
+                        <div className={cn(
+                          'text-2xl font-bold',
+                          errorsData.errorRate7d > 20 ? 'text-red-500' :
+                          errorsData.errorRate7d > 10 ? 'text-amber-500' :
+                          'text-green-500'
+                        )}>
+                          {errorsData.errorRate7d}%
+                        </div>
+                      </div>
+                      <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <div className="text-sm text-slate-500">Error Rate (30 days)</div>
+                        <div className={cn(
+                          'text-2xl font-bold',
+                          errorsData.errorRate30d > 20 ? 'text-red-500' :
+                          errorsData.errorRate30d > 10 ? 'text-amber-500' :
+                          'text-green-500'
+                        )}>
+                          {errorsData.errorRate30d}%
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Error List */}
+                    <div>
+                      <h4 className="font-medium mb-3">Recent Errors ({errorsData.total})</h4>
+                      {errorsData.errors.length > 0 ? (
+                        <div className="space-y-2">
+                          {errorsData.errors.map((error) => (
+                            <div key={error.id} className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50 rounded-lg">
+                              <div className="flex items-start gap-3">
+                                <div className="p-1.5 bg-red-100 dark:bg-red-900/30 rounded">
+                                  <Icons.alertTriangle className="h-4 w-4 text-red-500" />
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-medium text-sm">{error.title}</span>
+                                    <span className="px-1.5 py-0.5 text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded capitalize">
+                                      {error.type.replace('_', ' ')}
+                                    </span>
+                                  </div>
+                                  {error.errorMessage && (
+                                    <div className="text-sm text-red-600 dark:text-red-400 font-mono bg-red-100/50 dark:bg-red-900/20 p-2 rounded mt-1">
+                                      {error.errorMessage}
+                                    </div>
+                                  )}
+                                  <div className="text-xs text-slate-500 mt-2">
+                                    {new Date(error.createdAt).toLocaleString()}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-slate-500">
+                          <Icons.checkCircle className="h-8 w-8 mx-auto mb-2 opacity-50 text-green-500" />
+                          No errors found
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Actions Sidebar */}
@@ -679,6 +911,116 @@ export default function AdminUserDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Health Score Breakdown */}
+          {healthBreakdown && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Health Breakdown</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500">Activity</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div 
+                          className={cn(
+                            'h-full rounded-full',
+                            healthBreakdown.activityScore >= 25 ? 'bg-green-500' :
+                            healthBreakdown.activityScore >= 15 ? 'bg-amber-500' :
+                            'bg-red-500'
+                          )}
+                          style={{ width: `${(healthBreakdown.activityScore / 30) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-medium w-8">{healthBreakdown.activityScore}/30</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500">Errors</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div 
+                          className={cn(
+                            'h-full rounded-full',
+                            healthBreakdown.errorScore >= 20 ? 'bg-green-500' :
+                            healthBreakdown.errorScore >= 10 ? 'bg-amber-500' :
+                            'bg-red-500'
+                          )}
+                          style={{ width: `${(healthBreakdown.errorScore / 25) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-medium w-8">{healthBreakdown.errorScore}/25</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500">Usage</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div 
+                          className={cn(
+                            'h-full rounded-full',
+                            healthBreakdown.usageScore >= 12 ? 'bg-green-500' :
+                            healthBreakdown.usageScore >= 8 ? 'bg-amber-500' :
+                            'bg-red-500'
+                          )}
+                          style={{ width: `${(healthBreakdown.usageScore / 15) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-medium w-8">{healthBreakdown.usageScore}/15</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500">Profile</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div 
+                          className={cn(
+                            'h-full rounded-full',
+                            healthBreakdown.profileScore >= 8 ? 'bg-green-500' :
+                            healthBreakdown.profileScore >= 5 ? 'bg-amber-500' :
+                            'bg-red-500'
+                          )}
+                          style={{ width: `${(healthBreakdown.profileScore / 10) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-medium w-8">{healthBreakdown.profileScore}/10</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500">Payments</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div 
+                          className={cn(
+                            'h-full rounded-full',
+                            healthBreakdown.paymentScore >= 20 ? 'bg-green-500' :
+                            'bg-red-500'
+                          )}
+                          style={{ width: `${(healthBreakdown.paymentScore / 20) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-medium w-8">{healthBreakdown.paymentScore}/20</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Total Score</span>
+                    <span className={cn(
+                      'text-lg font-bold',
+                      healthBreakdown.status === 'healthy' ? 'text-green-500' :
+                      healthBreakdown.status === 'at_risk' ? 'text-amber-500' :
+                      'text-red-500'
+                    )}>
+                      {healthBreakdown.totalScore}/100
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Quick Info Card */}
           <Card>
