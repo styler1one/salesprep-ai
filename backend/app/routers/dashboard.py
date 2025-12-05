@@ -46,10 +46,10 @@ async def get_recent_activity(
         
         # Get recent completed research
         research_result = supabase.table("research_briefs") \
-            .select("id, company_name, status, created_at, updated_at") \
+            .select("id, company_name, status, created_at") \
             .eq("organization_id", organization_id) \
             .eq("status", "completed") \
-            .order("updated_at", desc=True) \
+            .order("created_at", desc=True) \
             .limit(limit) \
             .execute()
         
@@ -58,7 +58,7 @@ async def get_recent_activity(
                 "id": f"research-{r['id']}",
                 "type": "research_completed",
                 "company": r["company_name"],
-                "timestamp": r["updated_at"] or r["created_at"],
+                "timestamp": r["created_at"],
                 "icon": "search",
                 "color": "blue"
             })
