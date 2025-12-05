@@ -8,7 +8,7 @@ Endpoints for billing overview and transaction management.
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 
 from app.deps import get_admin_user, require_admin_role, AdminContext
@@ -118,7 +118,7 @@ async def get_billing_overview(
     cancelled_result = supabase.table("organization_subscriptions") \
         .select("id", count="exact") \
         .eq("status", "cancelled") \
-        .gte("updated_at", datetime.utcnow().replace(day=datetime.utcnow().day - 30).isoformat()) \
+        .gte("updated_at", (datetime.utcnow() - timedelta(days=30)).isoformat()) \
         .execute()
     
     cancelled = cancelled_result.count or 0

@@ -168,14 +168,17 @@ async def get_admin_user(
     supabase = _get_supabase()
     
     # Check if user is an admin
-    result = supabase.table("admin_users") \
-        .select("id, role, is_active") \
-        .eq("user_id", user_id) \
-        .eq("is_active", True) \
-        .maybe_single() \
-        .execute()
+    try:
+        result = supabase.table("admin_users") \
+            .select("id, role, is_active") \
+            .eq("user_id", user_id) \
+            .eq("is_active", True) \
+            .maybe_single() \
+            .execute()
+    except Exception:
+        result = None
     
-    if not result.data:
+    if not result or not result.data:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required"

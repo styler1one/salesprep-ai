@@ -678,66 +678,82 @@ async def _enrich_user_data(supabase, user: dict) -> dict:
         "last_active": None
     }
     
-    # Get organization
-    org_result = supabase.table("organization_members") \
-        .select("organization_id, organizations(name)") \
-        .eq("user_id", user["id"]) \
-        .maybe_single() \
-        .execute()
-    
-    if org_result.data:
-        result["organization_id"] = org_result.data["organization_id"]
-        result["organization_name"] = org_result.data["organizations"]["name"] if org_result.data["organizations"] else None
-        
-        org_id = org_result.data["organization_id"]
-        
-        # Get subscription
-        sub_result = supabase.table("organization_subscriptions") \
-            .select("plan_id, status, stripe_customer_id, trial_ends_at, subscription_plans(features)") \
-            .eq("organization_id", org_id) \
+    try:
+        # Get organization
+        org_result = supabase.table("organization_members") \
+            .select("organization_id, organizations(name)") \
+            .eq("user_id", user["id"]) \
             .maybe_single() \
             .execute()
         
-        if sub_result.data:
-            result["plan"] = sub_result.data["plan_id"]
-            result["subscription_status"] = sub_result.data["status"]
-            result["stripe_customer_id"] = sub_result.data["stripe_customer_id"]
-            result["trial_ends_at"] = sub_result.data["trial_ends_at"]
+        if org_result and org_result.data:
+            result["organization_id"] = org_result.data["organization_id"]
+            result["organization_name"] = org_result.data["organizations"]["name"] if org_result.data.get("organizations") else None
             
-            if sub_result.data["subscription_plans"]:
-                result["flow_limit"] = sub_result.data["subscription_plans"]["features"].get("flow_limit", 2)
-        
-        # Get usage
-        usage_result = supabase.table("usage_records") \
-            .select("flow_count") \
-            .eq("organization_id", org_id) \
-            .gte("period_start", datetime.utcnow().replace(day=1).isoformat()) \
-            .maybe_single() \
-            .execute()
-        
-        if usage_result.data:
-            result["flow_count"] = usage_result.data["flow_count"]
-        
-        # Get flow pack balance
-        pack_result = supabase.table("flow_packs") \
-            .select("flows_remaining") \
-            .eq("organization_id", org_id) \
-            .eq("status", "active") \
-            .execute()
-        
-        if pack_result.data:
-            result["pack_balance"] = sum(p["flows_remaining"] for p in pack_result.data)
-        
-        # Get last activity
-        activity_result = supabase.table("prospect_activities") \
-            .select("created_at") \
-            .eq("organization_id", org_id) \
-            .order("created_at", desc=True) \
-            .limit(1) \
-            .execute()
-        
-        if activity_result.data:
-            result["last_active"] = activity_result.data[0]["created_at"]
+            org_id = org_result.data["organization_id"]
+            
+            # Get subscription
+            try:
+                sub_result = supabase.table("organization_subscriptions") \
+                    .select("plan_id, status, stripe_customer_id, trial_ends_at, subscription_plans(features)") \
+                    .eq("organization_id", org_id) \
+                    .maybe_single() \
+                    .execute()
+                
+                if sub_result and sub_result.data:
+                    result["plan"] = sub_result.data.get("plan_id", "free")
+                    result["subscription_status"] = sub_result.data.get("status")
+                    result["stripe_customer_id"] = sub_result.data.get("stripe_customer_id")
+                    result["trial_ends_at"] = sub_result.data.get("trial_ends_at")
+                    
+                    if sub_result.data.get("subscription_plans"):
+                        result["flow_limit"] = sub_result.data["subscription_plans"].get("features", {}).get("flow_limit", 2)
+            except Exception:
+                pass
+            
+            # Get usage
+            try:
+                usage_result = supabase.table("usage_records") \
+                    .select("flow_count") \
+                    .eq("organization_id", org_id) \
+                    .gte("period_start", datetime.utcnow().replace(day=1).isoformat()) \
+                    .maybe_single() \
+                    .execute()
+                
+                if usage_result and usage_result.data:
+                    result["flow_count"] = usage_result.data.get("flow_count", 0)
+            except Exception:
+                pass
+            
+            # Get flow pack balance
+            try:
+                pack_result = supabase.table("flow_packs") \
+                    .select("flows_remaining") \
+                    .eq("organization_id", org_id) \
+                    .eq("status", "active") \
+                    .execute()
+                
+                if pack_result and pack_result.data:
+                    result["pack_balance"] = sum(p.get("flows_remaining", 0) for p in pack_result.data)
+            except Exception:
+                pass
+            
+            # Get last activity
+            try:
+                activity_result = supabase.table("prospect_activities") \
+                    .select("created_at") \
+                    .eq("organization_id", org_id) \
+                    .order("created_at", desc=True) \
+                    .limit(1) \
+                    .execute()
+                
+                if activity_result and activity_result.data:
+                    result["last_active"] = activity_result.data[0].get("created_at")
+            except Exception:
+                pass
+    except Exception as e:
+        # Log but don't fail - return basic user data
+        print(f"Error enriching user data for {user.get('id')}: {e}")
     
     return result
 
