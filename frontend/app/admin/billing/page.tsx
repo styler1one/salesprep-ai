@@ -40,7 +40,7 @@ export default function AdminBillingPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Icons.loader className="h-8 w-8 animate-spin text-teal-500" />
+        <Icons.spinner className="h-8 w-8 animate-spin text-teal-500" />
       </div>
     )
   }

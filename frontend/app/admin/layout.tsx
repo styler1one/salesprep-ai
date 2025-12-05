@@ -59,7 +59,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-100 dark:bg-slate-950">
         <div className="flex flex-col items-center gap-4">
-          <Icons.loader className="h-8 w-8 animate-spin text-teal-500" />
+          <Icons.spinner className="h-8 w-8 animate-spin text-teal-500" />
           <p className="text-slate-500 dark:text-slate-400">Verifying admin access...</p>
         </div>
       </div>

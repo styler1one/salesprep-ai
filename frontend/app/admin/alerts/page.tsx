@@ -152,7 +152,7 @@ export default function AdminAlertsPage() {
         <CardContent className="p-0">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Icons.loader className="h-6 w-6 animate-spin text-teal-500" />
+              <Icons.spinner className="h-6 w-6 animate-spin text-teal-500" />
             </div>
           ) : alerts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-slate-500">
@@ -247,7 +247,7 @@ export default function AdminAlertsPage() {
                   Cancel
                 </Button>
                 <Button onClick={handleResolve} disabled={actionLoading}>
-                  {actionLoading ? <Icons.loader className="h-4 w-4 animate-spin mr-2" /> : null}
+                  {actionLoading ? <Icons.spinner className="h-4 w-4 animate-spin mr-2" /> : null}
                   Resolve
                 </Button>
               </div>

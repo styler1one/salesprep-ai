@@ -125,7 +125,7 @@ export default function AdminUserDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Icons.loader className="h-8 w-8 animate-spin text-teal-500" />
+        <Icons.spinner className="h-8 w-8 animate-spin text-teal-500" />
       </div>
     )
   }
@@ -486,7 +486,7 @@ export default function AdminUserDetailPage() {
                   onClick={handleResetFlows}
                   disabled={!actionReason.trim() || actionLoading}
                 >
-                  {actionLoading ? <Icons.loader className="h-4 w-4 animate-spin mr-2" /> : null}
+                  {actionLoading ? <Icons.spinner className="h-4 w-4 animate-spin mr-2" /> : null}
                   Reset Flows
                 </Button>
               </div>
@@ -529,7 +529,7 @@ export default function AdminUserDetailPage() {
                   onClick={handleAddFlows}
                   disabled={!actionReason.trim() || flowsToAdd < 1 || actionLoading}
                 >
-                  {actionLoading ? <Icons.loader className="h-4 w-4 animate-spin mr-2" /> : null}
+                  {actionLoading ? <Icons.spinner className="h-4 w-4 animate-spin mr-2" /> : null}
                   Add {flowsToAdd} Flows
                 </Button>
               </div>
@@ -560,7 +560,7 @@ export default function AdminUserDetailPage() {
                   onClick={handleAddNote}
                   disabled={!noteContent.trim() || actionLoading}
                 >
-                  {actionLoading ? <Icons.loader className="h-4 w-4 animate-spin mr-2" /> : null}
+                  {actionLoading ? <Icons.spinner className="h-4 w-4 animate-spin mr-2" /> : null}
                   Add Note
                 </Button>
               </div>

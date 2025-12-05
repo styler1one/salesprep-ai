@@ -182,7 +182,7 @@ export default function AdminAuditPage() {
         <CardContent className="p-0">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Icons.loader className="h-6 w-6 animate-spin text-teal-500" />
+              <Icons.spinner className="h-6 w-6 animate-spin text-teal-500" />
             </div>
           ) : entries.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-slate-500">
@@ -258,7 +258,7 @@ export default function AdminAuditPage() {
                     disabled={loadingMore}
                   >
                     {loadingMore ? (
-                      <Icons.loader className="h-4 w-4 animate-spin mr-2" />
+                      <Icons.spinner className="h-4 w-4 animate-spin mr-2" />
                     ) : null}
                     Load More
                   </Button>
