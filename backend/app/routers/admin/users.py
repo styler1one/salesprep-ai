@@ -367,56 +367,68 @@ async def get_user_activity(
     
     activities = []
     
-    # Get recent researches
-    researches = supabase.table("research_briefs") \
-        .select("id, prospect_company_name, status, created_at") \
-        .eq("organization_id", org_id) \
-        .order("created_at", desc=True) \
-        .limit(limit // 3) \
-        .execute()
-    
-    for r in (researches.data or []):
-        activities.append(ActivityItem(
-            id=f"research-{r['id']}",
-            type="research",
-            description=f"Research on {r['prospect_company_name']} - {r['status']}",
-            created_at=r["created_at"],
-            metadata={"company": r["prospect_company_name"], "status": r["status"]}
-        ))
+    # Get recent researches (uses 'company_name' not 'prospect_company_name')
+    try:
+        researches = supabase.table("research_briefs") \
+            .select("id, company_name, status, created_at") \
+            .eq("organization_id", org_id) \
+            .order("created_at", desc=True) \
+            .limit(limit // 3) \
+            .execute()
+        
+        for r in (researches.data or []):
+            company = r.get("company_name", "Unknown")
+            activities.append(ActivityItem(
+                id=f"research-{r['id']}",
+                type="research",
+                description=f"Research on {company} - {r['status']}",
+                created_at=r["created_at"],
+                metadata={"company": company, "status": r["status"]}
+            ))
+    except Exception as e:
+        print(f"Error fetching researches: {e}")
     
     # Get recent preps
-    preps = supabase.table("meeting_preps") \
-        .select("id, prospect_company_name, status, created_at") \
-        .eq("organization_id", org_id) \
-        .order("created_at", desc=True) \
-        .limit(limit // 3) \
-        .execute()
-    
-    for p in (preps.data or []):
-        activities.append(ActivityItem(
-            id=f"prep-{p['id']}",
-            type="preparation",
-            description=f"Prep for {p['prospect_company_name']} - {p['status']}",
-            created_at=p["created_at"],
-            metadata={"company": p["prospect_company_name"], "status": p["status"]}
-        ))
+    try:
+        preps = supabase.table("meeting_preps") \
+            .select("id, prospect_company_name, status, created_at") \
+            .eq("organization_id", org_id) \
+            .order("created_at", desc=True) \
+            .limit(limit // 3) \
+            .execute()
+        
+        for p in (preps.data or []):
+            company = p.get("prospect_company_name", "Unknown")
+            activities.append(ActivityItem(
+                id=f"prep-{p['id']}",
+                type="preparation",
+                description=f"Prep for {company} - {p['status']}",
+                created_at=p["created_at"],
+                metadata={"company": company, "status": p["status"]}
+            ))
+    except Exception as e:
+        print(f"Error fetching preps: {e}")
     
     # Get recent followups
-    followups = supabase.table("followups") \
-        .select("id, prospect_company_name, status, created_at") \
-        .eq("organization_id", org_id) \
-        .order("created_at", desc=True) \
-        .limit(limit // 3) \
-        .execute()
-    
-    for f in (followups.data or []):
-        activities.append(ActivityItem(
-            id=f"followup-{f['id']}",
-            type="followup",
-            description=f"Follow-up for {f['prospect_company_name']} - {f['status']}",
-            created_at=f["created_at"],
-            metadata={"company": f["prospect_company_name"], "status": f["status"]}
-        ))
+    try:
+        followups = supabase.table("followups") \
+            .select("id, prospect_company_name, status, created_at") \
+            .eq("organization_id", org_id) \
+            .order("created_at", desc=True) \
+            .limit(limit // 3) \
+            .execute()
+        
+        for f in (followups.data or []):
+            company = f.get("prospect_company_name", "Unknown")
+            activities.append(ActivityItem(
+                id=f"followup-{f['id']}",
+                type="followup",
+                description=f"Follow-up for {company} - {f['status']}",
+                created_at=f["created_at"],
+                metadata={"company": company, "status": f["status"]}
+            ))
+    except Exception as e:
+        print(f"Error fetching followups: {e}")
     
     # Sort by created_at
     activities.sort(key=lambda x: x.created_at, reverse=True)
