@@ -1115,7 +1115,7 @@ async def _enrich_user_data(supabase, user: dict) -> dict:
             except Exception:
                 pass
             
-            # Get usage
+            # Get usage - try usage_records first, then fall back to organizations
             try:
                 usage_result = supabase.table("usage_records") \
                     .select("flow_count") \
@@ -1126,6 +1126,15 @@ async def _enrich_user_data(supabase, user: dict) -> dict:
                 
                 if usage_result and usage_result.data:
                     result["flow_count"] = usage_result.data.get("flow_count", 0)
+                else:
+                    # Fallback to organizations.flow_count
+                    org_flow = supabase.table("organizations") \
+                        .select("flow_count") \
+                        .eq("id", org_id) \
+                        .maybe_single() \
+                        .execute()
+                    if org_flow and org_flow.data:
+                        result["flow_count"] = org_flow.data.get("flow_count", 0)
             except Exception:
                 pass
             
@@ -1164,7 +1173,7 @@ async def _enrich_user_data(supabase, user: dict) -> dict:
 
 async def _get_health_data(supabase, user_id: str) -> dict:
     """Get health score data for a user."""
-    # Try to use the database function
+    # Try to use the database function first
     try:
         result = supabase.rpc("get_user_health_data", {"p_user_id": user_id}).execute()
         if result.data and "error" not in result.data:
@@ -1172,13 +1181,203 @@ async def _get_health_data(supabase, user_id: str) -> dict:
     except Exception:
         pass
     
-    # Fallback to manual calculation
-    return {
+    # Fallback to manual calculation with REAL data
+    health_data = {
         "plan": "free",
-        "days_since_last_activity": 0,
+        "days_since_last_activity": 999,
         "error_count_30d": 0,
+        "error_rate_30d": 0.0,
         "flow_usage_percent": 0,
-        "profile_completeness": 50,
+        "profile_completeness": 0,
         "has_failed_payment": False
     }
+    
+    try:
+        # Get organization ID
+        org_result = supabase.table("organization_members") \
+            .select("organization_id") \
+            .eq("user_id", user_id) \
+            .maybe_single() \
+            .execute()
+        
+        if not org_result or not org_result.data:
+            return health_data
+        
+        org_id = org_result.data["organization_id"]
+        
+        # Get plan from subscription
+        try:
+            sub_result = supabase.table("organization_subscriptions") \
+                .select("plan_id") \
+                .eq("organization_id", org_id) \
+                .maybe_single() \
+                .execute()
+            if sub_result and sub_result.data:
+                health_data["plan"] = sub_result.data.get("plan_id", "free")
+        except Exception:
+            pass
+        
+        # Get days since last activity
+        try:
+            activity_result = supabase.table("prospect_activities") \
+                .select("created_at") \
+                .eq("organization_id", org_id) \
+                .order("created_at", desc=True) \
+                .limit(1) \
+                .execute()
+            
+            if activity_result and activity_result.data:
+                from dateutil.parser import parse
+                last_activity = parse(activity_result.data[0]["created_at"])
+                days_diff = (datetime.utcnow() - last_activity.replace(tzinfo=None)).days
+                health_data["days_since_last_activity"] = max(0, days_diff)
+            else:
+                # Check research_briefs as fallback
+                research_result = supabase.table("research_briefs") \
+                    .select("created_at") \
+                    .eq("organization_id", org_id) \
+                    .order("created_at", desc=True) \
+                    .limit(1) \
+                    .execute()
+                if research_result and research_result.data:
+                    from dateutil.parser import parse
+                    last_activity = parse(research_result.data[0]["created_at"])
+                    days_diff = (datetime.utcnow() - last_activity.replace(tzinfo=None)).days
+                    health_data["days_since_last_activity"] = max(0, days_diff)
+        except Exception:
+            pass
+        
+        # Get error count and rate (failed research_briefs, meeting_preps, followups in last 30 days)
+        try:
+            thirty_days_ago = (datetime.utcnow() - timedelta(days=30)).isoformat()
+            error_count = 0
+            total_count = 0
+            
+            # Count research briefs (total and failed)
+            research_total = supabase.table("research_briefs") \
+                .select("id", count="exact") \
+                .eq("organization_id", org_id) \
+                .gte("created_at", thirty_days_ago) \
+                .execute()
+            if research_total:
+                total_count += research_total.count or 0
+            
+            research_errors = supabase.table("research_briefs") \
+                .select("id", count="exact") \
+                .eq("organization_id", org_id) \
+                .eq("status", "failed") \
+                .gte("created_at", thirty_days_ago) \
+                .execute()
+            if research_errors:
+                error_count += research_errors.count or 0
+            
+            # Count meeting preps (total and failed)
+            prep_total = supabase.table("meeting_preps") \
+                .select("id", count="exact") \
+                .eq("organization_id", org_id) \
+                .gte("created_at", thirty_days_ago) \
+                .execute()
+            if prep_total:
+                total_count += prep_total.count or 0
+            
+            prep_errors = supabase.table("meeting_preps") \
+                .select("id", count="exact") \
+                .eq("organization_id", org_id) \
+                .eq("status", "failed") \
+                .gte("created_at", thirty_days_ago) \
+                .execute()
+            if prep_errors:
+                error_count += prep_errors.count or 0
+            
+            # Count followups (total and failed)
+            followup_total = supabase.table("followups") \
+                .select("id", count="exact") \
+                .eq("organization_id", org_id) \
+                .gte("created_at", thirty_days_ago) \
+                .execute()
+            if followup_total:
+                total_count += followup_total.count or 0
+            
+            followup_errors = supabase.table("followups") \
+                .select("id", count="exact") \
+                .eq("organization_id", org_id) \
+                .eq("status", "failed") \
+                .gte("created_at", thirty_days_ago) \
+                .execute()
+            if followup_errors:
+                error_count += followup_errors.count or 0
+            
+            health_data["error_count_30d"] = error_count
+            # Calculate error rate as a percentage (0-1 scale for the health calc)
+            if total_count > 0:
+                health_data["error_rate_30d"] = error_count / total_count
+            else:
+                health_data["error_rate_30d"] = 0.0
+        except Exception:
+            pass
+        
+        # Get flow usage percentage
+        try:
+            org_data = supabase.table("organizations") \
+                .select("flow_count, flow_limit") \
+                .eq("id", org_id) \
+                .maybe_single() \
+                .execute()
+            
+            if org_data and org_data.data:
+                flow_count = org_data.data.get("flow_count", 0) or 0
+                flow_limit = org_data.data.get("flow_limit", 2) or 2
+                if flow_limit > 0:
+                    health_data["flow_usage_percent"] = round((flow_count / flow_limit) * 100, 1)
+        except Exception:
+            pass
+        
+        # Get profile completeness from sales_profiles
+        try:
+            profile_result = supabase.table("sales_profiles") \
+                .select("profile_completeness") \
+                .eq("user_id", user_id) \
+                .maybe_single() \
+                .execute()
+            
+            if profile_result and profile_result.data:
+                health_data["profile_completeness"] = profile_result.data.get("profile_completeness", 0) or 0
+            else:
+                # Calculate completeness based on user data
+                user_result = supabase.table("users") \
+                    .select("full_name, email") \
+                    .eq("id", user_id) \
+                    .maybe_single() \
+                    .execute()
+                
+                completeness = 0
+                if user_result and user_result.data:
+                    if user_result.data.get("email"):
+                        completeness += 20
+                    if user_result.data.get("full_name"):
+                        completeness += 20
+                    # Check if they have any organization
+                    completeness += 20  # They have an org
+                health_data["profile_completeness"] = completeness
+        except Exception:
+            pass
+        
+        # Check for failed payments
+        try:
+            sub_result = supabase.table("organization_subscriptions") \
+                .select("status, stripe_customer_id") \
+                .eq("organization_id", org_id) \
+                .maybe_single() \
+                .execute()
+            
+            if sub_result and sub_result.data:
+                status = sub_result.data.get("status", "")
+                health_data["has_failed_payment"] = status in ["past_due", "unpaid", "incomplete"]
+        except Exception:
+            pass
+            
+    except Exception as e:
+        print(f"Error getting health data for {user_id}: {e}")
+    
+    return health_data
 
