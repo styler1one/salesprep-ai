@@ -20,14 +20,15 @@ stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 supabase = get_supabase_service()
 
 # Stripe Price IDs (set via environment variables after creating in Stripe)
-# v2 pricing model (December 2025)
+# v3 pricing model (December 2025)
 STRIPE_PRICES = {
-    # v2 plans
-    "light_solo": os.getenv("STRIPE_PRICE_LIGHT_SOLO"),
+    # v3 plans
+    "pro_solo": os.getenv("STRIPE_PRICE_PRO_SOLO"),
     "unlimited_solo": os.getenv("STRIPE_PRICE_UNLIMITED_SOLO"),
-    # v1 legacy (deprecated but kept for existing subscribers)
-    "solo_monthly": os.getenv("STRIPE_PRICE_SOLO_MONTHLY"),
-    "solo_yearly": os.getenv("STRIPE_PRICE_SOLO_YEARLY"),
+    # Legacy aliases (for backwards compatibility)
+    "light_solo": os.getenv("STRIPE_PRICE_PRO_SOLO"),  # Renamed to pro_solo
+    "solo_monthly": os.getenv("STRIPE_PRICE_PRO_SOLO"),  # Legacy
+    "solo_yearly": os.getenv("STRIPE_PRICE_SOLO_YEARLY"),  # Legacy
 }
 
 # Stripe Donation Link (for free users)
@@ -203,7 +204,7 @@ class SubscriptionService:
             # v2: No trial period - direct payment
             session = self.stripe.checkout.Session.create(
                 customer=stripe_customer_id,
-                payment_method_types=["card", "ideal", "bancontact"],  # EU payment methods
+                payment_method_types=["card", "ideal", "bancontact"],  # EU payment methods (SEPA enabled)
                 line_items=[{
                     "price": stripe_price_id,
                     "quantity": 1,

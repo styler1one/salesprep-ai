@@ -102,20 +102,21 @@ async def get_recent_activity(
                 "color": "orange"
             })
         
-        # Get recent contacts added
+        # Get recent contacts added (join with prospects to get company name)
         contacts_result = supabase.table("prospect_contacts") \
-            .select("id, full_name, company_name, created_at") \
+            .select("id, name, created_at, prospects(company_name)") \
             .eq("organization_id", organization_id) \
             .order("created_at", desc=True) \
             .limit(limit) \
             .execute()
         
         for c in (contacts_result.data or []):
+            company_name = c.get("prospects", {}).get("company_name", "Unknown") if c.get("prospects") else "Unknown"
             activities.append({
                 "id": f"contact-{c['id']}",
                 "type": "contact_added",
-                "company": c["company_name"] or "Unknown",
-                "contact_name": c["full_name"],
+                "company": company_name,
+                "contact_name": c.get("name", "Unknown"),
                 "timestamp": c["created_at"],
                 "icon": "userPlus",
                 "color": "purple"
