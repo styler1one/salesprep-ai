@@ -65,10 +65,10 @@ async def get_recent_activity(
         
         # Get recent completed preps
         prep_result = supabase.table("meeting_preps") \
-            .select("id, prospect_company_name, status, created_at, updated_at") \
+            .select("id, prospect_company_name, status, created_at") \
             .eq("organization_id", organization_id) \
             .eq("status", "completed") \
-            .order("updated_at", desc=True) \
+            .order("created_at", desc=True) \
             .limit(limit) \
             .execute()
         
@@ -77,7 +77,7 @@ async def get_recent_activity(
                 "id": f"prep-{p['id']}",
                 "type": "prep_generated",
                 "company": p["prospect_company_name"],
-                "timestamp": p["updated_at"] or p["created_at"],
+                "timestamp": p["created_at"],
                 "icon": "fileText",
                 "color": "green"
             })

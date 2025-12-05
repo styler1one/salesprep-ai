@@ -414,6 +414,8 @@ class StyleGuideResponse(BaseModel):
     signoff: str = "Best regards"
     writing_length: str = "concise"
     confidence_score: float = 0.5
+    
+    model_config = {"extra": "ignore"}  # Ignore unknown fields from database
 
 
 @router.get("/style-guide", response_model=StyleGuideResponse)
