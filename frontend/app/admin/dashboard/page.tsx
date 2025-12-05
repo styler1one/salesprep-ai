@@ -135,21 +135,47 @@ export default function AdminDashboardPage() {
           <CardContent>
             {trends && trends.trends.length > 0 ? (
               <div className="space-y-4">
-                {/* Simple bar chart representation */}
+                {/* Stacked bar chart representation */}
                 <div className="flex items-end gap-1 h-40">
                   {trends.trends.map((day, i) => {
                     const total = day.researches + day.preps + day.followups
                     const maxHeight = 160
                     const maxTotal = Math.max(...trends.trends.map(t => t.researches + t.preps + t.followups), 1)
-                    const height = (total / maxTotal) * maxHeight
+                    
+                    // Calculate heights for stacked bars
+                    const researchHeight = maxTotal > 0 ? (day.researches / maxTotal) * maxHeight : 0
+                    const prepHeight = maxTotal > 0 ? (day.preps / maxTotal) * maxHeight : 0
+                    const followupHeight = maxTotal > 0 ? (day.followups / maxTotal) * maxHeight : 0
                     
                     return (
                       <div key={i} className="flex-1 flex flex-col items-center gap-1">
                         <div 
-                          className="w-full bg-gradient-to-t from-teal-500 to-teal-400 rounded-t transition-all hover:opacity-80"
-                          style={{ height: `${height}px` }}
-                          title={`${day.date}: ${total} actions`}
-                        />
+                          className="w-full flex flex-col-reverse rounded-t overflow-hidden transition-all hover:opacity-80"
+                          style={{ height: `${researchHeight + prepHeight + followupHeight}px` }}
+                          title={`${day.date}: ${day.researches} researches, ${day.preps} preps, ${day.followups} follow-ups`}
+                        >
+                          {/* Researches (bottom - blue) */}
+                          {day.researches > 0 && (
+                            <div 
+                              className="w-full bg-blue-500"
+                              style={{ height: `${researchHeight}px` }}
+                            />
+                          )}
+                          {/* Preps (middle - green) */}
+                          {day.preps > 0 && (
+                            <div 
+                              className="w-full bg-green-500"
+                              style={{ height: `${prepHeight}px` }}
+                            />
+                          )}
+                          {/* Follow-ups (top - orange) */}
+                          {day.followups > 0 && (
+                            <div 
+                              className="w-full bg-orange-500"
+                              style={{ height: `${followupHeight}px` }}
+                            />
+                          )}
+                        </div>
                         <span className="text-[10px] text-slate-500">
                           {new Date(day.date).toLocaleDateString('en', { weekday: 'short' })}
                         </span>

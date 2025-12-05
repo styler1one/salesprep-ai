@@ -139,15 +139,39 @@ async def _calculate_metrics_fallback(supabase) -> DashboardMetrics:
         .execute()
     users_growth_week = week_result.count or 0
     
-    # Active users (7 days) - users with activity in last 7 days
+    # Active users (7 days) - count unique users with activity in last 7 days
     active_users_7d = 0
     try:
-        # Count unique users with research_briefs in last 7 days
-        active_result = supabase.table("research_briefs") \
-            .select("user_id", count="exact") \
+        # Get unique user_ids from research_briefs in last 7 days
+        research_users = supabase.table("research_briefs") \
+            .select("user_id") \
             .gte("created_at", week_ago.isoformat()) \
             .execute()
-        active_users_7d = active_result.count or 0
+        
+        unique_users = set()
+        for r in (research_users.data or []):
+            if r.get("user_id"):
+                unique_users.add(r["user_id"])
+        
+        # Also check meeting_preps
+        prep_users = supabase.table("meeting_preps") \
+            .select("user_id") \
+            .gte("created_at", week_ago.isoformat()) \
+            .execute()
+        for p in (prep_users.data or []):
+            if p.get("user_id"):
+                unique_users.add(p["user_id"])
+        
+        # Also check followups
+        followup_users = supabase.table("followups") \
+            .select("user_id") \
+            .gte("created_at", week_ago.isoformat()) \
+            .execute()
+        for f in (followup_users.data or []):
+            if f.get("user_id"):
+                unique_users.add(f["user_id"])
+        
+        active_users_7d = len(unique_users)
     except Exception:
         pass
     
