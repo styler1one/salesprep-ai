@@ -45,10 +45,14 @@ class DashboardTrends(BaseModel):
 
 
 class AdminCheckResponse(BaseModel):
-    is_admin: bool
+    isAdmin: bool
     role: str
-    admin_id: str
-    user_id: str
+    adminId: str
+    userId: str
+    
+    class Config:
+        # Allow population by field name (snake_case internally, camelCase in JSON)
+        populate_by_name = True
 
 
 # ============================================================
@@ -66,10 +70,10 @@ async def check_admin_access(
     Also updates last_admin_login_at.
     """
     return AdminCheckResponse(
-        is_admin=True,
+        isAdmin=True,
         role=admin.role,
-        admin_id=admin.admin_id,
-        user_id=admin.user_id
+        adminId=admin.admin_id,
+        userId=admin.user_id
     )
 
 
