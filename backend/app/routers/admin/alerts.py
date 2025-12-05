@@ -13,35 +13,36 @@ from datetime import datetime
 
 from app.deps import get_admin_user, require_admin_role, AdminContext
 from app.database import get_supabase_service
+from .models import CamelModel
 from .utils import log_admin_action
 
 router = APIRouter(prefix="/alerts", tags=["admin-alerts"])
 
 
 # ============================================================
-# Models
+# Models (with camelCase serialization)
 # ============================================================
 
-class AlertResponse(BaseModel):
+class AlertResponse(CamelModel):
     id: str
     alert_type: str
     severity: str  # 'info', 'warning', 'error', 'critical'
-    target_type: Optional[str]
-    target_id: Optional[str]
-    target_name: Optional[str]
+    target_type: Optional[str] = None
+    target_id: Optional[str] = None
+    target_name: Optional[str] = None
     title: str
-    description: Optional[str]
-    context: Optional[Dict[str, Any]]
+    description: Optional[str] = None
+    context: Optional[Dict[str, Any]] = None
     status: str  # 'active', 'acknowledged', 'resolved'
-    acknowledged_by: Optional[str]
-    acknowledged_at: Optional[datetime]
-    resolved_by: Optional[str]
-    resolved_at: Optional[datetime]
-    resolution_notes: Optional[str]
+    acknowledged_by: Optional[str] = None
+    acknowledged_at: Optional[datetime] = None
+    resolved_by: Optional[str] = None
+    resolved_at: Optional[datetime] = None
+    resolution_notes: Optional[str] = None
     created_at: datetime
 
 
-class AlertListResponse(BaseModel):
+class AlertListResponse(CamelModel):
     alerts: List[AlertResponse]
     total: int
     active_count: int

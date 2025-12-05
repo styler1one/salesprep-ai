@@ -10,7 +10,7 @@ Shared utilities for admin panel endpoints including:
 
 from typing import Optional, Dict, Any
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import Request
 
 from app.database import get_supabase_service
@@ -254,8 +254,8 @@ async def get_organization_activity_count(organization_id: str, days: int = 30) 
     """Get count of activities for organization in last N days."""
     supabase = get_supabase_service()
     
-    cutoff = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-    cutoff = cutoff.replace(day=cutoff.day - days if cutoff.day > days else 1)
+    cutoff = datetime.utcnow() - timedelta(days=days)
+    cutoff = cutoff.replace(hour=0, minute=0, second=0, microsecond=0)
     
     result = supabase.table("prospect_activities") \
         .select("id", count="exact") \

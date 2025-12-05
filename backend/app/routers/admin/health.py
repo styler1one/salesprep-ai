@@ -6,7 +6,6 @@ Endpoints for system health monitoring.
 """
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 import os
@@ -14,15 +13,16 @@ import httpx
 
 from app.deps import get_admin_user, AdminContext
 from app.database import get_supabase_service
+from .models import CamelModel
 
 router = APIRouter(prefix="/health", tags=["admin-health"])
 
 
 # ============================================================
-# Models
+# Models (with camelCase serialization)
 # ============================================================
 
-class ServiceStatus(BaseModel):
+class ServiceStatus(CamelModel):
     name: str
     status: str  # 'healthy', 'degraded', 'down'
     response_time_ms: Optional[int] = None
@@ -30,7 +30,7 @@ class ServiceStatus(BaseModel):
     details: Optional[str] = None
 
 
-class JobStats(BaseModel):
+class JobStats(CamelModel):
     name: str
     total_24h: int
     completed: int
@@ -38,13 +38,13 @@ class JobStats(BaseModel):
     success_rate: float
 
 
-class HealthOverview(BaseModel):
+class HealthOverview(CamelModel):
     overall_status: str  # 'healthy', 'degraded', 'down'
     services: List[ServiceStatus]
     last_updated: datetime
 
 
-class JobHealthResponse(BaseModel):
+class JobHealthResponse(CamelModel):
     jobs: List[JobStats]
     overall_success_rate: float
 

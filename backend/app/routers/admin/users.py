@@ -6,14 +6,14 @@ Endpoints for user management in the admin panel.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from pydantic import BaseModel, ConfigDict
-from pydantic.alias_generators import to_camel
+from pydantic import BaseModel
 from typing import Optional, List, Any, Dict
 from uuid import UUID
 from datetime import datetime
 
 from app.deps import get_admin_user, require_admin_role, AdminContext
 from app.database import get_supabase_service
+from .models import CamelModel
 from .utils import log_admin_action, calculate_health_score, get_health_status
 
 router = APIRouter(prefix="/users", tags=["admin-users"])
@@ -22,14 +22,6 @@ router = APIRouter(prefix="/users", tags=["admin-users"])
 # ============================================================
 # Response Models (with camelCase serialization)
 # ============================================================
-
-class CamelModel(BaseModel):
-    """Base model that serializes to camelCase for frontend compatibility."""
-    model_config = ConfigDict(
-        alias_generator=to_camel,
-        populate_by_name=True,
-        from_attributes=True,
-    )
 
 
 class FlowUsage(CamelModel):

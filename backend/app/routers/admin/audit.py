@@ -6,7 +6,6 @@ Endpoints for viewing and exporting the admin audit log.
 """
 
 from fastapi import APIRouter, Depends, Query, Response
-from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 import csv
@@ -14,33 +13,34 @@ import io
 
 from app.deps import get_admin_user, require_admin_role, AdminContext
 from app.database import get_supabase_service
+from .models import CamelModel
 
 router = APIRouter(prefix="/audit", tags=["admin-audit"])
 
 
 # ============================================================
-# Models
+# Models (with camelCase serialization)
 # ============================================================
 
-class AuditLogEntry(BaseModel):
+class AuditLogEntry(CamelModel):
     id: str
     admin_id: str
     admin_email: str
     action: str
-    target_type: Optional[str]
-    target_id: Optional[str]
-    target_identifier: Optional[str]
-    details: Optional[Dict[str, Any]]
-    ip_address: Optional[str]
-    user_agent: Optional[str]
+    target_type: Optional[str] = None
+    target_id: Optional[str] = None
+    target_identifier: Optional[str] = None
+    details: Optional[Dict[str, Any]] = None
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
     created_at: datetime
 
 
-class AuditLogResponse(BaseModel):
+class AuditLogResponse(CamelModel):
     entries: List[AuditLogEntry]
     total: int
     has_more: bool
-    next_cursor: Optional[str]
+    next_cursor: Optional[str] = None
 
 
 # ============================================================
@@ -114,18 +114,24 @@ async def get_audit_log(
         data = data[:limit]
         next_cursor = data[-1]["created_at"] if data else None
     
+    # Batch fetch admin emails to avoid N+1 queries
+    admin_user_ids = set()
     for entry in data:
-        # Get admin email
+        if entry.get("admin_users") and entry["admin_users"].get("user_id"):
+            admin_user_ids.add(entry["admin_users"]["user_id"])
+    
+    admin_emails = {}
+    if admin_user_ids:
+        emails_result = supabase.table("users") \
+            .select("id, email") \
+            .in_("id", list(admin_user_ids)) \
+            .execute()
+        for user in (emails_result.data or []):
+            admin_emails[user["id"]] = user["email"]
+    
+    for entry in data:
         admin_user_id = entry["admin_users"]["user_id"] if entry.get("admin_users") else None
-        admin_email = "Unknown"
-        if admin_user_id:
-            user_result = supabase.table("users") \
-                .select("email") \
-                .eq("id", admin_user_id) \
-                .maybe_single() \
-                .execute()
-            if user_result.data:
-                admin_email = user_result.data["email"]
+        admin_email = admin_emails.get(admin_user_id, "Unknown")
         
         entries.append(AuditLogEntry(
             id=entry["id"],

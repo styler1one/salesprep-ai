@@ -13,13 +13,14 @@ from datetime import datetime
 
 from app.deps import get_admin_user, require_admin_role, AdminContext
 from app.database import get_supabase_service
+from .models import CamelModel
 from .utils import log_admin_action
 
 router = APIRouter(prefix="/notes", tags=["admin-notes"])
 
 
 # ============================================================
-# Models
+# Models (with camelCase serialization)
 # ============================================================
 
 class NoteCreate(BaseModel):
@@ -34,11 +35,11 @@ class NoteUpdate(BaseModel):
     is_pinned: Optional[bool] = None
 
 
-class NoteResponse(BaseModel):
+class NoteResponse(CamelModel):
     id: str
     target_type: str
     target_id: str
-    target_identifier: Optional[str]
+    target_identifier: Optional[str] = None
     content: str
     is_pinned: bool
     admin_id: str
@@ -47,7 +48,7 @@ class NoteResponse(BaseModel):
     updated_at: datetime
 
 
-class NoteListResponse(BaseModel):
+class NoteListResponse(CamelModel):
     notes: List[NoteResponse]
     total: int
 
@@ -85,19 +86,25 @@ async def list_notes(
         .order("created_at", desc=True) \
         .execute()
     
+    # Batch fetch admin emails to avoid N+1 queries
+    admin_user_ids = set()
+    for note in (result.data or []):
+        if note.get("admin_users") and note["admin_users"].get("user_id"):
+            admin_user_ids.add(note["admin_users"]["user_id"])
+    
+    admin_emails = {}
+    if admin_user_ids:
+        emails_result = supabase.table("users") \
+            .select("id, email") \
+            .in_("id", list(admin_user_ids)) \
+            .execute()
+        for user in (emails_result.data or []):
+            admin_emails[user["id"]] = user["email"]
+    
     notes = []
     for note in (result.data or []):
-        # Get admin email
-        admin_user_id = note["admin_users"]["user_id"] if note["admin_users"] else None
-        admin_email = "Unknown"
-        if admin_user_id:
-            user_result = supabase.table("users") \
-                .select("email") \
-                .eq("id", admin_user_id) \
-                .maybe_single() \
-                .execute()
-            if user_result.data:
-                admin_email = user_result.data["email"]
+        admin_user_id = note["admin_users"]["user_id"] if note.get("admin_users") else None
+        admin_email = admin_emails.get(admin_user_id, "Unknown")
         
         notes.append(NoteResponse(
             id=note["id"],

@@ -6,22 +6,22 @@ Endpoints for billing overview and transaction management.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
 import os
 
 from app.deps import get_admin_user, require_admin_role, AdminContext
 from app.database import get_supabase_service
+from .models import CamelModel
 
 router = APIRouter(prefix="/billing", tags=["admin-billing"])
 
 
 # ============================================================
-# Models
+# Models (with camelCase serialization)
 # ============================================================
 
-class BillingOverview(BaseModel):
+class BillingOverview(CamelModel):
     mrr_cents: int
     mrr_formatted: str
     arr_cents: int
@@ -33,10 +33,10 @@ class BillingOverview(BaseModel):
     plan_distribution: Dict[str, int]
 
 
-class TransactionItem(BaseModel):
+class TransactionItem(CamelModel):
     id: str
     organization_id: str
-    organization_name: Optional[str]
+    organization_name: Optional[str] = None
     amount_cents: int
     amount_formatted: str
     type: str  # 'subscription', 'flow_pack', 'refund'
@@ -44,23 +44,23 @@ class TransactionItem(BaseModel):
     created_at: datetime
 
 
-class TransactionListResponse(BaseModel):
+class TransactionListResponse(CamelModel):
     transactions: List[TransactionItem]
     total: int
 
 
-class FailedPaymentItem(BaseModel):
+class FailedPaymentItem(CamelModel):
     id: str
     customer_email: str
-    organization_name: Optional[str]
+    organization_name: Optional[str] = None
     amount_cents: int
     amount_formatted: str
     attempt_count: int
-    next_attempt: Optional[datetime]
+    next_attempt: Optional[datetime] = None
     created_at: datetime
 
 
-class FailedPaymentsResponse(BaseModel):
+class FailedPaymentsResponse(CamelModel):
     failed_payments: List[FailedPaymentItem]
     total: int
 

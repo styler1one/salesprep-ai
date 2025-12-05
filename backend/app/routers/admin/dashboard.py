@@ -6,22 +6,22 @@ Endpoints for admin dashboard metrics and trends.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.deps import get_admin_user, AdminContext
 from app.database import get_supabase_service
+from .models import CamelModel
 from .utils import log_admin_action
 
 router = APIRouter(prefix="/dashboard", tags=["admin-dashboard"])
 
 
 # ============================================================
-# Response Models
+# Response Models (with camelCase serialization)
 # ============================================================
 
-class DashboardMetrics(BaseModel):
+class DashboardMetrics(CamelModel):
     total_users: int
     users_growth_week: int
     active_users_7d: int
@@ -31,7 +31,7 @@ class DashboardMetrics(BaseModel):
     error_rate_24h: Optional[float] = 0.0
 
 
-class TrendDataPoint(BaseModel):
+class TrendDataPoint(CamelModel):
     date: str
     researches: int
     preps: int
@@ -39,20 +39,16 @@ class TrendDataPoint(BaseModel):
     new_users: int
 
 
-class DashboardTrends(BaseModel):
+class DashboardTrends(CamelModel):
     trends: List[TrendDataPoint]
     period_days: int
 
 
-class AdminCheckResponse(BaseModel):
-    isAdmin: bool
+class AdminCheckResponse(CamelModel):
+    is_admin: bool
     role: str
-    adminId: str
-    userId: str
-    
-    class Config:
-        # Allow population by field name (snake_case internally, camelCase in JSON)
-        populate_by_name = True
+    admin_id: str
+    user_id: str
 
 
 # ============================================================
@@ -70,10 +66,10 @@ async def check_admin_access(
     Also updates last_admin_login_at.
     """
     return AdminCheckResponse(
-        isAdmin=True,
+        is_admin=True,
         role=admin.role,
-        adminId=admin.admin_id,
-        userId=admin.user_id
+        admin_id=admin.admin_id,
+        user_id=admin.user_id
     )
 
 
@@ -136,9 +132,10 @@ async def _calculate_metrics_fallback(supabase) -> DashboardMetrics:
     total_users = users_result.count or 0
     
     # Users this week
+    week_ago = datetime.utcnow() - timedelta(days=7)
     week_result = supabase.table("users") \
         .select("id", count="exact") \
-        .gte("created_at", datetime.utcnow().replace(day=datetime.utcnow().day - 7).isoformat()) \
+        .gte("created_at", week_ago.isoformat()) \
         .execute()
     users_growth_week = week_result.count or 0
     
