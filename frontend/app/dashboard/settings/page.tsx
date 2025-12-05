@@ -26,7 +26,11 @@ import {
   Palette,
   Smile,
   Type,
-  FileText
+  FileText,
+  Zap,
+  Infinity,
+  ArrowRight,
+  Check
 } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { useToast } from '@/components/ui/use-toast'
@@ -184,9 +188,25 @@ export default function SettingsPage() {
     outputLanguage !== settings.output_language ||
     emailLanguage !== settings.email_language
 
-  const handleUpgrade = () => {
-    // Navigate to pricing page so user can choose their plan
-    router.push('/pricing')
+  const handleUpgradeToPlan = async (planId: string) => {
+    setBillingActionLoading(true)
+    try {
+      const checkoutUrl = await createCheckoutSession(planId)
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl
+      } else {
+        throw new Error('No checkout URL returned')
+      }
+    } catch (error: any) {
+      console.error('Failed to start checkout:', error)
+      toast({
+        title: tErrors('generic'),
+        description: error?.message || tBilling('checkoutError'),
+        variant: 'destructive',
+      })
+    } finally {
+      setBillingActionLoading(false)
+    }
   }
 
   const handleManageSubscription = async () => {
@@ -733,8 +753,7 @@ export default function SettingsPage() {
                           used={usage.flow.used}
                           limit={usage.flow.limit}
                           unlimited={usage.flow.unlimited}
-                          showUpgrade={!subscription || subscription.plan_id === 'free' || !subscription.is_paid}
-                          onUpgrade={handleUpgrade}
+                          showUpgrade={false}
                         />
                       )}
                       {/* Fallback: Individual metrics if flow not available */}
@@ -745,69 +764,158 @@ export default function SettingsPage() {
                             used={usage.research.used}
                             limit={usage.research.limit}
                             unlimited={usage.research.unlimited}
-                            showUpgrade={!subscription || subscription.plan_id === 'free' || !subscription.is_paid}
-                            onUpgrade={handleUpgrade}
+                            showUpgrade={false}
                           />
                           <UsageMeter
                             label="Preparation"
                             used={usage.preparation.used}
                             limit={usage.preparation.limit}
                             unlimited={usage.preparation.unlimited}
-                            showUpgrade={!subscription || subscription.plan_id === 'free' || !subscription.is_paid}
-                            onUpgrade={handleUpgrade}
+                            showUpgrade={false}
                           />
                           <UsageMeter
                             label="Follow-up"
                             used={usage.followup.used}
                             limit={usage.followup.limit}
                             unlimited={usage.followup.unlimited}
-                            showUpgrade={!subscription || subscription.plan_id === 'free' || !subscription.is_paid}
-                            onUpgrade={handleUpgrade}
+                            showUpgrade={false}
                           />
                         </>
                       )}
                     </div>
                   )}
 
-                  {/* Action Buttons */}
-                  <div className="pt-4 border-t flex flex-wrap gap-3">
-                    {/* Show upgrade button for free users or when subscription not loaded */}
-                    {(!subscription || subscription.plan_id === 'free' || !subscription.is_paid) ? (
-                      <Button 
-                        onClick={handleUpgrade}
-                        disabled={billingActionLoading}
-                        className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                      >
-                        {billingActionLoading ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Sparkles className="h-4 w-4" />
-                        )}
-                        {tBilling('upgradeToSolo')}
-                      </Button>
-                    ) : (
-                      /* Only show manage button for paid subscribers */
-                      <Button 
-                        variant="outline" 
-                        onClick={handleManageSubscription}
-                        disabled={billingActionLoading}
-                        className="gap-2"
-                      >
-                        {billingActionLoading ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <ExternalLink className="h-4 w-4" />
-                        )}
-                        {tBilling('manageSubscription')}
-                      </Button>
+                  {/* Upgrade Options - Context-aware */}
+                  <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                    {/* FREE USERS: Show both plan options */}
+                    {(!subscription || subscription.plan_id === 'free' || !subscription.is_paid) && (
+                      <div className="space-y-4">
+                        <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                          {tBilling('upgradePlan')}
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {/* Pro Solo Card */}
+                          <div className="relative p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Zap className="h-5 w-5 text-blue-500" />
+                              <span className="font-semibold text-slate-900 dark:text-white">Pro Solo</span>
+                            </div>
+                            <div className="mb-3">
+                              <span className="text-2xl font-bold text-slate-900 dark:text-white">€9,95</span>
+                              <span className="text-sm text-slate-500">/mo</span>
+                            </div>
+                            <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">5 flows per month</p>
+                            <Button 
+                              size="sm"
+                              onClick={() => handleUpgradeToPlan('pro_solo')}
+                              disabled={billingActionLoading}
+                              className="w-full gap-2"
+                            >
+                              {billingActionLoading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <ArrowRight className="h-4 w-4" />
+                              )}
+                              Upgrade
+                            </Button>
+                          </div>
+                          
+                          {/* Unlimited Solo Card */}
+                          <div className="relative p-4 rounded-lg border-2 border-purple-300 dark:border-purple-700 bg-purple-50 dark:bg-purple-900/20 hover:border-purple-400 dark:hover:border-purple-600 transition-colors">
+                            <div className="absolute -top-2 right-3">
+                              <Badge className="bg-purple-500 text-white text-xs">Popular</Badge>
+                            </div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Infinity className="h-5 w-5 text-purple-500" />
+                              <span className="font-semibold text-slate-900 dark:text-white">Unlimited Solo</span>
+                            </div>
+                            <div className="mb-3">
+                              <span className="text-sm text-slate-400 line-through mr-2">€99,95</span>
+                              <span className="text-2xl font-bold text-slate-900 dark:text-white">€49,95</span>
+                              <span className="text-sm text-slate-500">/mo</span>
+                            </div>
+                            <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">Unlimited flows</p>
+                            <Button 
+                              size="sm"
+                              onClick={() => handleUpgradeToPlan('unlimited_solo')}
+                              disabled={billingActionLoading}
+                              className="w-full gap-2 bg-purple-600 hover:bg-purple-700"
+                            >
+                              {billingActionLoading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Sparkles className="h-4 w-4" />
+                              )}
+                              Upgrade
+                            </Button>
+                          </div>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => router.push('/pricing')}
+                          className="gap-2 text-slate-500"
+                        >
+                          Compare all features <ArrowRight className="h-3 w-3" />
+                        </Button>
+                      </div>
                     )}
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => router.push('/pricing')}
-                      className="gap-2"
-                    >
-                      {tBilling('viewAllPlans')}
-                    </Button>
+
+                    {/* PRO SOLO USERS: Show upgrade to Unlimited + Manage */}
+                    {subscription?.is_paid && subscription.plan_id === 'pro_solo' && (
+                      <div className="space-y-4">
+                        <div className="flex flex-wrap gap-3">
+                          <Button 
+                            variant="outline" 
+                            onClick={handleManageSubscription}
+                            disabled={billingActionLoading}
+                            className="gap-2"
+                          >
+                            {billingActionLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <ExternalLink className="h-4 w-4" />
+                            )}
+                            {tBilling('manageSubscription')}
+                          </Button>
+                          <Button 
+                            onClick={() => handleUpgradeToPlan('unlimited_solo')}
+                            disabled={billingActionLoading}
+                            className="gap-2 bg-purple-600 hover:bg-purple-700"
+                          >
+                            {billingActionLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Infinity className="h-4 w-4" />
+                            )}
+                            Upgrade to Unlimited
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* UNLIMITED USERS: Only Manage */}
+                    {subscription?.is_paid && subscription.plan_id === 'unlimited_solo' && (
+                      <div className="flex items-center gap-3">
+                        <Button 
+                          variant="outline" 
+                          onClick={handleManageSubscription}
+                          disabled={billingActionLoading}
+                          className="gap-2"
+                        >
+                          {billingActionLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <ExternalLink className="h-4 w-4" />
+                          )}
+                          {tBilling('manageSubscription')}
+                        </Button>
+                        <span className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+                          <Check className="h-4 w-4" />
+                          You have the best plan!
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
