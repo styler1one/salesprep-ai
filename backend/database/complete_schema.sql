@@ -1,16 +1,37 @@
 -- ============================================================
 -- DealMotion Complete Database Schema
--- Version: 3.4 (VERIFIED AGAINST DATABASE)
--- Last Updated: 4 December 2025
+-- Version: 3.6
+-- Last Updated: 5 December 2025
 -- 
 -- This file consolidates ALL migrations into a single schema.
 -- Use this as reference documentation - DO NOT run on existing DB!
 -- 
--- VERIFIED COUNTS (from database query):
--- - Tables: 33 ✓
--- - Functions: 31 ✓
--- - Triggers: 30 ✓
--- - Indexes: 159 ✓
+-- COUNTS:
+-- - Tables: 40 (+4 admin tables)
+-- - Functions: 42 (+8 admin functions)
+-- - Triggers: 32 (+1 admin trigger)
+-- - Indexes: 169
+-- 
+-- Changes in 3.6:
+-- - Added admin_users table (role-based admin access)
+-- - Added admin_audit_log table (action tracking)
+-- - Added admin_alerts table (system alerts)
+-- - Added admin_notes table (user notes)
+-- - Added admin helper functions: is_admin, is_super_admin, get_admin_role
+-- - Added dashboard functions: calculate_mrr, get_job_stats_24h, 
+--   get_admin_dashboard_metrics, get_admin_usage_trends, get_user_health_data
+-- - Added RLS policies for all admin tables
+-- 
+-- Changes in 3.5:
+-- - Added flow_pack_products table (Pricing v3)
+-- - Added flow_packs table (Pricing v3)
+-- - Added get_flow_pack_balance function
+-- - Added consume_flow_pack function
+-- - Updated check_flow_limit return type to BOOLEAN
+-- - Updated check_usage_limit return type to BOOLEAN
+-- - Updated users table with full_name and updated_at columns
+-- - Added RLS policies for flow_pack_products and flow_packs
+-- - Added SET search_path = '' to all security definer functions
 -- 
 -- Changes in 3.4:
 -- - Added missing functions: get_knowledge_base_stats, update_coach_updated_at,
@@ -68,9 +89,11 @@ CREATE INDEX IF NOT EXISTS idx_organizations_slug ON organizations(slug);
 -- 2. USERS (Sync from auth.users)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS users (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email VARCHAR NOT NULL,
+  full_name VARCHAR,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ============================================================
@@ -756,7 +779,7 @@ CREATE TABLE IF NOT EXISTS subscription_plans (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Insert v2 plans
+-- Insert v3 plans (Pricing v3 - December 2025)
 INSERT INTO subscription_plans (id, name, description, price_cents, original_price_cents, billing_interval, features, display_order, is_active) VALUES
 ('free', 'Free', 'Start gratis met 2 flows', 0, NULL, NULL, '{
   "flow_limit": 2,
@@ -765,21 +788,21 @@ INSERT INTO subscription_plans (id, name, description, price_cents, original_pri
   "team_sharing": false,
   "priority_support": false
 }'::jsonb, 1, true),
-('light_solo', 'Light Solo', 'Voor de startende sales pro', 995, NULL, 'month', '{
+('pro_solo', 'Pro Solo', 'For the active sales pro', 995, NULL, 'month', '{
   "flow_limit": 5,
   "user_limit": 1,
   "crm_integration": false,
   "team_sharing": false,
   "priority_support": false
 }'::jsonb, 2, true),
-('unlimited_solo', 'Unlimited Solo', 'Onbeperkt voor early adopters', 2995, 7995, 'month', '{
+('unlimited_solo', 'Unlimited Solo', 'Unlimited for early adopters', 4995, 9995, 'month', '{
   "flow_limit": -1,
   "user_limit": 1,
   "crm_integration": false,
   "team_sharing": false,
   "priority_support": true
 }'::jsonb, 3, true),
-('enterprise', 'Enterprise', 'Voor teams met CRM integraties', NULL, NULL, NULL, '{
+('enterprise', 'Enterprise', 'For teams with CRM integrations', NULL, NULL, NULL, '{
   "flow_limit": -1,
   "user_limit": -1,
   "crm_integration": true,
@@ -851,7 +874,49 @@ CREATE TABLE IF NOT EXISTS usage_records (
 CREATE INDEX IF NOT EXISTS idx_usage_org_period ON usage_records(organization_id, period_start, period_end);
 
 -- ============================================================
--- 23. PAYMENT_HISTORY
+-- 23. FLOW_PACK_PRODUCTS (Available flow pack options)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS flow_pack_products (
+  id TEXT PRIMARY KEY,                  -- 'pack_5', 'pack_10', etc.
+  name TEXT NOT NULL,
+  flows INTEGER NOT NULL,
+  price_cents INTEGER NOT NULL,
+  stripe_price_id TEXT,
+  is_active BOOLEAN DEFAULT true,
+  display_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Insert default flow pack products
+INSERT INTO flow_pack_products (id, name, flows, price_cents, display_order, is_active) VALUES
+('pack_5', 'Flow Pack 5', 5, 995, 1, true)
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================
+-- 24. FLOW_PACKS (Purchased flow packs per organization)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS flow_packs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  flows_purchased INTEGER NOT NULL,
+  flows_remaining INTEGER NOT NULL,
+  price_cents INTEGER NOT NULL,
+  stripe_payment_intent_id TEXT,
+  stripe_checkout_session_id TEXT,
+  status TEXT NOT NULL DEFAULT 'active',  -- 'active', 'depleted', 'expired', 'refunded'
+  purchased_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ,                 -- Optional expiration
+  depleted_at TIMESTAMPTZ,                -- When all flows were used
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_flow_packs_org ON flow_packs(organization_id);
+CREATE INDEX IF NOT EXISTS idx_flow_packs_status ON flow_packs(organization_id, status);
+CREATE INDEX IF NOT EXISTS idx_flow_packs_active ON flow_packs(organization_id) WHERE status = 'active' AND flows_remaining > 0;
+
+-- ============================================================
+-- 25. PAYMENT_HISTORY
 -- ============================================================
 CREATE TABLE IF NOT EXISTS payment_history (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -1129,17 +1194,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
--- Check flow limit
+-- Check flow limit (returns BOOLEAN - true if allowed)
 CREATE OR REPLACE FUNCTION check_flow_limit(p_organization_id UUID)
-RETURNS JSONB AS $$
+RETURNS BOOLEAN AS $$
 DECLARE
   v_plan_id TEXT;
   v_features JSONB;
   v_limit INTEGER;
   v_current INTEGER;
+  v_pack_balance INTEGER;
 BEGIN
   SELECT plan_id INTO v_plan_id
-  FROM organization_subscriptions
+  FROM public.organization_subscriptions
   WHERE organization_id = p_organization_id;
   
   IF v_plan_id IS NULL THEN
@@ -1147,45 +1213,119 @@ BEGIN
   END IF;
   
   SELECT features INTO v_features
-  FROM subscription_plans
+  FROM public.subscription_plans
   WHERE id = v_plan_id;
   
   v_limit := COALESCE((v_features->>'flow_limit')::INTEGER, 2);
   
+  -- Unlimited plan
   IF v_limit = -1 THEN
-    RETURN jsonb_build_object(
-      'allowed', true,
-      'current', 0,
-      'limit', -1,
-      'unlimited', true,
-      'remaining', -1
-    );
+    RETURN TRUE;
   END IF;
   
+  -- Check monthly usage
   SELECT COALESCE(flow_count, 0) INTO v_current
-  FROM usage_records
+  FROM public.usage_records
   WHERE organization_id = p_organization_id
     AND period_start = date_trunc('month', NOW());
   
-  RETURN jsonb_build_object(
-    'allowed', COALESCE(v_current, 0) < v_limit,
-    'current', COALESCE(v_current, 0),
-    'limit', v_limit,
-    'unlimited', false,
-    'remaining', GREATEST(0, v_limit - COALESCE(v_current, 0))
-  );
+  -- Within monthly limit
+  IF COALESCE(v_current, 0) < v_limit THEN
+    RETURN TRUE;
+  END IF;
+  
+  -- Check flow pack balance
+  v_pack_balance := public.get_flow_pack_balance(p_organization_id);
+  
+  RETURN v_pack_balance > 0;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
--- Increment flow count
+-- Get flow pack balance for organization
+CREATE OR REPLACE FUNCTION get_flow_pack_balance(p_organization_id UUID)
+RETURNS INTEGER AS $$
+BEGIN
+  RETURN COALESCE(
+    (SELECT SUM(flows_remaining)
+     FROM public.flow_packs
+     WHERE organization_id = p_organization_id
+       AND status = 'active'
+       AND flows_remaining > 0
+       AND (expires_at IS NULL OR expires_at > NOW())
+    ), 0
+  )::INTEGER;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+-- Consume flow from pack (returns TRUE if consumed)
+CREATE OR REPLACE FUNCTION consume_flow_pack(p_organization_id UUID, p_amount INTEGER DEFAULT 1)
+RETURNS BOOLEAN AS $$
+DECLARE
+  v_pack_id UUID;
+  v_remaining INTEGER;
+BEGIN
+  -- Find oldest active pack with remaining flows
+  SELECT id, flows_remaining INTO v_pack_id, v_remaining
+  FROM public.flow_packs
+  WHERE organization_id = p_organization_id
+    AND status = 'active'
+    AND flows_remaining > 0
+    AND (expires_at IS NULL OR expires_at > NOW())
+  ORDER BY purchased_at ASC
+  LIMIT 1
+  FOR UPDATE;
+  
+  IF v_pack_id IS NULL THEN
+    RETURN FALSE;
+  END IF;
+  
+  -- Consume the flow
+  UPDATE public.flow_packs
+  SET 
+    flows_remaining = flows_remaining - p_amount,
+    depleted_at = CASE WHEN flows_remaining - p_amount <= 0 THEN NOW() ELSE NULL END,
+    status = CASE WHEN flows_remaining - p_amount <= 0 THEN 'depleted' ELSE 'active' END,
+    updated_at = NOW()
+  WHERE id = v_pack_id;
+  
+  RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+-- Increment flow count (tries flow pack first, then monthly quota)
 CREATE OR REPLACE FUNCTION increment_flow(p_organization_id UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
   v_usage_id UUID;
+  v_pack_consumed BOOLEAN;
 BEGIN
-  v_usage_id := get_or_create_usage_record(p_organization_id);
+  -- Try to consume from flow pack first
+  v_pack_consumed := public.consume_flow_pack(p_organization_id, 1);
   
-  UPDATE usage_records 
+  IF v_pack_consumed THEN
+    -- Flow consumed from pack, also increment research_count for tracking
+    v_usage_id := public.get_or_create_usage_record(
+      p_organization_id,
+      date_trunc('month', NOW()),
+      date_trunc('month', NOW()) + INTERVAL '1 month'
+    );
+    
+    UPDATE public.usage_records 
+    SET research_count = research_count + 1,
+        updated_at = NOW() 
+    WHERE id = v_usage_id;
+    
+    RETURN TRUE;
+  END IF;
+  
+  -- No pack available, use monthly quota
+  v_usage_id := public.get_or_create_usage_record(
+    p_organization_id,
+    date_trunc('month', NOW()),
+    date_trunc('month', NOW()) + INTERVAL '1 month'
+  );
+  
+  UPDATE public.usage_records 
   SET flow_count = flow_count + 1,
       research_count = research_count + 1,
       updated_at = NOW() 
@@ -1425,12 +1565,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
--- Check usage limit (supports flow and individual metrics)
+-- Check usage limit (returns BOOLEAN - true if allowed)
 CREATE OR REPLACE FUNCTION check_usage_limit(
   p_organization_id UUID,
   p_metric TEXT
 )
-RETURNS JSONB AS $$
+RETURNS BOOLEAN AS $$
 DECLARE
   v_plan_id TEXT;
   v_features JSONB;
@@ -1440,18 +1580,18 @@ DECLARE
 BEGIN
   -- For 'flow' metric, use dedicated function
   IF p_metric = 'flow' THEN
-    RETURN check_flow_limit(p_organization_id);
+    RETURN public.check_flow_limit(p_organization_id);
   END IF;
 
   -- Get organization's plan
   SELECT plan_id INTO v_plan_id
-  FROM organization_subscriptions
+  FROM public.organization_subscriptions
   WHERE organization_id = p_organization_id;
   
   IF v_plan_id IS NULL THEN v_plan_id := 'free'; END IF;
   
   SELECT features INTO v_features
-  FROM subscription_plans WHERE id = v_plan_id;
+  FROM public.subscription_plans WHERE id = v_plan_id;
   
   -- Build limit key (e.g., 'research' -> 'research_limit')
   v_limit_key := p_metric || '_limit';
@@ -1460,14 +1600,14 @@ BEGIN
   -- If limit not found, check flow_limit for backwards compatibility
   IF v_limit IS NULL THEN
     IF p_metric IN ('research', 'preparation', 'followup') THEN
-      RETURN check_flow_limit(p_organization_id);
+      RETURN public.check_flow_limit(p_organization_id);
     END IF;
     -- Otherwise unlimited
-    RETURN jsonb_build_object('allowed', true, 'current', 0, 'limit', -1, 'unlimited', true);
+    RETURN TRUE;
   END IF;
   
   IF v_limit = -1 THEN
-    RETURN jsonb_build_object('allowed', true, 'current', 0, 'limit', -1, 'unlimited', true);
+    RETURN TRUE;
   END IF;
   
   SELECT COALESCE(
@@ -1481,17 +1621,11 @@ BEGIN
       ELSE 0
     END, 0
   ) INTO v_current
-  FROM usage_records
+  FROM public.usage_records
   WHERE organization_id = p_organization_id
     AND period_start = date_trunc('month', NOW());
   
-  RETURN jsonb_build_object(
-    'allowed', COALESCE(v_current, 0) < v_limit,
-    'current', COALESCE(v_current, 0),
-    'limit', v_limit,
-    'unlimited', false,
-    'remaining', GREATEST(0, v_limit - COALESCE(v_current, 0))
-  );
+  RETURN COALESCE(v_current, 0) < v_limit;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
@@ -1818,6 +1952,21 @@ ALTER TABLE coach_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE icps ENABLE ROW LEVEL SECURITY;
 ALTER TABLE personas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE flow_pack_products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE flow_packs ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for flow_pack_products (read-only for authenticated users)
+CREATE POLICY "flow_pack_products_select" ON flow_pack_products
+  FOR SELECT TO authenticated
+  USING (is_active = true);
+
+-- RLS Policies for flow_packs (org-based access)
+CREATE POLICY "flow_packs_select" ON flow_packs
+  FOR SELECT TO authenticated
+  USING (organization_id IN (
+    SELECT om.organization_id FROM organization_members om 
+    WHERE om.user_id = (SELECT auth.uid())
+  ));
 
 -- ============================================================
 -- VIEWS
@@ -1865,18 +2014,388 @@ FROM deals d
 JOIN prospects p ON p.id = d.prospect_id;
 
 -- ============================================================
+-- ADMIN PANEL TABLES (v3.6)
+-- ============================================================
+
+-- Admin Users - Role-based admin access
+CREATE TABLE IF NOT EXISTS admin_users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    role TEXT NOT NULL DEFAULT 'support' 
+        CHECK (role IN ('super_admin', 'admin', 'support', 'viewer')),
+    is_active BOOLEAN DEFAULT true,
+    last_admin_login_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by UUID,
+    UNIQUE(user_id)
+);
+
+-- Admin Audit Log - Track all admin actions
+CREATE TABLE IF NOT EXISTS admin_audit_log (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    admin_user_id UUID NOT NULL REFERENCES admin_users(id),
+    action TEXT NOT NULL,
+    target_type TEXT,
+    target_id UUID,
+    target_identifier TEXT,
+    details JSONB,
+    ip_address TEXT,
+    user_agent TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Admin Alerts - System-generated alerts
+CREATE TABLE IF NOT EXISTS admin_alerts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    alert_type TEXT NOT NULL 
+        CHECK (alert_type IN ('error', 'warning', 'info', 'payment_failed', 'usage_limit', 'security')),
+    title TEXT NOT NULL,
+    message TEXT,
+    severity TEXT DEFAULT 'medium' 
+        CHECK (severity IN ('low', 'medium', 'high', 'critical')),
+    target_user_id UUID REFERENCES auth.users(id),
+    target_organization_id UUID REFERENCES organizations(id),
+    status TEXT DEFAULT 'active' 
+        CHECK (status IN ('active', 'acknowledged', 'resolved')),
+    acknowledged_by UUID REFERENCES admin_users(id),
+    acknowledged_at TIMESTAMPTZ,
+    resolved_by UUID REFERENCES admin_users(id),
+    resolved_at TIMESTAMPTZ,
+    resolution_notes TEXT,
+    metadata JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Admin Notes - Notes on users
+CREATE TABLE IF NOT EXISTS admin_notes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    target_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    admin_user_id UUID NOT NULL REFERENCES admin_users(id),
+    note TEXT NOT NULL,
+    is_pinned BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for admin tables
+CREATE INDEX IF NOT EXISTS idx_admin_users_user_id ON admin_users(user_id);
+CREATE INDEX IF NOT EXISTS idx_admin_audit_log_admin_user ON admin_audit_log(admin_user_id);
+CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created_at ON admin_audit_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_admin_alerts_status ON admin_alerts(status);
+CREATE INDEX IF NOT EXISTS idx_admin_alerts_created_at ON admin_alerts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_admin_notes_target_user ON admin_notes(target_user_id);
+
+-- RLS Policies for admin tables
+ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_audit_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_alerts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_notes ENABLE ROW LEVEL SECURITY;
+
+-- Admin helper functions
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    v_is_admin BOOLEAN;
+BEGIN
+    SELECT EXISTS (
+        SELECT 1 FROM public.admin_users
+        WHERE user_id = (SELECT auth.uid())
+        AND is_active = true
+    ) INTO v_is_admin;
+    RETURN COALESCE(v_is_admin, false);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_super_admin()
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    v_is_super BOOLEAN;
+BEGIN
+    SELECT EXISTS (
+        SELECT 1 FROM public.admin_users
+        WHERE user_id = (SELECT auth.uid())
+        AND role = 'super_admin'
+        AND is_active = true
+    ) INTO v_is_super;
+    RETURN COALESCE(v_is_super, false);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_admin_role()
+RETURNS TEXT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    v_role TEXT;
+BEGIN
+    SELECT role INTO v_role
+    FROM public.admin_users
+    WHERE user_id = (SELECT auth.uid())
+    AND is_active = true;
+    RETURN v_role;
+END;
+$$;
+
+-- RLS policies
+CREATE POLICY admin_users_select ON admin_users
+    FOR SELECT TO authenticated
+    USING (public.is_admin());
+
+CREATE POLICY admin_users_insert ON admin_users
+    FOR INSERT TO authenticated
+    WITH CHECK (public.is_super_admin());
+
+CREATE POLICY admin_users_update ON admin_users
+    FOR UPDATE TO authenticated
+    USING (public.is_super_admin());
+
+CREATE POLICY admin_users_delete ON admin_users
+    FOR DELETE TO authenticated
+    USING (public.is_super_admin());
+
+CREATE POLICY admin_audit_log_select ON admin_audit_log
+    FOR SELECT TO authenticated
+    USING (public.is_admin());
+
+CREATE POLICY admin_audit_log_insert ON admin_audit_log
+    FOR INSERT TO authenticated
+    WITH CHECK (public.is_admin());
+
+CREATE POLICY admin_alerts_select ON admin_alerts
+    FOR SELECT TO authenticated
+    USING (public.is_admin());
+
+CREATE POLICY admin_alerts_update ON admin_alerts
+    FOR UPDATE TO authenticated
+    USING (public.is_admin());
+
+CREATE POLICY admin_notes_select ON admin_notes
+    FOR SELECT TO authenticated
+    USING (public.is_admin());
+
+CREATE POLICY admin_notes_insert ON admin_notes
+    FOR INSERT TO authenticated
+    WITH CHECK (public.is_admin());
+
+CREATE POLICY admin_notes_update ON admin_notes
+    FOR UPDATE TO authenticated
+    USING (public.is_admin());
+
+CREATE POLICY admin_notes_delete ON admin_notes
+    FOR DELETE TO authenticated
+    USING (public.is_admin());
+
+-- Trigger for admin_notes updated_at
+CREATE TRIGGER update_admin_notes_updated_at
+    BEFORE UPDATE ON admin_notes
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================
+-- ADMIN DASHBOARD FUNCTIONS
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.calculate_mrr()
+RETURNS NUMERIC
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    v_mrr NUMERIC;
+BEGIN
+    SELECT COALESCE(SUM(
+        CASE 
+            WHEN plan = 'pro_solo' THEN 14.95
+            WHEN plan = 'unlimited_solo' THEN 49.95
+            ELSE 0
+        END
+    ), 0) INTO v_mrr
+    FROM public.organizations
+    WHERE plan IN ('pro_solo', 'unlimited_solo');
+    RETURN v_mrr;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_job_stats_24h()
+RETURNS TABLE(
+    total_jobs INTEGER,
+    successful_jobs INTEGER,
+    failed_jobs INTEGER,
+    success_rate NUMERIC
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        COUNT(*)::INTEGER as total_jobs,
+        COUNT(*) FILTER (WHERE status = 'completed')::INTEGER as successful_jobs,
+        COUNT(*) FILTER (WHERE status = 'failed')::INTEGER as failed_jobs,
+        CASE 
+            WHEN COUNT(*) > 0 THEN 
+                ROUND(COUNT(*) FILTER (WHERE status = 'completed')::NUMERIC / COUNT(*)::NUMERIC * 100, 2)
+            ELSE 0
+        END as success_rate
+    FROM public.research_briefs
+    WHERE created_at > NOW() - INTERVAL '24 hours';
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_admin_dashboard_metrics()
+RETURNS TABLE(
+    total_users BIGINT,
+    active_users_7d BIGINT,
+    active_users_30d BIGINT,
+    mrr NUMERIC,
+    active_alerts BIGINT,
+    total_organizations BIGINT,
+    paid_users BIGINT,
+    free_users BIGINT
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        (SELECT COUNT(*) FROM auth.users) as total_users,
+        (SELECT COUNT(DISTINCT user_id) FROM public.research_briefs 
+         WHERE created_at > NOW() - INTERVAL '7 days') as active_users_7d,
+        (SELECT COUNT(DISTINCT user_id) FROM public.research_briefs 
+         WHERE created_at > NOW() - INTERVAL '30 days') as active_users_30d,
+        public.calculate_mrr() as mrr,
+        (SELECT COUNT(*) FROM public.admin_alerts WHERE status = 'active') as active_alerts,
+        (SELECT COUNT(*) FROM public.organizations) as total_organizations,
+        (SELECT COUNT(*) FROM public.organizations 
+         WHERE plan IN ('pro_solo', 'unlimited_solo')) as paid_users,
+        (SELECT COUNT(*) FROM public.organizations 
+         WHERE plan = 'free' OR plan IS NULL) as free_users;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_admin_usage_trends(days INTEGER DEFAULT 30)
+RETURNS TABLE(
+    date DATE,
+    new_users BIGINT,
+    active_users BIGINT,
+    flows_used BIGINT
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+    RETURN QUERY
+    WITH date_series AS (
+        SELECT generate_series(
+            CURRENT_DATE - (days || ' days')::INTERVAL,
+            CURRENT_DATE,
+            '1 day'::INTERVAL
+        )::DATE as date
+    )
+    SELECT 
+        ds.date,
+        COALESCE((SELECT COUNT(*) FROM auth.users 
+                  WHERE DATE(created_at) = ds.date), 0) as new_users,
+        COALESCE((SELECT COUNT(DISTINCT user_id) FROM public.research_briefs 
+                  WHERE DATE(created_at) = ds.date), 0) as active_users,
+        COALESCE((SELECT SUM(flow_count) FROM public.organizations 
+                  WHERE DATE(updated_at) = ds.date), 0) as flows_used
+    FROM date_series ds
+    ORDER BY ds.date;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_user_health_data(p_user_id UUID)
+RETURNS TABLE(
+    health_score INTEGER,
+    last_activity TIMESTAMPTZ,
+    error_count_7d BIGINT,
+    flow_usage_pct NUMERIC
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    v_org_id UUID;
+    v_last_activity TIMESTAMPTZ;
+    v_error_count BIGINT;
+    v_flow_count INTEGER;
+    v_flow_limit INTEGER;
+    v_flow_pct NUMERIC;
+    v_health INTEGER;
+BEGIN
+    -- Get organization
+    SELECT id INTO v_org_id FROM public.organizations 
+    WHERE owner_id = p_user_id LIMIT 1;
+    
+    -- Get last activity
+    SELECT MAX(created_at) INTO v_last_activity 
+    FROM public.research_briefs WHERE user_id = p_user_id;
+    
+    -- Get error count (from failed briefs)
+    SELECT COUNT(*) INTO v_error_count
+    FROM public.research_briefs 
+    WHERE user_id = p_user_id 
+    AND status = 'failed'
+    AND created_at > NOW() - INTERVAL '7 days';
+    
+    -- Get flow usage
+    SELECT flow_count, flow_limit INTO v_flow_count, v_flow_limit
+    FROM public.organizations WHERE id = v_org_id;
+    
+    v_flow_pct := CASE 
+        WHEN v_flow_limit > 0 THEN (v_flow_count::NUMERIC / v_flow_limit * 100)
+        ELSE 0
+    END;
+    
+    -- Calculate health score (0-100)
+    v_health := 100;
+    -- Reduce for inactivity
+    IF v_last_activity < NOW() - INTERVAL '30 days' THEN
+        v_health := v_health - 30;
+    ELSIF v_last_activity < NOW() - INTERVAL '14 days' THEN
+        v_health := v_health - 15;
+    END IF;
+    -- Reduce for errors
+    v_health := v_health - LEAST(v_error_count::INTEGER * 10, 30);
+    -- Reduce if near limit
+    IF v_flow_pct > 90 THEN v_health := v_health - 10; END IF;
+    
+    v_health := GREATEST(v_health, 0);
+    
+    RETURN QUERY SELECT v_health, v_last_activity, v_error_count, v_flow_pct;
+END;
+$$;
+
+-- ============================================================
 -- END OF SCHEMA
 -- ============================================================
--- Version: 3.4 (VERIFIED AGAINST DATABASE)
--- Last Updated: 4 December 2025
+-- Version: 3.6
+-- Last Updated: 5 December 2025
 -- 
--- Summary (EXACT MATCH with database):
--- - Tables: 33
+-- Summary:
+-- - Tables: 40 (36 + 4 admin)
 -- - Views: 2
--- - Functions: 31
--- - Triggers: 30
+-- - Functions: 42 (34 + 8 admin)
+-- - Triggers: 32 (31 + 1 admin)
 -- - Storage Buckets: 3 (with policies)
--- - Indexes: 159
+-- - Indexes: 175 (169 + 6 admin)
 -- 
 -- This file is for REFERENCE ONLY. Do not run on existing database!
 -- Use individual migration files for updates.

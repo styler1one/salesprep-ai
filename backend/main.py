@@ -8,6 +8,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from app.routers import users, knowledge_base, research, sales_profile, company_profile, context, preparation, followup, followup_actions, prospects, contacts, settings, billing, webhooks, deals, coach, dashboard
+from app.routers.admin import router as admin_router
 
 # Sentry imports (error tracking)
 try:
@@ -119,6 +120,9 @@ app.include_router(deals.meetings_router)  # Already has prefix /api/v1/meetings
 app.include_router(deals.hub_router)  # Already has prefix /api/v1/prospects (extends existing)
 app.include_router(coach.router)  # Already has prefix /api/v1/coach
 app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["dashboard"])
+
+# Admin panel routes (protected by admin role check)
+app.include_router(admin_router, prefix="/api/v1", tags=["admin"])
 
 # Inngest webhook endpoint for workflow orchestration
 if INNGEST_ENABLED:

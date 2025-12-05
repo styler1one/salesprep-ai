@@ -1705,6 +1705,219 @@
         "frequent": "Frequent"
       }
     }
+  },
+  
+  "admin": {
+    "title": "Admin Panel",
+    "subtitle": "DealMotion Administration",
+    "accessDenied": "Admin access required",
+    "loading": "Loading admin panel...",
+    
+    "roles": {
+      "super_admin": "Super Admin",
+      "admin": "Admin",
+      "support": "Support",
+      "viewer": "Viewer"
+    },
+    
+    "nav": {
+      "dashboard": "Dashboard",
+      "users": "Users",
+      "alerts": "Alerts",
+      "health": "Health",
+      "billing": "Billing",
+      "audit": "Audit Log",
+      "backToApp": "Back to App"
+    },
+    
+    "dashboard": {
+      "title": "Admin Dashboard",
+      "subtitle": "System overview and key metrics",
+      "metrics": {
+        "totalUsers": "Total Users",
+        "activeUsers": "Active Users",
+        "mrr": "Monthly Revenue",
+        "activeAlerts": "Active Alerts"
+      },
+      "trends": {
+        "title": "Usage Trends",
+        "last30Days": "Last 30 days",
+        "users": "Users",
+        "flows": "Flows"
+      },
+      "recentAlerts": {
+        "title": "Recent Alerts",
+        "viewAll": "View all alerts",
+        "noAlerts": "No active alerts"
+      }
+    },
+    
+    "users": {
+      "title": "User Management",
+      "subtitle": "View and manage all users",
+      "searchPlaceholder": "Search by email or name...",
+      "filterByPlan": "Filter by plan",
+      "allPlans": "All plans",
+      "noUsers": "No users found",
+      "columns": {
+        "user": "User",
+        "organization": "Organization",
+        "plan": "Plan",
+        "flows": "Flows",
+        "health": "Health",
+        "lastActive": "Last Active",
+        "actions": "Actions"
+      },
+      "actions": {
+        "viewDetails": "View Details",
+        "resetFlows": "Reset Flows",
+        "addFlows": "Add Flows",
+        "extendTrial": "Extend Trial",
+        "exportData": "Export Data"
+      },
+      "detail": {
+        "title": "User Details",
+        "overview": "Overview",
+        "activity": "Activity",
+        "flowPacks": "Flow Packs",
+        "billing": "Billing",
+        "errors": "Errors",
+        "notes": "Admin Notes",
+        "createdAt": "Created",
+        "lastLogin": "Last Login",
+        "never": "Never"
+      },
+      "health": {
+        "good": "Good",
+        "warning": "Warning",
+        "critical": "Critical"
+      }
+    },
+    
+    "alerts": {
+      "title": "System Alerts",
+      "subtitle": "Monitor and resolve system issues",
+      "filterByType": "Filter by type",
+      "filterByStatus": "Filter by status",
+      "allTypes": "All types",
+      "allStatuses": "All statuses",
+      "noAlerts": "No alerts found",
+      "columns": {
+        "alert": "Alert",
+        "type": "Type",
+        "user": "User",
+        "status": "Status",
+        "createdAt": "Created",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "Active",
+        "acknowledged": "Acknowledged",
+        "resolved": "Resolved"
+      },
+      "types": {
+        "error": "Error",
+        "warning": "Warning",
+        "info": "Info",
+        "payment_failed": "Payment Failed",
+        "usage_limit": "Usage Limit",
+        "security": "Security"
+      },
+      "actions": {
+        "acknowledge": "Acknowledge",
+        "resolve": "Resolve"
+      }
+    },
+    
+    "health": {
+      "title": "System Health",
+      "subtitle": "Service status and job monitoring",
+      "overview": "Service Overview",
+      "jobs": "Job Health",
+      "services": {
+        "api": "API Server",
+        "database": "Database",
+        "inngest": "Inngest Jobs",
+        "stripe": "Stripe",
+        "supabase": "Supabase"
+      },
+      "status": {
+        "operational": "Operational",
+        "degraded": "Degraded",
+        "outage": "Outage"
+      },
+      "jobStats": {
+        "successRate": "Success Rate",
+        "totalJobs": "Total Jobs (24h)",
+        "failed": "Failed",
+        "avgDuration": "Avg Duration"
+      }
+    },
+    
+    "billing": {
+      "title": "Billing Overview",
+      "subtitle": "Revenue and payment metrics",
+      "metrics": {
+        "mrr": "Monthly Recurring Revenue",
+        "paidUsers": "Paid Users",
+        "churnRate": "Churn Rate",
+        "avgRevenue": "Avg Revenue/User"
+      },
+      "planDistribution": "Plan Distribution",
+      "recentTransactions": "Recent Transactions",
+      "failedPayments": "Failed Payments",
+      "noTransactions": "No transactions found",
+      "noFailedPayments": "No failed payments"
+    },
+    
+    "audit": {
+      "title": "Audit Log",
+      "subtitle": "Admin action history",
+      "searchPlaceholder": "Search actions...",
+      "filterByAction": "Filter by action",
+      "allActions": "All actions",
+      "export": "Export CSV",
+      "noLogs": "No audit logs found",
+      "columns": {
+        "admin": "Admin",
+        "action": "Action",
+        "target": "Target",
+        "details": "Details",
+        "timestamp": "Timestamp",
+        "ip": "IP Address"
+      }
+    },
+    
+    "notes": {
+      "title": "Admin Notes",
+      "addNote": "Add Note",
+      "editNote": "Edit Note",
+      "deleteNote": "Delete Note",
+      "placeholder": "Enter note...",
+      "noNotes": "No notes yet",
+      "confirmDelete": "Are you sure you want to delete this note?"
+    },
+    
+    "common": {
+      "user": "User",
+      "users": "Users",
+      "actions": "Actions",
+      "status": "Status",
+      "date": "Date",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "view": "View",
+      "loading": "Loading...",
+      "error": "Error",
+      "success": "Success",
+      "confirm": "Confirm",
+      "previous": "Previous",
+      "next": "Next",
+      "showing": "Showing {from} to {to} of {total}",
+      "perPage": "per page"
+    }
   }
 }
 
