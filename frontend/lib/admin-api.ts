@@ -40,20 +40,20 @@ const BASE = '/api/v1/admin'
 export const adminApi = {
   // Check admin access
   checkAccess: async (): Promise<AdminCheckResponse> => {
-    const response = await api.get(`${BASE}/dashboard/check`)
-    return response.data
+    const response = await api.get<AdminCheckResponse>(`${BASE}/dashboard/check`)
+    return response.data as AdminCheckResponse
   },
 
   // Get dashboard metrics
   getMetrics: async (): Promise<DashboardMetrics> => {
-    const response = await api.get(`${BASE}/dashboard/metrics`)
-    return response.data
+    const response = await api.get<DashboardMetrics>(`${BASE}/dashboard/metrics`)
+    return response.data as DashboardMetrics
   },
 
   // Get usage trends
   getTrends: async (days = 7): Promise<DashboardTrends> => {
-    const response = await api.get(`${BASE}/dashboard/trends?days=${days}`)
-    return response.data
+    const response = await api.get<DashboardTrends>(`${BASE}/dashboard/trends?days=${days}`)
+    return response.data as DashboardTrends
   },
 
   // ============================================================
@@ -79,44 +79,44 @@ export const adminApi = {
     if (params.offset) query.set('offset', params.offset.toString())
     if (params.limit) query.set('limit', params.limit.toString())
     
-    const response = await api.get(`${BASE}/users?${query.toString()}`)
-    return response.data
+    const response = await api.get<UserListResponse>(`${BASE}/users?${query.toString()}`)
+    return response.data as UserListResponse
   },
 
   // Get user detail
   getUser: async (userId: string): Promise<AdminUserDetail> => {
-    const response = await api.get(`${BASE}/users/${userId}`)
-    return response.data
+    const response = await api.get<AdminUserDetail>(`${BASE}/users/${userId}`)
+    return response.data as AdminUserDetail
   },
 
   // Get user activity
   getUserActivity: async (userId: string, limit = 50): Promise<UserActivityResponse> => {
-    const response = await api.get(`${BASE}/users/${userId}/activity?limit=${limit}`)
-    return response.data
+    const response = await api.get<UserActivityResponse>(`${BASE}/users/${userId}/activity?limit=${limit}`)
+    return response.data as UserActivityResponse
   },
 
   // Reset user flows
   resetFlows: async (userId: string, data: ResetFlowsRequest): Promise<{ success: boolean; message: string }> => {
-    const response = await api.post(`${BASE}/users/${userId}/reset-flows`, data)
-    return response.data
+    const response = await api.post<{ success: boolean; message: string }>(`${BASE}/users/${userId}/reset-flows`, data)
+    return response.data as { success: boolean; message: string }
   },
 
   // Add bonus flows
   addFlows: async (userId: string, data: AddFlowsRequest): Promise<{ success: boolean; message: string }> => {
-    const response = await api.post(`${BASE}/users/${userId}/add-flows`, data)
-    return response.data
+    const response = await api.post<{ success: boolean; message: string }>(`${BASE}/users/${userId}/add-flows`, data)
+    return response.data as { success: boolean; message: string }
   },
 
   // Extend trial
   extendTrial: async (userId: string, data: ExtendTrialRequest): Promise<{ success: boolean; message: string; newEnd: string }> => {
-    const response = await api.post(`${BASE}/users/${userId}/extend-trial`, data)
-    return response.data
+    const response = await api.post<{ success: boolean; message: string; newEnd: string }>(`${BASE}/users/${userId}/extend-trial`, data)
+    return response.data as { success: boolean; message: string; newEnd: string }
   },
 
   // Export user data
   exportUser: async (userId: string): Promise<Record<string, unknown>> => {
-    const response = await api.get(`${BASE}/users/${userId}/export`)
-    return response.data
+    const response = await api.get<Record<string, unknown>>(`${BASE}/users/${userId}/export`)
+    return response.data as Record<string, unknown>
   },
 
   // ============================================================
@@ -132,34 +132,34 @@ export const adminApi = {
     if (params.targetType) query.set('target_type', params.targetType)
     if (params.targetId) query.set('target_id', params.targetId)
     
-    const response = await api.get(`${BASE}/notes?${query.toString()}`)
-    return response.data
+    const response = await api.get<NoteListResponse>(`${BASE}/notes?${query.toString()}`)
+    return response.data as NoteListResponse
   },
 
   // Create note
   createNote: async (data: NoteCreate): Promise<NoteResponse> => {
-    const response = await api.post(`${BASE}/notes`, {
+    const response = await api.post<NoteResponse>(`${BASE}/notes`, {
       target_type: data.targetType,
       target_id: data.targetId,
       content: data.content,
       is_pinned: data.isPinned ?? false,
     })
-    return response.data
+    return response.data as NoteResponse
   },
 
   // Update note
   updateNote: async (noteId: string, data: NoteUpdate): Promise<NoteResponse> => {
-    const response = await api.patch(`${BASE}/notes/${noteId}`, {
+    const response = await api.patch<NoteResponse>(`${BASE}/notes/${noteId}`, {
       content: data.content,
       is_pinned: data.isPinned,
     })
-    return response.data
+    return response.data as NoteResponse
   },
 
   // Delete note
   deleteNote: async (noteId: string): Promise<{ success: boolean }> => {
-    const response = await api.delete(`${BASE}/notes/${noteId}`)
-    return response.data
+    const response = await api.delete<{ success: boolean }>(`${BASE}/notes/${noteId}`)
+    return response.data as { success: boolean }
   },
 
   // ============================================================
@@ -181,32 +181,32 @@ export const adminApi = {
     if (params.limit) query.set('limit', params.limit.toString())
     if (params.offset) query.set('offset', params.offset.toString())
     
-    const response = await api.get(`${BASE}/alerts?${query.toString()}`)
-    return response.data
+    const response = await api.get<AlertListResponse>(`${BASE}/alerts?${query.toString()}`)
+    return response.data as AlertListResponse
   },
 
   // Get single alert
   getAlert: async (alertId: string): Promise<AdminAlert> => {
-    const response = await api.get(`${BASE}/alerts/${alertId}`)
-    return response.data
+    const response = await api.get<AdminAlert>(`${BASE}/alerts/${alertId}`)
+    return response.data as AdminAlert
   },
 
   // Acknowledge alert
   acknowledgeAlert: async (alertId: string): Promise<{ success: boolean }> => {
-    const response = await api.post(`${BASE}/alerts/${alertId}/acknowledge`)
-    return response.data
+    const response = await api.post<{ success: boolean }>(`${BASE}/alerts/${alertId}/acknowledge`)
+    return response.data as { success: boolean }
   },
 
   // Resolve alert
   resolveAlert: async (alertId: string, data: ResolveAlertRequest): Promise<{ success: boolean }> => {
-    const response = await api.post(`${BASE}/alerts/${alertId}/resolve`, data)
-    return response.data
+    const response = await api.post<{ success: boolean }>(`${BASE}/alerts/${alertId}/resolve`, data)
+    return response.data as { success: boolean }
   },
 
   // Bulk acknowledge
   bulkAcknowledgeAlerts: async (alertIds: string[]): Promise<{ success: boolean; acknowledgedCount: number }> => {
-    const response = await api.post(`${BASE}/alerts/bulk-acknowledge`, alertIds)
-    return response.data
+    const response = await api.post<{ success: boolean; acknowledgedCount: number }>(`${BASE}/alerts/bulk-acknowledge`, alertIds)
+    return response.data as { success: boolean; acknowledgedCount: number }
   },
 
   // ============================================================
@@ -215,14 +215,14 @@ export const adminApi = {
 
   // Get health overview
   getHealthOverview: async (): Promise<HealthOverview> => {
-    const response = await api.get(`${BASE}/health/overview`)
-    return response.data
+    const response = await api.get<HealthOverview>(`${BASE}/health/overview`)
+    return response.data as HealthOverview
   },
 
   // Get job health
   getJobHealth: async (): Promise<JobHealthResponse> => {
-    const response = await api.get(`${BASE}/health/jobs`)
-    return response.data
+    const response = await api.get<JobHealthResponse>(`${BASE}/health/jobs`)
+    return response.data as JobHealthResponse
   },
 
   // ============================================================
@@ -231,8 +231,8 @@ export const adminApi = {
 
   // Get billing overview
   getBillingOverview: async (): Promise<BillingOverview> => {
-    const response = await api.get(`${BASE}/billing/overview`)
-    return response.data
+    const response = await api.get<BillingOverview>(`${BASE}/billing/overview`)
+    return response.data as BillingOverview
   },
 
   // Get transactions
@@ -246,14 +246,14 @@ export const adminApi = {
     if (params.limit) query.set('limit', params.limit.toString())
     if (params.offset) query.set('offset', params.offset.toString())
     
-    const response = await api.get(`${BASE}/billing/transactions?${query.toString()}`)
-    return response.data
+    const response = await api.get<TransactionListResponse>(`${BASE}/billing/transactions?${query.toString()}`)
+    return response.data as TransactionListResponse
   },
 
   // Get failed payments
   getFailedPayments: async (): Promise<FailedPaymentsResponse> => {
-    const response = await api.get(`${BASE}/billing/failed-payments`)
-    return response.data
+    const response = await api.get<FailedPaymentsResponse>(`${BASE}/billing/failed-payments`)
+    return response.data as FailedPaymentsResponse
   },
 
   // ============================================================
@@ -281,14 +281,14 @@ export const adminApi = {
     if (params.limit) query.set('limit', params.limit.toString())
     if (params.cursor) query.set('cursor', params.cursor)
     
-    const response = await api.get(`${BASE}/audit?${query.toString()}`)
-    return response.data
+    const response = await api.get<AuditLogResponse>(`${BASE}/audit?${query.toString()}`)
+    return response.data as AuditLogResponse
   },
 
   // Get action types
   getActionTypes: async (): Promise<{ actions: string[] }> => {
-    const response = await api.get(`${BASE}/audit/actions`)
-    return response.data
+    const response = await api.get<{ actions: string[] }>(`${BASE}/audit/actions`)
+    return response.data as { actions: string[] }
   },
 
   // Export audit log
@@ -306,10 +306,7 @@ export const adminApi = {
     if (params.dateTo) query.set('date_to', params.dateTo)
     if (params.limit) query.set('limit', params.limit.toString())
     
-    const response = await api.get(`${BASE}/audit/export?${query.toString()}`, {
-      responseType: 'blob',
-    })
-    return response.data
+    const response = await api.get<Blob>(`${BASE}/audit/export?${query.toString()}`)
+    return response.data as Blob
   },
 }
-
