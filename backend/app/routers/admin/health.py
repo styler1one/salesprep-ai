@@ -188,7 +188,8 @@ async def get_job_health(
                     success_rate=0.0  # 0% = no data, not 100% fake success
                 ))
     
-    overall_rate = (total_success / total_count * 100) if total_count > 0 else 100.0
+    # If no jobs at all, show 0% (not fake 100%)
+    overall_rate = (total_success / total_count * 100) if total_count > 0 else 0.0
     
     return JobHealthResponse(
         jobs=jobs,
@@ -230,10 +231,13 @@ async def _check_database_health() -> ServiceStatus:
 
 
 async def _check_inngest_health() -> ServiceStatus:
-    """Check Inngest service status."""
+    """Check Inngest service status by making a real API call."""
     now = datetime.utcnow()
+    start_time = datetime.utcnow()
     
     inngest_event_key = os.getenv("INNGEST_EVENT_KEY")
+    inngest_signing_key = os.getenv("INNGEST_SIGNING_KEY")
+    
     if not inngest_event_key:
         return ServiceStatus(
             name="Inngest",
@@ -242,13 +246,52 @@ async def _check_inngest_health() -> ServiceStatus:
             details="INNGEST_EVENT_KEY not configured"
         )
     
-    # We can't easily check Inngest status, so we just verify config exists
-    return ServiceStatus(
-        name="Inngest",
-        status="healthy",
-        last_check=now,
-        details="Inngest configured (check dashboard for details)"
-    )
+    # Try to make a real health check to Inngest
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            # Inngest's event API endpoint - sending a test event (will be ignored)
+            # We use the events endpoint to verify connectivity
+            response = await client.post(
+                "https://inn.gs/e/" + inngest_event_key,
+                json={
+                    "name": "admin/health-check",
+                    "data": {"check": True, "timestamp": now.isoformat()}
+                },
+                headers={"Content-Type": "application/json"}
+            )
+            
+            elapsed = (datetime.utcnow() - start_time).total_seconds() * 1000
+            
+            if response.status_code in [200, 201, 202]:
+                return ServiceStatus(
+                    name="Inngest",
+                    status="healthy",
+                    response_time_ms=int(elapsed),
+                    last_check=now,
+                    details=f"Inngest API connected, {int(elapsed)}ms response"
+                )
+            else:
+                return ServiceStatus(
+                    name="Inngest",
+                    status="degraded",
+                    response_time_ms=int(elapsed),
+                    last_check=now,
+                    details=f"Inngest returned status {response.status_code}"
+                )
+    except httpx.TimeoutException:
+        return ServiceStatus(
+            name="Inngest",
+            status="degraded",
+            last_check=now,
+            details="Inngest API timeout (>5s)"
+        )
+    except Exception as e:
+        return ServiceStatus(
+            name="Inngest",
+            status="degraded",
+            last_check=now,
+            details=f"Could not reach Inngest: {str(e)[:50]}"
+        )
 
 
 async def _check_stripe_health() -> ServiceStatus:
