@@ -86,11 +86,35 @@ async def get_billing_overview(
     supabase = get_supabase_service()
     
     # Get MRR from database function
-    mrr_result = supabase.rpc("calculate_mrr").execute()
-    mrr_data = mrr_result.data or {"mrr_cents": 0, "paid_users": 0}
+    mrr_cents = 0
+    paid_users = 0
     
-    mrr_cents = mrr_data.get("mrr_cents", 0)
-    paid_users = mrr_data.get("paid_users", 0)
+    try:
+        mrr_result = supabase.rpc("calculate_mrr").execute()
+        if mrr_result.data:
+            mrr_data = mrr_result.data
+            mrr_cents = mrr_data.get("mrr_cents", 0) or 0
+            paid_users = mrr_data.get("paid_users", 0) or 0
+    except Exception:
+        pass
+    
+    # Fallback: calculate MRR manually if RPC failed or returned 0
+    if mrr_cents == 0:
+        try:
+            # Get active subscriptions with their plan prices
+            subs_result = supabase.table("organization_subscriptions") \
+                .select("plan_id, subscription_plans(price_monthly_cents)") \
+                .eq("status", "active") \
+                .execute()
+            
+            for sub in (subs_result.data or []):
+                if sub.get("subscription_plans"):
+                    price = sub["subscription_plans"].get("price_monthly_cents", 0) or 0
+                    if price > 0:
+                        mrr_cents += price
+                        paid_users += 1
+        except Exception:
+            pass
     
     # Get user counts
     total_users = supabase.table("users").select("id", count="exact").execute()
@@ -141,22 +165,22 @@ async def get_billing_overview(
 async def get_transactions(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
-    type: Optional[str] = Query(None, description="Filter by type"),
+    status_filter: Optional[str] = Query(None, alias="status", description="Filter by status"),
     admin: AdminContext = Depends(require_admin_role("super_admin", "admin"))
 ):
     """
     Get recent transactions.
     
     Query params:
-    - type: 'subscription', 'flow_pack', 'refund'
+    - status: 'paid', 'failed', 'refunded', 'pending'
     """
     supabase = get_supabase_service()
     
     query = supabase.table("payment_history") \
         .select("*, organizations(name)", count="exact")
     
-    if type:
-        query = query.eq("payment_type", type)
+    if status_filter:
+        query = query.eq("status", status_filter)
     
     result = query \
         .order("created_at", desc=True) \
@@ -167,14 +191,18 @@ async def get_transactions(
     for t in (result.data or []):
         org_name = t["organizations"]["name"] if t.get("organizations") else None
         
+        # Determine transaction type from status
+        status = t.get("status", "unknown")
+        tx_type = "refund" if status == "refunded" else "subscription"
+        
         transactions.append(TransactionItem(
             id=t["id"],
             organization_id=t["organization_id"],
             organization_name=org_name,
             amount_cents=t.get("amount_cents", 0),
             amount_formatted=f"€{t.get('amount_cents', 0) / 100:.2f}",
-            type=t.get("payment_type", "subscription"),
-            status=t.get("status", "unknown"),
+            type=tx_type,
+            status=status,
             created_at=t["created_at"]
         ))
     
