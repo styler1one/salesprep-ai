@@ -1,20 +1,23 @@
-# SalesPrep AI
+# DealMotion
 
-AI-powered sales enablement platform for B2B SaaS teams.
+AI sales execution platform - Put your deals in motion.
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14, TypeScript, Tailwind CSS, shadcn/ui
-- **Backend**: FastAPI, Python 3.11, SQLAlchemy
+- **Frontend**: Next.js 15, TypeScript, Tailwind CSS, shadcn/ui
+- **Backend**: FastAPI, Python 3.11
 - **Database**: PostgreSQL (Supabase)
+- **Workflow**: Inngest
 - **Deployment**: Vercel (frontend), Railway (backend)
 
 ## Features
 
-- 🔍 Automated prospect research
+- 🔍 Automated prospect & contact research
 - 📋 AI-powered meeting preparation
 - ✉️ Intelligent follow-up generation
-- 🔗 CRM integration (HubSpot, Salesforce)
+- 🤖 AI Sales Coach (Luna)
+- 📚 Knowledge Base with RAG
+- 🌍 Multi-language support (7 languages)
 
 ## Development
 

@@ -787,9 +787,9 @@
     }
   },
   "onboarding": {
-    "title": "Bienvenido a SalesPrep AI",
+    "title": "Bienvenido a DealMotion",
     "subtitle": "Configuremos tu cuenta",
-    "welcome": "Bienvenido a SalesPrep AI",
+    "welcome": "Bienvenido a DealMotion",
     "welcomeDesc": "Conozcámonos mejor para personalizar tu experiencia",
     "starting": "Iniciando tu entrevista de incorporación...",
     "question": "Pregunta {current} de {total}",
@@ -1211,7 +1211,7 @@
     },
     "features": {
       "title": "Todo lo que necesitas para ganar más ventas",
-      "description": "Desde la investigación hasta el seguimiento, SalesPrep AI te ayuda en cada paso de tu proceso de ventas.",
+      "description": "Desde la investigación hasta el seguimiento, DealMotion te ayuda en cada paso de tu proceso de ventas.",
       "research": {
         "title": "Investigación de prospectos",
         "description": "Investigación impulsada por IA sobre cualquier empresa. Obtén información sobre su negocio, desafíos y oportunidades."
@@ -1242,7 +1242,7 @@
     },
     "cta": {
       "title": "¿Listo para transformar tu proceso de ventas?",
-      "description": "Únete a miles de profesionales de ventas que cierran más tratos con SalesPrep AI.",
+      "description": "Únete a miles de profesionales de ventas que cierran más tratos con DealMotion.",
       "button": "Comenzar gratis"
     },
     "footer": {

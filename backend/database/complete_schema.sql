@@ -1,5 +1,5 @@
 -- ============================================================
--- SalesPrep-AI Complete Database Schema
+-- DealMotion Complete Database Schema
 -- Version: 3.4 (VERIFIED AGAINST DATABASE)
 -- Last Updated: 4 December 2025
 -- 

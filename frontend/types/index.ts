@@ -1,5 +1,5 @@
 /**
- * Centralized TypeScript type definitions for SalesPrep AI.
+ * Centralized TypeScript type definitions for DealMotion.
  * 
  * This file contains all shared types used across the application.
  * Import types from here instead of defining them inline.

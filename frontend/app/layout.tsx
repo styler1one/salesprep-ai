@@ -12,8 +12,8 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: "SalesPrep AI",
-  description: "AI-powered sales enablement platform",
+  title: "DealMotion",
+  description: "AI-powered sales enablement - Put your deals in motion",
 }
 
 export default async function RootLayout({

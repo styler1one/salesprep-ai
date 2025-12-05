@@ -4,8 +4,8 @@ Follow-up Actions Inngest Function.
 Handles on-demand generation of follow-up action documents with observability.
 
 Events:
-- salesprep/followup.action.requested: Triggers action generation
-- salesprep/followup.action.completed: Emitted when generation is complete
+- dealmotion/followup.action.requested: Triggers action generation
+- dealmotion/followup.action.completed: Emitted when generation is complete
 
 Action Types:
 - customer_report: Professional report to share with customer
@@ -33,7 +33,7 @@ supabase = get_supabase_service()
 
 @inngest_client.create_function(
     fn_id="followup-action-generate",
-    trigger=TriggerEvent(event="salesprep/followup.action.requested"),
+    trigger=TriggerEvent(event="dealmotion/followup.action.requested"),
     retries=2,
 )
 async def generate_followup_action_fn(ctx, step):
@@ -99,7 +99,7 @@ async def generate_followup_action_fn(ctx, step):
     await step.send_event(
         "emit-completion",
         inngest.Event(
-            name="salesprep/followup.action.completed",
+            name="dealmotion/followup.action.completed",
             data={
                 "action_id": action_id,
                 "followup_id": followup_id,

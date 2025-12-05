@@ -45,7 +45,7 @@ export default function Home() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
                 <Icons.zap className="h-5 w-5 text-white" />
               </div>
-              <span className="font-bold text-xl text-slate-900 dark:text-white">SalesPrep AI</span>
+              <span className="font-bold text-xl text-slate-900 dark:text-white">DealMotion</span>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
               <LanguageSelector currentLocale={locale} />
@@ -285,10 +285,10 @@ export default function Home() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
                 <Icons.zap className="h-5 w-5 text-white" />
               </div>
-              <span className="font-bold text-white">SalesPrep AI</span>
+              <span className="font-bold text-white">DealMotion</span>
             </div>
             <p className="text-sm">
-              © {new Date().getFullYear()} SalesPrep AI. {t('footer.rights')}
+              © {new Date().getFullYear()} DealMotion. {t('footer.rights')}
             </p>
           </div>
         </div>

@@ -44,7 +44,7 @@ export default function BillingCancelPage() {
 
           <div className="text-center pt-4 border-t">
             <Link 
-              href="mailto:support@salesprep.ai" 
+              href="mailto:support@dealmotion.ai" 
               className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
             >
               <MessageCircle className="h-4 w-4" />

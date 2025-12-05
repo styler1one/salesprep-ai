@@ -45,7 +45,7 @@ class CompanyLookupService:
     def __init__(self):
         self.timeout = aiohttp.ClientTimeout(total=10)
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (compatible; SalesPrepAI/1.0)",
+            "User-Agent": "Mozilla/5.0 (compatible; DealMotion/1.0)",
             "Accept": "text/html,application/xhtml+xml",
         }
         self.confidence_threshold = 80  # Only return if >= 80% confident

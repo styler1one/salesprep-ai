@@ -10,7 +10,7 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 
 # Backend API URL
-NEXT_PUBLIC_API_URL=https://salesprep-ai-production.up.railway.app
+NEXT_PUBLIC_API_URL=https://api.dealmotion.ai
 ```
 
 ## Getting Your Supabase Credentials

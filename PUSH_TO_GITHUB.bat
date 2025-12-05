@@ -1,6 +1,6 @@
 @echo off
 echo ==========================================
-echo   SalesPrep AI - Git Push Script
+echo   DealMotion - Git Push Script
 echo ==========================================
 echo.
 

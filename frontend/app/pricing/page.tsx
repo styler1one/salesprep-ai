@@ -103,7 +103,7 @@ export default function PricingPage() {
     }
 
     if (planId === 'enterprise') {
-      window.location.href = 'mailto:sales@salesprep.ai?subject=Enterprise%20Plan%20Request'
+      window.location.href = 'mailto:sales@dealmotion.ai?subject=Enterprise%20Plan%20Request'
       return
     }
 
@@ -157,7 +157,7 @@ export default function PricingPage() {
               {t('pricing.backToDashboard')}
             </Link>
             <Link href="/" className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              SalesPrep AI
+              DealMotion
             </Link>
           </div>
         </div>

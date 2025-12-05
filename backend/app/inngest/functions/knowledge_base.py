@@ -4,9 +4,9 @@ Knowledge Base File Processing Inngest Function.
 Handles file processing pipeline with full observability and automatic retries.
 
 Events:
-- salesprep/knowledge.file.uploaded: Triggers file processing
-- salesprep/knowledge.file.processed: Emitted when processing is complete
-- salesprep/knowledge.file.failed: Emitted when processing fails
+- dealmotion/knowledge.file.uploaded: Triggers file processing
+- dealmotion/knowledge.file.processed: Emitted when processing is complete
+- dealmotion/knowledge.file.failed: Emitted when processing fails
 
 Steps:
 1. Update status to processing
@@ -40,7 +40,7 @@ supabase = get_supabase_service()
 
 @inngest_client.create_function(
     fn_id="knowledge-file-process",
-    trigger=TriggerEvent(event="salesprep/knowledge.file.uploaded"),
+    trigger=TriggerEvent(event="dealmotion/knowledge.file.uploaded"),
     retries=2,
 )
 async def process_knowledge_file_fn(ctx, step):
@@ -127,7 +127,7 @@ async def process_knowledge_file_fn(ctx, step):
         await step.send_event(
             "emit-completion",
             inngest.Event(
-                name="salesprep/knowledge.file.processed",
+                name="dealmotion/knowledge.file.processed",
                 data={
                     "file_id": file_id,
                     "organization_id": organization_id,
@@ -158,7 +158,7 @@ async def process_knowledge_file_fn(ctx, step):
         await step.send_event(
             "emit-failure",
             inngest.Event(
-                name="salesprep/knowledge.file.failed",
+                name="dealmotion/knowledge.file.failed",
                 data={
                     "file_id": file_id,
                     "organization_id": organization_id,

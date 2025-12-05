@@ -1,5 +1,5 @@
 """
-Internationalization (i18n) module for SalesPrep AI.
+Internationalization (i18n) module for DealMotion.
 
 Provides:
 - Language constants and utilities

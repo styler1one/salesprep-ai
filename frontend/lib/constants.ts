@@ -212,8 +212,8 @@ export const FILE_UPLOAD = {
 // ===========================================
 
 export const EXTERNAL_URLS = {
-  support: 'mailto:support@salesprep.ai',
-  docs: 'https://docs.salesprep.ai',
+  support: 'mailto:support@dealmotion.ai',
+  docs: 'https://docs.dealmotion.ai',
   privacy: '/privacy',
   terms: '/terms',
 } as const

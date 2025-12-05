@@ -4,8 +4,8 @@ Research Agent Inngest Function.
 Handles company research workflow with full observability and automatic retries.
 
 Events:
-- salesprep/research.requested: Triggers new research
-- salesprep/research.completed: Emitted when research is done
+- dealmotion/research.requested: Triggers new research
+- dealmotion/research.completed: Emitted when research is done
 """
 
 import logging
@@ -35,7 +35,7 @@ supabase = get_supabase_service()
 
 @inngest_client.create_function(
     fn_id="research-company",
-    trigger=TriggerEvent(event="salesprep/research.requested"),
+    trigger=TriggerEvent(event="dealmotion/research.requested"),
     retries=2,  # Total attempts = 3 (1 initial + 2 retries)
 )
 async def research_company_fn(ctx, step):
@@ -114,7 +114,7 @@ async def research_company_fn(ctx, step):
     await step.send_event(
         "emit-completion",
         inngest.Event(
-            name="salesprep/research.completed",
+            name="dealmotion/research.completed",
             data={
                 "research_id": research_id,
                 "company_name": company_name,

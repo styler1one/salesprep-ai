@@ -4,9 +4,9 @@ Follow-up Agent Inngest Functions.
 Handles post-meeting follow-up workflows with full observability and automatic retries.
 
 Events:
-- salesprep/followup.audio.uploaded: Triggers audio processing (transcribe + summarize)
-- salesprep/followup.transcript.uploaded: Triggers transcript processing (summarize only)
-- salesprep/followup.completed: Emitted when follow-up is done
+- dealmotion/followup.audio.uploaded: Triggers audio processing (transcribe + summarize)
+- dealmotion/followup.transcript.uploaded: Triggers transcript processing (summarize only)
+- dealmotion/followup.completed: Emitted when follow-up is done
 
 Note: Email generation is handled separately via Follow-up Actions system.
 """
@@ -35,7 +35,7 @@ supabase = get_supabase_service()
 
 @inngest_client.create_function(
     fn_id="followup-process-audio",
-    trigger=TriggerEvent(event="salesprep/followup.audio.uploaded"),
+    trigger=TriggerEvent(event="dealmotion/followup.audio.uploaded"),
     retries=2,
 )
 async def process_followup_audio_fn(ctx, step):
@@ -114,7 +114,7 @@ async def process_followup_audio_fn(ctx, step):
     await step.send_event(
         "emit-completion",
         inngest.Event(
-            name="salesprep/followup.completed",
+            name="dealmotion/followup.completed",
             data={
                 "followup_id": followup_id,
                 "prospect_company": prospect_company,
@@ -139,7 +139,7 @@ async def process_followup_audio_fn(ctx, step):
 
 @inngest_client.create_function(
     fn_id="followup-process-transcript",
-    trigger=TriggerEvent(event="salesprep/followup.transcript.uploaded"),
+    trigger=TriggerEvent(event="dealmotion/followup.transcript.uploaded"),
     retries=2,
 )
 async def process_followup_transcript_fn(ctx, step):
@@ -208,7 +208,7 @@ async def process_followup_transcript_fn(ctx, step):
     await step.send_event(
         "emit-completion",
         inngest.Event(
-            name="salesprep/followup.completed",
+            name="dealmotion/followup.completed",
             data={
                 "followup_id": followup_id,
                 "prospect_company": prospect_company,

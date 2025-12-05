@@ -1,5 +1,5 @@
 """
-Utility modules for the SalesPrep AI backend.
+Utility modules for the DealMotion backend.
 """
 
 from .timeout import (

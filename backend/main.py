@@ -67,8 +67,8 @@ logger = logging.getLogger(__name__)
 limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
-    title="SalesPrep AI API",
-    description="AI-powered sales enablement platform API",
+    title="DealMotion API",
+    description="AI-powered sales enablement - Put your deals in motion",
     version="1.0.0"
 )
 
@@ -132,7 +132,7 @@ if INNGEST_ENABLED:
 @app.get("/")
 def read_root():
     return {
-        "message": "Welcome to SalesPrep AI API",
+        "message": "Welcome to DealMotion API",
         "version": "1.0.0",
         "status": "running",
         "docs": "/docs"

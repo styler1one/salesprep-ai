@@ -1,5 +1,5 @@
 /**
- * Custom React hooks for SalesPrep AI.
+ * Custom React hooks for DealMotion.
  * 
  * Import hooks from here:
  * @example

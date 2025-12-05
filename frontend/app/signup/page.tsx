@@ -28,7 +28,7 @@ export default function SignupPage() {
             <header className="p-4">
                 <Link href="/" className="flex items-center gap-2 w-fit">
                     <Icons.zap className="h-6 w-6 text-blue-600" />
-                    <span className="font-bold text-xl text-slate-900 dark:text-white">SalesPrep AI</span>
+                    <span className="font-bold text-xl text-slate-900 dark:text-white">DealMotion</span>
                 </Link>
             </header>
 
@@ -84,7 +84,7 @@ export default function SignupPage() {
 
             {/* Footer */}
             <footer className="p-4 text-center text-sm text-muted-foreground">
-                <p>© {new Date().getFullYear()} SalesPrep AI. All rights reserved.</p>
+                <p>© {new Date().getFullYear()} DealMotion. All rights reserved.</p>
             </footer>
         </div>
     )

@@ -46,7 +46,7 @@ Add these to your Railway deployment:
 
 9. **PINECONE_INDEX_NAME**
    - Your Pinecone index name
-   - Example: `salesprep-knowledge-base`
+   - Example: `dealmotion-knowledge-base`
 
 ## How to Add in Railway
 

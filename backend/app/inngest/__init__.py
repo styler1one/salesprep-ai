@@ -1,5 +1,5 @@
 """
-Inngest Workflow Orchestration for SalesPrep AI.
+Inngest Workflow Orchestration for DealMotion.
 
 This module provides event-driven workflow orchestration using Inngest,
 enabling durable execution, automatic retries, and full observability

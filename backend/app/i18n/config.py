@@ -1,5 +1,5 @@
 """
-i18n configuration for SalesPrep AI backend.
+i18n configuration for DealMotion backend.
 """
 
 from typing import List, Optional

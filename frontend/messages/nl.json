@@ -799,9 +799,9 @@
     }
   },
   "onboarding": {
-    "title": "Welkom bij SalesPrep AI",
+    "title": "Welkom bij DealMotion",
     "subtitle": "Laten we je account instellen",
-    "welcome": "Welkom bij SalesPrep AI",
+    "welcome": "Welkom bij DealMotion",
     "welcomeDesc": "Laten we je beter leren kennen om je ervaring te personaliseren",
     "starting": "Je onboarding interview starten...",
     "question": "Vraag {current} van {total}",
@@ -1301,7 +1301,7 @@
     },
     "features": {
       "title": "Alles wat je nodig hebt om meer deals te winnen",
-      "description": "Van research tot follow-up, SalesPrep AI helpt je bij elke stap van je salesproces.",
+      "description": "Van research tot follow-up, DealMotion helpt je bij elke stap van je salesproces.",
       "research": {
         "title": "Prospect Research",
         "description": "AI-gestuurde research over elk bedrijf. Krijg inzichten in hun business, uitdagingen en kansen."
@@ -1332,7 +1332,7 @@
     },
     "cta": {
       "title": "Klaar om je salesproces te transformeren?",
-      "description": "Sluit je aan bij duizenden sales professionals die meer deals sluiten met SalesPrep AI.",
+      "description": "Sluit je aan bij duizenden sales professionals die meer deals sluiten met DealMotion.",
       "button": "Start Gratis"
     },
     "footer": {

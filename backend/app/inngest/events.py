@@ -42,7 +42,7 @@ async def send_event(
     Send an event to Inngest.
     
     Args:
-        event_name: The event name (e.g., "salesprep/research.requested")
+        event_name: The event name (e.g., "dealmotion/research.requested")
         data: Event data payload
         user: Optional user context
         
@@ -108,43 +108,43 @@ class Events:
     """Event name constants for type safety."""
     
     # Research Agent
-    RESEARCH_REQUESTED = "salesprep/research.requested"
-    RESEARCH_COMPLETED = "salesprep/research.completed"
-    RESEARCH_FAILED = "salesprep/research.failed"
+    RESEARCH_REQUESTED = "dealmotion/research.requested"
+    RESEARCH_COMPLETED = "dealmotion/research.completed"
+    RESEARCH_FAILED = "dealmotion/research.failed"
     
     # Preparation Agent
-    PREP_REQUESTED = "salesprep/prep.requested"
-    PREP_COMPLETED = "salesprep/prep.completed"
-    PREP_FAILED = "salesprep/prep.failed"
+    PREP_REQUESTED = "dealmotion/prep.requested"
+    PREP_COMPLETED = "dealmotion/prep.completed"
+    PREP_FAILED = "dealmotion/prep.failed"
     
     # Follow-up Agent
-    FOLLOWUP_AUDIO_UPLOADED = "salesprep/followup.audio.uploaded"
-    FOLLOWUP_TRANSCRIPT_UPLOADED = "salesprep/followup.transcript.uploaded"
-    FOLLOWUP_TRANSCRIBED = "salesprep/followup.transcribed"
-    FOLLOWUP_COMPLETED = "salesprep/followup.completed"
-    FOLLOWUP_FAILED = "salesprep/followup.failed"
+    FOLLOWUP_AUDIO_UPLOADED = "dealmotion/followup.audio.uploaded"
+    FOLLOWUP_TRANSCRIPT_UPLOADED = "dealmotion/followup.transcript.uploaded"
+    FOLLOWUP_TRANSCRIBED = "dealmotion/followup.transcribed"
+    FOLLOWUP_COMPLETED = "dealmotion/followup.completed"
+    FOLLOWUP_FAILED = "dealmotion/followup.failed"
     
     # Follow-up Actions
-    FOLLOWUP_ACTION_REQUESTED = "salesprep/followup.action.requested"
-    FOLLOWUP_ACTION_COMPLETED = "salesprep/followup.action.completed"
+    FOLLOWUP_ACTION_REQUESTED = "dealmotion/followup.action.requested"
+    FOLLOWUP_ACTION_COMPLETED = "dealmotion/followup.action.completed"
     
     # Contact Analysis
-    CONTACT_ADDED = "salesprep/contact.added"
-    CONTACT_ANALYZED = "salesprep/contact.analyzed"
+    CONTACT_ADDED = "dealmotion/contact.added"
+    CONTACT_ANALYZED = "dealmotion/contact.analyzed"
     
     # Knowledge Base
-    KNOWLEDGE_FILE_UPLOADED = "salesprep/knowledge.file.uploaded"
-    KNOWLEDGE_FILE_PROCESSED = "salesprep/knowledge.file.processed"
-    KNOWLEDGE_FILE_FAILED = "salesprep/knowledge.file.failed"
+    KNOWLEDGE_FILE_UPLOADED = "dealmotion/knowledge.file.uploaded"
+    KNOWLEDGE_FILE_PROCESSED = "dealmotion/knowledge.file.processed"
+    KNOWLEDGE_FILE_FAILED = "dealmotion/knowledge.file.failed"
     
     # Coach
-    COACH_INSIGHT_REQUESTED = "salesprep/coach.insight.requested"
+    COACH_INSIGHT_REQUESTED = "dealmotion/coach.insight.requested"
     
     # Deal/Prospect events (future automation)
-    DEAL_CREATED = "salesprep/deal.created"
-    DEAL_STAGE_CHANGED = "salesprep/deal.stage.changed"
-    MEETING_SCHEDULED = "salesprep/meeting.scheduled"
-    MEETING_COMPLETED = "salesprep/meeting.completed"
+    DEAL_CREATED = "dealmotion/deal.created"
+    DEAL_STAGE_CHANGED = "dealmotion/deal.stage.changed"
+    MEETING_SCHEDULED = "dealmotion/meeting.scheduled"
+    MEETING_COMPLETED = "dealmotion/meeting.completed"
 
 
 # =============================================================================

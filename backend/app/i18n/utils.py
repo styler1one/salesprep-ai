@@ -1,5 +1,5 @@
 """
-i18n utility functions for SalesPrep AI backend.
+i18n utility functions for DealMotion backend.
 """
 
 from typing import Optional

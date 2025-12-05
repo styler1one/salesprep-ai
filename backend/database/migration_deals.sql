@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS meetings (
   -- Attendees (contact references)
   contact_ids UUID[] DEFAULT '{}',       -- Which contacts attended
   
-  -- Linked SalesPrep Items (reverse links - actual FKs are on the other tables)
+  -- Linked DealMotion Items (reverse links - actual FKs are on the other tables)
   -- These are populated by triggers or views
   
   -- Notes

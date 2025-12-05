@@ -4,8 +4,8 @@ Contact Analysis Inngest Function.
 Handles contact person analysis with full observability and automatic retries.
 
 Events:
-- salesprep/contact.added: Triggers contact analysis
-- salesprep/contact.analyzed: Emitted when analysis is complete
+- dealmotion/contact.added: Triggers contact analysis
+- dealmotion/contact.analyzed: Emitted when analysis is complete
 """
 
 import logging
@@ -26,7 +26,7 @@ supabase = get_supabase_service()
 
 @inngest_client.create_function(
     fn_id="contact-analyze",
-    trigger=TriggerEvent(event="salesprep/contact.added"),
+    trigger=TriggerEvent(event="dealmotion/contact.added"),
     retries=2,
 )
 async def analyze_contact_fn(ctx, step):
@@ -89,7 +89,7 @@ async def analyze_contact_fn(ctx, step):
     await step.send_event(
         "emit-completion",
         inngest.Event(
-            name="salesprep/contact.analyzed",
+            name="dealmotion/contact.analyzed",
             data={
                 "contact_id": contact_id,
                 "contact_name": contact_name,

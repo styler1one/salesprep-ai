@@ -4,8 +4,8 @@ Preparation Agent Inngest Function.
 Handles meeting preparation workflow with full observability and automatic retries.
 
 Events:
-- salesprep/prep.requested: Triggers new preparation
-- salesprep/prep.completed: Emitted when preparation is done
+- dealmotion/prep.requested: Triggers new preparation
+- dealmotion/prep.completed: Emitted when preparation is done
 """
 
 import logging
@@ -27,7 +27,7 @@ supabase = get_supabase_service()
 
 @inngest_client.create_function(
     fn_id="preparation-meeting",
-    trigger=TriggerEvent(event="salesprep/prep.requested"),
+    trigger=TriggerEvent(event="dealmotion/prep.requested"),
     retries=2,  # Total attempts = 3 (1 initial + 2 retries)
 )
 async def preparation_meeting_fn(ctx, step):
@@ -92,7 +92,7 @@ async def preparation_meeting_fn(ctx, step):
     await step.send_event(
         "emit-completion",
         inngest.Event(
-            name="salesprep/prep.completed",
+            name="dealmotion/prep.completed",
             data={
                 "prep_id": prep_id,
                 "prospect_company": prospect_company,

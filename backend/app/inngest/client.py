@@ -16,7 +16,7 @@ ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 
 # Create Inngest client
 inngest_client = Inngest(
-    app_id="salesprep-ai",
+    app_id="dealmotion",
     # Event key is required for sending events in production
     # In dev mode, it can be omitted
     event_key=os.getenv("INNGEST_EVENT_KEY"),

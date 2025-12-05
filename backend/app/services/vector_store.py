@@ -14,7 +14,7 @@ class VectorStore:
     def __init__(self):
         """Initialize Pinecone client and connect to index."""
         api_key = os.getenv("PINECONE_API_KEY")
-        index_name = os.getenv("PINECONE_INDEX_NAME", "salesprep-knowledge-base")
+        index_name = os.getenv("PINECONE_INDEX_NAME", "dealmotion-knowledge-base")
         
         if not api_key:
             raise ValueError("PINECONE_API_KEY must be set")
