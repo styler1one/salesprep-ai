@@ -153,22 +153,40 @@ async def get_job_health(
                 total_success += completed
                 total_count += total
             else:
+                # RPC returned empty - fetch real data manually
+                stats = await _get_job_stats_fallback(supabase, table_name)
+                jobs.append(JobStats(
+                    name=job_name,
+                    total_24h=stats["total"],
+                    completed=stats["completed"],
+                    failed=stats["failed"],
+                    success_rate=stats["success_rate"]
+                ))
+                total_success += stats["completed"]
+                total_count += stats["total"]
+        except Exception as e:
+            print(f"Error getting job stats for {table_name}: {e}")
+            # Even on exception, try to get real data
+            try:
+                stats = await _get_job_stats_fallback(supabase, table_name)
+                jobs.append(JobStats(
+                    name=job_name,
+                    total_24h=stats["total"],
+                    completed=stats["completed"],
+                    failed=stats["failed"],
+                    success_rate=stats["success_rate"]
+                ))
+                total_success += stats["completed"]
+                total_count += stats["total"]
+            except Exception:
+                # Ultimate fallback: show 0s (no fake success rates)
                 jobs.append(JobStats(
                     name=job_name,
                     total_24h=0,
                     completed=0,
                     failed=0,
-                    success_rate=100.0
+                    success_rate=0.0  # 0% = no data, not 100% fake success
                 ))
-        except Exception as e:
-            print(f"Error getting job stats for {table_name}: {e}")
-            jobs.append(JobStats(
-                name=job_name,
-                total_24h=0,
-                completed=0,
-                failed=0,
-                success_rate=0.0
-            ))
     
     overall_rate = (total_success / total_count * 100) if total_count > 0 else 100.0
     
@@ -277,4 +295,44 @@ async def _async_stripe_check():
     import stripe
     # This is a synchronous call but it's lightweight
     stripe.Balance.retrieve()
+
+
+async def _get_job_stats_fallback(supabase, table_name: str) -> dict:
+    """Fallback to get real job stats when RPC fails."""
+    from datetime import timedelta
+    
+    day_ago = (datetime.utcnow() - timedelta(days=1)).isoformat()
+    
+    # Total jobs in 24h
+    total_result = supabase.table(table_name) \
+        .select("id", count="exact") \
+        .gte("created_at", day_ago) \
+        .execute()
+    total = total_result.count or 0
+    
+    # Completed jobs
+    completed_result = supabase.table(table_name) \
+        .select("id", count="exact") \
+        .gte("created_at", day_ago) \
+        .eq("status", "completed") \
+        .execute()
+    completed = completed_result.count or 0
+    
+    # Failed jobs
+    failed_result = supabase.table(table_name) \
+        .select("id", count="exact") \
+        .gte("created_at", day_ago) \
+        .eq("status", "failed") \
+        .execute()
+    failed = failed_result.count or 0
+    
+    # Calculate success rate
+    success_rate = (completed / total * 100) if total > 0 else 0.0
+    
+    return {
+        "total": total,
+        "completed": completed,
+        "failed": failed,
+        "success_rate": round(success_rate, 1)
+    }
 

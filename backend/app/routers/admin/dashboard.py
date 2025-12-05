@@ -125,7 +125,7 @@ async def get_dashboard_metrics(
 
 
 async def _calculate_metrics_fallback(supabase) -> DashboardMetrics:
-    """Fallback calculation if database function fails."""
+    """Fallback calculation if database function fails - uses REAL data."""
     
     # Total users
     users_result = supabase.table("users").select("id", count="exact").execute()
@@ -139,21 +139,89 @@ async def _calculate_metrics_fallback(supabase) -> DashboardMetrics:
         .execute()
     users_growth_week = week_result.count or 0
     
+    # Active users (7 days) - users with activity in last 7 days
+    active_users_7d = 0
+    try:
+        # Count unique users with research_briefs in last 7 days
+        active_result = supabase.table("research_briefs") \
+            .select("user_id", count="exact") \
+            .gte("created_at", week_ago.isoformat()) \
+            .execute()
+        active_users_7d = active_result.count or 0
+    except Exception:
+        pass
+    
+    # MRR (Monthly Recurring Revenue) - sum of active subscriptions
+    mrr_cents = 0
+    try:
+        # Get active/trialing subscriptions with their plan prices
+        subs_result = supabase.table("organization_subscriptions") \
+            .select("plan_id, subscription_plans(price_monthly_cents)") \
+            .in_("status", ["active", "trialing"]) \
+            .execute()
+        
+        for sub in (subs_result.data or []):
+            if sub.get("subscription_plans"):
+                mrr_cents += sub["subscription_plans"].get("price_monthly_cents", 0) or 0
+    except Exception:
+        pass
+    
+    # Paid users - count of non-free active subscriptions
+    paid_users = 0
+    try:
+        paid_result = supabase.table("organization_subscriptions") \
+            .select("id", count="exact") \
+            .in_("status", ["active", "trialing"]) \
+            .neq("plan_id", "free") \
+            .execute()
+        paid_users = paid_result.count or 0
+    except Exception:
+        pass
+    
     # Active alerts
-    alerts_result = supabase.table("admin_alerts") \
-        .select("id", count="exact") \
-        .eq("status", "active") \
-        .execute()
-    active_alerts = alerts_result.count or 0
+    active_alerts = 0
+    try:
+        alerts_result = supabase.table("admin_alerts") \
+            .select("id", count="exact") \
+            .eq("status", "active") \
+            .execute()
+        active_alerts = alerts_result.count or 0
+    except Exception:
+        pass
+    
+    # Error rate (24h) - percentage of failed jobs
+    error_rate_24h = 0.0
+    try:
+        day_ago = (datetime.utcnow() - timedelta(days=1)).isoformat()
+        
+        # Total research briefs in 24h
+        total_result = supabase.table("research_briefs") \
+            .select("id", count="exact") \
+            .gte("created_at", day_ago) \
+            .execute()
+        total_24h = total_result.count or 0
+        
+        # Failed research briefs in 24h
+        failed_result = supabase.table("research_briefs") \
+            .select("id", count="exact") \
+            .gte("created_at", day_ago) \
+            .eq("status", "failed") \
+            .execute()
+        failed_24h = failed_result.count or 0
+        
+        if total_24h > 0:
+            error_rate_24h = round((failed_24h / total_24h) * 100, 1)
+    except Exception:
+        pass
     
     return DashboardMetrics(
         total_users=total_users,
         users_growth_week=users_growth_week,
-        active_users_7d=0,  # Complex query, skip in fallback
-        mrr_cents=0,
-        paid_users=0,
+        active_users_7d=active_users_7d,
+        mrr_cents=mrr_cents,
+        paid_users=paid_users,
         active_alerts=active_alerts,
-        error_rate_24h=0.0
+        error_rate_24h=error_rate_24h
     )
 
 
@@ -192,9 +260,79 @@ async def get_usage_trends(
             ]
             return DashboardTrends(trends=trends, period_days=days)
         
-        return DashboardTrends(trends=[], period_days=days)
+        # RPC returned empty, use fallback
+        return await _calculate_trends_fallback(supabase, days)
         
     except Exception as e:
         print(f"Error getting usage trends: {e}")
-        return DashboardTrends(trends=[], period_days=days)
+        return await _calculate_trends_fallback(supabase, days)
+
+
+async def _calculate_trends_fallback(supabase, days: int) -> DashboardTrends:
+    """Fallback calculation for trends if database function fails - uses REAL data."""
+    trends = []
+    
+    for i in range(days - 1, -1, -1):
+        day_start = (datetime.utcnow() - timedelta(days=i)).replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = day_start + timedelta(days=1)
+        date_str = day_start.strftime("%Y-%m-%d")
+        
+        researches = 0
+        preps = 0
+        followups = 0
+        new_users = 0
+        
+        try:
+            # Count researches for this day
+            research_result = supabase.table("research_briefs") \
+                .select("id", count="exact") \
+                .gte("created_at", day_start.isoformat()) \
+                .lt("created_at", day_end.isoformat()) \
+                .execute()
+            researches = research_result.count or 0
+        except Exception:
+            pass
+        
+        try:
+            # Count meeting preps for this day
+            prep_result = supabase.table("meeting_preps") \
+                .select("id", count="exact") \
+                .gte("created_at", day_start.isoformat()) \
+                .lt("created_at", day_end.isoformat()) \
+                .execute()
+            preps = prep_result.count or 0
+        except Exception:
+            pass
+        
+        try:
+            # Count followups for this day
+            followup_result = supabase.table("followups") \
+                .select("id", count="exact") \
+                .gte("created_at", day_start.isoformat()) \
+                .lt("created_at", day_end.isoformat()) \
+                .execute()
+            followups = followup_result.count or 0
+        except Exception:
+            pass
+        
+        try:
+            # Count new users for this day
+            users_result = supabase.table("users") \
+                .select("id", count="exact") \
+                .gte("created_at", day_start.isoformat()) \
+                .lt("created_at", day_end.isoformat()) \
+                .execute()
+            new_users = users_result.count or 0
+        except Exception:
+            pass
+        
+        trends.append(TrendDataPoint(
+            date=date_str,
+            researches=researches,
+            preps=preps,
+            followups=followups,
+            new_users=new_users
+        ))
+    
+    return DashboardTrends(trends=trends, period_days=days)
 
