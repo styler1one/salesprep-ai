@@ -6,7 +6,8 @@ Endpoints for user management in the admin panel.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 from typing import Optional, List, Any, Dict
 from uuid import UUID
 from datetime import datetime
@@ -19,30 +20,39 @@ router = APIRouter(prefix="/users", tags=["admin-users"])
 
 
 # ============================================================
-# Response Models
+# Response Models (with camelCase serialization)
 # ============================================================
 
-class FlowUsage(BaseModel):
+class CamelModel(BaseModel):
+    """Base model that serializes to camelCase for frontend compatibility."""
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+        from_attributes=True,
+    )
+
+
+class FlowUsage(CamelModel):
     used: int
     limit: int
     pack_balance: int
 
 
-class AdminUserListItem(BaseModel):
+class AdminUserListItem(CamelModel):
     id: str
     email: str
-    full_name: Optional[str]
-    organization_id: Optional[str]
-    organization_name: Optional[str]
+    full_name: Optional[str] = None
+    organization_id: Optional[str] = None
+    organization_name: Optional[str] = None
     plan: str
     flow_usage: FlowUsage
     health_score: int
     health_status: str
-    last_active: Optional[datetime]
+    last_active: Optional[datetime] = None
     created_at: datetime
 
 
-class FlowPackInfo(BaseModel):
+class FlowPackInfo(CamelModel):
     id: str
     flows_purchased: int
     flows_remaining: int
@@ -50,7 +60,7 @@ class FlowPackInfo(BaseModel):
     status: str
 
 
-class AdminNoteInfo(BaseModel):
+class AdminNoteInfo(CamelModel):
     id: str
     content: str
     is_pinned: bool
@@ -59,26 +69,26 @@ class AdminNoteInfo(BaseModel):
 
 
 class AdminUserDetail(AdminUserListItem):
-    stripe_customer_id: Optional[str]
-    subscription_status: Optional[str]
-    trial_ends_at: Optional[datetime]
-    profile_completeness: int
-    total_researches: int
-    total_preps: int
-    total_followups: int
-    error_count_30d: int
-    flow_packs: List[FlowPackInfo]
-    admin_notes: List[AdminNoteInfo]
+    stripe_customer_id: Optional[str] = None
+    subscription_status: Optional[str] = None
+    trial_ends_at: Optional[datetime] = None
+    profile_completeness: int = 0
+    total_researches: int = 0
+    total_preps: int = 0
+    total_followups: int = 0
+    error_count_30d: int = 0
+    flow_packs: List[FlowPackInfo] = []
+    admin_notes: List[AdminNoteInfo] = []
 
 
-class UserListResponse(BaseModel):
+class UserListResponse(CamelModel):
     users: List[AdminUserListItem]
     total: int
     offset: int
     limit: int
 
 
-class ActivityItem(BaseModel):
+class ActivityItem(CamelModel):
     id: str
     type: str
     description: str
@@ -86,7 +96,7 @@ class ActivityItem(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
 
 
-class UserActivityResponse(BaseModel):
+class UserActivityResponse(CamelModel):
     activities: List[ActivityItem]
     total: int
 
