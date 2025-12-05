@@ -14,6 +14,7 @@ from app.deps import get_current_user
 from app.database import get_supabase_service
 from app.services.subscription_service import get_subscription_service
 from app.services.usage_service import get_usage_service
+from app.services.flow_pack_service import get_flow_pack_service
 
 logger = logging.getLogger(__name__)
 
@@ -442,4 +443,140 @@ async def get_donation_link(current_user: dict = Depends(get_current_user)):
         )
     
     return {"donation_url": STRIPE_DONATION_LINK}
+
+
+# ==========================================
+# FLOW PACK ENDPOINTS (v3)
+# ==========================================
+
+class FlowPackCheckoutRequest(BaseModel):
+    pack_id: str = "pack_5"  # Default to 5-pack
+    success_url: Optional[str] = None
+    cancel_url: Optional[str] = None
+
+
+class FlowPackBalanceResponse(BaseModel):
+    total_remaining: int
+    packs: List[Dict[str, Any]]
+
+
+class FlowPackProductResponse(BaseModel):
+    id: str
+    name: str
+    flows: int
+    price_cents: int
+
+
+@router.get("/flow-packs/balance", response_model=FlowPackBalanceResponse)
+async def get_flow_pack_balance(current_user: dict = Depends(get_current_user)):
+    """
+    Get flow pack balance for the organization
+    
+    Returns total remaining flows and individual pack details
+    """
+    try:
+        user_id = current_user.get("sub") or current_user.get("id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid user")
+        
+        organization_id = await get_user_organization(user_id)
+        
+        flow_pack_service = get_flow_pack_service()
+        balance = await flow_pack_service.get_balance(organization_id)
+        
+        return balance
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting flow pack balance: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/flow-packs/products", response_model=List[FlowPackProductResponse])
+async def get_flow_pack_products(current_user: dict = Depends(get_current_user)):
+    """
+    Get available flow pack products for purchase
+    """
+    try:
+        flow_pack_service = get_flow_pack_service()
+        products = await flow_pack_service.get_available_packs()
+        
+        return products
+        
+    except Exception as e:
+        logger.error(f"Error getting flow pack products: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/flow-packs/checkout", response_model=CheckoutResponse)
+async def create_flow_pack_checkout(
+    request: FlowPackCheckoutRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Create Stripe Checkout session for flow pack purchase
+    
+    Returns URL to redirect user to Stripe Checkout for one-time payment
+    """
+    try:
+        user_id = current_user.get("sub") or current_user.get("id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid user")
+        
+        organization_id = await get_user_organization(user_id)
+        user_email = await get_user_email(user_id)
+        
+        if not user_email:
+            raise HTTPException(status_code=400, detail="User email not found")
+        
+        # Default URLs
+        success_url = request.success_url or f"{FRONTEND_URL}/billing/success"
+        cancel_url = request.cancel_url or f"{FRONTEND_URL}/pricing"
+        
+        flow_pack_service = get_flow_pack_service()
+        result = await flow_pack_service.create_checkout_session(
+            organization_id=organization_id,
+            pack_id=request.pack_id,
+            user_email=user_email,
+            success_url=success_url,
+            cancel_url=cancel_url,
+        )
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error creating flow pack checkout: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/flow-packs/history")
+async def get_flow_pack_history(
+    limit: int = 10,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get flow pack purchase history for the organization
+    """
+    try:
+        user_id = current_user.get("sub") or current_user.get("id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid user")
+        
+        organization_id = await get_user_organization(user_id)
+        
+        flow_pack_service = get_flow_pack_service()
+        history = await flow_pack_service.get_purchase_history(organization_id, limit)
+        
+        return {"history": history}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting flow pack history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 

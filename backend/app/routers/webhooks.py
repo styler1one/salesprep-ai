@@ -11,6 +11,7 @@ import stripe
 
 from app.database import get_supabase_service
 from app.services.subscription_service import get_subscription_service
+from app.services.flow_pack_service import get_flow_pack_service
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +94,16 @@ async def stripe_webhook(
         # Handle event based on type
         if event_type == "checkout.session.completed":
             session = event["data"]["object"]
-            await subscription_service.handle_checkout_completed(session)
+            
+            # Check if this is a flow pack purchase or subscription
+            metadata = session.get("metadata", {})
+            if metadata.get("type") == "flow_pack":
+                # Handle flow pack purchase
+                flow_pack_service = get_flow_pack_service()
+                await flow_pack_service.handle_checkout_completed(session)
+            else:
+                # Handle subscription checkout
+                await subscription_service.handle_checkout_completed(session)
             
         elif event_type == "customer.subscription.created":
             subscription = event["data"]["object"]

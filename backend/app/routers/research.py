@@ -252,9 +252,11 @@ async def start_research(
     except Exception as e:
         logger.warning(f"Could not get user settings, using default language: {e}")
     
-    # Check subscription limit (v2: flow-based)
+    # Check subscription limit (v3: flow-based with flow pack fallback)
     usage_service = get_usage_service()
     limit_check = await usage_service.check_flow_limit(organization_id)
+    use_flow_pack = limit_check.get("using_flow_pack", False)
+    
     if not limit_check.get("allowed"):
         raise HTTPException(
             status_code=402,  # Payment Required
@@ -263,6 +265,7 @@ async def start_research(
                 "message": "You have reached your flow limit for this month",
                 "current": limit_check.get("current", 0),
                 "limit": limit_check.get("limit", 0),
+                "flow_pack_balance": limit_check.get("flow_pack_balance", 0),
                 "upgrade_url": "/pricing"
             }
         )
@@ -349,8 +352,8 @@ async def start_research(
             )
             logger.info(f"Research {research_id} triggered via BackgroundTasks")
         
-        # Increment flow counter (v2: flow-based tracking)
-        await usage_service.increment_flow(organization_id)
+        # Increment flow counter (v3: flow-based tracking with flow pack support)
+        await usage_service.increment_flow(organization_id, use_flow_pack=use_flow_pack)
         
         return ResearchResponse(
             id=research_id,

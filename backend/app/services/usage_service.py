@@ -97,6 +97,8 @@ class UsageService:
         """
         Check if user can start a new flow (research)
         
+        v3: Also checks flow pack balance if subscription limit is reached
+        
         Returns:
             {
                 "allowed": bool,
@@ -104,7 +106,9 @@ class UsageService:
                 "limit": int,
                 "unlimited": bool,
                 "remaining": int,
-                "upgrade_required": bool
+                "upgrade_required": bool,
+                "flow_pack_balance": int,
+                "using_flow_pack": bool
             }
         """
         try:
@@ -123,18 +127,36 @@ class UsageService:
                     "unlimited": True,
                     "remaining": -1,
                     "upgrade_required": False,
+                    "flow_pack_balance": 0,
+                    "using_flow_pack": False,
                 }
             
-            remaining = max(0, limit - used)
-            allowed = used < limit
+            subscription_remaining = max(0, limit - used)
+            
+            # Check flow pack balance if subscription is exhausted
+            flow_pack_balance = 0
+            using_flow_pack = False
+            
+            if subscription_remaining == 0:
+                # Import here to avoid circular imports
+                from app.services.flow_pack_service import get_flow_pack_service
+                flow_pack_service = get_flow_pack_service()
+                balance = await flow_pack_service.get_balance(organization_id)
+                flow_pack_balance = balance.get("total_remaining", 0)
+                using_flow_pack = flow_pack_balance > 0
+            
+            total_remaining = subscription_remaining + flow_pack_balance
+            allowed = total_remaining > 0
             
             return {
                 "allowed": allowed,
                 "current": used,
                 "limit": limit,
                 "unlimited": False,
-                "remaining": remaining,
+                "remaining": subscription_remaining,
                 "upgrade_required": not allowed,
+                "flow_pack_balance": flow_pack_balance,
+                "using_flow_pack": using_flow_pack,
             }
             
         except Exception as e:
@@ -146,17 +168,35 @@ class UsageService:
                 "unlimited": False,
                 "remaining": 0,
                 "upgrade_required": True,
+                "flow_pack_balance": 0,
+                "using_flow_pack": False,
                 "error": str(e),
             }
     
-    async def increment_flow(self, organization_id: str) -> bool:
+    async def increment_flow(self, organization_id: str, use_flow_pack: bool = False) -> bool:
         """
         Increment flow count when starting a new research
         
+        v3: If use_flow_pack=True, consume from flow pack instead of subscription
+        
+        Args:
+            organization_id: Organization UUID
+            use_flow_pack: If True, consume from flow pack balance
+            
         Returns:
             True if successful
         """
         try:
+            # If using flow pack, consume from pack first
+            if use_flow_pack:
+                from app.services.flow_pack_service import get_flow_pack_service
+                flow_pack_service = get_flow_pack_service()
+                consumed = await flow_pack_service.consume_flow(organization_id, 1)
+                if not consumed:
+                    logger.error(f"Failed to consume flow pack for org {organization_id}")
+                    return False
+                logger.info(f"Consumed 1 flow from flow pack for org {organization_id}")
+            
             period_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             period_end = (period_start.replace(month=period_start.month + 1) if period_start.month < 12 
                          else period_start.replace(year=period_start.year + 1, month=1))
@@ -188,7 +228,8 @@ class UsageService:
                     "research_count": 1,
                 }).execute()
             
-            logger.info(f"Incremented flow count for org {organization_id}")
+            source = "flow pack" if use_flow_pack else "subscription"
+            logger.info(f"Incremented flow count for org {organization_id} (source: {source})")
             return True
             
         except Exception as e:

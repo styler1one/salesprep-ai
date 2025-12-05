@@ -24,6 +24,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { Logo } from '@/components/dealmotion-logo'
+import { api } from '@/lib/api'
 
 export default function PricingPage() {
   const router = useRouter()
@@ -32,6 +33,7 @@ export default function PricingPage() {
   const t = useTranslations('billing')
   const tErrors = useTranslations('errors')
   const [loading, setLoading] = useState<string | null>(null)
+  const [flowPackLoading, setFlowPackLoading] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
   const supabase = createClientComponentClient()
 
@@ -44,47 +46,49 @@ export default function PricingPage() {
     checkAuth()
   }, [supabase])
 
-  // v2 Features - all plans include KB and transcription
+  // v3 Features - all plans include KB and transcription
   const features = {
     free: [
-      { text: t('features.v2.flows', { count: '2' }), included: true },
-      { text: t('features.v2.kb'), included: true },
-      { text: t('features.v2.transcription'), included: true },
-      { text: t('features.v2.contacts'), included: true },
-      { text: t('features.v2.pdf'), included: true },
-      { text: t('features.v2.user', { count: '1' }), included: true },
-      { text: t('features.v2.crm'), included: false },
+      { text: t('features.v3.flows', { count: '2' }), included: true },
+      { text: t('features.v3.kb'), included: true },
+      { text: t('features.v3.transcription'), included: true },
+      { text: t('features.v3.contacts'), included: true },
+      { text: t('features.v3.pdf'), included: true },
+      { text: t('features.v3.user', { count: '1' }), included: true },
+      { text: t('features.v3.flowPacks'), included: true },
+      { text: t('features.v3.crm'), included: false },
     ],
-    lightSolo: [
-      { text: t('features.v2.flows', { count: '5' }), included: true },
-      { text: t('features.v2.kb'), included: true },
-      { text: t('features.v2.transcription'), included: true },
-      { text: t('features.v2.contacts'), included: true },
-      { text: t('features.v2.pdf'), included: true },
-      { text: t('features.v2.user', { count: '1' }), included: true },
-      { text: t('features.v2.support'), included: true },
-      { text: t('features.v2.crm'), included: false },
+    proSolo: [
+      { text: t('features.v3.flows', { count: '5' }), included: true },
+      { text: t('features.v3.kb'), included: true },
+      { text: t('features.v3.transcription'), included: true },
+      { text: t('features.v3.contacts'), included: true },
+      { text: t('features.v3.pdf'), included: true },
+      { text: t('features.v3.user', { count: '1' }), included: true },
+      { text: t('features.v3.flowPacks'), included: true },
+      { text: t('features.v3.support'), included: true },
+      { text: t('features.v3.crm'), included: false },
     ],
     unlimitedSolo: [
-      { text: t('features.v2.flowsUnlimited'), included: true },
-      { text: t('features.v2.kb'), included: true },
-      { text: t('features.v2.transcription'), included: true },
-      { text: t('features.v2.contacts'), included: true },
-      { text: t('features.v2.pdf'), included: true },
-      { text: t('features.v2.user', { count: '1' }), included: true },
-      { text: t('features.v2.prioritySupport'), included: true },
-      { text: t('features.v2.crm'), included: false },
+      { text: t('features.v3.flowsUnlimited'), included: true },
+      { text: t('features.v3.kb'), included: true },
+      { text: t('features.v3.transcription'), included: true },
+      { text: t('features.v3.contacts'), included: true },
+      { text: t('features.v3.pdf'), included: true },
+      { text: t('features.v3.user', { count: '1' }), included: true },
+      { text: t('features.v3.prioritySupport'), included: true },
+      { text: t('features.v3.crm'), included: false },
     ],
     enterprise: [
-      { text: t('features.v2.flowsUnlimited'), included: true },
-      { text: t('features.v2.usersUnlimited'), included: true },
-      { text: t('features.v2.crmDynamics'), included: true },
-      { text: t('features.v2.crmSalesforce'), included: true },
-      { text: t('features.v2.crmHubspot'), included: true },
-      { text: t('features.v2.crmPipedrive'), included: true },
-      { text: t('features.v2.crmZoho'), included: true },
-      { text: t('features.v2.sso'), included: true },
-      { text: t('features.v2.dedicatedSupport'), included: true },
+      { text: t('features.v3.flowsUnlimited'), included: true },
+      { text: t('features.v3.usersUnlimited'), included: true },
+      { text: t('features.v3.crmDynamics'), included: true },
+      { text: t('features.v3.crmSalesforce'), included: true },
+      { text: t('features.v3.crmHubspot'), included: true },
+      { text: t('features.v3.crmPipedrive'), included: true },
+      { text: t('features.v3.crmZoho'), included: true },
+      { text: t('features.v3.sso'), included: true },
+      { text: t('features.v3.dedicatedSupport'), included: true },
     ],
   }
 
@@ -137,6 +141,38 @@ export default function PricingPage() {
         description: t('donationNotConfigured'),
         variant: 'destructive',
       })
+    }
+  }
+
+  const handleFlowPackPurchase = async () => {
+    // Must be logged in to buy flow packs
+    if (!isLoggedIn) {
+      router.push('/signup')
+      return
+    }
+
+    setFlowPackLoading(true)
+    try {
+      const { data, error } = await api.post<{ checkout_url: string }>('/api/v1/billing/flow-packs/checkout', {
+        pack_id: 'pack_5',
+        success_url: `${window.location.origin}/billing/success`,
+        cancel_url: `${window.location.origin}/pricing`,
+      })
+
+      if (error || !data?.checkout_url) {
+        throw new Error('Failed to create checkout')
+      }
+
+      window.location.href = data.checkout_url
+    } catch (error) {
+      console.error('Flow pack checkout failed:', error)
+      toast({
+        title: tErrors('generic'),
+        description: t('flowPacks.checkoutError'),
+        variant: 'destructive',
+      })
+    } finally {
+      setFlowPackLoading(false)
     }
   }
 
@@ -240,16 +276,16 @@ export default function PricingPage() {
             </CardFooter>
           </Card>
 
-          {/* Light Solo Plan */}
+          {/* Pro Solo Plan */}
           <Card className="relative border-2 hover:border-blue-300 dark:hover:border-blue-600 transition-colors">
             <CardHeader className="pb-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
                   <Sparkles className="h-5 w-5 text-blue-600" />
                 </div>
-                <CardTitle className="text-lg">{t('plans.v2.lightSolo.name')}</CardTitle>
+                <CardTitle className="text-lg">{t('plans.v3.proSolo.name')}</CardTitle>
               </div>
-              <CardDescription className="text-sm">{t('plans.v2.lightSolo.description')}</CardDescription>
+              <CardDescription className="text-sm">{t('plans.v3.proSolo.description')}</CardDescription>
               <div className="mt-4">
                 <span className="text-3xl font-bold text-slate-900 dark:text-white">€9,95</span>
                 <span className="text-slate-500 text-sm">{t('perMonth')}</span>
@@ -257,7 +293,7 @@ export default function PricingPage() {
             </CardHeader>
             <CardContent className="pb-4">
               <ul className="space-y-2">
-                {features.lightSolo.map((feature, idx) => (
+                {features.proSolo.map((feature, idx) => (
                   <li key={idx} className="flex items-center gap-2 text-sm">
                     {feature.included ? (
                       <Check className="h-4 w-4 text-blue-500 flex-shrink-0" />
@@ -303,12 +339,12 @@ export default function PricingPage() {
                 <div className="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-900/30">
                   <Crown className="h-5 w-5 text-indigo-600" />
                 </div>
-                <CardTitle className="text-lg">{t('plans.v2.unlimitedSolo.name')}</CardTitle>
+                <CardTitle className="text-lg">{t('plans.v3.unlimitedSolo.name')}</CardTitle>
               </div>
-              <CardDescription className="text-sm">{t('plans.v2.unlimitedSolo.description')}</CardDescription>
+              <CardDescription className="text-sm">{t('plans.v3.unlimitedSolo.description')}</CardDescription>
               <div className="mt-4">
-                <span className="text-lg text-slate-400 line-through">€79,95</span>
-                <span className="text-3xl font-bold text-slate-900 dark:text-white ml-2">€29,95</span>
+                <span className="text-lg text-slate-400 line-through">€99,95</span>
+                <span className="text-3xl font-bold text-slate-900 dark:text-white ml-2">€49,95</span>
                 <span className="text-slate-500 text-sm">{t('perMonth')}</span>
               </div>
             </CardHeader>
@@ -360,9 +396,9 @@ export default function PricingPage() {
                 <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
                   <Building2 className="h-5 w-5 text-purple-600" />
                 </div>
-                <CardTitle className="text-lg">{t('plans.v2.enterprise.name')}</CardTitle>
+                <CardTitle className="text-lg">{t('plans.v3.enterprise.name')}</CardTitle>
               </div>
-              <CardDescription className="text-sm">{t('plans.v2.enterprise.description')}</CardDescription>
+              <CardDescription className="text-sm">{t('plans.v3.enterprise.description')}</CardDescription>
               <div className="mt-4">
                 <span className="text-xl font-bold text-slate-900 dark:text-white">{t('pricing.contactSales')}</span>
               </div>
@@ -420,6 +456,41 @@ export default function PricingPage() {
               {t('pricing.flowDescription')}
             </p>
           </div>
+        </div>
+
+        {/* Flow Pack Section */}
+        <div className="mt-16 max-w-md mx-auto">
+          <Card className="border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+            <CardHeader className="text-center pb-2">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Zap className="h-5 w-5 text-amber-500" />
+                <CardTitle className="text-lg">{t('flowPacks.title')}</CardTitle>
+              </div>
+              <CardDescription>{t('flowPacks.description')}</CardDescription>
+            </CardHeader>
+            <CardContent className="text-center">
+              <div className="inline-flex items-baseline gap-1">
+                <span className="text-2xl font-bold text-slate-900 dark:text-white">€9,95</span>
+                <span className="text-slate-500 text-sm">/ 5 flows</span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">{t('flowPacks.pack5.pricePerFlow')}</p>
+            </CardContent>
+            <CardFooter className="justify-center">
+              <Button 
+                variant="outline"
+                className="border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                onClick={() => handleFlowPackPurchase()}
+                disabled={flowPackLoading}
+              >
+                {flowPackLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Zap className="h-4 w-4 mr-2 text-amber-500" />
+                )}
+                {t('flowPacks.buy')}
+              </Button>
+            </CardFooter>
+          </Card>
         </div>
 
         {/* Trust Section */}

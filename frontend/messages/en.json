@@ -1298,6 +1298,24 @@
       "flowStep3": "Follow-up",
       "flowDescription": "A complete sales cycle from prospect research to meeting follow-up."
     },
+    "flowPacks": {
+      "title": "Need more flows?",
+      "description": "Buy extra flows when you need them",
+      "pack5": {
+        "name": "5 Flow Pack",
+        "price": "€9.95",
+        "pricePerFlow": "€1.99/flow"
+      },
+      "buy": "Buy Flow Pack",
+      "balance": "Flow pack balance",
+      "noBalance": "No flow packs",
+      "history": "Purchase history",
+      "purchased": "Purchased",
+      "remaining": "{count} flows remaining",
+      "depleted": "Depleted",
+      "checkoutSuccess": "Flow pack purchased successfully!",
+      "checkoutError": "Could not purchase flow pack. Please try again."
+    },
     "plans": {
       "free": {
         "name": "Free",
@@ -1318,6 +1336,23 @@
         "lightSolo": {
           "name": "Light Solo",
           "description": "For the starting sales pro"
+        },
+        "unlimitedSolo": {
+          "name": "Unlimited Solo",
+          "description": "Unlimited for early adopters"
+        },
+        "enterprise": {
+          "name": "Enterprise",
+          "description": "For teams with CRM needs"
+        }
+      },
+      "v3": {
+        "free": {
+          "description": "Start free with 2 flows"
+        },
+        "proSolo": {
+          "name": "Pro Solo",
+          "description": "For the active sales pro"
         },
         "unlimitedSolo": {
           "name": "Unlimited Solo",
@@ -1360,6 +1395,27 @@
         "crmPipedrive": "Pipedrive",
         "crmZoho": "Zoho CRM",
         "sso": "SSO/SAML"
+      },
+      "v3": {
+        "flows": "{count} flows per month",
+        "flowsUnlimited": "Unlimited flows",
+        "kb": "Knowledge Base included",
+        "transcription": "Transcription included",
+        "contacts": "Full contact analysis",
+        "pdf": "Clean PDF exports",
+        "user": "{count} user",
+        "usersUnlimited": "Unlimited users",
+        "support": "Email support",
+        "prioritySupport": "Priority support",
+        "dedicatedSupport": "Dedicated support",
+        "crm": "CRM integration",
+        "crmDynamics": "Microsoft Dynamics",
+        "crmSalesforce": "Salesforce",
+        "crmHubspot": "HubSpot",
+        "crmPipedrive": "Pipedrive",
+        "crmZoho": "Zoho CRM",
+        "sso": "SSO/SAML",
+        "flowPacks": "Buy extra flow packs"
       },
       "free": {
         "research": "3 research briefs per month",
