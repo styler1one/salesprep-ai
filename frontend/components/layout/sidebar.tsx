@@ -6,6 +6,7 @@ import { Icons } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Logo, LogoIcon } from '@/components/dealmotion-logo'
 
 interface SidebarProps {
   className?: string
@@ -99,17 +100,10 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Logo */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-slate-800">
         {!collapsed && (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
-              <Icons.zap className="h-5 w-5 text-white" />
-            </div>
-            <span className="font-bold text-lg">DealMotion</span>
-          </div>
+          <Logo darkMode />
         )}
         {collapsed && (
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center mx-auto">
-            <Icons.zap className="h-5 w-5 text-white" />
-          </div>
+          <LogoIcon className="mx-auto" />
         )}
         <Button
           variant="ghost"

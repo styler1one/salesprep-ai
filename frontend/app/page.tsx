@@ -8,6 +8,7 @@ import { Icons } from '@/components/icons'
 import { useTranslations, useLocale } from 'next-intl'
 import { LanguageSelector } from '@/components/language-selector'
 import { type Locale } from '@/i18n/config'
+import { Logo, LogoIcon } from '@/components/dealmotion-logo'
 
 export default function Home() {
   const router = useRouter()
@@ -41,12 +42,7 @@ export default function Home() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
-                <Icons.zap className="h-5 w-5 text-white" />
-              </div>
-              <span className="font-bold text-xl text-slate-900 dark:text-white">DealMotion</span>
-            </div>
+            <Logo />
             <div className="flex items-center gap-2 sm:gap-4">
               <LanguageSelector currentLocale={locale} />
               <Button variant="ghost" onClick={() => router.push('/login')}>
@@ -281,12 +277,7 @@ export default function Home() {
       <footer className="py-12 px-4 bg-slate-900 text-slate-400">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
-                <Icons.zap className="h-5 w-5 text-white" />
-              </div>
-              <span className="font-bold text-white">DealMotion</span>
-            </div>
+            <Logo darkMode />
             <p className="text-sm">
               © {new Date().getFullYear()} DealMotion. {t('footer.rights')}
             </p>

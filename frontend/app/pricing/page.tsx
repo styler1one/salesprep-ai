@@ -23,6 +23,7 @@ import { useBilling } from '@/lib/billing-context'
 import { useToast } from '@/components/ui/use-toast'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
+import { Logo } from '@/components/dealmotion-logo'
 
 export default function PricingPage() {
   const router = useRouter()
@@ -156,8 +157,8 @@ export default function PricingPage() {
               <ArrowLeft className="h-4 w-4" />
               {t('pricing.backToDashboard')}
             </Link>
-            <Link href="/" className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              DealMotion
+            <Link href="/">
+              <Logo />
             </Link>
           </div>
         </div>

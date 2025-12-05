@@ -6,6 +6,7 @@ import { AuthForm } from '@/components/auth/auth-form'
 import { Icons } from '@/components/icons'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useTranslations } from 'next-intl'
+import { Logo } from '@/components/dealmotion-logo'
 
 export default function LoginPage() {
     const searchParams = useSearchParams()
@@ -26,9 +27,8 @@ export default function LoginPage() {
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-950">
             {/* Header */}
             <header className="p-4">
-                <Link href="/" className="flex items-center gap-2 w-fit">
-                    <Icons.zap className="h-6 w-6 text-blue-600" />
-                    <span className="font-bold text-xl text-slate-900 dark:text-white">DealMotion</span>
+                <Link href="/" className="w-fit">
+                    <Logo />
                 </Link>
             </header>
 
