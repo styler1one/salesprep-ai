@@ -271,20 +271,31 @@ async def get_user_detail(
         .limit(20) \
         .execute()
     
+    # Batch fetch admin emails to avoid N+1 queries
+    admin_user_ids = set()
+    for note in (notes_result.data or []):
+        if note.get("admin_users") and note["admin_users"].get("user_id"):
+            admin_user_ids.add(note["admin_users"]["user_id"])
+    
+    admin_emails = {}
+    if admin_user_ids:
+        emails_result = supabase.table("users") \
+            .select("id, email") \
+            .in_("id", list(admin_user_ids)) \
+            .execute()
+        for u in (emails_result.data or []):
+            admin_emails[u["id"]] = u["email"]
+    
     admin_notes = []
     for note in (notes_result.data or []):
-        # Get admin email
-        admin_user = supabase.table("users") \
-            .select("email") \
-            .eq("id", note["admin_users"]["user_id"]) \
-            .maybe_single() \
-            .execute()
+        admin_user_id = note["admin_users"]["user_id"] if note.get("admin_users") else None
+        admin_email = admin_emails.get(admin_user_id, "Unknown")
         
         admin_notes.append(AdminNoteInfo(
             id=note["id"],
             content=note["content"],
             is_pinned=note["is_pinned"],
-            admin_name=admin_user.data["email"] if admin_user.data else "Unknown",
+            admin_name=admin_email,
             created_at=note["created_at"]
         ))
     
