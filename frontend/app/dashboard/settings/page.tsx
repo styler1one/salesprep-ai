@@ -184,25 +184,9 @@ export default function SettingsPage() {
     outputLanguage !== settings.output_language ||
     emailLanguage !== settings.email_language
 
-  const handleUpgrade = async () => {
-    setBillingActionLoading(true)
-    try {
-      const checkoutUrl = await createCheckoutSession('solo_monthly')
-      if (checkoutUrl) {
-        window.location.href = checkoutUrl
-      } else {
-        throw new Error('No checkout URL returned')
-      }
-    } catch (error: any) {
-      console.error('Failed to start checkout:', error)
-      toast({
-        title: tErrors('generic'),
-        description: error?.message || tBilling('checkoutError'),
-        variant: 'destructive',
-      })
-    } finally {
-      setBillingActionLoading(false)
-    }
+  const handleUpgrade = () => {
+    // Navigate to pricing page so user can choose their plan
+    router.push('/pricing')
   }
 
   const handleManageSubscription = async () => {
