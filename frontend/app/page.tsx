@@ -241,13 +241,11 @@ export default function Home() {
       {/* Social Proof */}
       <section className="py-20 px-4 bg-slate-50 dark:bg-slate-800">
         <div className="max-w-7xl mx-auto text-center">
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-8">{t('socialProof.trustedBy')}</p>
-          <div className="flex flex-wrap items-center justify-center gap-8 opacity-50">
-            {['Microsoft', 'Salesforce', 'HubSpot', 'Oracle', 'SAP'].map((company) => (
-              <span key={company} className="text-2xl font-bold text-slate-400 dark:text-slate-500">
-                {company}
-              </span>
-            ))}
+          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white dark:bg-slate-900 shadow-sm border dark:border-slate-700">
+            <Icons.users className="h-5 w-5 text-blue-600" />
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              {t('socialProof.usedBy')}
+            </p>
           </div>
         </div>
       </section>

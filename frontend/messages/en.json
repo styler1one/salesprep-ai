@@ -1522,7 +1522,8 @@
       }
     },
     "socialProof": {
-      "trustedBy": "TRUSTED BY SALES TEAMS AT"
+      "trustedBy": "TRUSTED BY SALES TEAMS AT",
+      "usedBy": "Used by sales professionals worldwide"
     },
     "cta": {
       "title": "Ready to put your deals in motion?",
