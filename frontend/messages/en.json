@@ -23,7 +23,7 @@
       "startResearch": "Start Research",
       "addContact": "Add Contact",
       "uploadMeeting": "Upload Meeting",
-      "followup": "Follow-up",
+      "followup": "Analyze",
       "newProspect": "New Prospect",
       "prepare": "Prepare",
       "complete": "Complete",
@@ -45,7 +45,7 @@
       "title": "Quick Actions",
       "newResearch": "New Research",
       "newPreparation": "New Preparation",
-      "newFollowup": "New Follow-up"
+      "newFollowup": "Analyze Meeting"
     },
     "profile": {
       "salesProfile": "Sales Profile",
@@ -67,7 +67,7 @@
       "title": "Recent Activity",
       "research_completed": "Research completed: {company}",
       "prep_generated": "Prep generated: {company}",
-      "followup_created": "Follow-up created: {company}",
+      "followup_created": "Meeting analyzed: {company}",
       "contact_added": "Contact added: {company}"
     }
   },
@@ -110,7 +110,7 @@
     "prospects": "Prospects",
     "research": "Research",
     "preparation": "Preparation",
-    "followup": "Follow-up",
+    "followup": "Meeting Analysis",
     "profile": "Profile",
     "companyProfile": "Company Profile",
     "knowledgeBase": "Knowledge Base",
@@ -503,11 +503,11 @@
     }
   },
   "followup": {
-    "title": "Follow-up Agent",
-    "subtitle": "AI transcription and summary of your sales conversations",
+    "title": "Meeting Analysis",
+    "subtitle": "Upload your meeting recording and get AI-powered insights",
     "loading": "Loading...",
     "form": {
-      "title": "New Follow-up",
+      "title": "Analyze Meeting",
       "selectProspect": "Select Prospect",
       "selectProspectPlaceholder": "Choose a company...",
       "selectContact": "Select Contact Person",
@@ -519,15 +519,15 @@
       "dragDrop": "Drag file here or click to upload",
       "supportedFormats": "Supported formats: MP3, WAV, M4A, WebM",
       "includeCoaching": "Include coaching feedback",
-      "startFollowup": "Start Follow-up",
+      "startFollowup": "Start Analysis",
       "processing": "Processing...",
       "subject": "Subject",
       "subjectPlaceholder": "E.g. Demo call",
       "date": "Date"
     },
     "history": {
-      "title": "Recent Follow-ups",
-      "empty": "No follow-ups yet",
+      "title": "Analyzed Meetings",
+      "empty": "No meetings analyzed yet",
       "emptyDesc": "Upload your first meeting recording on the right →"
     },
     "stats": {
