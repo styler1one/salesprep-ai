@@ -10,9 +10,10 @@ import { LanguageSelector } from '@/components/language-selector'
 import { cn } from '@/lib/utils'
 import { useLocale, useTranslations } from 'next-intl'
 import type { Locale } from '@/i18n/config'
+import type { User } from '@supabase/supabase-js'
 
 interface HeaderProps {
-  user: any
+  user: User | null
   className?: string
 }
 
@@ -38,8 +39,9 @@ export function Header({ user, className }: HeaderProps) {
             variant="ghost"
             size="icon"
             className="md:hidden"
+            aria-label={t('mobileMenu')}
           >
-            <Icons.menu className="h-5 w-5" />
+            <Icons.menu className="h-5 w-5" aria-hidden="true" />
           </Button>
         </div>
 
@@ -52,9 +54,10 @@ export function Header({ user, className }: HeaderProps) {
           <ThemeToggle />
 
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Icons.bell className="h-5 w-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+          <Button variant="ghost" size="icon" className="relative" aria-label={t('notifications')}>
+            <Icons.bell className="h-5 w-5" aria-hidden="true" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" aria-hidden="true" />
+            <span className="sr-only">{t('notificationsCount', { count: 1 })}</span>
           </Button>
 
           {/* User Dropdown */}

@@ -12,6 +12,8 @@ import { useTranslations } from 'next-intl'
 import { LanguageSelector } from '@/components/language-selector'
 import { useLocale } from 'next-intl'
 import type { Locale } from '@/i18n/config'
+import { getErrorMessage } from '@/lib/error-utils'
+import { logger } from '@/lib/logger'
 
 interface InterviewResponse {
   session_id: string
@@ -124,8 +126,9 @@ export default function OnboardingPage() {
       setCurrentProgress(data.progress)
       setTotalQuestions(data.total_questions)
     } catch (err) {
-      setError("Failed to start interview. Please try again.")
-      console.error(err)
+      const message = getErrorMessage(err)
+      setError(t('errors.startFailed'))
+      logger.error('Failed to start interview', err, { source: 'OnboardingPage', details: message })
     } finally {
       setStarting(false)
     }
@@ -179,8 +182,9 @@ export default function OnboardingPage() {
         setAnswer("")
       }
     } catch (err) {
-      setError("Failed to submit answer. Please try again.")
-      console.error(err)
+      const message = getErrorMessage(err)
+      setError(t('errors.submitFailed'))
+      logger.error('Failed to submit answer', err, { source: 'OnboardingPage', details: message })
     } finally {
       setLoading(false)
     }

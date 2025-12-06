@@ -117,7 +117,10 @@
     "settings": "Settings",
     "logout": "Log out",
     "main": "Main",
-    "profiles": "Profiles"
+    "profiles": "Profiles",
+    "notifications": "Notifications",
+    "notificationsCount": "{count, plural, =0 {No notifications} one {# notification} other {# notifications}}",
+    "mobileMenu": "Open menu"
   },
   "auth": {
     "login": "Log in",
@@ -936,6 +939,11 @@
       "description": "You can now start your first prospect research",
       "creating": "Creating your personalized profile...",
       "button": "Go to Dashboard"
+    },
+    "errors": {
+      "startFailed": "Failed to start interview. Please try again.",
+      "submitFailed": "Failed to submit answer. Please try again.",
+      "completeFailed": "Failed to complete interview. Please try again."
     },
     "skip": "Skip",
     "next": "Next",

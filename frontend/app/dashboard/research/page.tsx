@@ -138,7 +138,7 @@ export default function ResearchPage() {
     }
   }
   
-  const selectCompanyOption = (option: any) => {
+  const selectCompanyOption = (option: CompanyOption) => {
     setSelectedCompany(option)
     setCompanyName(option.company_name)
     if (option.website) setWebsiteUrl(option.website)

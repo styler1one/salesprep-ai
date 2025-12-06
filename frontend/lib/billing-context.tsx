@@ -29,13 +29,24 @@ interface Usage {
   kb_documents: UsageMetric
 }
 
+interface PlanFeatures {
+  flow_limit?: number
+  user_limit?: number
+  crm_integration?: boolean
+  priority_support?: boolean
+  pdf_watermark?: boolean
+  kb_document_limit?: number
+  transcription_seconds_limit?: number
+  [key: string]: unknown  // Allow additional features
+}
+
 interface Subscription {
   id: string | null
   organization_id: string
   plan_id: string
   plan_name: string
   status: string
-  features: Record<string, any>
+  features: PlanFeatures
   price_cents: number | null
   billing_interval: string | null
   current_period_start: string | null

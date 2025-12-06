@@ -3,10 +3,11 @@
 import { Sidebar } from './sidebar'
 import { Header } from './header'
 import { CoachProvider, CoachWidget } from '@/components/coach'
+import type { User } from '@supabase/supabase-js'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
-  user: any
+  user: User | null
 }
 
 export function DashboardLayout({ children, user }: DashboardLayoutProps) {

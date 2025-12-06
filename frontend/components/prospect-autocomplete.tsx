@@ -7,13 +7,20 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { Search, Building2, FileText, Briefcase, MessageSquare, Check, Loader2 } from 'lucide-react'
 
-// Updated interface to match new API response
-interface Prospect {
+// API response from prospects endpoint
+interface ProspectApiResponse {
     id: string
     company_name: string
     status: string
     industry?: string
     last_activity_at: string
+    research_count?: number
+    prep_count?: number
+    followup_count?: number
+}
+
+// Enriched prospect with computed fields
+interface Prospect extends ProspectApiResponse {
     // Legacy compatibility fields (computed in component)
     name?: string
     has_research?: boolean
@@ -68,7 +75,7 @@ export function ProspectAutocomplete({
                 if (response.ok) {
                     const data = await response.json()
                     // Transform to include legacy fields
-                    const transformed = (data.prospects || []).map((p: any) => ({
+                    const transformed = (data.prospects || []).map((p: ProspectApiResponse): Prospect => ({
                         ...p,
                         name: p.company_name,
                         has_research: (p.research_count || 0) > 0,
@@ -112,7 +119,7 @@ export function ProspectAutocomplete({
             if (response.ok) {
                 const data = await response.json()
                 // Transform to include legacy fields
-                const transformed = data.map((p: any) => ({
+                const transformed = data.map((p: ProspectApiResponse): Prospect => ({
                     ...p,
                     name: p.company_name,
                     has_research: false, // Search endpoint doesn't return counts

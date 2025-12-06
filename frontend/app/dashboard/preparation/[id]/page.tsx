@@ -30,7 +30,7 @@ interface MeetingPrep {
   status: string
   custom_notes?: string
   brief_content?: string
-  talking_points?: any[]
+  talking_points?: Array<{ category: string; points: string[] }>
   questions?: string[]
   strategy?: string
   pdf_url?: string

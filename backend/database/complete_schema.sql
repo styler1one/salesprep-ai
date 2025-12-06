@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS organizations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   slug TEXT UNIQUE,  -- For URL-friendly names
+  owner_id UUID REFERENCES auth.users(id),  -- Organization owner (added for quick lookups)
   
   -- i18n (added in migration_i18n_languages)
   default_working_language TEXT DEFAULT 'en' 
@@ -2049,12 +2050,14 @@ CREATE TABLE IF NOT EXISTS admin_alerts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     alert_type TEXT NOT NULL 
         CHECK (alert_type IN ('error', 'warning', 'info', 'payment_failed', 'usage_limit', 'security')),
-    title TEXT NOT NULL,
-    message TEXT,
     severity TEXT DEFAULT 'medium' 
         CHECK (severity IN ('low', 'medium', 'high', 'critical')),
-    target_user_id UUID REFERENCES auth.users(id),
-    target_organization_id UUID REFERENCES organizations(id),
+    target_type TEXT,                -- 'user' or 'organization'
+    target_id UUID,                  -- UUID of user or organization
+    target_name TEXT,                -- Display name for quick reference
+    title TEXT NOT NULL,
+    description TEXT,                -- Alert details (was: message)
+    context JSONB,                   -- Additional context data (was: metadata)
     status TEXT DEFAULT 'active' 
         CHECK (status IN ('active', 'acknowledged', 'resolved')),
     acknowledged_by UUID REFERENCES admin_users(id),
@@ -2062,17 +2065,18 @@ CREATE TABLE IF NOT EXISTS admin_alerts (
     resolved_by UUID REFERENCES admin_users(id),
     resolved_at TIMESTAMPTZ,
     resolution_notes TEXT,
-    metadata JSONB,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Admin Notes - Notes on users
+-- Admin Notes - Notes on users and organizations
 CREATE TABLE IF NOT EXISTS admin_notes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    target_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    admin_user_id UUID NOT NULL REFERENCES admin_users(id),
-    note TEXT NOT NULL,
+    target_type TEXT NOT NULL,           -- 'user' or 'organization'
+    target_id UUID NOT NULL,             -- UUID of user or organization
+    target_identifier TEXT,              -- Display identifier (email or org name)
+    content TEXT NOT NULL,               -- Note content (was: note)
     is_pinned BOOLEAN DEFAULT false,
+    admin_user_id UUID NOT NULL REFERENCES admin_users(id),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -2083,7 +2087,7 @@ CREATE INDEX IF NOT EXISTS idx_admin_audit_log_admin_user ON admin_audit_log(adm
 CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created_at ON admin_audit_log(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_admin_alerts_status ON admin_alerts(status);
 CREATE INDEX IF NOT EXISTS idx_admin_alerts_created_at ON admin_alerts(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_admin_notes_target_user ON admin_notes(target_user_id);
+CREATE INDEX IF NOT EXISTS idx_admin_notes_target ON admin_notes(target_type, target_id);
 
 -- RLS Policies for admin tables
 ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
@@ -2206,24 +2210,32 @@ CREATE TRIGGER update_admin_notes_updated_at
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION public.calculate_mrr()
-RETURNS NUMERIC
+RETURNS JSON
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE
-    v_mrr NUMERIC;
+    v_result JSON;
 BEGIN
-    SELECT COALESCE(SUM(
-        CASE 
-            WHEN plan = 'pro_solo' THEN 14.95
-            WHEN plan = 'unlimited_solo' THEN 49.95
-            ELSE 0
-        END
-    ), 0) INTO v_mrr
-    FROM public.organizations
-    WHERE plan IN ('pro_solo', 'unlimited_solo');
-    RETURN v_mrr;
+    SELECT json_build_object(
+        'mrr_cents', COALESCE((
+            SELECT SUM(sp.price_cents)
+            FROM public.organization_subscriptions os
+            JOIN public.subscription_plans sp ON os.plan_id = sp.id
+            WHERE os.status = 'active'
+            AND sp.price_cents > 0
+        ), 0),
+        'paid_users', COALESCE((
+            SELECT COUNT(*)
+            FROM public.organization_subscriptions os
+            JOIN public.subscription_plans sp ON os.plan_id = sp.id
+            WHERE os.status = 'active'
+            AND sp.price_cents > 0
+        ), 0)
+    ) INTO v_result;
+    
+    RETURN v_result;
 END;
 $$;
 
@@ -2255,131 +2267,190 @@ END;
 $$;
 
 CREATE OR REPLACE FUNCTION public.get_admin_dashboard_metrics()
-RETURNS TABLE(
-    total_users BIGINT,
-    active_users_7d BIGINT,
-    active_users_30d BIGINT,
-    mrr NUMERIC,
-    active_alerts BIGINT,
-    total_organizations BIGINT,
-    paid_users BIGINT,
-    free_users BIGINT
-)
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = ''
-AS $$
-BEGIN
-    RETURN QUERY
-    SELECT 
-        (SELECT COUNT(*) FROM auth.users) as total_users,
-        (SELECT COUNT(DISTINCT user_id) FROM public.research_briefs 
-         WHERE created_at > NOW() - INTERVAL '7 days') as active_users_7d,
-        (SELECT COUNT(DISTINCT user_id) FROM public.research_briefs 
-         WHERE created_at > NOW() - INTERVAL '30 days') as active_users_30d,
-        public.calculate_mrr() as mrr,
-        (SELECT COUNT(*) FROM public.admin_alerts WHERE status = 'active') as active_alerts,
-        (SELECT COUNT(*) FROM public.organizations) as total_organizations,
-        (SELECT COUNT(*) FROM public.organizations 
-         WHERE plan IN ('pro_solo', 'unlimited_solo')) as paid_users,
-        (SELECT COUNT(*) FROM public.organizations 
-         WHERE plan = 'free' OR plan IS NULL) as free_users;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.get_admin_usage_trends(days INTEGER DEFAULT 30)
-RETURNS TABLE(
-    date DATE,
-    new_users BIGINT,
-    active_users BIGINT,
-    flows_used BIGINT
-)
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = ''
-AS $$
-BEGIN
-    RETURN QUERY
-    WITH date_series AS (
-        SELECT generate_series(
-            CURRENT_DATE - (days || ' days')::INTERVAL,
-            CURRENT_DATE,
-            '1 day'::INTERVAL
-        )::DATE as date
-    )
-    SELECT 
-        ds.date,
-        COALESCE((SELECT COUNT(*) FROM auth.users 
-                  WHERE DATE(created_at) = ds.date), 0) as new_users,
-        COALESCE((SELECT COUNT(DISTINCT user_id) FROM public.research_briefs 
-                  WHERE DATE(created_at) = ds.date), 0) as active_users,
-        COALESCE((SELECT SUM(flow_count) FROM public.organizations 
-                  WHERE DATE(updated_at) = ds.date), 0) as flows_used
-    FROM date_series ds
-    ORDER BY ds.date;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.get_user_health_data(p_user_id UUID)
-RETURNS TABLE(
-    health_score INTEGER,
-    last_activity TIMESTAMPTZ,
-    error_count_7d BIGINT,
-    flow_usage_pct NUMERIC
-)
+RETURNS JSON
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE
+    v_result JSON;
+    v_total_users INTEGER;
+    v_users_growth_week INTEGER;
+    v_active_users_7d INTEGER;
+    v_mrr JSON;
+    v_active_alerts INTEGER;
+BEGIN
+    -- Total users
+    SELECT COUNT(*) INTO v_total_users
+    FROM public.users;
+    
+    -- Users growth this week
+    SELECT COUNT(*) INTO v_users_growth_week
+    FROM public.users
+    WHERE created_at > NOW() - INTERVAL '7 days';
+    
+    -- Active users in last 7 days (users with activity)
+    SELECT COUNT(DISTINCT organization_id) INTO v_active_users_7d
+    FROM public.prospect_activities
+    WHERE created_at > NOW() - INTERVAL '7 days';
+    
+    -- MRR
+    SELECT public.calculate_mrr() INTO v_mrr;
+    
+    -- Active alerts
+    SELECT COUNT(*) INTO v_active_alerts
+    FROM public.admin_alerts
+    WHERE status = 'active';
+    
+    SELECT json_build_object(
+        'total_users', COALESCE(v_total_users, 0),
+        'users_growth_week', COALESCE(v_users_growth_week, 0),
+        'active_users_7d', COALESCE(v_active_users_7d, 0),
+        'mrr_cents', COALESCE((v_mrr->>'mrr_cents')::integer, 0),
+        'paid_users', COALESCE((v_mrr->>'paid_users')::integer, 0),
+        'active_alerts', COALESCE(v_active_alerts, 0)
+    ) INTO v_result;
+    
+    RETURN v_result;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_admin_usage_trends(p_days INTEGER DEFAULT 7)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    v_result JSON;
+BEGIN
+    SELECT json_agg(day_data ORDER BY day_date) INTO v_result
+    FROM (
+        SELECT 
+            day_date::date,
+            json_build_object(
+                'date', day_date::date,
+                'researches', COALESCE((
+                    SELECT COUNT(*) 
+                    FROM public.research_briefs 
+                    WHERE created_at::date = day_date::date
+                ), 0),
+                'preps', COALESCE((
+                    SELECT COUNT(*) 
+                    FROM public.meeting_preps 
+                    WHERE created_at::date = day_date::date
+                ), 0),
+                'followups', COALESCE((
+                    SELECT COUNT(*) 
+                    FROM public.followups 
+                    WHERE created_at::date = day_date::date
+                ), 0),
+                'new_users', COALESCE((
+                    SELECT COUNT(*) 
+                    FROM public.users 
+                    WHERE created_at::date = day_date::date
+                ), 0)
+            ) as day_data
+        FROM generate_series(
+            NOW() - (p_days || ' days')::interval,
+            NOW(),
+            '1 day'::interval
+        ) AS day_date
+    ) trends;
+    
+    RETURN COALESCE(v_result, '[]'::json);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_user_health_data(p_user_id UUID)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    v_result JSON;
     v_org_id UUID;
-    v_last_activity TIMESTAMPTZ;
-    v_error_count BIGINT;
+    v_plan TEXT;
+    v_days_inactive INTEGER;
+    v_error_count INTEGER;
     v_flow_count INTEGER;
     v_flow_limit INTEGER;
-    v_flow_pct NUMERIC;
-    v_health INTEGER;
+    v_profile_completeness INTEGER;
+    v_has_failed_payment BOOLEAN;
 BEGIN
-    -- Get organization
-    SELECT id INTO v_org_id FROM public.organizations 
-    WHERE owner_id = p_user_id LIMIT 1;
+    -- Get organization via organization_members
+    SELECT om.organization_id INTO v_org_id
+    FROM public.organization_members om
+    WHERE om.user_id = p_user_id
+    LIMIT 1;
     
-    -- Get last activity
-    SELECT MAX(created_at) INTO v_last_activity 
-    FROM public.research_briefs WHERE user_id = p_user_id;
-    
-    -- Get error count (from failed briefs)
-    SELECT COUNT(*) INTO v_error_count
-    FROM public.research_briefs 
-    WHERE user_id = p_user_id 
-    AND status = 'failed'
-    AND created_at > NOW() - INTERVAL '7 days';
-    
-    -- Get flow usage
-    SELECT flow_count, flow_limit INTO v_flow_count, v_flow_limit
-    FROM public.organizations WHERE id = v_org_id;
-    
-    v_flow_pct := CASE 
-        WHEN v_flow_limit > 0 THEN (v_flow_count::NUMERIC / v_flow_limit * 100)
-        ELSE 0
-    END;
-    
-    -- Calculate health score (0-100)
-    v_health := 100;
-    -- Reduce for inactivity
-    IF v_last_activity < NOW() - INTERVAL '30 days' THEN
-        v_health := v_health - 30;
-    ELSIF v_last_activity < NOW() - INTERVAL '14 days' THEN
-        v_health := v_health - 15;
+    IF v_org_id IS NULL THEN
+        RETURN json_build_object('error', 'User not found in organization');
     END IF;
-    -- Reduce for errors
-    v_health := v_health - LEAST(v_error_count::INTEGER * 10, 30);
-    -- Reduce if near limit
-    IF v_flow_pct > 90 THEN v_health := v_health - 10; END IF;
     
-    v_health := GREATEST(v_health, 0);
+    -- Get plan
+    SELECT COALESCE(os.plan_id, 'free') INTO v_plan
+    FROM public.organization_subscriptions os
+    WHERE os.organization_id = v_org_id;
     
-    RETURN QUERY SELECT v_health, v_last_activity, v_error_count, v_flow_pct;
+    -- Days since last activity
+    SELECT COALESCE(
+        EXTRACT(DAY FROM NOW() - MAX(created_at))::integer,
+        999
+    ) INTO v_days_inactive
+    FROM public.prospect_activities
+    WHERE organization_id = v_org_id;
+    
+    -- Error count in last 30 days
+    SELECT COUNT(*) INTO v_error_count
+    FROM public.research_briefs
+    WHERE organization_id = v_org_id
+    AND status = 'failed'
+    AND created_at > NOW() - INTERVAL '30 days';
+    
+    -- Current flow usage from usage_records and subscription_plans
+    SELECT COALESCE(ur.flow_count, 0), COALESCE((sp.features->>'flow_limit')::integer, 2)
+    INTO v_flow_count, v_flow_limit
+    FROM public.organization_subscriptions os
+    JOIN public.subscription_plans sp ON os.plan_id = sp.id
+    LEFT JOIN public.usage_records ur ON ur.organization_id = v_org_id 
+        AND ur.period_start = date_trunc('month', NOW())
+    WHERE os.organization_id = v_org_id;
+    
+    -- Profile completeness (simplified)
+    SELECT COALESCE(
+        (SELECT CASE 
+            WHEN sp.job_title IS NOT NULL AND sp.experience_years IS NOT NULL THEN 80
+            WHEN sp.job_title IS NOT NULL THEN 50
+            ELSE 20
+        END
+        FROM public.sales_profiles sp
+        WHERE sp.organization_id = v_org_id), 0
+    ) INTO v_profile_completeness;
+    
+    -- Check for failed payments
+    SELECT EXISTS (
+        SELECT 1 FROM public.organization_subscriptions os
+        WHERE os.organization_id = v_org_id
+        AND os.status = 'past_due'
+    ) INTO v_has_failed_payment;
+    
+    SELECT json_build_object(
+        'plan', COALESCE(v_plan, 'free'),
+        'days_since_last_activity', COALESCE(v_days_inactive, 0),
+        'error_count_30d', COALESCE(v_error_count, 0),
+        'flow_count', COALESCE(v_flow_count, 0),
+        'flow_limit', COALESCE(v_flow_limit, 2),
+        'flow_usage_percent', CASE 
+            WHEN v_flow_limit <= 0 THEN 0
+            ELSE ROUND(v_flow_count::numeric / v_flow_limit, 2)
+        END,
+        'profile_completeness', COALESCE(v_profile_completeness, 0),
+        'has_failed_payment', COALESCE(v_has_failed_payment, false)
+    ) INTO v_result;
+    
+    RETURN v_result;
 END;
 $$;
 
