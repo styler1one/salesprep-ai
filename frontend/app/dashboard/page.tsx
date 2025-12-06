@@ -49,10 +49,10 @@ function getGreetingKey(): { key: string; emoji: string } {
 }
 
 // Helper to count items from last 7 days
-function countRecentItems<T extends Record<string, unknown>>(items: T[], dateField: keyof T = 'created_at' as keyof T): number {
+function countRecentItems<T extends { created_at: string }>(items: T[]): number {
     const weekAgo = new Date()
     weekAgo.setDate(weekAgo.getDate() - 7)
-    return items.filter(item => new Date(String(item[dateField])) > weekAgo).length
+    return items.filter(item => new Date(item.created_at) > weekAgo).length
 }
 
 interface ProspectWithStatus {
