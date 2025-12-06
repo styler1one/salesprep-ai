@@ -1115,7 +1115,7 @@ async def _enrich_user_data(supabase, user: dict) -> dict:
             except Exception:
                 pass
             
-            # Get usage - try usage_records first, then fall back to organizations
+            # Get usage from usage_records
             try:
                 usage_result = supabase.table("usage_records") \
                     .select("flow_count") \
@@ -1126,15 +1126,6 @@ async def _enrich_user_data(supabase, user: dict) -> dict:
                 
                 if usage_result and usage_result.data:
                     result["flow_count"] = usage_result.data.get("flow_count", 0)
-                else:
-                    # Fallback to organizations.flow_count
-                    org_flow = supabase.table("organizations") \
-                        .select("flow_count") \
-                        .eq("id", org_id) \
-                        .maybe_single() \
-                        .execute()
-                    if org_flow and org_flow.data:
-                        result["flow_count"] = org_flow.data.get("flow_count", 0)
             except Exception:
                 pass
             
@@ -1316,19 +1307,32 @@ async def _get_health_data(supabase, user_id: str) -> dict:
         except Exception:
             pass
         
-        # Get flow usage percentage
+        # Get flow usage percentage from usage_records and subscription_plans
         try:
-            org_data = supabase.table("organizations") \
-                .select("flow_count, flow_limit") \
-                .eq("id", org_id) \
+            # Get current month's flow count
+            current_month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            usage_result = supabase.table("usage_records") \
+                .select("flow_count") \
+                .eq("organization_id", org_id) \
+                .gte("period_start", current_month_start.isoformat()) \
                 .maybe_single() \
                 .execute()
             
-            if org_data and org_data.data:
-                flow_count = org_data.data.get("flow_count", 0) or 0
-                flow_limit = org_data.data.get("flow_limit", 2) or 2
-                if flow_limit > 0:
-                    health_data["flow_usage_percent"] = round((flow_count / flow_limit) * 100, 1)
+            flow_count = (usage_result.data or {}).get("flow_count", 0) or 0
+            
+            # Get flow limit from subscription
+            sub_result = supabase.table("organization_subscriptions") \
+                .select("subscription_plans(features)") \
+                .eq("organization_id", org_id) \
+                .in_("status", ["active", "trialing"]) \
+                .maybe_single() \
+                .execute()
+            
+            features = ((sub_result.data or {}).get("subscription_plans") or {}).get("features") or {}
+            flow_limit = features.get("flow_limit", 2) or 2
+            
+            if flow_limit > 0:
+                health_data["flow_usage_percent"] = round((flow_count / flow_limit) * 100, 1)
         except Exception:
             pass
         

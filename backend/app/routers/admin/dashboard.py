@@ -567,21 +567,36 @@ async def _batch_fetch_user_health_data(supabase) -> Dict[str, Dict[str, Any]]:
             if org_id:
                 org_ids.add(org_id)
     
-    # 4. Get organization flow data (single query)
+    # 4. Get organization flow data from usage_records and subscription_plans
     if org_ids:
-        orgs = supabase.table("organizations") \
-            .select("id, flow_count, flow_limit") \
-            .in_("id", list(org_ids)) \
+        # Get current month's flow usage from usage_records
+        current_month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        usage_records = supabase.table("usage_records") \
+            .select("organization_id, flow_count") \
+            .in_("organization_id", list(org_ids)) \
+            .gte("period_start", current_month_start.isoformat()) \
             .execute()
         
-        org_flow_map = {org["id"]: org for org in (orgs.data or [])}
+        usage_map = {ur["organization_id"]: ur.get("flow_count", 0) or 0 for ur in (usage_records.data or [])}
+        
+        # Get flow limits from subscription_plans via organization_subscriptions
+        subscriptions = supabase.table("organization_subscriptions") \
+            .select("organization_id, subscription_plans(features)") \
+            .in_("organization_id", list(org_ids)) \
+            .in_("status", ["active", "trialing"]) \
+            .execute()
+        
+        limit_map = {}
+        for sub in (subscriptions.data or []):
+            org_id = sub.get("organization_id")
+            features = (sub.get("subscription_plans") or {}).get("features") or {}
+            limit_map[org_id] = features.get("flow_limit", 2) or 2
         
         for uid, data in user_data.items():
             org_id = data.get("org_id")
-            if org_id and org_id in org_flow_map:
-                org = org_flow_map[org_id]
-                user_data[uid]["flow_count"] = org.get("flow_count", 0) or 0
-                user_data[uid]["flow_limit"] = org.get("flow_limit", 0) or 0
+            if org_id:
+                user_data[uid]["flow_count"] = usage_map.get(org_id, 0)
+                user_data[uid]["flow_limit"] = limit_map.get(org_id, 2)
     
     # 5. Get profile completeness (single query)
     profiles = supabase.table("sales_profiles") \
