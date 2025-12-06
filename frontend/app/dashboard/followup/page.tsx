@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { api } from '@/lib/api'
 import { formatDate } from '@/lib/date-utils'
+import { logger } from '@/lib/logger'
+import { getErrorMessage } from '@/lib/error-utils'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -14,7 +16,6 @@ import { useToast } from '@/components/ui/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 import { DashboardLayout } from '@/components/layout'
 import { ProspectAutocomplete } from '@/components/prospect-autocomplete'
-import { LanguageSelect } from '@/components/language-select'
 import { useTranslations } from 'next-intl'
 import { useSettings } from '@/lib/settings-context'
 import { useConfirmDialog } from '@/components/confirm-dialog'
@@ -41,7 +42,6 @@ export default function FollowupPage() {
   const { confirm } = useConfirmDialog()
   const t = useTranslations('followup')
   const tCommon = useTranslations('common')
-  const tLang = useTranslations('language')
   const { settings, loaded: settingsLoaded } = useSettings()
   
   const [user, setUser] = useState<User | null>(null)
@@ -56,8 +56,6 @@ export default function FollowupPage() {
   const [prospectCompany, setProspectCompany] = useState('')
   const [meetingSubject, setMeetingSubject] = useState('')
   const [meetingDate, setMeetingDate] = useState('')
-  const [includeCoaching, setIncludeCoaching] = useState(false)
-  const [emailLanguage, setEmailLanguage] = useState('en')
   const [showAdvanced, setShowAdvanced] = useState(false)
   
   // Contact selector state
@@ -69,13 +67,6 @@ export default function FollowupPage() {
   const [availableDeals, setAvailableDeals] = useState<Deal[]>([])
   const [selectedDealId, setSelectedDealId] = useState<string>('')
   const [loadingDeals, setLoadingDeals] = useState(false)
-  
-  // Set language from settings on load
-  useEffect(() => {
-    if (settingsLoaded) {
-      setEmailLanguage(settings.email_language)
-    }
-  }, [settingsLoaded, settings.email_language])
   
   // Fetch contacts and deals when prospect company changes (optimized: single search, parallel fetch)
   useEffect(() => {
@@ -137,7 +128,7 @@ export default function FollowupPage() {
           setAvailableDeals([])
         }
       } catch (error) {
-        console.error('Error fetching contacts/deals:', error)
+        logger.error('Error fetching contacts/deals', error)
         setAvailableContacts([])
         setAvailableDeals([])
       } finally {
@@ -159,7 +150,7 @@ export default function FollowupPage() {
         setFollowups(data)
       }
     } catch (error) {
-      console.error('Error fetching followups:', error)
+      logger.error('Error fetching followups', error)
     } finally {
       setLoading(false)
     }
@@ -271,8 +262,8 @@ export default function FollowupPage() {
       if (meetingDate) formData.append('meeting_date', meetingDate)
       if (selectedContactIds.length > 0) formData.append('contact_ids', selectedContactIds.join(','))
       if (selectedDealId) formData.append('deal_id', selectedDealId)
-      formData.append('include_coaching', includeCoaching.toString())
-      formData.append('language', emailLanguage)
+      formData.append('include_coaching', 'false') // Coaching can be enabled later in Follow-up Actions
+      formData.append('language', settings.email_language) // Use language from user settings
 
       setUploadProgress(30)
 
@@ -307,8 +298,6 @@ export default function FollowupPage() {
       setProspectCompany('')
       setMeetingSubject('')
       setMeetingDate('')
-      setIncludeCoaching(false)
-      setEmailLanguage(settings.email_language) // Reset to settings default
       setShowAdvanced(false)
       setSelectedContactIds([])
       setAvailableContacts([])
@@ -317,10 +306,11 @@ export default function FollowupPage() {
       
       fetchFollowups()
 
-    } catch (error: any) {
+    } catch (error) {
+      logger.error('Upload failed', error)
       toast({
         title: t('toast.failed'),
-        description: error.message || t('toast.failedDesc'),
+        description: getErrorMessage(error) || t('toast.failedDesc'),
         variant: 'destructive'
       })
     } finally {
@@ -605,7 +595,9 @@ export default function FollowupPage() {
                           {t('form.dragDrop')}
                         </p>
                         <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
-                          {t('form.supportedFormats')}
+                          {uploadType === 'audio' 
+                            ? t('form.supportedFormatsAudio') 
+                            : t('form.supportedFormatsTranscript')}
                         </p>
                       </>
                     )}
@@ -743,30 +735,6 @@ export default function FollowupPage() {
                       </div>
                     </div>
                   )}
-
-                  {/* Coaching Toggle */}
-                  <div className="flex items-center space-x-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-                    <Checkbox
-                      id="coaching"
-                      checked={includeCoaching}
-                      onCheckedChange={(checked) => setIncludeCoaching(checked === true)}
-                      disabled={uploading}
-                    />
-                    <div className="grid gap-0.5 leading-none">
-                      <Label htmlFor="coaching" className="text-xs cursor-pointer text-slate-700 dark:text-slate-300">
-                        📈 {t('form.includeCoaching')}
-                      </Label>
-                    </div>
-                  </div>
-
-                  {/* Email Language Selector */}
-                  <LanguageSelect
-                    value={emailLanguage}
-                    onChange={setEmailLanguage}
-                    label={tLang('emailLanguage')}
-                    description={tLang('emailLanguageDesc')}
-                    disabled={uploading}
-                  />
 
                   <Button 
                     className="w-full bg-orange-600 hover:bg-orange-700" 
