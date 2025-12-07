@@ -10,6 +10,7 @@ from .followup import process_followup_audio_fn, process_followup_transcript_fn
 from .contacts import analyze_contact_fn
 from .followup_actions import generate_followup_action_fn
 from .knowledge_base import process_knowledge_file_fn
+from .calendar import sync_all_calendars_fn, sync_calendar_connection_fn
 
 # All functions to register with Inngest
 all_functions = [
@@ -20,6 +21,8 @@ all_functions = [
     analyze_contact_fn,
     generate_followup_action_fn,
     process_knowledge_file_fn,
+    sync_all_calendars_fn,
+    sync_calendar_connection_fn,
 ]
 
 __all__ = [
@@ -31,5 +34,7 @@ __all__ = [
     "analyze_contact_fn",
     "generate_followup_action_fn",
     "process_knowledge_file_fn",
+    "sync_all_calendars_fn",
+    "sync_calendar_connection_fn",
 ]
 

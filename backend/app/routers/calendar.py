@@ -12,6 +12,7 @@ from app.deps import get_current_user, get_user_org
 from app.database import get_supabase_service
 from app.services.google_calendar import google_calendar_service
 from app.services.calendar_sync import calendar_sync_service
+from app.inngest.events import send_event, Events
 from typing import Tuple
 
 # Use centralized database module
@@ -253,6 +254,14 @@ async def google_auth_callback(
             )
         
         logger.info(f"Google Calendar connected for user {user_id[:8]}..., email: {email}")
+        
+        # Trigger initial calendar sync via Inngest
+        connection_id = result.data[0]["id"]
+        await send_event(
+            Events.CALENDAR_SYNC_REQUESTED,
+            {"connection_id": connection_id}
+        )
+        logger.info(f"Triggered initial sync for connection {connection_id[:8]}...")
         
         return CalendarCallbackResponse(
             success=True,

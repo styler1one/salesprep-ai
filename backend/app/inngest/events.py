@@ -145,6 +145,10 @@ class Events:
     DEAL_STAGE_CHANGED = "dealmotion/deal.stage.changed"
     MEETING_SCHEDULED = "dealmotion/meeting.scheduled"
     MEETING_COMPLETED = "dealmotion/meeting.completed"
+    
+    # Calendar Integration
+    CALENDAR_SYNC_REQUESTED = "dealmotion/calendar.sync.requested"
+    CALENDAR_SYNC_COMPLETED = "dealmotion/calendar.sync.completed"
 
 
 # =============================================================================
