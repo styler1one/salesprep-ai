@@ -222,17 +222,13 @@ async def google_auth_callback(
         ).eq("provider", "google").execute()
         
         # TODO: Implement proper encryption with pgsodium
-        # For now, store tokens as-is (they're already strings from Google)
-        import base64
-        access_token_b64 = base64.b64encode(tokens["access_token"].encode()).decode()
-        refresh_token_b64 = base64.b64encode(tokens.get("refresh_token", "").encode()).decode() if tokens.get("refresh_token") else None
-        
+        # For now, store tokens directly as strings (will be stored as BYTEA)
         connection_data = {
             "organization_id": organization_id,
             "user_id": user_id,
             "provider": "google",
-            "access_token_encrypted": access_token_b64,
-            "refresh_token_encrypted": refresh_token_b64,
+            "access_token_encrypted": tokens["access_token"],
+            "refresh_token_encrypted": tokens.get("refresh_token"),
             "token_expires_at": tokens.get("token_expires_at"),
             "email": email,
             "sync_enabled": True,

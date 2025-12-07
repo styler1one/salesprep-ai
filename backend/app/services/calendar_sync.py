@@ -64,14 +64,36 @@ class CalendarSyncService:
     def __init__(self):
         self.supabase = get_supabase_service()
     
-    def _decode_token(self, encoded_token: str) -> str:
-        """Decode a base64-encoded token."""
+    def _decode_token(self, stored_token) -> str:
+        """Decode a stored token from database."""
         try:
-            # Add padding if needed (base64 requires length to be multiple of 4)
-            padding_needed = len(encoded_token) % 4
-            if padding_needed:
-                encoded_token += '=' * (4 - padding_needed)
-            return base64.b64decode(encoded_token).decode()
+            # Handle different storage formats
+            if stored_token is None:
+                return ""
+            
+            # If it's bytes (from BYTEA column), decode to string
+            if isinstance(stored_token, bytes):
+                return stored_token.decode('utf-8')
+            
+            # If it's already a string, return as-is
+            if isinstance(stored_token, str):
+                # Check if it might be base64 encoded (legacy data)
+                try:
+                    # Try base64 decode for backwards compatibility
+                    padding_needed = len(stored_token) % 4
+                    if padding_needed:
+                        stored_token_padded = stored_token + '=' * (4 - padding_needed)
+                    else:
+                        stored_token_padded = stored_token
+                    decoded = base64.b64decode(stored_token_padded).decode('utf-8')
+                    # If it looks like a token (starts with ya29), use decoded
+                    if decoded.startswith('ya29'):
+                        return decoded
+                except:
+                    pass
+                return stored_token
+            
+            return str(stored_token)
         except Exception as e:
             logger.error(f"Failed to decode token: {e}")
             raise ValueError("Invalid token encoding")
