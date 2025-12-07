@@ -75,22 +75,31 @@ class CalendarSyncService:
             if isinstance(stored_token, bytes):
                 return stored_token.decode('utf-8')
             
-            # If it's already a string, return as-is
+            # If it's already a string
             if isinstance(stored_token, str):
-                # Check if it might be base64 encoded (legacy data)
+                # Check if it's PostgreSQL hex format (starts with \x)
+                if stored_token.startswith('\\x'):
+                    # Convert hex string to bytes, then to string
+                    hex_data = stored_token[2:]  # Remove \x prefix
+                    return bytes.fromhex(hex_data).decode('utf-8')
+                
+                # Check if it looks like a valid token already
+                if stored_token.startswith('ya29'):
+                    return stored_token
+                
+                # Try base64 decode for legacy data
                 try:
-                    # Try base64 decode for backwards compatibility
                     padding_needed = len(stored_token) % 4
                     if padding_needed:
                         stored_token_padded = stored_token + '=' * (4 - padding_needed)
                     else:
                         stored_token_padded = stored_token
                     decoded = base64.b64decode(stored_token_padded).decode('utf-8')
-                    # If it looks like a token (starts with ya29), use decoded
                     if decoded.startswith('ya29'):
                         return decoded
                 except:
                     pass
+                
                 return stored_token
             
             return str(stored_token)
