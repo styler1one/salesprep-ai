@@ -194,11 +194,78 @@ async def google_auth_callback(
     
     Exchanges the authorization code for tokens and stores the connection.
     """
-    # TODO: Implement in Sprint 1.7
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Google OAuth callback not yet implemented. Coming in Sprint 1.7."
-    )
+    user_id = current_user["sub"]
+    
+    # Verify state contains user_id
+    if not callback.state.startswith(user_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid state parameter"
+        )
+    
+    try:
+        # Exchange code for tokens
+        tokens = google_calendar_service.exchange_code_for_tokens(callback.code)
+        
+        if not tokens:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to exchange authorization code"
+            )
+        
+        # Get user email from Google
+        email = google_calendar_service.get_user_email(tokens["access_token"])
+        
+        # Check if connection already exists for this user + provider
+        existing = supabase.table("calendar_connections").select("id").eq(
+            "user_id", user_id
+        ).eq("provider", "google").execute()
+        
+        connection_data = {
+            "organization_id": organization_id,
+            "user_id": user_id,
+            "provider": "google",
+            "access_token_encrypted": tokens["access_token"].encode(),  # TODO: Use proper encryption
+            "refresh_token_encrypted": tokens.get("refresh_token", "").encode() if tokens.get("refresh_token") else None,
+            "token_expires_at": tokens.get("token_expires_at"),
+            "email": email,
+            "sync_enabled": True,
+            "needs_reauth": False,
+        }
+        
+        if existing.data and len(existing.data) > 0:
+            # Update existing connection
+            result = supabase.table("calendar_connections").update(
+                connection_data
+            ).eq("id", existing.data[0]["id"]).execute()
+        else:
+            # Create new connection
+            result = supabase.table("calendar_connections").insert(
+                connection_data
+            ).execute()
+        
+        if not result.data:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to save calendar connection"
+            )
+        
+        logger.info(f"Google Calendar connected for user {user_id[:8]}..., email: {email}")
+        
+        return CalendarCallbackResponse(
+            success=True,
+            email=email,
+            provider="google"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Google OAuth callback error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to connect Google Calendar: {str(e)}"
+        )
 
 
 @router.get("/auth/microsoft", response_model=CalendarAuthUrlResponse)

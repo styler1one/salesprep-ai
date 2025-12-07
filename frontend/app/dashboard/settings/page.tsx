@@ -102,6 +102,7 @@ export default function SettingsPage() {
   const [calendarStatus, setCalendarStatus] = useState<CalendarStatus | null>(null)
   const [calendarLoading, setCalendarLoading] = useState(true)
   const [calendarError, setCalendarError] = useState<string | null>(null)
+  const [googleConnecting, setGoogleConnecting] = useState(false)
   
   // Fetch coach settings directly (independent of CoachProvider)
   useEffect(() => {
@@ -160,6 +161,80 @@ export default function SettingsPage() {
   useEffect(() => {
     fetchCalendarStatus()
   }, [fetchCalendarStatus])
+  
+  // Handle Google Calendar OAuth popup
+  const handleGoogleConnect = async () => {
+    setGoogleConnecting(true)
+    try {
+      // Get OAuth URL from backend
+      const { data, error } = await api.get<{ auth_url: string; state: string }>('/api/v1/calendar/auth/google')
+      
+      if (error || !data) {
+        throw new Error(error?.message || 'Failed to start Google authorization')
+      }
+      
+      // Store state for verification
+      sessionStorage.setItem('google_calendar_state', data.state)
+      
+      // Open OAuth popup
+      const width = 500
+      const height = 600
+      const left = window.screenX + (window.outerWidth - width) / 2
+      const top = window.screenY + (window.outerHeight - height) / 2
+      
+      const popup = window.open(
+        data.auth_url,
+        'google_calendar_auth',
+        `width=${width},height=${height},left=${left},top=${top},popup=1`
+      )
+      
+      // Poll for popup close or message
+      const pollTimer = setInterval(() => {
+        if (popup?.closed) {
+          clearInterval(pollTimer)
+          setGoogleConnecting(false)
+          // Refresh status to check if connection was successful
+          fetchCalendarStatus()
+        }
+      }, 500)
+      
+    } catch (err) {
+      console.error('Failed to start Google OAuth:', err)
+      toast({
+        title: tErrors('generic'),
+        description: tIntegrations('status.error'),
+        variant: 'destructive',
+      })
+      setGoogleConnecting(false)
+    }
+  }
+  
+  // Listen for OAuth callback message from popup
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Verify origin
+      if (event.origin !== window.location.origin) return
+      
+      if (event.data?.type === 'google_calendar_connected') {
+        setGoogleConnecting(false)
+        fetchCalendarStatus()
+        toast({
+          title: tIntegrations('calendar.connected'),
+          description: event.data.email ? `Connected as ${event.data.email}` : undefined,
+        })
+      } else if (event.data?.type === 'google_calendar_error') {
+        setGoogleConnecting(false)
+        toast({
+          title: tErrors('generic'),
+          description: event.data.error || tIntegrations('status.error'),
+          variant: 'destructive',
+        })
+      }
+    }
+    
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [fetchCalendarStatus, toast, tErrors, tIntegrations])
   
   // Local state for form
   const [appLanguage, setAppLanguage] = useState('en')
@@ -1052,9 +1127,21 @@ export default function SettingsPage() {
                             )}
                           </>
                         ) : (
-                          <Button variant="outline" size="sm" disabled className="gap-1">
-                            {tIntegrations('calendar.connect')}
-                            <Badge variant="secondary" className="text-xs ml-1">{t('comingSoon')}</Badge>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={handleGoogleConnect}
+                            disabled={googleConnecting}
+                            className="gap-1"
+                          >
+                            {googleConnecting ? (
+                              <>
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                {tCommon('loading')}
+                              </>
+                            ) : (
+                              tIntegrations('calendar.connect')
+                            )}
                           </Button>
                         )}
                       </div>
