@@ -1151,8 +1151,18 @@ export default function SettingsPage() {
                         {calendarStatus?.google.connected ? (
                           <div className="flex items-center gap-2">
                             {calendarStatus.google.needs_reauth ? (
-                              <Button variant="outline" size="sm" className="gap-1 text-amber-600 border-amber-300" disabled>
-                                <AlertCircle className="h-3 w-3" />
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={handleGoogleConnect}
+                                disabled={googleConnecting}
+                                className="gap-1 text-amber-600 border-amber-300"
+                              >
+                                {googleConnecting ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <AlertCircle className="h-3 w-3" />
+                                )}
                                 {tIntegrations('calendar.reconnect')}
                               </Button>
                             ) : (
