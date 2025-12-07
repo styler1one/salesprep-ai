@@ -11,6 +11,7 @@ import logging
 from app.deps import get_current_user, get_user_org
 from app.database import get_supabase_service
 from app.services.google_calendar import google_calendar_service
+from app.services.calendar_sync import calendar_sync_service
 from typing import Tuple
 
 # Use centralized database module
@@ -319,11 +320,37 @@ async def trigger_calendar_sync(
     
     Fetches latest events from Google/Microsoft and updates local database.
     """
-    # TODO: Implement in Sprint 1.10
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Calendar sync not yet implemented. Coming in Sprint 1.10."
-    )
+    user_id, organization_id = user_org
+    
+    try:
+        # Sync all user calendars
+        results = calendar_sync_service.sync_user_calendars(user_id)
+        
+        # Aggregate results
+        total_synced = 0
+        total_new = 0
+        total_updated = 0
+        total_deleted = 0
+        
+        for provider, result in results.items():
+            total_synced += result.synced_meetings
+            total_new += result.new_meetings
+            total_updated += result.updated_meetings
+            total_deleted += result.deleted_meetings
+        
+        return CalendarSyncResponse(
+            synced_meetings=total_synced,
+            new_meetings=total_new,
+            updated_meetings=total_updated,
+            deleted_meetings=total_deleted
+        )
+        
+    except Exception as e:
+        logger.error(f"Calendar sync failed: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Sync failed: {str(e)}"
+        )
 
 
 # ==========================================
