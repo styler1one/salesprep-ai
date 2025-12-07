@@ -26,10 +26,10 @@ CALENDAR_SCOPES = [
     "openid"
 ]
 
-# Redirect URI for OAuth callback
+# Redirect URI for OAuth callback - points to frontend callback page
 REDIRECT_URI = os.getenv(
     "GOOGLE_CALENDAR_REDIRECT_URI",
-    "https://api.dealmotion.ai/api/v1/calendar/callback/google"
+    "https://dealmotion.ai/auth/calendar/callback"
 )
 
 
