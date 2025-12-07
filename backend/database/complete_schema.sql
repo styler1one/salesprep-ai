@@ -1,16 +1,26 @@
 -- ============================================================
 -- DealMotion Complete Database Schema
--- Version: 3.6
--- Last Updated: 5 December 2025
+-- Version: 3.7
+-- Last Updated: 7 December 2025
 -- 
 -- This file consolidates ALL migrations into a single schema.
 -- Use this as reference documentation - DO NOT run on existing DB!
 -- 
 -- COUNTS:
--- - Tables: 40 (+4 admin tables)
+-- - Tables: 44 (+4 calendar/recording tables)
 -- - Functions: 42 (+8 admin functions)
--- - Triggers: 32 (+1 admin trigger)
--- - Indexes: 169
+-- - Triggers: 36 (+4 calendar/recording triggers)
+-- - Indexes: 193 (+18 calendar/recording indexes)
+-- 
+-- Changes in 3.7:
+-- - Added calendar_connections table (OAuth tokens for Google/Microsoft)
+-- - Added calendar_meetings table (synced meetings from external calendars)
+-- - Added recording_integrations table (Fireflies/Zoom/Teams config)
+-- - Added external_recordings table (imported recordings before processing)
+-- - Added calendar_meeting_id and external_recording_id to followups table
+-- - Added RLS policies for all new tables
+-- - Added updated_at triggers for all new tables
+-- - SPEC-038: Meetings & Calendar Integration
 -- 
 -- Changes in 3.6:
 -- - Added admin_users table (role-based admin access)
@@ -2455,18 +2465,264 @@ END;
 $$;
 
 -- ============================================================
+-- 45. CALENDAR CONNECTIONS (OAuth for Google/Microsoft)
+-- ============================================================
+-- Stores OAuth tokens and sync status per user per provider.
+-- SPEC-038: Meetings & Calendar Integration
+
+CREATE TABLE IF NOT EXISTS calendar_connections (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    
+    provider TEXT NOT NULL CHECK (provider IN ('google', 'microsoft')),
+    
+    -- OAuth tokens (encrypted before storage)
+    access_token_encrypted BYTEA NOT NULL,
+    refresh_token_encrypted BYTEA,
+    token_expires_at TIMESTAMPTZ,
+    encryption_key_id UUID,
+    
+    -- Account info
+    email TEXT,
+    
+    -- Sync status
+    last_sync_at TIMESTAMPTZ,
+    last_sync_status TEXT CHECK (last_sync_status IN ('success', 'failed', 'partial')),
+    last_sync_error TEXT,
+    needs_reauth BOOLEAN DEFAULT false,
+    
+    -- Settings
+    sync_enabled BOOLEAN DEFAULT true,
+    
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    UNIQUE(user_id, provider)
+);
+
+CREATE INDEX IF NOT EXISTS idx_calendar_connections_org ON calendar_connections(organization_id);
+CREATE INDEX IF NOT EXISTS idx_calendar_connections_user ON calendar_connections(user_id);
+CREATE INDEX IF NOT EXISTS idx_calendar_connections_sync ON calendar_connections(sync_enabled, last_sync_at);
+CREATE INDEX IF NOT EXISTS idx_calendar_connections_needs_reauth ON calendar_connections(needs_reauth) WHERE needs_reauth = true;
+
+ALTER TABLE calendar_connections ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own connections" ON calendar_connections 
+    FOR SELECT USING (user_id = (SELECT auth.uid()));
+CREATE POLICY "Users can insert own connections" ON calendar_connections 
+    FOR INSERT WITH CHECK (user_id = (SELECT auth.uid()));
+CREATE POLICY "Users can update own connections" ON calendar_connections 
+    FOR UPDATE USING (user_id = (SELECT auth.uid()));
+CREATE POLICY "Users can delete own connections" ON calendar_connections 
+    FOR DELETE USING (user_id = (SELECT auth.uid()));
+
+-- ============================================================
+-- 46. CALENDAR MEETINGS (Synced from external calendars)
+-- ============================================================
+-- Synchronized meetings from Google/Microsoft calendars.
+-- Note: Separate from the existing `meetings` table (manual meetings linked to deals).
+
+CREATE TABLE IF NOT EXISTS calendar_meetings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    
+    calendar_connection_id UUID NOT NULL REFERENCES calendar_connections(id) ON DELETE CASCADE,
+    external_event_id TEXT NOT NULL,
+    
+    title TEXT NOT NULL,
+    description TEXT,
+    start_time TIMESTAMPTZ NOT NULL,
+    end_time TIMESTAMPTZ NOT NULL,
+    original_timezone TEXT DEFAULT 'UTC',
+    location TEXT,
+    meeting_url TEXT,
+    
+    is_recurring BOOLEAN DEFAULT false,
+    recurrence_rule TEXT,
+    recurring_event_id TEXT,
+    
+    status TEXT DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'tentative', 'cancelled')),
+    attendees JSONB DEFAULT '[]',
+    
+    prospect_id UUID REFERENCES prospects(id) ON DELETE SET NULL,
+    prospect_link_type TEXT CHECK (prospect_link_type IN ('auto', 'manual')),
+    preparation_id UUID REFERENCES meeting_preps(id) ON DELETE SET NULL,
+    followup_id UUID REFERENCES followups(id) ON DELETE SET NULL,
+    legacy_meeting_id UUID REFERENCES meetings(id) ON DELETE SET NULL,
+    
+    etag TEXT,
+    last_synced_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    UNIQUE(calendar_connection_id, external_event_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_calendar_meetings_org ON calendar_meetings(organization_id);
+CREATE INDEX IF NOT EXISTS idx_calendar_meetings_user ON calendar_meetings(user_id);
+CREATE INDEX IF NOT EXISTS idx_calendar_meetings_time ON calendar_meetings(start_time);
+CREATE INDEX IF NOT EXISTS idx_calendar_meetings_end_time ON calendar_meetings(end_time);
+CREATE INDEX IF NOT EXISTS idx_calendar_meetings_prospect ON calendar_meetings(prospect_id) WHERE prospect_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_calendar_meetings_status ON calendar_meetings(status) WHERE status != 'cancelled';
+CREATE INDEX IF NOT EXISTS idx_calendar_meetings_recurring ON calendar_meetings(recurring_event_id) WHERE is_recurring = true;
+CREATE INDEX IF NOT EXISTS idx_calendar_meetings_connection ON calendar_meetings(calendar_connection_id);
+
+ALTER TABLE calendar_meetings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Org members can view meetings" ON calendar_meetings 
+    FOR SELECT USING (organization_id IN (SELECT organization_id FROM organization_members WHERE user_id = (SELECT auth.uid())));
+CREATE POLICY "Users can insert own meetings" ON calendar_meetings 
+    FOR INSERT WITH CHECK (user_id = (SELECT auth.uid()));
+CREATE POLICY "Users can update own meetings" ON calendar_meetings 
+    FOR UPDATE USING (user_id = (SELECT auth.uid()));
+CREATE POLICY "Users can delete own meetings" ON calendar_meetings 
+    FOR DELETE USING (user_id = (SELECT auth.uid()));
+
+-- ============================================================
+-- 47. RECORDING INTEGRATIONS (Fireflies/Zoom/Teams config)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS recording_integrations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    
+    provider TEXT NOT NULL CHECK (provider IN ('fireflies', 'zoom', 'teams')),
+    credentials JSONB NOT NULL,
+    
+    account_email TEXT,
+    account_name TEXT,
+    
+    last_sync_at TIMESTAMPTZ,
+    last_sync_status TEXT CHECK (last_sync_status IN ('success', 'failed')),
+    last_sync_error TEXT,
+    needs_reauth BOOLEAN DEFAULT false,
+    
+    auto_import BOOLEAN DEFAULT true,
+    
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    UNIQUE(user_id, provider)
+);
+
+CREATE INDEX IF NOT EXISTS idx_recording_integrations_org ON recording_integrations(organization_id);
+CREATE INDEX IF NOT EXISTS idx_recording_integrations_user ON recording_integrations(user_id);
+CREATE INDEX IF NOT EXISTS idx_recording_integrations_provider ON recording_integrations(provider);
+CREATE INDEX IF NOT EXISTS idx_recording_integrations_auto_import ON recording_integrations(auto_import) WHERE auto_import = true;
+
+ALTER TABLE recording_integrations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage own integrations" ON recording_integrations 
+    FOR ALL USING (user_id = (SELECT auth.uid()));
+
+-- ============================================================
+-- 48. EXTERNAL RECORDINGS (Imported before processing)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS external_recordings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    
+    integration_id UUID NOT NULL REFERENCES recording_integrations(id) ON DELETE CASCADE,
+    external_id TEXT NOT NULL,
+    provider TEXT NOT NULL CHECK (provider IN ('fireflies', 'zoom', 'teams', 'mobile')),
+    
+    title TEXT,
+    recording_date TIMESTAMPTZ NOT NULL,
+    duration_seconds INTEGER,
+    participants JSONB DEFAULT '[]',
+    
+    audio_url TEXT,
+    transcript_url TEXT,
+    transcript_text TEXT,
+    
+    matched_meeting_id UUID REFERENCES calendar_meetings(id) ON DELETE SET NULL,
+    matched_prospect_id UUID REFERENCES prospects(id) ON DELETE SET NULL,
+    match_confidence DECIMAL(5,4) CHECK (match_confidence >= 0 AND match_confidence <= 1),
+    
+    import_status TEXT DEFAULT 'pending' CHECK (import_status IN ('pending', 'imported', 'skipped', 'failed')),
+    imported_followup_id UUID REFERENCES followups(id) ON DELETE SET NULL,
+    import_error TEXT,
+    
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    UNIQUE(integration_id, external_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_external_recordings_org ON external_recordings(organization_id);
+CREATE INDEX IF NOT EXISTS idx_external_recordings_user ON external_recordings(user_id);
+CREATE INDEX IF NOT EXISTS idx_external_recordings_status ON external_recordings(import_status);
+CREATE INDEX IF NOT EXISTS idx_external_recordings_date ON external_recordings(recording_date);
+CREATE INDEX IF NOT EXISTS idx_external_recordings_meeting ON external_recordings(matched_meeting_id) WHERE matched_meeting_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_external_recordings_prospect ON external_recordings(matched_prospect_id) WHERE matched_prospect_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_external_recordings_integration ON external_recordings(integration_id);
+
+ALTER TABLE external_recordings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Org members can view recordings" ON external_recordings 
+    FOR SELECT USING (organization_id IN (SELECT organization_id FROM organization_members WHERE user_id = (SELECT auth.uid())));
+CREATE POLICY "Users can insert own recordings" ON external_recordings 
+    FOR INSERT WITH CHECK (user_id = (SELECT auth.uid()));
+CREATE POLICY "Users can update own recordings" ON external_recordings 
+    FOR UPDATE USING (user_id = (SELECT auth.uid()));
+CREATE POLICY "Users can delete own recordings" ON external_recordings 
+    FOR DELETE USING (user_id = (SELECT auth.uid()));
+
+-- ============================================================
+-- FOLLOWUPS TABLE UPDATE (Add calendar/recording references)
+-- ============================================================
+-- Note: In production, use ALTER TABLE. This shows the expected columns.
+
+-- ALTER TABLE followups 
+--     ADD COLUMN IF NOT EXISTS calendar_meeting_id UUID REFERENCES calendar_meetings(id) ON DELETE SET NULL,
+--     ADD COLUMN IF NOT EXISTS external_recording_id UUID REFERENCES external_recordings(id) ON DELETE SET NULL;
+
+-- CREATE INDEX IF NOT EXISTS idx_followups_calendar_meeting ON followups(calendar_meeting_id) WHERE calendar_meeting_id IS NOT NULL;
+-- CREATE INDEX IF NOT EXISTS idx_followups_external_recording ON followups(external_recording_id) WHERE external_recording_id IS NOT NULL;
+
+-- ============================================================
+-- TRIGGERS FOR NEW TABLES
+-- ============================================================
+
+DROP TRIGGER IF EXISTS update_calendar_connections_updated_at ON calendar_connections;
+CREATE TRIGGER update_calendar_connections_updated_at
+    BEFORE UPDATE ON calendar_connections
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_calendar_meetings_updated_at ON calendar_meetings;
+CREATE TRIGGER update_calendar_meetings_updated_at
+    BEFORE UPDATE ON calendar_meetings
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_recording_integrations_updated_at ON recording_integrations;
+CREATE TRIGGER update_recording_integrations_updated_at
+    BEFORE UPDATE ON recording_integrations
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_external_recordings_updated_at ON external_recordings;
+CREATE TRIGGER update_external_recordings_updated_at
+    BEFORE UPDATE ON external_recordings
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================
 -- END OF SCHEMA
 -- ============================================================
--- Version: 3.6
--- Last Updated: 5 December 2025
+-- Version: 3.7
+-- Last Updated: 7 December 2025
 -- 
 -- Summary:
--- - Tables: 40 (36 + 4 admin)
+-- - Tables: 44 (36 + 4 admin + 4 calendar/recording)
 -- - Views: 2
 -- - Functions: 42 (34 + 8 admin)
--- - Triggers: 32 (31 + 1 admin)
+-- - Triggers: 36 (31 + 1 admin + 4 calendar/recording)
 -- - Storage Buckets: 3 (with policies)
--- - Indexes: 175 (169 + 6 admin)
+-- - Indexes: 193 (169 + 6 admin + 18 calendar/recording)
 -- 
 -- This file is for REFERENCE ONLY. Do not run on existing database!
 -- Use individual migration files for updates.
