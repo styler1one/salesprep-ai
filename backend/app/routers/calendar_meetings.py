@@ -10,7 +10,7 @@ import logging
 
 from app.deps import get_user_org
 from app.database import get_supabase_service
-from app.services.prospect_matcher import ProspectMatcher, ProspectMatch
+from app.services.prospect_matcher import ProspectMatcher
 
 logger = logging.getLogger(__name__)
 supabase = get_supabase_service()

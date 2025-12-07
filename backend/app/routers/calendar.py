@@ -415,38 +415,4 @@ async def trigger_calendar_sync(
         )
 
 
-# ==========================================
-# Disconnect Endpoints (Placeholder - to be implemented in Sprint 1.20)
-# ==========================================
-
-@router.delete("/disconnect/google", response_model=CalendarDisconnectResponse)
-async def disconnect_google_calendar(
-    current_user: dict = Depends(get_current_user)
-):
-    """
-    Disconnect Google Calendar.
-    
-    Removes the connection and all synced meetings.
-    """
-    # TODO: Implement in Sprint 1.20
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Google disconnect not yet implemented. Coming in Sprint 1.20."
-    )
-
-
-@router.delete("/disconnect/microsoft", response_model=CalendarDisconnectResponse)
-async def disconnect_microsoft_calendar(
-    current_user: dict = Depends(get_current_user)
-):
-    """
-    Disconnect Microsoft 365 Calendar.
-    
-    Removes the connection and all synced meetings.
-    """
-    # TODO: Implement in Phase 4
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Microsoft disconnect not yet implemented. Coming in Phase 4."
-    )
 

@@ -98,7 +98,7 @@ class CalendarSyncService:
                     decoded = base64.b64decode(stored_token_padded).decode('utf-8')
                     if decoded.startswith('ya29'):
                         return decoded
-                except:
+                except (ValueError, UnicodeDecodeError):
                     pass
                 
                 return stored_token
@@ -426,9 +426,13 @@ class CalendarSyncService:
                 try:
                     matcher = ProspectMatcher(self.supabase)
                     import asyncio
-                    asyncio.get_event_loop().run_until_complete(
-                        matcher.match_all_unlinked(conn["organization_id"])
-                    )
+                    try:
+                        loop = asyncio.get_running_loop()
+                        # Already in async context, create task
+                        asyncio.create_task(matcher.match_all_unlinked(conn["organization_id"]))
+                    except RuntimeError:
+                        # No running loop, use asyncio.run()
+                        asyncio.run(matcher.match_all_unlinked(conn["organization_id"]))
                     logger.info(f"Ran prospect matching for organization {conn['organization_id']}")
                 except Exception as match_error:
                     logger.error(f"Prospect matching failed: {match_error}")
