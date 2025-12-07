@@ -1193,7 +1193,7 @@ export default function SettingsPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         {calendarStatus?.google.connected ? (
-                          <div className="flex flex-col items-end gap-2">
+                          <>
                             {calendarStatus.google.needs_reauth ? (
                               <Button 
                                 variant="outline" 
@@ -1211,26 +1211,10 @@ export default function SettingsPage() {
                               </Button>
                             ) : (
                               <>
-                                <div className="flex items-center gap-2">
-                                  <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                    <Check className="h-3 w-3 mr-1" />
-                                    {tIntegrations('calendar.connected')}
-                                  </Badge>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    onClick={() => handleCalendarDisconnect('google')}
-                                    disabled={disconnecting === 'google' || calendarSyncing}
-                                    className="gap-1 text-red-500 hover:text-red-600 hover:bg-red-50"
-                                  >
-                                    {disconnecting === 'google' ? (
-                                      <Loader2 className="h-3 w-3 animate-spin" />
-                                    ) : (
-                                      <Power className="h-3 w-3" />
-                                    )}
-                                    {tIntegrations('calendar.disconnect')}
-                                  </Button>
-                                </div>
+                                <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                  <Check className="h-3 w-3 mr-1" />
+                                  {tIntegrations('calendar.connected')}
+                                </Badge>
                                 <Button 
                                   variant="outline" 
                                   size="sm" 
@@ -1250,9 +1234,22 @@ export default function SettingsPage() {
                                     </>
                                   )}
                                 </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleCalendarDisconnect('google')}
+                                  disabled={disconnecting === 'google' || calendarSyncing}
+                                  className="gap-1 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                >
+                                  {disconnecting === 'google' ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <Power className="h-3 w-3" />
+                                  )}
+                                </Button>
                               </>
                             )}
-                          </div>
+                          </>
                         ) : (
                           <Button 
                             variant="outline" 
