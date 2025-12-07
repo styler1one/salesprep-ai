@@ -8,9 +8,10 @@ from typing import Optional, List
 from datetime import datetime
 import logging
 
-from app.deps import get_current_user, get_organization_id
+from app.deps import get_current_user, get_user_org
 from app.database import get_supabase_service
 from app.services.google_calendar import google_calendar_service
+from typing import Tuple
 
 # Use centralized database module
 supabase = get_supabase_service()
@@ -125,8 +126,7 @@ async def get_provider_status(
 
 @router.get("/status", response_model=CalendarStatusResponse)
 async def get_calendar_status(
-    current_user: dict = Depends(get_current_user),
-    organization_id: str = Depends(get_organization_id)
+    user_org: Tuple[str, str] = Depends(get_user_org)
 ):
     """
     Get status of all calendar connections for the current user.
@@ -134,7 +134,7 @@ async def get_calendar_status(
     Returns connection status for Google and Microsoft calendars,
     including sync status and meeting counts.
     """
-    user_id = current_user["sub"]
+    user_id, organization_id = user_org
     
     # Get status for each provider in parallel (could optimize with asyncio.gather)
     google_status = await get_provider_status(user_id, organization_id, "google")
@@ -186,15 +186,14 @@ async def start_google_auth(
 @router.post("/callback/google", response_model=CalendarCallbackResponse)
 async def google_auth_callback(
     callback: CalendarCallbackRequest,
-    current_user: dict = Depends(get_current_user),
-    organization_id: str = Depends(get_organization_id)
+    user_org: Tuple[str, str] = Depends(get_user_org)
 ):
     """
     Process Google OAuth callback.
     
     Exchanges the authorization code for tokens and stores the connection.
     """
-    user_id = current_user["sub"]
+    user_id, organization_id = user_org
     
     # Verify state contains user_id
     if not callback.state.startswith(user_id):
@@ -287,8 +286,7 @@ async def start_microsoft_auth(
 @router.post("/callback/microsoft", response_model=CalendarCallbackResponse)
 async def microsoft_auth_callback(
     callback: CalendarCallbackRequest,
-    current_user: dict = Depends(get_current_user),
-    organization_id: str = Depends(get_organization_id)
+    user_org: Tuple[str, str] = Depends(get_user_org)
 ):
     """
     Process Microsoft OAuth callback.
@@ -308,8 +306,7 @@ async def microsoft_auth_callback(
 
 @router.post("/sync", response_model=CalendarSyncResponse)
 async def trigger_calendar_sync(
-    current_user: dict = Depends(get_current_user),
-    organization_id: str = Depends(get_organization_id)
+    user_org: Tuple[str, str] = Depends(get_user_org)
 ):
     """
     Trigger manual calendar sync for all connected providers.
