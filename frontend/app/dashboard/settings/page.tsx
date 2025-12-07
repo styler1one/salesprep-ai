@@ -45,6 +45,7 @@ import { Switch } from '@/components/ui/switch'
 import { useBilling } from '@/lib/billing-context'
 import { UsageMeter } from '@/components/usage-meter'
 import { api } from '@/lib/api'
+import { useConfirmDialog } from '@/components/confirm-dialog'
 import type { User } from '@supabase/supabase-js'
 
 export default function SettingsPage() {
@@ -60,6 +61,7 @@ export default function SettingsPage() {
   
   const { settings, updateSettings, loading: settingsLoading, loaded: settingsLoaded } = useSettings()
   const { subscription, usage, loading: billingLoading, createCheckoutSession, openBillingPortal } = useBilling()
+  const { confirm } = useConfirmDialog()
   
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
@@ -275,10 +277,17 @@ export default function SettingsPage() {
   
   // Handle calendar disconnect
   const handleCalendarDisconnect = async (provider: 'google' | 'microsoft') => {
-    // Confirm before disconnecting
-    if (!confirm(tIntegrations('calendar.disconnectConfirmDesc'))) {
-      return
-    }
+    const providerName = provider === 'google' ? 'Google Calendar' : 'Microsoft 365'
+    
+    // Confirm before disconnecting with nice dialog
+    const confirmed = await confirm({
+      title: tIntegrations('calendar.disconnectConfirmTitle'),
+      description: tIntegrations('calendar.disconnectConfirmDesc'),
+      confirmLabel: tIntegrations('calendar.disconnect'),
+      variant: 'danger',
+    })
+    
+    if (!confirmed) return
     
     setDisconnecting(provider)
     try {
@@ -1202,30 +1211,11 @@ export default function SettingsPage() {
                               </Button>
                             ) : (
                               <>
-                                <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                  <Check className="h-3 w-3 mr-1" />
-                                  {tIntegrations('calendar.connected')}
-                                </Badge>
-                                <div className="flex gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    onClick={handleCalendarSync}
-                                    disabled={calendarSyncing || disconnecting === 'google'}
-                                    className="gap-1"
-                                  >
-                                    {calendarSyncing ? (
-                                      <>
-                                        <Loader2 className="h-3 w-3 animate-spin" />
-                                        {tIntegrations('calendar.syncing')}
-                                      </>
-                                    ) : (
-                                      <>
-                                        <RefreshCw className="h-3 w-3" />
-                                        {tIntegrations('calendar.syncNow')}
-                                      </>
-                                    )}
-                                  </Button>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                    <Check className="h-3 w-3 mr-1" />
+                                    {tIntegrations('calendar.connected')}
+                                  </Badge>
                                   <Button 
                                     variant="ghost" 
                                     size="sm" 
@@ -1241,6 +1231,25 @@ export default function SettingsPage() {
                                     {tIntegrations('calendar.disconnect')}
                                   </Button>
                                 </div>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={handleCalendarSync}
+                                  disabled={calendarSyncing || disconnecting === 'google'}
+                                  className="gap-1"
+                                >
+                                  {calendarSyncing ? (
+                                    <>
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                      {tIntegrations('calendar.syncing')}
+                                    </>
+                                  ) : (
+                                    <>
+                                      <RefreshCw className="h-3 w-3" />
+                                      {tIntegrations('calendar.syncNow')}
+                                    </>
+                                  )}
+                                </Button>
                               </>
                             )}
                           </div>
