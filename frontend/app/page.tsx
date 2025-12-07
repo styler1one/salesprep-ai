@@ -9,6 +9,15 @@ import { useTranslations, useLocale } from 'next-intl'
 import { LanguageSelector } from '@/components/language-selector'
 import { type Locale } from '@/i18n/config'
 import { Logo, LogoIcon } from '@/components/dealmotion-logo'
+import {
+  HowItWorks,
+  IntegrationsRow,
+  AIContextSection,
+  MeetingAnalysisShowcase,
+  MobileAppTeaser,
+  PainPointsSection,
+  DayInTheLife,
+} from '@/components/landing'
 
 export default function Home() {
   const router = useRouter()
@@ -234,12 +243,66 @@ export default function Home() {
                 {t('features.contactAnalysis.description')}
               </p>
             </div>
+
+            {/* Feature 7: Meetings Calendar */}
+            <div className="group p-6 rounded-2xl border dark:border-slate-800 bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <div className="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Icons.calendar className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white">{t('features.meetingsCalendar.title')}</h3>
+              <p className="text-slate-600 dark:text-slate-300 text-sm">
+                {t('features.meetingsCalendar.description')}
+              </p>
+            </div>
+
+            {/* Feature 8: In-Person Meetings */}
+            <div className="group p-6 rounded-2xl border dark:border-slate-800 bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <div className="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Icons.mic className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white">{t('features.inPersonMeetings.title')}</h3>
+              <p className="text-slate-600 dark:text-slate-300 text-sm">
+                {t('features.inPersonMeetings.description')}
+              </p>
+            </div>
+
+            {/* Feature 9: Smart Integrations */}
+            <div className="group p-6 rounded-2xl border dark:border-slate-800 bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Icons.link className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white">{t('features.smartIntegrations.title')}</h3>
+              <p className="text-slate-600 dark:text-slate-300 text-sm">
+                {t('features.smartIntegrations.description')}
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
+      {/* How It Works */}
+      <HowItWorks />
+
+      {/* AI That Knows You */}
+      <AIContextSection />
+
+      {/* Meeting Analysis Showcase */}
+      <MeetingAnalysisShowcase />
+
+      {/* Integrations */}
+      <IntegrationsRow />
+
+      {/* Pain Points Before/After */}
+      <PainPointsSection />
+
+      {/* Mobile App Teaser */}
+      <MobileAppTeaser />
+
+      {/* Day in the Life */}
+      <DayInTheLife />
+
       {/* Social Proof */}
-      <section className="py-20 px-4 bg-slate-50 dark:bg-slate-800">
+      <section className="py-16 px-4 bg-slate-50 dark:bg-slate-800">
         <div className="max-w-7xl mx-auto text-center">
           <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white dark:bg-slate-900 shadow-sm border dark:border-slate-700">
             <Icons.users className="h-5 w-5 text-blue-600" />

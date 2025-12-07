@@ -1524,15 +1524,210 @@
       "contactAnalysis": {
         "title": "Contact Analysis",
         "description": "Get detailed profiles on decision makers with communication preferences and engagement tips."
+      },
+      "meetingsCalendar": {
+        "title": "Meetings Calendar",
+        "description": "All your meetings in one view. Prep status at a glance. Never walk in unprepared again."
+      },
+      "inPersonMeetings": {
+        "title": "In-Person Meetings",
+        "description": "From Zoom calls to coffee meetings—record and analyze every conversation, anywhere."
+      },
+      "smartIntegrations": {
+        "title": "Smart Integrations",
+        "description": "Connect Google Calendar. More integrations coming soon: Outlook, Zoom, Teams, and CRM sync."
       }
     },
     "socialProof": {
       "trustedBy": "TRUSTED BY SALES TEAMS AT",
       "usedBy": "Used by sales professionals worldwide"
     },
+    "howItWorks": {
+      "title": "How It Works",
+      "subtitle": "From calendar sync to follow-up—DealMotion covers your entire deal cycle.",
+      "steps": {
+        "calendar": {
+          "title": "Calendar",
+          "description": "Sync your meetings"
+        },
+        "research": {
+          "title": "Research",
+          "description": "AI gathers insights"
+        },
+        "prep": {
+          "title": "Prep",
+          "description": "Get your brief"
+        },
+        "meeting": {
+          "title": "Meeting",
+          "description": "Record any conversation"
+        },
+        "analysis": {
+          "title": "Analysis",
+          "description": "7 outputs instantly"
+        },
+        "followup": {
+          "title": "Follow-up",
+          "description": "Send & track"
+        }
+      }
+    },
+    "integrations": {
+      "title": "Works With Your Tools",
+      "subtitle": "Connect DealMotion to your existing workflow.",
+      "comingSoon": "Coming soon"
+    },
+    "aiContext": {
+      "badge": "The Secret Sauce",
+      "title": "AI That Knows You, Your Company, and Your Prospect",
+      "subtitle": "DealMotion learns your style, your products, and your prospect—then personalizes every output.",
+      "inputsTitle": "What the AI knows about you",
+      "layers": {
+        "profile": {
+          "title": "Your Sales Profile",
+          "description": "Experience, strengths, communication style"
+        },
+        "company": {
+          "title": "Your Company",
+          "description": "Products, services, value propositions"
+        },
+        "knowledge": {
+          "title": "Your Knowledge Base",
+          "description": "Pitch decks, case studies, product docs"
+        },
+        "prospect": {
+          "title": "Your Prospect",
+          "description": "Research, contacts, history, context"
+        }
+      },
+      "outputTitle": "Personalized Output",
+      "outputDescription": "Every research report, meeting brief, and follow-up is tailored to you.",
+      "benefits": {
+        "personalized": "Tailored to your style",
+        "instant": "Generated in seconds",
+        "onBrand": "On-brand messaging",
+        "improves": "Gets smarter over time"
+      },
+      "quote": "It's like having a sales assistant who knows your entire playbook."
+    },
+    "meetingAnalysis": {
+      "badge": "One Recording, 7 Outputs",
+      "title": "Everything You Need From One Conversation",
+      "subtitle": "Upload any meeting recording and get 7 ready-to-use outputs instantly.",
+      "recording": "Recording",
+      "anyMeeting": "Video or in-person",
+      "outputs": {
+        "summary": {
+          "title": "Summary",
+          "description": "Key points & decisions"
+        },
+        "customerReport": {
+          "title": "Customer Report",
+          "description": "Ready to send to your client"
+        },
+        "shareEmail": {
+          "title": "Share Email",
+          "description": "Forward to colleagues"
+        },
+        "commercialAnalysis": {
+          "title": "Commercial Analysis",
+          "description": "Deal insights & opportunities"
+        },
+        "salesCoaching": {
+          "title": "Sales Coaching",
+          "description": "Personalized improvement tips"
+        },
+        "actionItems": {
+          "title": "Action Items",
+          "description": "Next steps with owners"
+        },
+        "internalReport": {
+          "title": "CRM Update",
+          "description": "Ready for your system"
+        }
+      },
+      "highlight": "Customer reports and commercial analysis are unique to DealMotion.",
+      "highlightSub": "Most tools only give you a transcript. We give you ready-to-use outputs."
+    },
+    "mobileApp": {
+      "badge": "Coming Soon",
+      "title": "Your Pocket Recording Studio",
+      "subtitle": "Record in-person meetings right from your phone. Coffee chats, on-site visits, trade shows—never miss an insight.",
+      "steps": {
+        "record": "Record",
+        "upload": "Upload",
+        "analyze": "Analyze",
+        "share": "Share"
+      },
+      "useCasesTitle": "Perfect for",
+      "useCases": {
+        "coffee": "Coffee meetings",
+        "onsite": "On-site visits",
+        "events": "Trade shows",
+        "field": "Field sales"
+      },
+      "tapToRecord": "Tap to start recording"
+    },
+    "painPoints": {
+      "title": "Before & After DealMotion",
+      "subtitle": "See how DealMotion transforms your sales workflow.",
+      "before": "Before",
+      "after": "After",
+      "items": {
+        "research": {
+          "before": "30+ minutes researching each account",
+          "after": "Complete research in 30 seconds"
+        },
+        "prep": {
+          "before": "Walking into meetings unprepared",
+          "after": "Personalized brief for every meeting"
+        },
+        "notes": {
+          "before": "Losing key details after conversations",
+          "after": "AI captures everything automatically"
+        },
+        "followup": {
+          "before": "Hours writing follow-up emails",
+          "after": "Ready-to-send reports in minutes"
+        }
+      }
+    },
+    "dayInTheLife": {
+      "title": "A Day with DealMotion",
+      "intro": "Monday morning. You open DealMotion.",
+      "steps": {
+        "open": {
+          "time": "8:30 AM",
+          "text": "You see 3 meetings this week."
+        },
+        "unprepared": {
+          "time": "8:31 AM",
+          "text": "One meeting isn't prepared yet."
+        },
+        "brief": {
+          "time": "8:32 AM",
+          "text": "Click. Personalized brief in 30 seconds.",
+          "highlight": "AI knows your style and your prospect"
+        },
+        "confident": {
+          "time": "10:00 AM",
+          "text": "Walk into the meeting confident."
+        },
+        "record": {
+          "time": "11:00 AM",
+          "text": "Upload recording. 7 outputs instantly.",
+          "highlight": "Summary, customer report, coaching, and more"
+        },
+        "sent": {
+          "time": "11:15 AM",
+          "text": "Customer report sent before you're back at your desk."
+        }
+      },
+      "tagline": "That's DealMotion. Your deals, in motion."
+    },
     "cta": {
-      "title": "Ready to put your deals in motion?",
-      "description": "Join sales professionals who close more deals with DealMotion.",
+      "title": "Walk into every meeting confident. Walk out with a clear plan.",
+      "description": "Start free. No credit card required.",
       "button": "Get Started Free"
     },
     "footer": {
