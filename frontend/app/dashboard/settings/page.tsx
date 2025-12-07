@@ -103,6 +103,7 @@ export default function SettingsPage() {
   const [calendarLoading, setCalendarLoading] = useState(true)
   const [calendarError, setCalendarError] = useState<string | null>(null)
   const [googleConnecting, setGoogleConnecting] = useState(false)
+  const [calendarSyncing, setCalendarSyncing] = useState(false)
   
   // Fetch coach settings directly (independent of CoachProvider)
   useEffect(() => {
@@ -235,6 +236,41 @@ export default function SettingsPage() {
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
   }, [fetchCalendarStatus, toast, tErrors, tIntegrations])
+  
+  // Handle calendar sync
+  const handleCalendarSync = async () => {
+    setCalendarSyncing(true)
+    try {
+      const { data, error } = await api.post<{
+        synced_meetings: number
+        new_meetings: number
+        updated_meetings: number
+        deleted_meetings: number
+      }>('/api/v1/calendar/sync', {})
+      
+      if (error) {
+        throw new Error(error.message || 'Sync failed')
+      }
+      
+      toast({
+        title: tIntegrations('calendar.syncNow'),
+        description: `${data?.new_meetings || 0} new, ${data?.updated_meetings || 0} updated meetings`,
+      })
+      
+      // Refresh status
+      fetchCalendarStatus()
+      
+    } catch (err) {
+      console.error('Calendar sync failed:', err)
+      toast({
+        title: tErrors('generic'),
+        description: err instanceof Error ? err.message : 'Sync failed',
+        variant: 'destructive',
+      })
+    } finally {
+      setCalendarSyncing(false)
+    }
+  }
   
   // Local state for form
   const [appLanguage, setAppLanguage] = useState('en')
@@ -1113,19 +1149,40 @@ export default function SettingsPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         {calendarStatus?.google.connected ? (
-                          <>
+                          <div className="flex items-center gap-2">
                             {calendarStatus.google.needs_reauth ? (
                               <Button variant="outline" size="sm" className="gap-1 text-amber-600 border-amber-300" disabled>
                                 <AlertCircle className="h-3 w-3" />
                                 {tIntegrations('calendar.reconnect')}
                               </Button>
                             ) : (
-                              <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                <Check className="h-3 w-3 mr-1" />
-                                {tIntegrations('calendar.connected')}
-                              </Badge>
+                              <>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={handleCalendarSync}
+                                  disabled={calendarSyncing}
+                                  className="gap-1"
+                                >
+                                  {calendarSyncing ? (
+                                    <>
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                      {tIntegrations('calendar.syncing')}
+                                    </>
+                                  ) : (
+                                    <>
+                                      <RefreshCw className="h-3 w-3" />
+                                      {tIntegrations('calendar.syncNow')}
+                                    </>
+                                  )}
+                                </Button>
+                                <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                  <Check className="h-3 w-3 mr-1" />
+                                  {tIntegrations('calendar.connected')}
+                                </Badge>
+                              </>
                             )}
-                          </>
+                          </div>
                         ) : (
                           <Button 
                             variant="outline" 
