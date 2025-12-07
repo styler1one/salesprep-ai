@@ -1483,7 +1483,7 @@
       "getStarted": "Get Started"
     },
     "hero": {
-      "badge": "AI-Powered Sales Enablement",
+      "badge": "AI-Powered Sales Enablement for B2B",
       "title": "Put your deals",
       "titleHighlight": "in motion",
       "description": "Research accounts, prepare meetings, analyse conversations, and follow up—all powered by AI that knows your style, your product, and your customer.",
@@ -1540,7 +1540,7 @@
     },
     "socialProof": {
       "trustedBy": "TRUSTED BY SALES TEAMS AT",
-      "usedBy": "Used by sales professionals worldwide"
+      "usedBy": "Used by B2B sales professionals worldwide"
     },
     "howItWorks": {
       "title": "How It Works",
