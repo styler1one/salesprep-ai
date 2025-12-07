@@ -110,6 +110,7 @@
     "prospects": "Prospects",
     "research": "Research",
     "preparation": "Preparation",
+    "meetings": "Meetings",
     "followup": "Meeting Analysis",
     "profile": "Profile",
     "companyProfile": "Company Profile",
@@ -500,6 +501,41 @@
       "title": "After your Meeting",
       "description": "Upload your meeting recording for automatic transcription and follow-up",
       "button": "Go to Follow-up"
+    }
+  },
+  "meetings": {
+    "title": "Meetings",
+    "subtitle": "Your upcoming calendar meetings",
+    "loading": "Loading meetings...",
+    "empty": {
+      "title": "No upcoming meetings",
+      "description": "Connect your calendar to see your meetings here",
+      "connectCalendar": "Connect Calendar"
+    },
+    "filters": {
+      "today": "Today",
+      "thisWeek": "This Week",
+      "thisMonth": "This Month",
+      "all": "All",
+      "unpreparedOnly": "Unprepared only"
+    },
+    "card": {
+      "now": "NOW",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "online": "Online",
+      "inPerson": "In Person",
+      "attendees": "{count, plural, =0 {No attendees} one {# attendee} other {# attendees}}",
+      "prepared": "Prepared",
+      "notPrepared": "Not prepared",
+      "prepare": "Prepare",
+      "viewPrep": "View Prep",
+      "join": "Join Meeting"
+    },
+    "sync": {
+      "lastSync": "Last synced {time}",
+      "syncing": "Syncing...",
+      "syncNow": "Sync Now"
     }
   },
   "followup": {

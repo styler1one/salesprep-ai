@@ -39,6 +39,12 @@ const navigationItems = [
     color: 'text-green-500',
   },
   {
+    key: 'meetings',
+    href: '/dashboard/meetings',
+    icon: Icons.calendar,
+    color: 'text-teal-500',
+  },
+  {
     key: 'followup',
     href: '/dashboard/followup',
     icon: Icons.mail,
