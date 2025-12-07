@@ -1056,7 +1056,46 @@
       "description": "Manage your subscription, view usage and invoices"
     },
     "integrations": {
-      "description": "Connect your CRM, calendar and other tools"
+      "description": "Connect your calendar and recording tools",
+      "title": "Integrations",
+      "subtitle": "Connect your tools to enhance your sales workflow",
+      "calendar": {
+        "title": "Calendar",
+        "description": "Sync your calendar to see upcoming meetings and prepare automatically",
+        "google": "Google Calendar",
+        "microsoft": "Microsoft 365",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connected": "Connected",
+        "notConnected": "Not connected",
+        "lastSync": "Last sync: {time}",
+        "syncNow": "Sync Now",
+        "syncing": "Syncing...",
+        "meetingsCount": "{count, plural, =0 {No meetings} one {# meeting} other {# meetings}} synced",
+        "needsReauth": "Reconnection required",
+        "reconnect": "Reconnect",
+        "syncEnabled": "Auto-sync enabled",
+        "syncDisabled": "Auto-sync disabled"
+      },
+      "recordings": {
+        "title": "Meeting Recordings",
+        "description": "Import recordings from your favorite notetaker apps",
+        "fireflies": "Fireflies.ai",
+        "zoom": "Zoom",
+        "teams": "Microsoft Teams",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connected": "Connected",
+        "notConnected": "Not connected",
+        "autoImport": "Auto-import recordings",
+        "lastImport": "Last import: {time}",
+        "recordingsCount": "{count, plural, =0 {No recordings} one {# recording} other {# recordings}} imported"
+      },
+      "status": {
+        "checking": "Checking status...",
+        "error": "Could not load integration status",
+        "retry": "Retry"
+      }
     },
     "notifications": {
       "description": "Configure your email and push notifications"
