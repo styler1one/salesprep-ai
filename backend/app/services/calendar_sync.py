@@ -275,7 +275,8 @@ class CalendarSyncService:
         self, 
         event: CalendarEvent, 
         connection_id: str, 
-        organization_id: str
+        organization_id: str,
+        user_id: str
     ) -> str:
         """Insert or update a calendar meeting. Returns 'new', 'updated', or 'unchanged'."""
         try:
@@ -289,6 +290,7 @@ class CalendarSyncService:
             meeting_data = {
                 "calendar_connection_id": connection_id,
                 "organization_id": organization_id,
+                "user_id": user_id,
                 "external_event_id": event.external_event_id,
                 "title": event.title,
                 "description": event.description,
@@ -393,7 +395,7 @@ class CalendarSyncService:
                 synced_event_ids.append(event.external_event_id)
                 
                 try:
-                    action = self._upsert_meeting(event, connection_id, conn["organization_id"])
+                    action = self._upsert_meeting(event, connection_id, conn["organization_id"], conn["user_id"])
                     if action == "new":
                         result.new_meetings += 1
                     elif action == "updated":
