@@ -24,6 +24,11 @@ google-genai>=1.0.0  # New unified Google GenAI SDK
 httpx>=0.28.1  # Updated for google-genai compatibility
 reportlab==4.0.7
 
+# Google Calendar API dependencies
+google-auth>=2.25.0
+google-auth-oauthlib>=1.2.0
+google-api-python-client>=2.111.0
+
 # Website Scraper dependencies
 aiohttp>=3.9.0
 beautifulsoup4>=4.12.0

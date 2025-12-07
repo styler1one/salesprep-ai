@@ -10,6 +10,7 @@ import logging
 
 from app.deps import get_current_user, get_organization_id
 from app.database import get_supabase_service
+from app.services.google_calendar import google_calendar_service
 
 # Use centralized database module
 supabase = get_supabase_service()
@@ -158,11 +159,28 @@ async def start_google_auth(
     
     Returns the authorization URL to redirect the user to Google's consent screen.
     """
-    # TODO: Implement in Sprint 1.5
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Google OAuth not yet implemented. Coming in Sprint 1.5."
-    )
+    # Check if Google OAuth is configured
+    if not google_calendar_service.is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Google Calendar integration is not configured"
+        )
+    
+    user_id = current_user["sub"]
+    
+    try:
+        auth_url, state = google_calendar_service.generate_auth_url(user_id)
+        
+        return CalendarAuthUrlResponse(
+            auth_url=auth_url,
+            state=state
+        )
+    except Exception as e:
+        logger.error(f"Failed to generate Google auth URL: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to start Google Calendar authorization"
+        )
 
 
 @router.post("/callback/google", response_model=CalendarCallbackResponse)
