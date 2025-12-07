@@ -582,18 +582,29 @@ export default function MeetingsPage() {
                         </div>
                         
                         {/* Right: Actions */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col items-end gap-2">
                           {/* Prep status */}
                           {meeting.prep_status?.has_prep ? (
-                            <Badge variant="secondary" className="bg-green-100 text-green-700">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              {t('card.prepared')}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                {t('card.prepared')}
+                              </Badge>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => router.push(`/dashboard/preparation/${meeting.prep_status?.prep_id}`)}
+                              >
+                                {t('card.viewPrep')}
+                              </Button>
+                            </div>
                           ) : (
                             <Button
                               size="sm"
                               onClick={() => {
-                                sessionStorage.setItem('prepareForCompany', meeting.title)
+                                // Use prospect name if linked, otherwise meeting title
+                                const companyName = meeting.prospect_name || meeting.title
+                                sessionStorage.setItem('prepareForCompany', companyName)
                                 router.push('/dashboard/preparation')
                               }}
                             >
@@ -607,8 +618,9 @@ export default function MeetingsPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => window.open(meeting.meeting_url, '_blank')}
+                              className="gap-1"
                             >
-                              <ExternalLink className="h-3 w-3 mr-1" />
+                              <ExternalLink className="h-3 w-3" />
                               {t('card.join')}
                             </Button>
                           )}
