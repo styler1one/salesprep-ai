@@ -102,61 +102,111 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Hero Image/Preview */}
+          {/* Hero Image/Preview - Meetings Calendar */}
           <div className="mt-16 relative">
             <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-slate-900 via-transparent to-transparent z-10 pointer-events-none" />
             <div className="rounded-2xl border dark:border-slate-800 shadow-2xl overflow-hidden bg-white dark:bg-slate-900">
-              <div className="h-8 bg-slate-100 dark:bg-slate-800 border-b dark:border-slate-700 flex items-center px-4 gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-400" />
-                <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                <div className="w-3 h-3 rounded-full bg-green-400" />
-              </div>
-              <div className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 min-h-[400px] flex items-center justify-center">
-                <div className="grid grid-cols-3 gap-4 w-full max-w-4xl">
-                  {/* Preview Cards */}
-                  <div className="col-span-1 space-y-4">
-                    <div className="rounded-lg bg-white dark:bg-slate-800 p-4 shadow-sm border dark:border-slate-700">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                          <Icons.search className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <span className="font-medium text-sm text-slate-900 dark:text-white">{t('preview.research')}</span>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded w-full" />
-                        <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded w-3/4" />
-                      </div>
-                    </div>
-                    <div className="rounded-lg bg-white dark:bg-slate-800 p-4 shadow-sm border dark:border-slate-700">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                          <Icons.fileText className="h-4 w-4 text-green-600 dark:text-green-400" />
-                        </div>
-                        <span className="font-medium text-sm text-slate-900 dark:text-white">{t('preview.brief')}</span>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded w-full" />
-                        <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded w-2/3" />
-                      </div>
-                    </div>
+              {/* Browser Chrome */}
+              <div className="h-10 bg-slate-100 dark:bg-slate-800 border-b dark:border-slate-700 flex items-center px-4 gap-2">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-400" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                  <div className="w-3 h-3 rounded-full bg-green-400" />
+                </div>
+                <div className="flex-1 flex justify-center">
+                  <div className="px-4 py-1 bg-white dark:bg-slate-700 rounded-md text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                    <Icons.globe className="h-3 w-3" />
+                    app.dealmotion.ai/meetings
                   </div>
-                  <div className="col-span-2 rounded-lg bg-white dark:bg-slate-800 p-6 shadow-sm border dark:border-slate-700">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
-                        <Icons.sparkles className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-slate-900 dark:text-white">{t('preview.aiMeetingBrief')}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{t('preview.generatedIn')}</p>
-                      </div>
+                </div>
+              </div>
+              
+              {/* App Content */}
+              <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+                {/* App Header */}
+                <div className="px-6 py-4 border-b dark:border-slate-700 flex items-center justify-between bg-white/50 dark:bg-slate-800/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
+                      <Icons.sparkles className="h-4 w-4 text-white" />
                     </div>
-                    <div className="space-y-3">
-                      <div className="h-3 bg-slate-100 dark:bg-slate-700 rounded w-full" />
-                      <div className="h-3 bg-slate-100 dark:bg-slate-700 rounded w-5/6" />
-                      <div className="h-3 bg-slate-100 dark:bg-slate-700 rounded w-4/5" />
-                      <div className="h-3 bg-slate-100 dark:bg-slate-700 rounded w-full" />
-                      <div className="h-3 bg-slate-100 dark:bg-slate-700 rounded w-3/4" />
+                    <span className="font-semibold text-slate-900 dark:text-white">My Meetings</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                    <Icons.calendar className="h-4 w-4" />
+                    <span>December 2024</span>
+                  </div>
+                </div>
+
+                {/* Meetings List */}
+                <div className="p-6 space-y-3 min-h-[320px]">
+                  {/* Meeting 1 - Prepared */}
+                  <div className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="w-3 h-3 rounded-full bg-green-500 ring-4 ring-green-500/20" title="Prepared" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-slate-900 dark:text-white truncate">Discovery Call</p>
+                        <span className="px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium">Ready</span>
+                      </div>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 truncate">Acme Corp • Sarah Johnson</p>
                     </div>
+                    <div className="text-right text-sm">
+                      <p className="font-medium text-slate-900 dark:text-white">Today</p>
+                      <p className="text-slate-500 dark:text-slate-400">2:00 PM</p>
+                    </div>
+                    <Icons.chevronRight className="h-5 w-5 text-slate-300 dark:text-slate-600" />
+                  </div>
+
+                  {/* Meeting 2 - In Progress */}
+                  <div className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="w-3 h-3 rounded-full bg-amber-500 ring-4 ring-amber-500/20" title="In Progress" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-slate-900 dark:text-white truncate">Product Demo</p>
+                        <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-medium">Preparing...</span>
+                      </div>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 truncate">TechStart Inc • Mike Chen</p>
+                    </div>
+                    <div className="text-right text-sm">
+                      <p className="font-medium text-slate-900 dark:text-white">Tomorrow</p>
+                      <p className="text-slate-500 dark:text-slate-400">10:00 AM</p>
+                    </div>
+                    <Icons.chevronRight className="h-5 w-5 text-slate-300 dark:text-slate-600" />
+                  </div>
+
+                  {/* Meeting 3 - Not Prepared */}
+                  <div className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border-2 border-red-200 dark:border-red-900/50 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="w-3 h-3 rounded-full bg-red-500 ring-4 ring-red-500/20" title="Not Prepared" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-slate-900 dark:text-white truncate">Contract Negotiation</p>
+                        <span className="px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-medium">Not Prepared</span>
+                      </div>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 truncate">Global Solutions • Emma Davis</p>
+                    </div>
+                    <div className="text-right text-sm">
+                      <p className="font-medium text-slate-900 dark:text-white">Dec 10</p>
+                      <p className="text-slate-500 dark:text-slate-400">3:30 PM</p>
+                    </div>
+                    <button className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-violet-600 text-white text-xs font-medium hover:opacity-90 transition-opacity">
+                      Prepare Now
+                    </button>
+                  </div>
+
+                  {/* Meeting 4 - Analyzed */}
+                  <div className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow opacity-75">
+                    <div className="w-3 h-3 rounded-full bg-purple-500 ring-4 ring-purple-500/20" title="Analyzed" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-slate-900 dark:text-white truncate">Quarterly Review</p>
+                        <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-xs font-medium">7 Outputs</span>
+                      </div>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 truncate">BigCo Ltd • James Wilson</p>
+                    </div>
+                    <div className="text-right text-sm">
+                      <p className="font-medium text-slate-500 dark:text-slate-400">Yesterday</p>
+                      <p className="text-slate-400 dark:text-slate-500">Completed</p>
+                    </div>
+                    <Icons.chevronRight className="h-5 w-5 text-slate-300 dark:text-slate-600" />
                   </div>
                 </div>
               </div>
