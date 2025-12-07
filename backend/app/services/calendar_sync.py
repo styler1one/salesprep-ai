@@ -67,6 +67,10 @@ class CalendarSyncService:
     def _decode_token(self, encoded_token: str) -> str:
         """Decode a base64-encoded token."""
         try:
+            # Add padding if needed (base64 requires length to be multiple of 4)
+            padding_needed = len(encoded_token) % 4
+            if padding_needed:
+                encoded_token += '=' * (4 - padding_needed)
             return base64.b64decode(encoded_token).decode()
         except Exception as e:
             logger.error(f"Failed to decode token: {e}")
