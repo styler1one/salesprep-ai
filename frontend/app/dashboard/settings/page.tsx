@@ -104,6 +104,7 @@ export default function SettingsPage() {
   const [calendarError, setCalendarError] = useState<string | null>(null)
   const [googleConnecting, setGoogleConnecting] = useState(false)
   const [calendarSyncing, setCalendarSyncing] = useState(false)
+  const [disconnecting, setDisconnecting] = useState<string | null>(null)
   
   // Fetch coach settings directly (independent of CoachProvider)
   useEffect(() => {
@@ -269,6 +270,40 @@ export default function SettingsPage() {
       })
     } finally {
       setCalendarSyncing(false)
+    }
+  }
+  
+  // Handle calendar disconnect
+  const handleCalendarDisconnect = async (provider: 'google' | 'microsoft') => {
+    // Confirm before disconnecting
+    if (!confirm(tIntegrations('calendar.disconnectConfirmDesc'))) {
+      return
+    }
+    
+    setDisconnecting(provider)
+    try {
+      const { error } = await api.delete(`/api/v1/calendar/disconnect/${provider}`)
+      
+      if (error) {
+        throw new Error(error.message || 'Disconnect failed')
+      }
+      
+      toast({
+        title: tIntegrations('calendar.disconnectSuccess'),
+      })
+      
+      // Refresh status
+      fetchCalendarStatus()
+      
+    } catch (err) {
+      console.error('Calendar disconnect failed:', err)
+      toast({
+        title: tIntegrations('calendar.disconnectFailed'),
+        description: err instanceof Error ? err.message : 'Disconnect failed',
+        variant: 'destructive',
+      })
+    } finally {
+      setDisconnecting(null)
     }
   }
   
@@ -1171,25 +1206,41 @@ export default function SettingsPage() {
                                   <Check className="h-3 w-3 mr-1" />
                                   {tIntegrations('calendar.connected')}
                                 </Badge>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  onClick={handleCalendarSync}
-                                  disabled={calendarSyncing}
-                                  className="gap-1"
-                                >
-                                  {calendarSyncing ? (
-                                    <>
+                                <div className="flex gap-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={handleCalendarSync}
+                                    disabled={calendarSyncing || disconnecting === 'google'}
+                                    className="gap-1"
+                                  >
+                                    {calendarSyncing ? (
+                                      <>
+                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                        {tIntegrations('calendar.syncing')}
+                                      </>
+                                    ) : (
+                                      <>
+                                        <RefreshCw className="h-3 w-3" />
+                                        {tIntegrations('calendar.syncNow')}
+                                      </>
+                                    )}
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => handleCalendarDisconnect('google')}
+                                    disabled={disconnecting === 'google' || calendarSyncing}
+                                    className="gap-1 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                  >
+                                    {disconnecting === 'google' ? (
                                       <Loader2 className="h-3 w-3 animate-spin" />
-                                      {tIntegrations('calendar.syncing')}
-                                    </>
-                                  ) : (
-                                    <>
-                                      <RefreshCw className="h-3 w-3" />
-                                      {tIntegrations('calendar.syncNow')}
-                                    </>
-                                  )}
-                                </Button>
+                                    ) : (
+                                      <Power className="h-3 w-3" />
+                                    )}
+                                    {tIntegrations('calendar.disconnect')}
+                                  </Button>
+                                </div>
                               </>
                             )}
                           </div>

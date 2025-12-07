@@ -279,6 +279,63 @@ async def google_auth_callback(
         )
 
 
+@router.delete("/disconnect/{provider}")
+async def disconnect_calendar(
+    provider: str,
+    user_org: Tuple[str, str] = Depends(get_user_org)
+):
+    """
+    Disconnect a calendar provider.
+    
+    Deletes the connection record and all synced meetings.
+    Optionally revokes the OAuth tokens.
+    """
+    user_id, organization_id = user_org
+    
+    if provider not in ["google", "microsoft"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid provider. Must be 'google' or 'microsoft'"
+        )
+    
+    try:
+        # Get connection
+        connection = supabase.table("calendar_connections").select("id").eq(
+            "user_id", user_id
+        ).eq("provider", provider).execute()
+        
+        if not connection.data or len(connection.data) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No {provider} calendar connected"
+            )
+        
+        connection_id = connection.data[0]["id"]
+        
+        # Delete related calendar meetings first (due to foreign key)
+        supabase.table("calendar_meetings").delete().eq(
+            "calendar_connection_id", connection_id
+        ).execute()
+        
+        # Delete connection
+        supabase.table("calendar_connections").delete().eq(
+            "id", connection_id
+        ).execute()
+        
+        logger.info(f"Disconnected {provider} calendar for user {user_id[:8]}...")
+        
+        return {"success": True, "message": f"{provider.capitalize()} Calendar disconnected"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Disconnect error for {provider}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to disconnect {provider} calendar: {str(e)}"
+        )
+
+
 @router.get("/auth/microsoft", response_model=CalendarAuthUrlResponse)
 async def start_microsoft_auth(
     current_user: dict = Depends(get_current_user)
