@@ -3,7 +3,12 @@
 import { useTranslations } from 'next-intl'
 import { Icons } from '@/components/icons'
 
-const outputs = [
+const outputs: Array<{
+  icon: string
+  key: string
+  color: string
+  highlight?: boolean
+}> = [
   { icon: 'fileText', key: 'summary', color: 'blue' },
   { icon: 'users', key: 'customerReport', color: 'green', highlight: true },
   { icon: 'mail', key: 'shareEmail', color: 'orange' },
@@ -11,7 +16,7 @@ const outputs = [
   { icon: 'sparkles', key: 'salesCoaching', color: 'pink', highlight: true },
   { icon: 'checkCircle', key: 'actionItems', color: 'cyan' },
   { icon: 'briefcase', key: 'internalReport', color: 'slate', highlight: true },
-] as const
+]
 
 export function MeetingAnalysisShowcase() {
   const t = useTranslations('homepage.meetingAnalysis')
