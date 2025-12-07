@@ -1149,7 +1149,7 @@ export default function SettingsPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         {calendarStatus?.google.connected ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-col items-end gap-2">
                             {calendarStatus.google.needs_reauth ? (
                               <Button 
                                 variant="outline" 
@@ -1167,6 +1167,10 @@ export default function SettingsPage() {
                               </Button>
                             ) : (
                               <>
+                                <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                  <Check className="h-3 w-3 mr-1" />
+                                  {tIntegrations('calendar.connected')}
+                                </Badge>
                                 <Button 
                                   variant="outline" 
                                   size="sm" 
@@ -1186,10 +1190,6 @@ export default function SettingsPage() {
                                     </>
                                   )}
                                 </Button>
-                                <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                  <Check className="h-3 w-3 mr-1" />
-                                  {tIntegrations('calendar.connected')}
-                                </Badge>
                               </>
                             )}
                           </div>
