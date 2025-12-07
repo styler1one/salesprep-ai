@@ -10,6 +10,7 @@ import logging
 
 from app.deps import get_user_org
 from app.database import get_supabase_service
+from app.services.prospect_matcher import ProspectMatcher, ProspectMatch
 
 logger = logging.getLogger(__name__)
 supabase = get_supabase_service()
@@ -299,5 +300,184 @@ async def get_meeting(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to load meeting: {str(e)}"
+        )
+
+
+# ==========================================
+# Prospect Linking Endpoints
+# ==========================================
+
+class LinkProspectRequest(BaseModel):
+    """Request to link a meeting to a prospect."""
+    prospect_id: str
+
+
+class LinkProspectResponse(BaseModel):
+    """Response after linking."""
+    success: bool
+    message: str
+
+
+class SuggestedMatchResponse(BaseModel):
+    """A suggested prospect match."""
+    prospect_id: str
+    company_name: str
+    confidence: float
+    match_reason: str
+
+
+class SuggestedMatchesResponse(BaseModel):
+    """Response with suggested matches."""
+    matches: List[SuggestedMatchResponse]
+
+
+@router.post("/{meeting_id}/link-prospect", response_model=LinkProspectResponse)
+async def link_meeting_to_prospect(
+    meeting_id: str,
+    request: LinkProspectRequest,
+    user_org: tuple = Depends(get_user_org),
+):
+    """Manually link a meeting to a prospect."""
+    user_id, organization_id = user_org
+    
+    try:
+        # Verify meeting belongs to organization
+        meeting_check = supabase.table("calendar_meetings").select("id").eq(
+            "id", meeting_id
+        ).eq("organization_id", organization_id).execute()
+        
+        if not meeting_check.data or len(meeting_check.data) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Meeting not found"
+            )
+        
+        # Verify prospect belongs to organization
+        prospect_check = supabase.table("prospects").select("id, company_name").eq(
+            "id", request.prospect_id
+        ).eq("organization_id", organization_id).execute()
+        
+        if not prospect_check.data or len(prospect_check.data) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Prospect not found"
+            )
+        
+        # Update meeting with prospect link
+        supabase.table("calendar_meetings").update({
+            "prospect_id": request.prospect_id,
+            "prospect_link_type": "manual",
+            "match_confidence": 1.0,  # Manual links have 100% confidence
+        }).eq("id", meeting_id).execute()
+        
+        company_name = prospect_check.data[0]["company_name"]
+        
+        return LinkProspectResponse(
+            success=True,
+            message=f"Meeting linked to {company_name}"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to link meeting {meeting_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to link meeting: {str(e)}"
+        )
+
+
+@router.delete("/{meeting_id}/link-prospect", response_model=LinkProspectResponse)
+async def unlink_meeting_from_prospect(
+    meeting_id: str,
+    user_org: tuple = Depends(get_user_org),
+):
+    """Remove prospect link from a meeting."""
+    user_id, organization_id = user_org
+    
+    try:
+        # Verify meeting belongs to organization
+        meeting_check = supabase.table("calendar_meetings").select("id").eq(
+            "id", meeting_id
+        ).eq("organization_id", organization_id).execute()
+        
+        if not meeting_check.data or len(meeting_check.data) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Meeting not found"
+            )
+        
+        # Remove prospect link
+        supabase.table("calendar_meetings").update({
+            "prospect_id": None,
+            "prospect_link_type": None,
+            "match_confidence": None,
+        }).eq("id", meeting_id).execute()
+        
+        return LinkProspectResponse(
+            success=True,
+            message="Prospect link removed"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to unlink meeting {meeting_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to unlink meeting: {str(e)}"
+        )
+
+
+@router.get("/{meeting_id}/suggested-matches", response_model=SuggestedMatchesResponse)
+async def get_suggested_matches(
+    meeting_id: str,
+    user_org: tuple = Depends(get_user_org),
+):
+    """Get suggested prospect matches for a meeting."""
+    user_id, organization_id = user_org
+    
+    try:
+        # Get meeting details
+        meeting_result = supabase.table("calendar_meetings").select(
+            "id, title, attendees"
+        ).eq("id", meeting_id).eq("organization_id", organization_id).execute()
+        
+        if not meeting_result.data or len(meeting_result.data) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Meeting not found"
+            )
+        
+        meeting = meeting_result.data[0]
+        
+        # Run prospect matcher
+        matcher = ProspectMatcher(supabase)
+        result = await matcher.match_meeting(
+            meeting_id=meeting["id"],
+            meeting_title=meeting.get("title", ""),
+            attendees=meeting.get("attendees", []),
+            organization_id=organization_id
+        )
+        
+        return SuggestedMatchesResponse(
+            matches=[
+                SuggestedMatchResponse(
+                    prospect_id=m.prospect_id,
+                    company_name=m.company_name,
+                    confidence=m.confidence,
+                    match_reason=m.match_reason
+                )
+                for m in result.all_matches
+            ]
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get matches for meeting {meeting_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get suggested matches: {str(e)}"
         )
 

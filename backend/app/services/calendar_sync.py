@@ -14,6 +14,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 from app.database import get_supabase_service
+from app.services.prospect_matcher import ProspectMatcher
 
 logger = logging.getLogger(__name__)
 
@@ -419,6 +420,19 @@ class CalendarSyncService:
                 f"{result.new_meetings} new, {result.updated_meetings} updated, "
                 f"{result.deleted_meetings} deleted"
             )
+            
+            # Run prospect matching on new/updated unlinked meetings
+            if result.new_meetings > 0 or result.updated_meetings > 0:
+                try:
+                    matcher = ProspectMatcher(self.supabase)
+                    import asyncio
+                    asyncio.get_event_loop().run_until_complete(
+                        matcher.match_all_unlinked(conn["organization_id"])
+                    )
+                    logger.info(f"Ran prospect matching for organization {conn['organization_id']}")
+                except Exception as match_error:
+                    logger.error(f"Prospect matching failed: {match_error}")
+                    # Don't fail the sync for matching errors
             
             return result
             
