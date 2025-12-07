@@ -536,6 +536,18 @@
       "lastSync": "Last synced {time}",
       "syncing": "Syncing...",
       "syncNow": "Sync Now"
+    },
+    "prospect": {
+      "linked": "Linked to {name}",
+      "notLinked": "Not linked",
+      "link": "Link to Prospect",
+      "unlink": "Unlink",
+      "unlinkConfirm": "Remove link to {name}?",
+      "suggestedMatches": "Suggested matches",
+      "noMatches": "No matching prospects found",
+      "linkSuccess": "Meeting linked to {name}",
+      "unlinkSuccess": "Prospect link removed",
+      "confidence": "{percent}% match"
     }
   },
   "followup": {

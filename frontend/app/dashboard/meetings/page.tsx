@@ -19,11 +19,23 @@ import {
   ExternalLink,
   CheckCircle,
   AlertCircle,
-  CalendarPlus
+  CalendarPlus,
+  Link2,
+  Link2Off,
+  Building2,
+  Sparkles
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useToast } from '@/components/ui/use-toast'
 import { api } from '@/lib/api'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import type { User } from '@supabase/supabase-js'
 
 interface Attendee {
@@ -66,6 +78,17 @@ interface MeetingsResponse {
   has_more: boolean
 }
 
+interface SuggestedMatch {
+  prospect_id: string
+  company_name: string
+  confidence: number
+  match_reason: string
+}
+
+interface SuggestedMatchesResponse {
+  matches: SuggestedMatch[]
+}
+
 type FilterType = 'today' | 'week' | 'month' | 'all'
 
 export default function MeetingsPage() {
@@ -82,6 +105,9 @@ export default function MeetingsPage() {
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<FilterType>('week')
   const [unpreparedOnly, setUnpreparedOnly] = useState(false)
+  const [linkingMeetingId, setLinkingMeetingId] = useState<string | null>(null)
+  const [suggestedMatches, setSuggestedMatches] = useState<Record<string, SuggestedMatch[]>>({})
+  const [loadingMatches, setLoadingMatches] = useState<Record<string, boolean>>({})
 
   // Load user
   useEffect(() => {
@@ -178,6 +204,87 @@ export default function MeetingsPage() {
       })
     } finally {
       setSyncing(false)
+    }
+  }
+
+  // Load suggested matches for a meeting
+  const loadSuggestedMatches = async (meetingId: string) => {
+    if (suggestedMatches[meetingId]) return // Already loaded
+    
+    setLoadingMatches(prev => ({ ...prev, [meetingId]: true }))
+    try {
+      const { data, error: apiError } = await api.get<SuggestedMatchesResponse>(
+        `/api/v1/calendar-meetings/${meetingId}/suggested-matches`
+      )
+      
+      if (!apiError && data) {
+        setSuggestedMatches(prev => ({ ...prev, [meetingId]: data.matches }))
+      }
+    } catch (err) {
+      console.error('Failed to load matches:', err)
+    } finally {
+      setLoadingMatches(prev => ({ ...prev, [meetingId]: false }))
+    }
+  }
+
+  // Link meeting to prospect
+  const linkMeetingToProspect = async (meetingId: string, prospectId: string, prospectName: string) => {
+    setLinkingMeetingId(meetingId)
+    try {
+      const { error: apiError } = await api.post(
+        `/api/v1/calendar-meetings/${meetingId}/link-prospect`,
+        { prospect_id: prospectId }
+      )
+      
+      if (apiError) {
+        throw new Error(apiError.message || 'Link failed')
+      }
+      
+      toast({
+        title: t('prospect.linkSuccess', { name: prospectName }),
+      })
+      
+      // Reload meetings to reflect the change
+      loadMeetings()
+    } catch (err) {
+      console.error('Link failed:', err)
+      toast({
+        title: 'Failed to link',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive',
+      })
+    } finally {
+      setLinkingMeetingId(null)
+    }
+  }
+
+  // Unlink meeting from prospect
+  const unlinkMeeting = async (meetingId: string) => {
+    setLinkingMeetingId(meetingId)
+    try {
+      const { error: apiError } = await api.delete(
+        `/api/v1/calendar-meetings/${meetingId}/link-prospect`
+      )
+      
+      if (apiError) {
+        throw new Error(apiError.message || 'Unlink failed')
+      }
+      
+      toast({
+        title: t('prospect.unlinkSuccess'),
+      })
+      
+      // Reload meetings
+      loadMeetings()
+    } catch (err) {
+      console.error('Unlink failed:', err)
+      toast({
+        title: 'Failed to unlink',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive',
+      })
+    } finally {
+      setLinkingMeetingId(null)
     }
   }
 
@@ -389,17 +496,88 @@ export default function MeetingsPage() {
                             )}
                             
                             {/* Prospect link */}
-                            {meeting.prospect_name && (
-                              <Button
-                                variant="link"
-                                size="sm"
-                                className="p-0 h-auto mt-1 text-blue-600"
-                                onClick={() => router.push(`/dashboard/prospects/${meeting.prospect_id}`)}
-                              >
-                                {meeting.prospect_name}
-                                <ChevronRight className="h-3 w-3 ml-1" />
-                              </Button>
-                            )}
+                            <div className="mt-2">
+                              {meeting.prospect_name ? (
+                                <div className="flex items-center gap-2">
+                                  <Badge 
+                                    variant="secondary" 
+                                    className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 cursor-pointer hover:bg-blue-200"
+                                    onClick={() => router.push(`/dashboard/prospects/${meeting.prospect_id}`)}
+                                  >
+                                    <Building2 className="h-3 w-3 mr-1" />
+                                    {meeting.prospect_name}
+                                  </Badge>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0 text-slate-400 hover:text-red-500"
+                                    onClick={() => unlinkMeeting(meeting.id)}
+                                    disabled={linkingMeetingId === meeting.id}
+                                  >
+                                    {linkingMeetingId === meeting.id ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <Link2Off className="h-3 w-3" />
+                                    )}
+                                  </Button>
+                                </div>
+                              ) : (
+                                <DropdownMenu onOpenChange={(open) => {
+                                  if (open) loadSuggestedMatches(meeting.id)
+                                }}>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 px-2 text-slate-500 hover:text-blue-600"
+                                      disabled={linkingMeetingId === meeting.id}
+                                    >
+                                      {linkingMeetingId === meeting.id ? (
+                                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                      ) : (
+                                        <Link2 className="h-3 w-3 mr-1" />
+                                      )}
+                                      {t('prospect.link')}
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="start" className="w-64">
+                                    <DropdownMenuLabel className="flex items-center gap-2">
+                                      <Sparkles className="h-3 w-3 text-amber-500" />
+                                      {t('prospect.suggestedMatches')}
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    {loadingMatches[meeting.id] ? (
+                                      <div className="flex items-center justify-center py-4">
+                                        <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                                      </div>
+                                    ) : suggestedMatches[meeting.id]?.length ? (
+                                      suggestedMatches[meeting.id].map((match) => (
+                                        <DropdownMenuItem
+                                          key={match.prospect_id}
+                                          onClick={() => linkMeetingToProspect(meeting.id, match.prospect_id, match.company_name)}
+                                          className="flex flex-col items-start gap-0.5 cursor-pointer"
+                                        >
+                                          <div className="flex items-center gap-2 w-full">
+                                            <Building2 className="h-3 w-3 text-blue-500" />
+                                            <span className="font-medium">{match.company_name}</span>
+                                            <Badge variant="outline" className="ml-auto text-xs">
+                                              {Math.round(match.confidence * 100)}%
+                                            </Badge>
+                                          </div>
+                                          <span className="text-xs text-slate-500 pl-5">
+                                            {match.match_reason}
+                                          </span>
+                                        </DropdownMenuItem>
+                                      ))
+                                    ) : (
+                                      <div className="px-2 py-4 text-center text-sm text-slate-500">
+                                        {t('prospect.noMatches')}
+                                      </div>
+                                    )}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
+                            </div>
                           </div>
                         </div>
                         
