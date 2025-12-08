@@ -286,7 +286,9 @@ async def sync_fireflies_recordings(
             date_ms = transcript.get("date", 0)
             recording_date = datetime.fromtimestamp(date_ms / 1000, tz=timezone.utc) if date_ms else datetime.now(timezone.utc)
             
-            duration_seconds = transcript.get("duration", 0)
+            # Fireflies returns duration in minutes as float, convert to seconds as int
+            duration_raw = transcript.get("duration", 0)
+            duration_seconds = int(float(duration_raw) * 60) if duration_raw else 0
             participants = transcript.get("participants", [])
             audio_url = transcript.get("audio_url")
             transcript_url = transcript.get("transcript_url")
