@@ -103,20 +103,39 @@ export function RecordingsSidebar() {
 
       // Load pending recordings from Teams
       if (hasTeams) {
-        const { data, error } = await api.get<{recordings: ExternalRecording[], total: number}>(
+        // Teams API returns different field names than Fireflies
+        interface TeamsRecording {
+          id: string
+          external_id: string
+          title: string | null
+          meeting_time: string | null
+          duration: number | null
+          participants: Array<{name?: string}> | null
+          transcript_available: boolean
+          status: string
+          imported_followup_id: string | null
+        }
+        
+        const { data, error } = await api.get<{recordings: TeamsRecording[], total: number}>(
           '/api/v1/integrations/teams/recordings?status_filter=pending&limit=10'
         )
         
         if (!error && data) {
-          // Map Teams recordings to the same format
-          const teamsRecordings = data.recordings.map(rec => ({
-            ...rec,
+          // Map Teams recordings to the ExternalRecording format
+          const teamsRecordings: ExternalRecording[] = data.recordings.map(rec => ({
+            id: rec.id,
             provider: 'teams',
+            external_id: rec.external_id,
+            title: rec.title,
             recording_date: rec.meeting_time || '',
             duration_seconds: rec.duration || null,
-            participants: rec.participants?.map((p: {name?: string}) => p.name || 'Unknown') || [],
+            participants: rec.participants?.map(p => p.name || 'Unknown') || [],
+            transcript_available: rec.transcript_available,
+            audio_url: null,
+            matched_meeting_id: null,
+            matched_prospect_id: null,
             import_status: rec.status || 'pending',
-          } as ExternalRecording))
+          }))
           allRecordings.push(...teamsRecordings)
         }
       }
