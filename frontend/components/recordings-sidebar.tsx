@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useToast } from '@/components/ui/use-toast'
+import { ImportRecordingModal } from './import-recording-modal'
 
 interface ExternalRecording {
   id: string
@@ -62,8 +63,11 @@ export function RecordingsSidebar() {
   const [recordings, setRecordings] = useState<ExternalRecording[]>([])
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
-  const [importing, setImporting] = useState<string | null>(null)
   const [hasIntegration, setHasIntegration] = useState(false)
+  
+  // Import modal state
+  const [selectedRecording, setSelectedRecording] = useState<ExternalRecording | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Load recordings
   const loadRecordings = async () => {
@@ -136,42 +140,19 @@ export function RecordingsSidebar() {
     }
   }
 
-  // Import recording
-  const handleImport = async (recordingId: string) => {
-    setImporting(recordingId)
-    try {
-      const { data, error } = await api.post<{
-        success: boolean
-        followup_id: string
-        message: string
-      }>(`/api/v1/integrations/fireflies/import/${recordingId}`, {})
-      
-      if (error) {
-        throw new Error(error.message || 'Import failed')
-      }
-      
-      toast({
-        title: 'Recording imported',
-        description: data?.message || 'AI analysis in progress',
-      })
-      
-      // Navigate to the followup if we got an ID
-      if (data?.followup_id) {
-        router.push(`/dashboard/followup/${data.followup_id}`)
-      } else {
-        // Remove from list
-        setRecordings(prev => prev.filter(r => r.id !== recordingId))
-      }
-    } catch (err) {
-      console.error('Import failed:', err)
-      toast({
-        title: 'Import failed',
-        description: err instanceof Error ? err.message : 'Unknown error',
-        variant: 'destructive',
-      })
-    } finally {
-      setImporting(null)
+  // Open import modal for a recording
+  const handleAnalyze = (recording: ExternalRecording) => {
+    setSelectedRecording(recording)
+    setIsModalOpen(true)
+  }
+
+  // Handle successful import
+  const handleImported = (followupId: string) => {
+    // Remove from list
+    if (selectedRecording) {
+      setRecordings(prev => prev.filter(r => r.id !== selectedRecording.id))
     }
+    setSelectedRecording(null)
   }
 
   // Format duration
@@ -283,24 +264,14 @@ export function RecordingsSidebar() {
                   </div>
                 </div>
                 
-                {/* Import button */}
+                {/* Analyze button - opens import modal */}
                 <Button
                   size="sm"
                   className="w-full mt-3 gap-1"
-                  onClick={() => handleImport(recording.id)}
-                  disabled={importing === recording.id}
+                  onClick={() => handleAnalyze(recording)}
                 >
-                  {importing === recording.id ? (
-                    <>
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Importing...
-                    </>
-                  ) : (
-                    <>
-                      Analyze
-                      <ArrowRight className="h-3 w-3" />
-                    </>
-                  )}
+                  Analyze
+                  <ArrowRight className="h-3 w-3" />
                 </Button>
               </div>
             ))}
@@ -330,6 +301,17 @@ export function RecordingsSidebar() {
           </div>
         )}
       </CardContent>
+
+      {/* Import Recording Modal */}
+      <ImportRecordingModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false)
+          setSelectedRecording(null)
+        }}
+        recording={selectedRecording}
+        onImported={handleImported}
+      />
     </Card>
   )
 }

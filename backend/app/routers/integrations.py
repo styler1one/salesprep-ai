@@ -103,6 +103,9 @@ class FirefliesSyncResponse(BaseModel):
 class FirefliesImportRequest(BaseModel):
     """Request to import a Fireflies recording."""
     prospect_id: Optional[str] = Field(None, description="Link to a specific prospect")
+    contact_ids: Optional[List[str]] = Field(None, description="Link to specific contacts")
+    meeting_prep_id: Optional[str] = Field(None, description="Link to a meeting preparation")
+    include_coaching: bool = Field(False, description="Include coaching feedback in analysis")
 
 
 class FirefliesImportResponse(BaseModel):
@@ -606,6 +609,16 @@ async def import_fireflies_recording(
                 if meeting_result.data and meeting_result.data[0].get("prospect_id"):
                     prospect_id = meeting_result.data[0]["prospect_id"]
         
+        # Get prospect company name for context
+        prospect_company = None
+        if prospect_id:
+            try:
+                prospect_result = supabase.table("prospects").select("company_name").eq("id", prospect_id).execute()
+                if prospect_result.data:
+                    prospect_company = prospect_result.data[0].get("company_name")
+            except Exception:
+                pass  # Non-critical
+        
         # Create followup record (only use columns that exist in the table)
         transcript = recording.get("transcript_text", "")
         title = recording.get("title", "Fireflies Recording")
@@ -614,9 +627,12 @@ async def import_fireflies_recording(
             "organization_id": org_id,
             "user_id": user_id,
             "prospect_id": prospect_id,
+            "meeting_prep_id": request.meeting_prep_id,  # Link to preparation
+            "contact_ids": request.contact_ids or [],  # Link to contacts
             "audio_url": recording.get("audio_url"),
             "transcription_text": transcript[:100000] if transcript else None,  # Limit size
             "meeting_subject": title,  # Use meeting_subject for title
+            "include_coaching": request.include_coaching,  # Coaching preference
             "status": "summarizing",  # Valid status: uploading, transcribing, summarizing, completed, failed
             "created_at": datetime.now(timezone.utc).isoformat()
         }
@@ -650,9 +666,9 @@ async def import_fireflies_recording(
                     "speaker_count": len(recording.get("participants", [])) or 2,
                     "organization_id": org_id,
                     "user_id": user_id,
-                    "meeting_prep_id": None,
-                    "prospect_company": None,  # Will be looked up from prospect_id
-                    "include_coaching": False,
+                    "meeting_prep_id": request.meeting_prep_id,
+                    "prospect_company": prospect_company,
+                    "include_coaching": request.include_coaching,
                     "language": "en"
                 })
                 logger.info(f"Triggered transcript processing for followup {followup_id}")
