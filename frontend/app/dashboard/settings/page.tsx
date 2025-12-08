@@ -1486,13 +1486,13 @@ export default function SettingsPage() {
                                 variant="ghost" 
                                 size="sm" 
                                 onClick={() => handleCalendarDisconnect('microsoft')}
-                                disabled={disconnecting === 'microsoft'}
-                                className="text-slate-400 hover:text-red-500"
+                                disabled={disconnecting === 'microsoft' || calendarSyncing}
+                                className="h-7 w-7 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                               >
                                 {disconnecting === 'microsoft' ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  <Loader2 className="h-3 w-3 animate-spin" />
                                 ) : (
-                                  <X className="h-4 w-4" />
+                                  <Power className="h-3 w-3" />
                                 )}
                               </Button>
                             </div>
