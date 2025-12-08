@@ -130,7 +130,12 @@ app.include_router(coach.router)  # Already has prefix /api/v1/coach
 app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["dashboard"])
 app.include_router(calendar.router)  # Already has prefix /api/v1/calendar
 app.include_router(calendar_meetings.router)  # Already has prefix /api/v1/calendar-meetings
-app.include_router(mobile.router, prefix="/api/v1/mobile", tags=["mobile"])
+
+# Mobile router (conditionally included)
+if MOBILE_ROUTER_AVAILABLE:
+    app.include_router(mobile.router, prefix="/api/v1/mobile", tags=["mobile"])
+else:
+    logger.warning("Mobile router not available, mobile endpoints will not work")
 
 # Admin panel routes (protected by admin role check)
 app.include_router(admin_router, prefix="/api/v1", tags=["admin"])

@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException, B
 from pydantic import BaseModel
 
 from app.deps import get_current_user, get_user_org
-from ..services.supabase import get_supabase_client
+from app.database import get_supabase_service
 
 router = APIRouter()
 
@@ -73,7 +73,7 @@ async def upload_recording(
     The recording will be stored and queued for processing (transcription + analysis).
     """
     user_id, organization_id = user_org
-    supabase = get_supabase_client()
+    supabase = get_supabase_service()
     
     try:
         # Generate unique ID
@@ -160,7 +160,7 @@ async def list_recordings(
     List recordings for the current user.
     """
     user_id, organization_id = user_org
-    supabase = get_supabase_client()
+    supabase = get_supabase_service()
     
     try:
         query = supabase.table("mobile_recordings").select(
@@ -225,7 +225,7 @@ async def get_recording(
     Get details of a specific recording.
     """
     user_id, organization_id = user_org
-    supabase = get_supabase_client()
+    supabase = get_supabase_service()
     
     try:
         result = supabase.table("mobile_recordings").select(
@@ -271,7 +271,7 @@ async def delete_recording(
     Delete a recording.
     """
     user_id, organization_id = user_org
-    supabase = get_supabase_client()
+    supabase = get_supabase_service()
     
     try:
         # Get recording to find storage path
@@ -319,7 +319,7 @@ async def get_pending_recordings(
     Used by mobile app to check which local recordings haven't been uploaded yet.
     """
     user_id, organization_id = user_org
-    supabase = get_supabase_client()
+    supabase = get_supabase_service()
     
     try:
         result = supabase.table("mobile_recordings").select(
