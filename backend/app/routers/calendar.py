@@ -11,6 +11,7 @@ import logging
 from app.deps import get_current_user, get_user_org
 from app.database import get_supabase_service
 from app.services.google_calendar import google_calendar_service
+from app.services.microsoft_calendar import microsoft_calendar_service
 from app.services.calendar_sync import calendar_sync_service
 from app.inngest.events import send_event, Events
 from typing import Tuple
@@ -276,6 +277,137 @@ async def google_auth_callback(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to connect Google Calendar: {str(e)}"
+        )
+
+
+# ==========================================
+# Microsoft OAuth Endpoints
+# ==========================================
+
+@router.get("/auth/microsoft", response_model=CalendarAuthUrlResponse)
+async def start_microsoft_auth(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Start Microsoft 365 Calendar OAuth flow.
+    
+    Returns the authorization URL to redirect the user to Microsoft's consent screen.
+    """
+    # Check if Microsoft OAuth is configured
+    if not microsoft_calendar_service.is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Microsoft 365 integration is not configured. Please add MICROSOFT_CLIENT_ID and MICROSOFT_CLIENT_SECRET environment variables."
+        )
+    
+    user_id = current_user["sub"]
+    
+    try:
+        auth_url, state = microsoft_calendar_service.generate_auth_url(user_id)
+        
+        return CalendarAuthUrlResponse(
+            auth_url=auth_url,
+            state=state
+        )
+    except Exception as e:
+        logger.error(f"Failed to generate Microsoft auth URL: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to start Microsoft Calendar authorization"
+        )
+
+
+@router.post("/callback/microsoft", response_model=CalendarCallbackResponse)
+async def microsoft_auth_callback(
+    callback: CalendarCallbackRequest,
+    user_org: Tuple[str, str] = Depends(get_user_org)
+):
+    """
+    Process Microsoft OAuth callback.
+    
+    Exchanges the authorization code for tokens and stores the connection.
+    """
+    user_id, organization_id = user_org
+    
+    # Verify state contains user_id
+    if not callback.state.startswith(user_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid state parameter"
+        )
+    
+    try:
+        # Exchange code for tokens
+        tokens = microsoft_calendar_service.exchange_code_for_tokens(callback.code)
+        
+        if not tokens:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to exchange authorization code"
+            )
+        
+        # Get user email from Microsoft Graph
+        user_info = await microsoft_calendar_service.get_user_info(tokens["access_token"])
+        email = user_info.get("email") if user_info else None
+        
+        # Check if connection already exists for this user + provider
+        existing = supabase.table("calendar_connections").select("id").eq(
+            "user_id", user_id
+        ).eq("provider", "microsoft").execute()
+        
+        # Store connection
+        connection_data = {
+            "organization_id": organization_id,
+            "user_id": user_id,
+            "provider": "microsoft",
+            "access_token_encrypted": tokens["access_token"],
+            "refresh_token_encrypted": tokens.get("refresh_token"),
+            "token_expires_at": None,  # TODO: Calculate from expires_in
+            "email": email,
+            "sync_enabled": True,
+            "needs_reauth": False,
+        }
+        
+        if existing.data and len(existing.data) > 0:
+            # Update existing connection
+            result = supabase.table("calendar_connections").update(
+                connection_data
+            ).eq("id", existing.data[0]["id"]).execute()
+        else:
+            # Create new connection
+            result = supabase.table("calendar_connections").insert(
+                connection_data
+            ).execute()
+        
+        if not result.data:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to save calendar connection"
+            )
+        
+        logger.info(f"Microsoft Calendar connected for user {user_id[:8]}..., email: {email}")
+        
+        # Trigger initial calendar sync via Inngest
+        connection_id = result.data[0]["id"]
+        await send_event(
+            Events.CALENDAR_SYNC_REQUESTED,
+            {"connection_id": connection_id}
+        )
+        logger.info(f"Triggered initial sync for Microsoft connection {connection_id[:8]}...")
+        
+        return CalendarCallbackResponse(
+            success=True,
+            email=email,
+            provider="microsoft"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Microsoft OAuth callback error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to connect Microsoft Calendar: {str(e)}"
         )
 
 

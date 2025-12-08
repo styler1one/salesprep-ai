@@ -8,6 +8,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
+import asyncio
 
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -15,6 +16,7 @@ from googleapiclient.errors import HttpError
 
 from app.database import get_supabase_service
 from app.services.prospect_matcher import ProspectMatcher
+from app.services.microsoft_calendar import microsoft_calendar_service
 
 logger = logging.getLogger(__name__)
 
@@ -354,6 +356,112 @@ class CalendarSyncService:
             logger.error(f"Failed to mark cancelled meetings: {e}")
             return 0
     
+    async def _sync_microsoft_connection(self, conn: Dict, connection_id: str) -> SyncResult:
+        """Sync calendar events for a Microsoft connection."""
+        result = SyncResult()
+        
+        try:
+            # Get access token
+            access_token = self._decode_token(conn.get("access_token_encrypted"))
+            refresh_token = self._decode_token(conn.get("refresh_token_encrypted")) if conn.get("refresh_token_encrypted") else None
+            
+            if not access_token:
+                result.errors.append("No access token available")
+                return result
+            
+            # Try to refresh token if we have a refresh token
+            # Microsoft tokens expire after 1 hour
+            if refresh_token:
+                new_tokens = microsoft_calendar_service.refresh_access_token(refresh_token)
+                if new_tokens:
+                    access_token = new_tokens["access_token"]
+                    # Update stored tokens
+                    self.supabase.table("calendar_connections").update({
+                        "access_token_encrypted": access_token,
+                        "refresh_token_encrypted": new_tokens.get("refresh_token", refresh_token),
+                    }).eq("id", connection_id).execute()
+            
+            # Fetch events from Microsoft Graph
+            now = datetime.now(timezone.utc)
+            from_date = now
+            to_date = now + timedelta(days=SYNC_DAYS_AHEAD)
+            
+            events = await microsoft_calendar_service.fetch_calendar_events(
+                access_token, from_date, to_date
+            )
+            
+            if not events:
+                logger.info(f"No events fetched from Microsoft for connection {connection_id}")
+            
+            synced_event_ids = []
+            
+            # Process each event
+            for event_data in events:
+                # Parse Microsoft event to our format
+                parsed = microsoft_calendar_service.parse_event_to_meeting(
+                    event_data, 
+                    connection_id, 
+                    conn["user_id"], 
+                    conn["organization_id"]
+                )
+                
+                if parsed.get("status") == "cancelled":
+                    continue
+                
+                synced_event_ids.append(parsed["external_id"])
+                
+                try:
+                    # Check if meeting already exists
+                    existing = self.supabase.table("calendar_meetings").select("id").eq(
+                        "calendar_connection_id", connection_id
+                    ).eq(
+                        "external_event_id", parsed["external_id"]
+                    ).execute()
+                    
+                    # Map parsed data to meeting schema
+                    meeting_data = {
+                        "calendar_connection_id": connection_id,
+                        "organization_id": parsed["organization_id"],
+                        "user_id": parsed["user_id"],
+                        "external_event_id": parsed["external_id"],
+                        "title": parsed["title"],
+                        "start_time": parsed["start_time"],
+                        "end_time": parsed["end_time"],
+                        "original_timezone": parsed.get("timezone"),
+                        "location": parsed.get("location"),
+                        "is_online": parsed.get("is_online", False),
+                        "meeting_url": parsed.get("meeting_url"),
+                        "attendees": parsed.get("attendees", []),
+                        "status": parsed.get("status", "confirmed"),
+                        "is_recurring": False,  # Graph API expands recurring events
+                    }
+                    
+                    if existing.data and len(existing.data) > 0:
+                        self.supabase.table("calendar_meetings").update(
+                            meeting_data
+                        ).eq("id", existing.data[0]["id"]).execute()
+                        result.updated_meetings += 1
+                    else:
+                        self.supabase.table("calendar_meetings").insert(
+                            meeting_data
+                        ).execute()
+                        result.new_meetings += 1
+                    
+                    result.synced_meetings += 1
+                    
+                except Exception as e:
+                    result.errors.append(f"Failed to save Microsoft event {parsed['external_id']}: {str(e)}")
+            
+            # Mark meetings that no longer exist as cancelled
+            result.deleted_meetings = self._mark_cancelled_meetings(connection_id, synced_event_ids)
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Microsoft sync failed: {e}")
+            result.errors.append(str(e))
+            return result
+    
     def sync_connection(self, connection_id: str) -> SyncResult:
         """Sync calendar events for a specific connection."""
         result = SyncResult()
@@ -374,39 +482,58 @@ class CalendarSyncService:
                 result.errors.append("Sync is disabled for this connection")
                 return result
             
-            # Get credentials
-            credentials = self._get_google_credentials(conn)
-            if not credentials:
-                result.errors.append("Failed to get valid credentials")
-                return result
+            provider = conn.get("provider", "google")
             
-            # Fetch events
-            events = self._fetch_google_events(credentials)
-            synced_event_ids = []
-            
-            # Process each event
-            for event_data in events:
-                event = self._parse_google_event(event_data, connection_id)
-                if not event:
-                    continue
-                
-                if event.status == "cancelled":
-                    continue  # Skip cancelled events
-                
-                synced_event_ids.append(event.external_event_id)
-                
+            # Route to appropriate provider sync
+            if provider == "microsoft":
+                # Microsoft sync is async, run it properly
                 try:
-                    action = self._upsert_meeting(event, connection_id, conn["organization_id"], conn["user_id"])
-                    if action == "new":
-                        result.new_meetings += 1
-                    elif action == "updated":
-                        result.updated_meetings += 1
-                    result.synced_meetings += 1
-                except Exception as e:
-                    result.errors.append(f"Failed to save event {event.external_event_id}: {str(e)}")
-            
-            # Mark meetings that no longer exist as cancelled
-            result.deleted_meetings = self._mark_cancelled_meetings(connection_id, synced_event_ids)
+                    loop = asyncio.get_running_loop()
+                    # We're already in an async context
+                    import concurrent.futures
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        future = executor.submit(
+                            asyncio.run,
+                            self._sync_microsoft_connection(conn, connection_id)
+                        )
+                        result = future.result()
+                except RuntimeError:
+                    # No running loop
+                    result = asyncio.run(self._sync_microsoft_connection(conn, connection_id))
+            else:
+                # Google sync (existing logic)
+                credentials = self._get_google_credentials(conn)
+                if not credentials:
+                    result.errors.append("Failed to get valid credentials")
+                    return result
+                
+                # Fetch events
+                events = self._fetch_google_events(credentials)
+                synced_event_ids = []
+                
+                # Process each event
+                for event_data in events:
+                    event = self._parse_google_event(event_data, connection_id)
+                    if not event:
+                        continue
+                    
+                    if event.status == "cancelled":
+                        continue  # Skip cancelled events
+                    
+                    synced_event_ids.append(event.external_event_id)
+                    
+                    try:
+                        action = self._upsert_meeting(event, connection_id, conn["organization_id"], conn["user_id"])
+                        if action == "new":
+                            result.new_meetings += 1
+                        elif action == "updated":
+                            result.updated_meetings += 1
+                        result.synced_meetings += 1
+                    except Exception as e:
+                        result.errors.append(f"Failed to save event {event.external_event_id}: {str(e)}")
+                
+                # Mark meetings that no longer exist as cancelled
+                result.deleted_meetings = self._mark_cancelled_meetings(connection_id, synced_event_ids)
             
             # Update connection sync status
             self.supabase.table("calendar_connections").update({
@@ -416,7 +543,7 @@ class CalendarSyncService:
             }).eq("id", connection_id).execute()
             
             logger.info(
-                f"Synced connection {connection_id}: "
+                f"Synced {provider} connection {connection_id}: "
                 f"{result.new_meetings} new, {result.updated_meetings} updated, "
                 f"{result.deleted_meetings} deleted"
             )
@@ -425,7 +552,6 @@ class CalendarSyncService:
             if result.new_meetings > 0 or result.updated_meetings > 0:
                 try:
                     matcher = ProspectMatcher(self.supabase)
-                    import asyncio
                     try:
                         loop = asyncio.get_running_loop()
                         # Already in async context, create task

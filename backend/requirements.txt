@@ -29,6 +29,9 @@ google-auth>=2.25.0
 google-auth-oauthlib>=1.2.0
 google-api-python-client>=2.111.0
 
+# Microsoft Graph API dependencies
+msal>=1.25.0  # Microsoft Authentication Library
+
 # Website Scraper dependencies
 aiohttp>=3.9.0
 beautifulsoup4>=4.12.0

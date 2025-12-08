@@ -105,6 +105,7 @@ export default function SettingsPage() {
   const [calendarLoading, setCalendarLoading] = useState(true)
   const [calendarError, setCalendarError] = useState<string | null>(null)
   const [googleConnecting, setGoogleConnecting] = useState(false)
+  const [microsoftConnecting, setMicrosoftConnecting] = useState(false)
   const [calendarSyncing, setCalendarSyncing] = useState(false)
   const [disconnecting, setDisconnecting] = useState<string | null>(null)
   
@@ -357,12 +358,63 @@ export default function SettingsPage() {
           description: event.data.error || tIntegrations('status.error'),
           variant: 'destructive',
         })
+      } else if (event.data?.type === 'microsoft_calendar_connected') {
+        setMicrosoftConnecting(false)
+        fetchCalendarStatus()
+        toast({
+          title: tIntegrations('calendar.connected'),
+          description: event.data.email ? `Connected as ${event.data.email}` : undefined,
+        })
+      } else if (event.data?.type === 'microsoft_calendar_error') {
+        setMicrosoftConnecting(false)
+        toast({
+          title: tErrors('generic'),
+          description: event.data.error || tIntegrations('status.error'),
+          variant: 'destructive',
+        })
       }
     }
     
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
   }, [fetchCalendarStatus, toast, tErrors, tIntegrations])
+  
+  // Handle Microsoft Calendar OAuth popup
+  const handleMicrosoftConnect = async () => {
+    setMicrosoftConnecting(true)
+    try {
+      // Get OAuth URL from backend
+      const { data, error } = await api.get<{ auth_url: string; state: string }>('/api/v1/calendar/auth/microsoft')
+      
+      if (error || !data) {
+        throw new Error(error?.message || 'Failed to start Microsoft authorization')
+      }
+      
+      // Store state for verification
+      sessionStorage.setItem('microsoft_calendar_state', data.state)
+      
+      // Open OAuth popup
+      const width = 500
+      const height = 700
+      const left = window.screenX + (window.outerWidth - width) / 2
+      const top = window.screenY + (window.outerHeight - height) / 2
+      
+      window.open(
+        data.auth_url,
+        'microsoft_calendar_auth',
+        `width=${width},height=${height},left=${left},top=${top},popup=1`
+      )
+      
+    } catch (err) {
+      console.error('Failed to start Microsoft OAuth:', err)
+      toast({
+        title: tErrors('generic'),
+        description: tIntegrations('status.error'),
+        variant: 'destructive',
+      })
+      setMicrosoftConnecting(false)
+    }
+  }
   
   // Handle calendar sync
   const handleCalendarSync = async () => {
@@ -1423,14 +1475,43 @@ export default function SettingsPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         {calendarStatus?.microsoft.connected ? (
-                          <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                            <Check className="h-3 w-3 mr-1" />
-                            {tIntegrations('calendar.connected')}
-                          </Badge>
+                          <>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                <Check className="h-3 w-3 mr-1" />
+                                {tIntegrations('calendar.connected')}
+                              </Badge>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleCalendarDisconnect('microsoft')}
+                                disabled={disconnecting === 'microsoft'}
+                                className="text-slate-400 hover:text-red-500"
+                              >
+                                {disconnecting === 'microsoft' ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <X className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </>
                         ) : (
-                          <Button variant="outline" size="sm" disabled className="gap-1">
-                            {tIntegrations('calendar.connect')}
-                            <Badge variant="secondary" className="text-xs ml-1">Phase 4</Badge>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={handleMicrosoftConnect}
+                            disabled={microsoftConnecting}
+                            className="gap-1"
+                          >
+                            {microsoftConnecting ? (
+                              <>
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                {tCommon('loading')}
+                              </>
+                            ) : (
+                              tIntegrations('calendar.connect')
+                            )}
                           </Button>
                         )}
                       </div>
