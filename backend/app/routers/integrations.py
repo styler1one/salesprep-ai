@@ -608,6 +608,7 @@ async def import_fireflies_recording(
         
         # Create followup record
         transcript = recording.get("transcript_text", "")
+        title = recording.get("title") or "Fireflies Recording"
         
         followup_data = {
             "organization_id": org_id,
@@ -617,14 +618,7 @@ async def import_fireflies_recording(
             "transcript": transcript[:100000] if transcript else None,  # Limit size
             "status": "processing",
             "source": "fireflies",
-            "metadata": {
-                "external_recording_id": recording_id,
-                "fireflies_id": recording.get("external_id"),
-                "title": recording.get("title"),
-                "duration_seconds": recording.get("duration_seconds"),
-                "participants": recording.get("participants", []),
-                "recording_date": recording.get("recording_date")
-            },
+            "title": title,  # Use title field instead of metadata
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         
