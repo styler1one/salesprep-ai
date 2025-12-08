@@ -130,20 +130,27 @@ export default function MeetingsPage() {
     try {
       // Calculate date range based on filter
       const now = new Date()
-      let fromDate = now.toISOString()
+      let fromDate: string
       let toDate: string
       
       switch (filter) {
         case 'today':
-          toDate = new Date(now.setHours(23, 59, 59, 999)).toISOString()
+          // Show all meetings from today (start of day)
+          fromDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
+          toDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).toISOString()
           break
         case 'week':
+          // Show meetings from start of today through next 7 days
+          fromDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
           toDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
           break
         case 'month':
+          // Show meetings from start of today through next 30 days
+          fromDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
           toDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString()
           break
         default:
+          fromDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
           toDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString()
       }
       

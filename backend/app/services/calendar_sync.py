@@ -237,9 +237,11 @@ class CalendarSyncService:
         try:
             service = build("calendar", "v3", credentials=credentials)
             
-            # Fetch events for the next SYNC_DAYS_AHEAD days
+            # Fetch events from yesterday (to catch recent meetings) through SYNC_DAYS_AHEAD
             now = datetime.utcnow()
-            time_min = now.isoformat() + "Z"
+            # Start from beginning of yesterday to include recent meetings
+            from_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+            time_min = from_date.isoformat() + "Z"
             time_max = (now + timedelta(days=SYNC_DAYS_AHEAD)).isoformat() + "Z"
             
             events = []
@@ -382,8 +384,9 @@ class CalendarSyncService:
                     }).eq("id", connection_id).execute()
             
             # Fetch events from Microsoft Graph
+            # Start from beginning of yesterday to include recent meetings
             now = datetime.now(timezone.utc)
-            from_date = now
+            from_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
             to_date = now + timedelta(days=SYNC_DAYS_AHEAD)
             
             events = await microsoft_calendar_service.fetch_calendar_events(
