@@ -306,15 +306,9 @@ export function RecordingsSidebar() {
             ))}
             
             {recordings.length > 5 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full text-slate-500 gap-1"
-                onClick={() => router.push('/dashboard/recordings')}
-              >
-                View all {recordings.length} recordings
-                <ChevronRight className="h-3 w-3" />
-              </Button>
+              <p className="text-center text-xs text-slate-400">
+                {recordings.length - 5} more recordings available
+              </p>
             )}
           </>
         )}
