@@ -308,12 +308,15 @@ async def upload_audio(
         if not user_id:
             raise HTTPException(status_code=401, detail="Could not get user ID")
         
-        # Validate file type
-        allowed_types = ["audio/mpeg", "audio/mp4", "audio/wav", "audio/webm", "audio/x-m4a"]
-        if file.content_type not in allowed_types:
+        # Validate file type (check base MIME type, ignoring codec parameters)
+        allowed_base_types = ["audio/mpeg", "audio/mp4", "audio/wav", "audio/webm", "audio/x-m4a", "audio/ogg"]
+        content_type = file.content_type or ""
+        # Extract base type (e.g., "audio/webm" from "audio/webm;codecs=opus")
+        base_type = content_type.split(";")[0].strip()
+        if base_type not in allowed_base_types:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid file type. Allowed: mp3, m4a, wav, webm"
+                detail=f"Invalid file type: {content_type}. Allowed: mp3, m4a, wav, webm, ogg"
             )
         
         # Get user's organization
