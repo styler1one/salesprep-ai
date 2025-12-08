@@ -1,0 +1,6 @@
+# Nixpacks configuration for Railway
+# Adds ffmpeg for audio conversion (webm -> mp3)
+
+[phases.setup]
+nixPkgs = ["ffmpeg"]
+

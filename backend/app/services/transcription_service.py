@@ -3,11 +3,15 @@ Transcription Service - Audio to text using Deepgram
 
 Handles audio file transcription with speaker diarization.
 Falls back to OpenAI Whisper if Deepgram is not configured.
+
+Includes automatic webm -> mp3 conversion for browser recordings.
 """
 
 import os
 import logging
 import httpx
+import subprocess
+import tempfile
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 
@@ -138,6 +142,12 @@ class TranscriptionService:
     ) -> TranscriptionResult:
         """Transcribe using Deepgram API from bytes"""
         
+        # Convert webm to mp3 for better Deepgram compatibility
+        ext = filename.lower().split(".")[-1] if "." in filename else ""
+        if ext in ["webm", "ogg"]:
+            logger.info(f"Converting {ext} to mp3 for Deepgram compatibility")
+            audio_data, filename = self._convert_to_mp3(audio_data, filename)
+        
         url = "https://api.deepgram.com/v1/listen"
         
         params = {
@@ -158,6 +168,8 @@ class TranscriptionService:
             "Content-Type": content_type
         }
         
+        logger.info(f"Sending {len(audio_data)} bytes to Deepgram as {content_type}")
+        
         async with httpx.AsyncClient(timeout=300.0) as client:
             response = await client.post(
                 url,
@@ -169,6 +181,63 @@ class TranscriptionService:
             result = response.json()
         
         return self._parse_deepgram_response(result)
+    
+    def _convert_to_mp3(self, audio_data: bytes, filename: str) -> tuple[bytes, str]:
+        """Convert audio to mp3 using ffmpeg for better Deepgram compatibility."""
+        try:
+            # Create temp files for input and output
+            ext = filename.lower().split(".")[-1] if "." in filename else "webm"
+            
+            with tempfile.NamedTemporaryFile(suffix=f".{ext}", delete=False) as input_file:
+                input_file.write(audio_data)
+                input_path = input_file.name
+            
+            output_path = input_path.rsplit(".", 1)[0] + ".mp3"
+            
+            # Run ffmpeg conversion
+            result = subprocess.run(
+                [
+                    "ffmpeg", "-y",  # Overwrite output
+                    "-i", input_path,
+                    "-acodec", "libmp3lame",
+                    "-ab", "128k",  # 128kbps bitrate
+                    "-ar", "44100",  # 44.1kHz sample rate
+                    output_path
+                ],
+                capture_output=True,
+                timeout=60  # 1 minute timeout
+            )
+            
+            if result.returncode != 0:
+                logger.error(f"ffmpeg conversion failed: {result.stderr.decode()}")
+                # Return original data if conversion fails
+                return audio_data, filename
+            
+            # Read converted file
+            with open(output_path, "rb") as f:
+                converted_data = f.read()
+            
+            # Cleanup temp files
+            try:
+                os.unlink(input_path)
+                os.unlink(output_path)
+            except:
+                pass
+            
+            new_filename = filename.rsplit(".", 1)[0] + ".mp3"
+            logger.info(f"Converted {filename} ({len(audio_data)} bytes) to {new_filename} ({len(converted_data)} bytes)")
+            
+            return converted_data, new_filename
+            
+        except subprocess.TimeoutExpired:
+            logger.error("ffmpeg conversion timed out")
+            return audio_data, filename
+        except FileNotFoundError:
+            logger.warning("ffmpeg not found, skipping conversion")
+            return audio_data, filename
+        except Exception as e:
+            logger.error(f"Audio conversion failed: {e}")
+            return audio_data, filename
     
     def _parse_deepgram_response(self, result: Dict[str, Any]) -> TranscriptionResult:
         """Parse Deepgram API response into TranscriptionResult"""

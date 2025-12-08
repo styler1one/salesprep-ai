@@ -89,13 +89,14 @@ export function useBrowserRecording(options: UseBrowserRecordingOptions = {}) {
     }
     
     // Check supported MIME types (in order of preference)
+    // Prefer mp4 (better Deepgram compatibility) then webm
     const mimeTypes = [
-      'audio/webm;codecs=opus',  // Best: WebM with Opus (Chrome, Firefox, Edge)
+      'audio/mp4',               // Best: MP4 (Safari, better Deepgram support)
+      'audio/mpeg',              // MP3 (if supported, rare)
+      'audio/wav',               // WAV (universally supported by Deepgram)
+      'audio/webm;codecs=opus',  // WebM with Opus (Chrome, Firefox, Edge)
       'audio/webm',              // WebM fallback
       'audio/ogg;codecs=opus',   // Ogg with Opus
-      'audio/mp4',               // MP4 (Safari)
-      'audio/wav',               // WAV fallback
-      'audio/mpeg',              // MP3 (if supported)
     ]
     
     const supportedMimeTypes = mimeTypes.filter(type => {
