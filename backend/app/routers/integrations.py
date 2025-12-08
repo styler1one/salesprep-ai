@@ -629,6 +629,7 @@ async def import_fireflies_recording(
             "prospect_id": prospect_id,
             "meeting_prep_id": request.meeting_prep_id,  # Link to preparation
             "contact_ids": request.contact_ids or [],  # Link to contacts
+            "external_recording_id": recording_id,  # Link to external recording (SPEC-038)
             "audio_url": recording.get("audio_url"),
             "transcription_text": transcript[:100000] if transcript else None,  # Limit size
             "meeting_subject": title,  # Use meeting_subject for title
@@ -911,6 +912,7 @@ async def import_teams_recording(
         followup_data = {
             "user_id": user_id,
             "organization_id": org_id,
+            "external_recording_id": recording_id,  # Link to external recording (SPEC-038)
             "meeting_subject": rec.get("title") or "Teams Meeting",
             "meeting_date": rec.get("meeting_time"),
             "meeting_duration": rec.get("duration"),

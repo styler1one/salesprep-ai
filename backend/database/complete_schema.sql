@@ -592,6 +592,10 @@ CREATE TABLE IF NOT EXISTS followups (
   deal_id UUID REFERENCES deals(id) ON DELETE SET NULL,
   meeting_id UUID REFERENCES meetings(id) ON DELETE SET NULL,
   
+  -- Calendar/Recording links (SPEC-038)
+  calendar_meeting_id UUID REFERENCES calendar_meetings(id) ON DELETE SET NULL,
+  external_recording_id UUID REFERENCES external_recordings(id) ON DELETE SET NULL,
+  
   -- Contact links (added in migration_contact_links)
   contact_ids UUID[] DEFAULT '{}',
   
@@ -2677,14 +2681,11 @@ CREATE POLICY "Users can delete own recordings" ON external_recordings
 -- ============================================================
 -- FOLLOWUPS TABLE UPDATE (Add calendar/recording references)
 -- ============================================================
--- Note: In production, use ALTER TABLE. This shows the expected columns.
+-- Note: Columns are now in main CREATE TABLE statement.
+-- These indexes are still needed:
 
--- ALTER TABLE followups 
---     ADD COLUMN IF NOT EXISTS calendar_meeting_id UUID REFERENCES calendar_meetings(id) ON DELETE SET NULL,
---     ADD COLUMN IF NOT EXISTS external_recording_id UUID REFERENCES external_recordings(id) ON DELETE SET NULL;
-
--- CREATE INDEX IF NOT EXISTS idx_followups_calendar_meeting ON followups(calendar_meeting_id) WHERE calendar_meeting_id IS NOT NULL;
--- CREATE INDEX IF NOT EXISTS idx_followups_external_recording ON followups(external_recording_id) WHERE external_recording_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_followups_calendar_meeting ON followups(calendar_meeting_id) WHERE calendar_meeting_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_followups_external_recording ON followups(external_recording_id) WHERE external_recording_id IS NOT NULL;
 
 -- ============================================================
 -- TRIGGERS FOR NEW TABLES
