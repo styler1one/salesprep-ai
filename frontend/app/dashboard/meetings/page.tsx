@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { User } from '@supabase/supabase-js'
 import { RecordingsSidebar } from '@/components/recordings-sidebar'
+import { BrowserRecording } from '@/components/browser-recording'
 
 interface Attendee {
   email: string
@@ -626,6 +627,17 @@ export default function MeetingsPage() {
                               <ExternalLink className="h-3 w-3" />
                               {t('card.join')}
                             </Button>
+                          )}
+                          
+                          {/* Record button for current meetings (desktop only) */}
+                          {meeting.is_now && (
+                            <div className="hidden md:block">
+                              <BrowserRecording
+                                meetingId={meeting.id}
+                                meetingTitle={meeting.title}
+                                prospectId={meeting.prospect_id}
+                              />
+                            </div>
                           )}
                         </div>
                       </div>
