@@ -201,12 +201,21 @@ def get_empty_provider_status() -> IntegrationProviderStatus:
 @router.get("/status", response_model=IntegrationsStatusResponse)
 async def get_integrations_status(
     user: dict = Depends(get_current_user),
-    user_org: tuple = Depends(get_user_org)
+    user_org: Tuple[str, str] = Depends(get_user_org)
 ):
     """
     Get status of all recording integrations for current user.
     """
     user_id, org_id = user_org  # Unpack tuple (user_id, organization_id)
+    
+    # Validate user_id is a valid UUID string
+    if not user_id or user_id == "None" or len(user_id) < 10:
+        logger.warning(f"Invalid user_id in get_integrations_status: {user_id}")
+        return IntegrationsStatusResponse(
+            fireflies=get_empty_provider_status(),
+            zoom=get_empty_provider_status(),
+            teams=get_empty_provider_status()
+        )
     
     # Initialize empty status for all providers
     fireflies_status = get_empty_provider_status()
@@ -277,13 +286,20 @@ async def get_integrations_status(
 async def connect_fireflies(
     request: FirefliesConnectRequest,
     user: dict = Depends(get_current_user),
-    user_org: tuple = Depends(get_user_org)
+    user_org: Tuple[str, str] = Depends(get_user_org)
 ):
     """
     Connect Fireflies integration with API key.
     Validates the API key against Fireflies API before saving.
     """
     user_id, org_id = user_org  # Unpack tuple (user_id, organization_id)
+    
+    # Validate IDs
+    if not user_id or not org_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user or organization"
+        )
     api_key = request.api_key
     
     # Validate API key with Fireflies
@@ -379,7 +395,7 @@ async def disconnect_fireflies(
 @router.post("/fireflies/sync", response_model=FirefliesSyncResponse)
 async def sync_fireflies(
     user: dict = Depends(get_current_user),
-    user_org: tuple = Depends(get_user_org),
+    user_org: Tuple[str, str] = Depends(get_user_org),
     days_back: int = 30
 ):
     """
@@ -391,6 +407,12 @@ async def sync_fireflies(
         days_back = 30  # Default to 30 if out of range
     
     user_id, org_id = user_org  # Unpack tuple (user_id, organization_id)
+    
+    if not user_id or not org_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user or organization"
+        )
     
     # Get integration record
     result = supabase.table("recording_integrations").select("*").eq(
@@ -497,13 +519,19 @@ async def import_fireflies_recording(
     recording_id: str,
     request: FirefliesImportRequest = FirefliesImportRequest(),
     user: dict = Depends(get_current_user),
-    user_org: tuple = Depends(get_user_org)
+    user_org: Tuple[str, str] = Depends(get_user_org)
 ):
     """
     Import a Fireflies recording into Meeting Analysis.
     Creates a followup record and triggers AI summarization.
     """
     user_id, org_id = user_org  # Unpack tuple (user_id, organization_id)
+    
+    if not user_id or not org_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user or organization"
+        )
     
     try:
         # Get the external recording
