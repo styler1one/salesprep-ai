@@ -154,15 +154,13 @@ def get_user_fireflies_integration(user_id: str) -> dict:
         return None
 
 
-def sync_fireflies_integration(integration: dict) -> dict:
+async def sync_fireflies_integration(integration: dict) -> dict:
     """Sync a Fireflies integration (default 7 days for scheduled sync)."""
-    return sync_fireflies_integration_with_days(integration, days_back=7)
+    return await sync_fireflies_integration_with_days(integration, days_back=7)
 
 
-def sync_fireflies_integration_with_days(integration: dict, days_back: int = 7) -> dict:
+async def sync_fireflies_integration_with_days(integration: dict, days_back: int = 7) -> dict:
     """Sync a Fireflies integration with specified days back."""
-    import asyncio
-    
     try:
         user_id = integration["user_id"]
         org_id = integration["organization_id"]
@@ -174,33 +172,14 @@ def sync_fireflies_integration_with_days(integration: dict, days_back: int = 7) 
             logger.error(f"Invalid Fireflies credentials for integration {integration_id}")
             return {"error": "Invalid credentials"}
         
-        # Run sync (need to handle async in sync context)
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            # We're in an async context, create a task
-            import concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(
-                    asyncio.run,
-                    sync_fireflies_recordings(
-                        user_id=user_id,
-                        org_id=org_id,
-                        integration_id=integration_id,
-                        service=service,
-                        days_back=days_back
-                    )
-                )
-                stats = future.result(timeout=120)
-        else:
-            stats = asyncio.run(
-                sync_fireflies_recordings(
-                    user_id=user_id,
-                    org_id=org_id,
-                    integration_id=integration_id,
-                    service=service,
-                    days_back=days_back
-                )
-            )
+        # Run sync (already async)
+        stats = await sync_fireflies_recordings(
+            user_id=user_id,
+            org_id=org_id,
+            integration_id=integration_id,
+            service=service,
+            days_back=days_back
+        )
         
         return {
             "new_recordings": stats.get("new", 0),

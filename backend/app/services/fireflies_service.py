@@ -8,12 +8,12 @@ Handles:
 - Matching with calendar meetings
 """
 import httpx
-import base64
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Dict, Any
 
 from app.database import get_supabase_service
+from app.services.encryption import decrypt_api_key
 
 supabase = get_supabase_service()
 logger = logging.getLogger(__name__)
@@ -36,23 +36,16 @@ class FirefliesService:
     def from_integration(cls, integration: dict) -> Optional['FirefliesService']:
         """
         Create a FirefliesService from a recording_integration record.
-        Handles decryption of the API key.
+        Handles decryption of the API key using the encryption service.
         """
         credentials = integration.get("credentials", {})
         if not credentials:
             return None
         
-        encoded_key = credentials.get("api_key")
-        key_type = credentials.get("key_type", "base64")
-        
-        if not encoded_key:
+        # Use centralized decryption service
+        api_key = decrypt_api_key(credentials)
+        if not api_key:
             return None
-        
-        # Decrypt the API key
-        if key_type == "base64":
-            api_key = base64.b64decode(encoded_key.encode()).decode()
-        else:
-            api_key = encoded_key
         
         return cls(api_key)
     
@@ -247,8 +240,8 @@ async def sync_fireflies_recordings(
     """
     stats = {"new": 0, "updated": 0, "skipped": 0, "error": 0}
     
-    # Calculate from_date
-    from_date = datetime.utcnow() - timedelta(days=days_back)
+    # Calculate from_date (timezone-aware)
+    from_date = datetime.now(timezone.utc) - timedelta(days=days_back)
     
     # Fetch transcripts from Fireflies
     transcripts = await service.fetch_transcripts(limit=100, from_date=from_date)
@@ -287,9 +280,9 @@ async def sync_fireflies_recordings(
             # Parse transcript data
             title = transcript.get("title", "Untitled Recording")
             
-            # Fireflies date is in milliseconds
+            # Fireflies date is in milliseconds (convert to timezone-aware UTC)
             date_ms = transcript.get("date", 0)
-            recording_date = datetime.fromtimestamp(date_ms / 1000) if date_ms else datetime.utcnow()
+            recording_date = datetime.fromtimestamp(date_ms / 1000, tz=timezone.utc) if date_ms else datetime.now(timezone.utc)
             
             duration_seconds = transcript.get("duration", 0)
             participants = transcript.get("participants", [])
@@ -317,12 +310,20 @@ async def sync_fireflies_recordings(
             matched_prospect_id = None
             
             for meeting in meetings:
-                meeting_start = datetime.fromisoformat(meeting["start_time"].replace("Z", "+00:00"))
-                meeting_end = datetime.fromisoformat(meeting["end_time"].replace("Z", "+00:00"))
+                # Parse meeting times (handle both Z suffix and +00:00)
+                start_str = meeting["start_time"].replace("Z", "+00:00")
+                end_str = meeting["end_time"].replace("Z", "+00:00")
+                meeting_start = datetime.fromisoformat(start_str)
+                meeting_end = datetime.fromisoformat(end_str)
+                
+                # Make recording_date offset-naive for comparison if meeting times are naive
+                recording_date_for_comparison = recording_date.replace(tzinfo=None) if meeting_start.tzinfo is None else recording_date
+                meeting_start_for_comparison = meeting_start if meeting_start.tzinfo else meeting_start.replace(tzinfo=timezone.utc)
+                meeting_end_for_comparison = meeting_end if meeting_end.tzinfo else meeting_end.replace(tzinfo=timezone.utc)
                 
                 # Check if recording date falls within meeting time (with some tolerance)
                 tolerance = timedelta(minutes=15)
-                if meeting_start - tolerance <= recording_date <= meeting_end + tolerance:
+                if meeting_start_for_comparison - tolerance <= recording_date <= meeting_end_for_comparison + tolerance:
                     matched_meeting_id = meeting["id"]
                     matched_prospect_id = meeting.get("prospect_id")
                     logger.info(f"Matched transcript '{title}' with meeting '{meeting['title']}'")
@@ -345,7 +346,7 @@ async def sync_fireflies_recordings(
                 "matched_meeting_id": matched_meeting_id,
                 "matched_prospect_id": matched_prospect_id,
                 "import_status": "pending",
-                "created_at": datetime.utcnow().isoformat()
+                "created_at": datetime.now(timezone.utc).isoformat()
             }
             
             supabase.table("external_recordings").insert(record_data).execute()
@@ -358,18 +359,10 @@ async def sync_fireflies_recordings(
     
     # Update integration last_sync
     supabase.table("recording_integrations").update({
-        "last_sync_at": datetime.utcnow().isoformat(),
+        "last_sync_at": datetime.now(timezone.utc).isoformat(),
         "last_sync_status": "success" if stats["error"] == 0 else "partial"
     }).eq("id", integration_id).execute()
     
     logger.info(f"Fireflies sync complete: {stats}")
     return stats
-
-
-# Singleton-like access for convenience
-fireflies_service = None
-
-def get_fireflies_service(api_key: str) -> FirefliesService:
-    """Get or create a FirefliesService instance."""
-    return FirefliesService(api_key)
 

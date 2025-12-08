@@ -5,13 +5,14 @@ SPEC-038: Meetings & Calendar Integration - Phase 3
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 import httpx
 
 from app.deps import get_current_user, get_user_org
 from app.database import get_supabase_service
 from app.services.fireflies_service import FirefliesService, sync_fireflies_recordings
+from app.services.encryption import encrypt_api_key, is_encryption_secure
 
 # Try to import Inngest for async processing
 try:
@@ -293,15 +294,12 @@ async def connect_fireflies(
     account_email = user_info.get("email")
     account_name = user_info.get("name")
     
-    # Store credentials (encrypted in production - TODO: use proper encryption)
-    # For now, storing as JSON with basic obfuscation
-    import base64
-    encoded_key = base64.b64encode(api_key.encode()).decode()
+    # Encrypt credentials for secure storage
+    credentials = encrypt_api_key(api_key)
     
-    credentials = {
-        "api_key": encoded_key,
-        "key_type": "base64"
-    }
+    # Log security status (don't log in production)
+    if not is_encryption_secure():
+        logger.warning(f"API key stored with fallback encoding for user {user_id}. Configure ENCRYPTION_KEY for production.")
     
     try:
         # Check if integration already exists
@@ -317,7 +315,7 @@ async def connect_fireflies(
             "account_email": account_email,
             "account_name": account_name,
             "auto_import": True,
-            "updated_at": datetime.utcnow().isoformat()
+            "updated_at": datetime.now(timezone.utc).isoformat()
         }
         
         if existing.data:
@@ -328,7 +326,7 @@ async def connect_fireflies(
             logger.info(f"Updated Fireflies integration for user {user_id}")
         else:
             # Create new integration
-            integration_data["created_at"] = datetime.utcnow().isoformat()
+            integration_data["created_at"] = datetime.now(timezone.utc).isoformat()
             result = supabase.table("recording_integrations").insert(
                 integration_data
             ).execute()
@@ -385,6 +383,9 @@ async def sync_fireflies(
     org: dict = Depends(get_user_org),
     days_back: int = 30
 ):
+    # Input validation
+    if days_back < 1 or days_back > 365:
+        days_back = 30  # Default to 30 if out of range
     """
     Manually trigger a sync of Fireflies recordings.
     Fetches recent transcripts and saves them to external_recordings.
@@ -560,7 +561,7 @@ async def import_fireflies_recording(
                 "participants": recording.get("participants", []),
                 "recording_date": recording.get("recording_date")
             },
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.now(timezone.utc).isoformat()
         }
         
         # Insert followup
@@ -579,7 +580,7 @@ async def import_fireflies_recording(
             "import_status": "imported",
             "followup_id": followup_id,
             "matched_prospect_id": prospect_id,
-            "updated_at": datetime.utcnow().isoformat()
+            "updated_at": datetime.now(timezone.utc).isoformat()
         }).eq("id", recording_id).execute()
         
         # Trigger AI summarization via Inngest
