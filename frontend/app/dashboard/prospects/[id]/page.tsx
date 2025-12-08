@@ -57,7 +57,7 @@ interface ProspectNote {
 
 interface TimelineEvent {
   id: string
-  type: 'research' | 'contact' | 'prep' | 'followup' | 'created'
+  type: 'research' | 'contact' | 'prep' | 'meeting' | 'followup' | 'created'
   title: string
   date: string
 }
@@ -243,10 +243,17 @@ export default function ProspectHubPage() {
   const { prospect, research, contacts, stats, recent_activities } = hubData
   
   // Determine journey progress
+  // Check if any meeting has passed (is_now or end_time < now)
+  const hasPastMeeting = upcomingMeetings.some(m => {
+    const endTime = new Date(m.end_time)
+    return m.is_now || endTime < new Date()
+  })
+  
   const journeySteps = [
     { key: 'research', done: !!research, label: t('journey.research') },
     { key: 'contacts', done: contacts.length > 0, label: t('journey.contacts') },
     { key: 'preparation', done: stats.prep_count > 0, label: t('journey.preparation') },
+    { key: 'meeting', done: hasPastMeeting || upcomingMeetings.length > 0, label: t('journey.meeting') },
     { key: 'followup', done: stats.followup_count > 0, label: t('journey.followup') }
   ]
   
@@ -322,15 +329,29 @@ export default function ProspectHubPage() {
   
   const nextAction = getNextActionConfig()
   
-  // Build timeline events
-  const timelineEvents: TimelineEvent[] = [
-    ...(recent_activities || []).slice(0, 6).map((event) => ({
-      id: event.id,
-      type: event.activity_type as TimelineEvent['type'],
-      title: event.title,
-      date: event.created_at
+  // Build timeline events - combine activities with meetings
+  const activityEvents: TimelineEvent[] = (recent_activities || []).slice(0, 6).map((event) => ({
+    id: event.id,
+    type: event.activity_type as TimelineEvent['type'],
+    title: event.title,
+    date: event.created_at
+  }))
+  
+  // Add meetings as timeline events
+  const meetingEvents: TimelineEvent[] = upcomingMeetings
+    .filter(m => new Date(m.end_time) < new Date() || m.is_now) // Only past/current meetings
+    .slice(0, 3)
+    .map(meeting => ({
+      id: `meeting-${meeting.id}`,
+      type: 'meeting' as const,
+      title: meeting.title,
+      date: meeting.start_time
     }))
-  ]
+  
+  // Combine and sort by date (most recent first)
+  const timelineEvents: TimelineEvent[] = [...activityEvents, ...meetingEvents]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 8)
   
   return (
     <DashboardLayout user={user}>
