@@ -589,7 +589,7 @@ async def import_fireflies_recording(
         if recording["import_status"] == "imported":
             return FirefliesImportResponse(
                 success=True,
-                followup_id=recording.get("followup_id"),
+                followup_id=recording.get("imported_followup_id"),
                 message="Recording already imported"
             )
         
