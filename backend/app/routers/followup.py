@@ -329,9 +329,9 @@ async def upload_audio(
         
         organization_id = org_response.data[0]["organization_id"]
         
-        # Check subscription limit
+        # Check subscription limit (v3: includes flow pack balance)
         usage_service = get_usage_service()
-        limit_check = await usage_service.check_limit(organization_id, "followup")
+        limit_check = await usage_service.check_flow_limit(organization_id)
         if not limit_check.get("allowed"):
             raise HTTPException(
                 status_code=402,  # Payment Required
@@ -340,9 +340,13 @@ async def upload_audio(
                     "message": "You have reached your follow-up limit for this month",
                     "current": limit_check.get("current", 0),
                     "limit": limit_check.get("limit", 0),
+                    "flow_pack_balance": limit_check.get("flow_pack_balance", 0),
                     "upgrade_url": "/pricing"
                 }
             )
+        
+        # Track whether we should use flow pack for this upload
+        use_flow_pack = limit_check.get("using_flow_pack", False)
         
         # Read file data
         audio_data = await file.read()
@@ -662,9 +666,9 @@ async def upload_transcript(
         
         organization_id = org_response.data[0]["organization_id"]
         
-        # Check subscription limit
+        # Check subscription limit (v3: includes flow pack balance)
         usage_service = get_usage_service()
-        limit_check = await usage_service.check_limit(organization_id, "followup")
+        limit_check = await usage_service.check_flow_limit(organization_id)
         if not limit_check.get("allowed"):
             raise HTTPException(
                 status_code=402,  # Payment Required
@@ -673,9 +677,13 @@ async def upload_transcript(
                     "message": "You have reached your follow-up limit for this month",
                     "current": limit_check.get("current", 0),
                     "limit": limit_check.get("limit", 0),
+                    "flow_pack_balance": limit_check.get("flow_pack_balance", 0),
                     "upgrade_url": "/pricing"
                 }
             )
+        
+        # Track whether we should use flow pack for this upload
+        use_flow_pack = limit_check.get("using_flow_pack", False)
         
         # Read file data
         file_data = await file.read()
