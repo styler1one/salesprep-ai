@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -48,6 +49,7 @@ export function BrowserRecording({
 }: BrowserRecordingProps) {
   const router = useRouter()
   const { toast } = useToast()
+  const t = useTranslations('meetings.recording')
   
   const [showDialog, setShowDialog] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -70,7 +72,7 @@ export function BrowserRecording({
   } = useBrowserRecording({
     onError: (error) => {
       toast({
-        title: 'Recording Error',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       })
@@ -87,8 +89,8 @@ export function BrowserRecording({
       const granted = await requestPermission()
       if (!granted) {
         toast({
-          title: 'Microphone Access Required',
-          description: 'Please allow microphone access to record meetings.',
+          title: t('accessRequired'),
+          description: t('accessRequiredDesc'),
           variant: 'destructive',
         })
         return
@@ -98,8 +100,8 @@ export function BrowserRecording({
     const started = await startRecording()
     if (!started) {
       toast({
-        title: 'Failed to Start Recording',
-        description: 'Could not access microphone.',
+        title: t('startFailed'),
+        description: t('startFailedDesc'),
         variant: 'destructive',
       })
     }
@@ -150,12 +152,12 @@ export function BrowserRecording({
       setUploadProgress(100)
       
       if (error) {
-        throw new Error(error.message || 'Upload failed')
+        throw new Error(error.message || t('uploadFailed'))
       }
       
       toast({
-        title: 'Recording Uploaded',
-        description: 'AI analysis in progress...',
+        title: t('uploaded'),
+        description: t('uploadedDesc'),
       })
       
       setShowDialog(false)
@@ -170,8 +172,8 @@ export function BrowserRecording({
     } catch (err) {
       console.error('Upload failed:', err)
       toast({
-        title: 'Upload Failed',
-        description: err instanceof Error ? err.message : 'Unknown error',
+        title: t('uploadFailed'),
+        description: err instanceof Error ? err.message : '',
         variant: 'destructive',
       })
     } finally {
@@ -195,7 +197,7 @@ export function BrowserRecording({
         onClick={handleStartRecording}
       >
         <Mic className="h-3 w-3" />
-        Record
+        {t('record')}
       </Button>
       
       {/* Recording Dialog */}
@@ -208,10 +210,10 @@ export function BrowserRecording({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Mic className="h-5 w-5 text-red-500" />
-              {recordingResult ? 'Recording Complete' : 'Recording Meeting'}
+              {recordingResult ? t('titleComplete') : t('title')}
             </DialogTitle>
             <DialogDescription>
-              {meetingTitle || 'Record your meeting for AI analysis'}
+              {meetingTitle || t('description')}
             </DialogDescription>
           </DialogHeader>
           
@@ -239,7 +241,7 @@ export function BrowserRecording({
                 
                 {/* Status */}
                 <Badge variant={isRecording ? 'destructive' : 'secondary'}>
-                  {isRecording ? 'Recording...' : 'Paused'}
+                  {isRecording ? t('recordingInProgress') : t('paused')}
                 </Badge>
                 
                 {/* Controls */}
@@ -252,7 +254,7 @@ export function BrowserRecording({
                       className="gap-2"
                     >
                       <Pause className="h-4 w-4" />
-                      Pause
+                      {t('pause')}
                     </Button>
                   ) : (
                     <Button
@@ -262,7 +264,7 @@ export function BrowserRecording({
                       className="gap-2"
                     >
                       <Play className="h-4 w-4" />
-                      Resume
+                      {t('resume')}
                     </Button>
                   )}
                   
@@ -273,7 +275,7 @@ export function BrowserRecording({
                     className="gap-2 bg-red-600 hover:bg-red-700"
                   >
                     <Square className="h-4 w-4" />
-                    Stop
+                    {t('stop')}
                   </Button>
                 </div>
                 
@@ -284,7 +286,7 @@ export function BrowserRecording({
                   className="text-slate-500"
                 >
                   <X className="h-4 w-4 mr-1" />
-                  Cancel
+                  {t('cancel')}
                 </Button>
               </div>
             )}
@@ -298,13 +300,13 @@ export function BrowserRecording({
                 
                 <div>
                   <p className="text-lg font-medium text-slate-900 dark:text-white">
-                    Recording Saved
+                    {t('recordingSaved')}
                   </p>
                   <p className="text-sm text-slate-500 mt-1">
-                    Duration: {formatRecordingDuration(recordingResult.duration)}
+                    {t('duration')}: {formatRecordingDuration(recordingResult.duration)}
                   </p>
                   <p className="text-xs text-slate-400 mt-1">
-                    Format: {recordingResult.mimeType}
+                    {t('format')}: {recordingResult.mimeType}
                   </p>
                 </div>
                 
@@ -316,7 +318,7 @@ export function BrowserRecording({
                       reset()
                     }}
                   >
-                    Record Again
+                    {t('recordAgain')}
                   </Button>
                   
                   <Button
@@ -324,7 +326,7 @@ export function BrowserRecording({
                     className="gap-2"
                   >
                     <Upload className="h-4 w-4" />
-                    Upload & Analyze
+                    {t('uploadAnalyze')}
                   </Button>
                 </div>
               </div>
@@ -339,10 +341,10 @@ export function BrowserRecording({
                 
                 <div>
                   <p className="text-lg font-medium text-slate-900 dark:text-white">
-                    Uploading Recording...
+                    {t('uploading')}
                   </p>
                   <p className="text-sm text-slate-500 mt-1">
-                    {uploadProgress}% complete
+                    {uploadProgress}% {t('complete')}
                   </p>
                 </div>
                 
@@ -363,7 +365,7 @@ export function BrowserRecording({
                   <Loader2 className="h-12 w-12 text-slate-400 animate-spin" />
                 </div>
                 <p className="text-sm text-slate-500">
-                  Requesting microphone access...
+                  {t('requestingAccess')}
                 </p>
               </div>
             )}
@@ -376,7 +378,7 @@ export function BrowserRecording({
                 <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
                   <AlertCircle className="h-4 w-4" />
                   <p className="text-sm">
-                    Microphone access denied. Please allow access in your browser settings.
+                    {t('accessDenied')}
                   </p>
                 </div>
               </CardContent>
