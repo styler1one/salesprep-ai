@@ -1663,8 +1663,8 @@ export default function SettingsPage() {
                     </Button>
                   </div>
                   
-                  {/* Microsoft Teams - Coming in Phase 4 */}
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 opacity-60">
+                  {/* Microsoft Teams - Uses Microsoft Calendar connection */}
+                  <div className={`flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 ${!calendarStatus?.microsoft.connected ? 'opacity-60' : ''}`}>
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-[#6264A7] flex items-center justify-center shadow-sm">
                         <span className="text-white text-xs font-bold">T</span>
@@ -1673,13 +1673,25 @@ export default function SettingsPage() {
                         <p className="text-sm font-medium text-slate-900 dark:text-white">
                           {tIntegrations('recordings.teams')}
                         </p>
-                        <p className="text-xs text-slate-400">{tIntegrations('recordings.notConnected')}</p>
+                        {calendarStatus?.microsoft.connected ? (
+                          <p className="text-xs text-slate-500">
+                            {calendarStatus.microsoft.email} • {integrationsStatus?.teams.pending_recordings || 0} pending
+                          </p>
+                        ) : (
+                          <p className="text-xs text-slate-400">Connect Microsoft 365 Calendar first</p>
+                        )}
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" disabled className="gap-1">
-                      {tIntegrations('recordings.connect')}
-                      <Badge variant="secondary" className="text-xs ml-1">Phase 4</Badge>
-                    </Button>
+                    {calendarStatus?.microsoft.connected ? (
+                      <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                        <Check className="h-3 w-3 mr-1" />
+                        {tIntegrations('recordings.connected')}
+                      </Badge>
+                    ) : (
+                      <Button variant="outline" size="sm" disabled className="gap-1">
+                        {tIntegrations('recordings.connect')}
+                      </Button>
+                    )}
                   </div>
                 </div>
                 )}

@@ -690,3 +690,275 @@ async def import_fireflies_recording(
             detail=f"Import failed: {str(e)}"
         )
 
+
+# ==========================================
+# Teams Endpoints
+# ==========================================
+
+class TeamsSyncResponse(BaseModel):
+    """Response after Teams sync."""
+    success: bool
+    total_meetings: int = 0
+    recordings_found: int = 0
+    transcripts_found: int = 0
+    new_recordings: int = 0
+    errors: List[str] = []
+
+
+@router.get("/teams/status")
+async def get_teams_status(
+    user: dict = Depends(get_current_user),
+    user_org: Tuple[str, str] = Depends(get_user_org)
+):
+    """
+    Get Teams integration status.
+    Teams uses the Microsoft Calendar connection for authentication.
+    """
+    user_id, org_id = user_org
+    
+    # Check if Microsoft Calendar is connected
+    connection = supabase.table("calendar_connections").select(
+        "id, email, last_sync_at, last_sync_status"
+    ).eq("user_id", user_id).eq("provider", "microsoft").execute()
+    
+    if not connection.data:
+        return {
+            "connected": False,
+            "message": "Connect Microsoft 365 Calendar first to enable Teams recordings"
+        }
+    
+    # Count pending Teams recordings
+    pending = supabase.table("external_recordings").select(
+        "id", count="exact"
+    ).eq("user_id", user_id).eq("source", "teams").eq("status", "pending").execute()
+    
+    return {
+        "connected": True,
+        "email": connection.data[0].get("email"),
+        "pending_recordings": pending.count or 0,
+        "last_sync": connection.data[0].get("last_sync_at"),
+        "message": "Microsoft 365 connected. Teams recordings available."
+    }
+
+
+@router.post("/teams/sync", response_model=TeamsSyncResponse)
+async def sync_teams_recordings(
+    days_back: int = 30,
+    user: dict = Depends(get_current_user),
+    user_org: Tuple[str, str] = Depends(get_user_org)
+):
+    """
+    Sync Teams recordings from Microsoft Graph API.
+    Requires Microsoft 365 Calendar to be connected.
+    """
+    from app.services.teams_service import teams_service
+    from app.services.calendar_sync import CalendarSyncService
+    
+    user_id, org_id = user_org
+    
+    # Validate days_back
+    if days_back < 1 or days_back > 365:
+        days_back = 30
+    
+    # Get Microsoft Calendar connection
+    connection = supabase.table("calendar_connections").select("*").eq(
+        "user_id", user_id
+    ).eq("provider", "microsoft").execute()
+    
+    if not connection.data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Microsoft 365 Calendar not connected. Connect in Settings first."
+        )
+    
+    conn = connection.data[0]
+    
+    # Get access token
+    sync_service = CalendarSyncService()
+    access_token = sync_service._decode_token(conn.get("access_token_encrypted"))
+    
+    if not access_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Microsoft access token not available. Please reconnect Microsoft 365."
+        )
+    
+    # Try to refresh token if we have a refresh token
+    refresh_token = sync_service._decode_token(conn.get("refresh_token_encrypted")) if conn.get("refresh_token_encrypted") else None
+    
+    if refresh_token:
+        from app.services.microsoft_calendar import microsoft_calendar_service
+        new_tokens = microsoft_calendar_service.refresh_access_token(refresh_token)
+        if new_tokens:
+            access_token = new_tokens["access_token"]
+            # Update stored tokens
+            supabase.table("calendar_connections").update({
+                "access_token_encrypted": access_token,
+                "refresh_token_encrypted": new_tokens.get("refresh_token", refresh_token),
+            }).eq("id", conn["id"]).execute()
+    
+    try:
+        # Sync Teams recordings
+        result = await teams_service.sync_teams_recordings(
+            user_id=user_id,
+            organization_id=org_id,
+            access_token=access_token,
+            days_back=days_back
+        )
+        
+        # Update connection sync status
+        supabase.table("calendar_connections").update({
+            "last_sync_at": datetime.now(timezone.utc).isoformat(),
+            "last_sync_status": "success" if not result["errors"] else "failed",
+        }).eq("id", conn["id"]).execute()
+        
+        return TeamsSyncResponse(
+            success=True,
+            total_meetings=result.get("total_meetings", 0),
+            recordings_found=result.get("recordings_found", 0),
+            transcripts_found=result.get("transcripts_found", 0),
+            new_recordings=result.get("new_recordings", 0),
+            errors=result.get("errors", [])
+        )
+        
+    except Exception as e:
+        logger.error(f"Teams sync failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Teams sync failed: {str(e)}"
+        )
+
+
+@router.get("/teams/recordings")
+async def get_teams_recordings(
+    status_filter: Optional[str] = None,
+    limit: int = 50,
+    user: dict = Depends(get_current_user),
+    user_org: Tuple[str, str] = Depends(get_user_org)
+):
+    """
+    Get Teams recordings for the current user.
+    """
+    user_id, org_id = user_org
+    
+    query = supabase.table("external_recordings").select("*").eq(
+        "user_id", user_id
+    ).eq("source", "teams").order("meeting_time", desc=True).limit(limit)
+    
+    if status_filter:
+        query = query.eq("status", status_filter)
+    
+    result = query.execute()
+    
+    recordings = []
+    for rec in result.data or []:
+        recordings.append({
+            "id": rec.get("id"),
+            "external_id": rec.get("external_id"),
+            "title": rec.get("title"),
+            "meeting_time": rec.get("meeting_time"),
+            "duration": rec.get("duration"),
+            "participants": rec.get("participants", []),
+            "transcript_available": rec.get("transcript_available", False),
+            "status": rec.get("status"),
+            "imported_followup_id": rec.get("imported_followup_id"),
+        })
+    
+    return {
+        "recordings": recordings,
+        "total": len(recordings)
+    }
+
+
+@router.post("/teams/recordings/{recording_id}/import")
+async def import_teams_recording(
+    recording_id: str,
+    prospect_id: Optional[str] = None,
+    contact_ids: Optional[List[str]] = None,
+    meeting_prep_id: Optional[str] = None,
+    user: dict = Depends(get_current_user),
+    user_org: Tuple[str, str] = Depends(get_user_org)
+):
+    """
+    Import a Teams recording for AI analysis.
+    Creates a followup record and triggers summarization.
+    """
+    user_id, org_id = user_org
+    
+    # Get the recording
+    recording = supabase.table("external_recordings").select("*").eq(
+        "id", recording_id
+    ).eq("user_id", user_id).eq("source", "teams").execute()
+    
+    if not recording.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Teams recording not found"
+        )
+    
+    rec = recording.data[0]
+    
+    # Check if already imported
+    if rec.get("imported_followup_id"):
+        return {
+            "success": True,
+            "followup_id": rec.get("imported_followup_id"),
+            "message": "Recording already imported"
+        }
+    
+    try:
+        # Create followup record
+        followup_data = {
+            "user_id": user_id,
+            "organization_id": org_id,
+            "meeting_subject": rec.get("title") or "Teams Meeting",
+            "meeting_date": rec.get("meeting_time"),
+            "meeting_duration": rec.get("duration"),
+            "transcription_text": rec.get("transcript_text"),
+            "status": "summarizing" if rec.get("transcript_text") else "pending",
+            "prospect_id": prospect_id,
+        }
+        
+        result = supabase.table("followups").insert(followup_data).execute()
+        
+        if not result.data:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create followup record"
+            )
+        
+        followup_id = result.data[0]["id"]
+        
+        # Update external_recordings
+        supabase.table("external_recordings").update({
+            "imported_followup_id": followup_id,
+            "status": "imported"
+        }).eq("id", recording_id).execute()
+        
+        # Trigger AI analysis if transcript is available
+        if rec.get("transcript_text") and INNGEST_ENABLED:
+            await send_event(
+                Events.FOLLOWUP_TRANSCRIPT_UPLOADED,
+                {
+                    "followup_id": followup_id,
+                    "user_id": user_id,
+                    "organization_id": org_id,
+                }
+            )
+            logger.info(f"Triggered AI analysis for Teams recording {recording_id}")
+        
+        return {
+            "success": True,
+            "followup_id": followup_id,
+            "message": "Teams recording imported successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error importing Teams recording: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Import failed: {str(e)}"
+        )
+

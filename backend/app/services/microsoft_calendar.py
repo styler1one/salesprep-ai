@@ -18,11 +18,13 @@ MICROSOFT_CLIENT_ID = os.getenv("MICROSOFT_CLIENT_ID")
 MICROSOFT_CLIENT_SECRET = os.getenv("MICROSOFT_CLIENT_SECRET")
 MICROSOFT_TENANT_ID = os.getenv("MICROSOFT_TENANT_ID", "common")  # "common" for multi-tenant
 
-# Scopes required for calendar read access
+# Scopes required for calendar and Teams access
 # Note: offline_access is automatically added by MSAL for refresh tokens
 CALENDAR_SCOPES = [
     "https://graph.microsoft.com/Calendars.Read",
     "https://graph.microsoft.com/User.Read",
+    "https://graph.microsoft.com/OnlineMeetings.Read",
+    "https://graph.microsoft.com/OnlineMeetingTranscript.Read.All",
 ]
 
 # Redirect URI for OAuth callback - points to frontend callback page

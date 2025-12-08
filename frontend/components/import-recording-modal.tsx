@@ -176,11 +176,17 @@ export function ImportRecordingModal({
     
     setImporting(true)
     try {
+      // Determine the correct endpoint based on provider
+      const provider = recording.provider || 'fireflies'
+      const endpoint = provider === 'teams' 
+        ? `/api/v1/integrations/teams/recordings/${recording.id}/import`
+        : `/api/v1/integrations/fireflies/import/${recording.id}`
+      
       const { data, error } = await api.post<{
         success: boolean
         followup_id: string
         message: string
-      }>(`/api/v1/integrations/fireflies/import/${recording.id}`, {
+      }>(endpoint, {
         prospect_id: prospectId || null,
         contact_ids: contactIds.length > 0 ? contactIds : null,
         meeting_prep_id: prepId || null
@@ -236,6 +242,8 @@ export function ImportRecordingModal({
     switch (provider) {
       case 'fireflies':
         return <Flame className="h-4 w-4 text-orange-500" />
+      case 'teams':
+        return <span className="text-[#6264A7] text-xs font-bold">T</span>
       default:
         return <Mic className="h-4 w-4 text-pink-500" />
     }

@@ -88,16 +88,45 @@ export function RecordingsSidebar() {
         return
       }
 
-      // Load pending recordings from Fireflies (for now, only Fireflies supported)
+      const allRecordings: ExternalRecording[] = []
+
+      // Load pending recordings from Fireflies
       if (hasFireflies) {
         const { data, error } = await api.get<RecordingsResponse>(
           '/api/v1/integrations/fireflies/recordings?import_status=pending&limit=10'
         )
         
         if (!error && data) {
-          setRecordings(data.recordings)
+          allRecordings.push(...data.recordings)
         }
       }
+
+      // Load pending recordings from Teams
+      if (hasTeams) {
+        const { data, error } = await api.get<{recordings: ExternalRecording[], total: number}>(
+          '/api/v1/integrations/teams/recordings?status_filter=pending&limit=10'
+        )
+        
+        if (!error && data) {
+          // Map Teams recordings to the same format
+          const teamsRecordings = data.recordings.map(rec => ({
+            ...rec,
+            provider: 'teams',
+            recording_date: rec.meeting_time || '',
+            duration_seconds: rec.duration || null,
+            participants: rec.participants?.map((p: {name?: string}) => p.name || 'Unknown') || [],
+            import_status: rec.status || 'pending',
+          } as ExternalRecording))
+          allRecordings.push(...teamsRecordings)
+        }
+      }
+
+      // Sort by date (newest first)
+      allRecordings.sort((a, b) => 
+        new Date(b.recording_date).getTime() - new Date(a.recording_date).getTime()
+      )
+
+      setRecordings(allRecordings)
     } catch (err) {
       console.error('Failed to load recordings:', err)
     } finally {
@@ -109,22 +138,39 @@ export function RecordingsSidebar() {
     loadRecordings()
   }, [])
 
-  // Sync recordings
+  // Sync recordings from all providers
   const handleSync = async () => {
     setSyncing(true)
+    let totalNew = 0
+    const errors: string[] = []
+    
     try {
-      const { data, error } = await api.post<{
+      // Sync Fireflies
+      const { data: ffData, error: ffError } = await api.post<{
         success: boolean
         new_recordings: number
       }>('/api/v1/integrations/fireflies/sync', { days_back: 30 })
       
-      if (error) {
-        throw new Error(error.message || 'Sync failed')
+      if (!ffError && ffData) {
+        totalNew += ffData.new_recordings || 0
+      }
+      
+      // Sync Teams (if connected via Microsoft 365)
+      const { data: teamsData, error: teamsError } = await api.post<{
+        success: boolean
+        new_recordings: number
+      }>('/api/v1/integrations/teams/sync', { days_back: 30 })
+      
+      if (!teamsError && teamsData) {
+        totalNew += teamsData.new_recordings || 0
+      } else if (teamsError) {
+        // Teams sync might fail if not connected, that's okay
+        console.log('Teams sync skipped or failed:', teamsError)
       }
       
       toast({
         title: 'Sync complete',
-        description: `${data?.new_recordings || 0} new recordings found`,
+        description: `${totalNew} new recordings found`,
       })
       
       loadRecordings()
@@ -177,13 +223,27 @@ export function RecordingsSidebar() {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
-  // Get provider icon
+  // Get provider icon and colors
   const getProviderIcon = (provider: string) => {
     switch (provider) {
       case 'fireflies':
-        return <Flame className="h-4 w-4 text-orange-500" />
+        return <Flame className="h-4 w-4 text-white" />
+      case 'teams':
+        return <span className="text-white text-xs font-bold">T</span>
       default:
-        return <Mic className="h-4 w-4 text-pink-500" />
+        return <Mic className="h-4 w-4 text-white" />
+    }
+  }
+
+  // Get provider color gradient
+  const getProviderGradient = (provider: string) => {
+    switch (provider) {
+      case 'fireflies':
+        return 'from-purple-500 to-pink-500'
+      case 'teams':
+        return 'from-[#6264A7] to-[#464775]'
+      default:
+        return 'from-pink-500 to-rose-500'
     }
   }
 
@@ -237,7 +297,7 @@ export function RecordingsSidebar() {
               >
                 <div className="flex items-start gap-3">
                   {/* Provider icon */}
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-sm shrink-0">
+                  <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getProviderGradient(recording.provider)} flex items-center justify-center shadow-sm shrink-0`}>
                     {getProviderIcon(recording.provider)}
                   </div>
                   
