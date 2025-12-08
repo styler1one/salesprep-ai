@@ -7,7 +7,15 @@ from dotenv import load_dotenv
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from app.routers import users, knowledge_base, research, sales_profile, company_profile, context, preparation, followup, followup_actions, prospects, contacts, settings, billing, webhooks, deals, coach, dashboard, calendar, calendar_meetings, mobile
+from app.routers import users, knowledge_base, research, sales_profile, company_profile, context, preparation, followup, followup_actions, prospects, contacts, settings, billing, webhooks, deals, coach, dashboard, calendar, calendar_meetings
+
+# Import mobile router separately to catch potential errors
+try:
+    from app.routers import mobile
+    MOBILE_ROUTER_AVAILABLE = True
+except Exception as e:
+    logging.error(f"Failed to import mobile router: {e}")
+    MOBILE_ROUTER_AVAILABLE = False
 from app.routers.admin import router as admin_router
 
 # Sentry imports (error tracking)

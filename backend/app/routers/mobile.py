@@ -8,7 +8,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 
-from ..dependencies import get_current_user, get_user_org
+from app.deps import get_current_user, get_user_org
 from ..services.supabase import get_supabase_client
 
 router = APIRouter()
