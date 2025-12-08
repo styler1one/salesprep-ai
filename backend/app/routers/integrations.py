@@ -635,7 +635,7 @@ async def import_fireflies_recording(
         # Update external recording status
         supabase.table("external_recordings").update({
             "import_status": "imported",
-            "followup_id": followup_id,
+            "imported_followup_id": followup_id,
             "matched_prospect_id": prospect_id,
             "updated_at": datetime.now(timezone.utc).isoformat()
         }).eq("id", recording_id).execute()
