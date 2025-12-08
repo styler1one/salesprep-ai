@@ -347,6 +347,35 @@ async def connect_fireflies(
             ).execute()
             logger.info(f"Created Fireflies integration for user {user_id}")
         
+        # Trigger initial sync with 90 days of history
+        try:
+            integration_result = supabase.table("recording_integrations").select("id").eq(
+                "user_id", user_id
+            ).eq("provider", "fireflies").execute()
+            
+            if integration_result.data:
+                integration_id = integration_result.data[0]["id"]
+                service = FirefliesService.from_integration({
+                    "credentials": credentials,
+                    "user_id": user_id,
+                    "organization_id": org_id,
+                    "id": integration_id
+                })
+                
+                if service:
+                    # Run initial sync in background (90 days of history)
+                    logger.info(f"Triggering initial Fireflies sync for user {user_id}")
+                    await sync_fireflies_recordings(
+                        user_id=user_id,
+                        org_id=org_id,
+                        integration_id=integration_id,
+                        service=service,
+                        days_back=90  # Initial sync: 90 days of history
+                    )
+        except Exception as sync_error:
+            # Don't fail the connect if sync fails
+            logger.warning(f"Initial Fireflies sync failed (non-critical): {sync_error}")
+        
         return FirefliesConnectResponse(
             success=True,
             account_email=account_email,
@@ -396,15 +425,16 @@ async def disconnect_fireflies(
 async def sync_fireflies(
     user: dict = Depends(get_current_user),
     user_org: Tuple[str, str] = Depends(get_user_org),
-    days_back: int = 30
+    days_back: int = 90
 ):
     """
     Manually trigger a sync of Fireflies recordings.
     Fetches recent transcripts and saves them to external_recordings.
+    Default: 90 days of history.
     """
     # Input validation
     if days_back < 1 or days_back > 365:
-        days_back = 30  # Default to 30 if out of range
+        days_back = 90  # Default to 90 if out of range
     
     user_id, org_id = user_org  # Unpack tuple (user_id, organization_id)
     
