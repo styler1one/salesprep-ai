@@ -37,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { User } from '@supabase/supabase-js'
+import { RecordingsSidebar } from '@/components/recordings-sidebar'
 
 interface Attendee {
   email: string
@@ -429,8 +430,10 @@ export default function MeetingsPage() {
           </Card>
         )}
 
-        {/* Meetings list grouped by day */}
-        <div className="space-y-6">
+        {/* Main content with sidebar */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Meetings list grouped by day */}
+          <div className="flex-1 space-y-6">
           {Object.entries(groupedMeetings).map(([date, dayMeetings]) => (
             <div key={date}>
               {/* Date header */}
@@ -632,6 +635,10 @@ export default function MeetingsPage() {
               </div>
             </div>
           ))}
+          </div>
+          
+          {/* Recordings Sidebar */}
+          <RecordingsSidebar />
         </div>
       </div>
     </DashboardLayout>
