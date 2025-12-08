@@ -83,9 +83,11 @@ class FirefliesService:
     
     async def fetch_transcripts(
         self, 
-        limit: int = 50, 
+        limit: int = 50,  # Fireflies API max is 50
         from_date: Optional[datetime] = None
     ) -> List[dict]:
+        # Enforce Fireflies API limit
+        limit = min(limit, 50)
         """
         Fetch transcripts from Fireflies API.
         
@@ -243,8 +245,8 @@ async def sync_fireflies_recordings(
     # Calculate from_date (timezone-aware)
     from_date = datetime.now(timezone.utc) - timedelta(days=days_back)
     
-    # Fetch transcripts from Fireflies
-    transcripts = await service.fetch_transcripts(limit=100, from_date=from_date)
+    # Fetch transcripts from Fireflies (API limit is 50 max)
+    transcripts = await service.fetch_transcripts(limit=50, from_date=from_date)
     
     if not transcripts:
         logger.info(f"No transcripts found for user {user_id}")

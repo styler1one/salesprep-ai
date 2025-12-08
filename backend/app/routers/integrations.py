@@ -465,6 +465,7 @@ async def sync_fireflies(
 @router.get("/fireflies/recordings", response_model=ExternalRecordingsListResponse)
 async def get_fireflies_recordings(
     user: dict = Depends(get_current_user),
+    user_org: Tuple[str, str] = Depends(get_user_org),
     import_status: Optional[str] = None,
     limit: int = 50
 ):
@@ -472,7 +473,11 @@ async def get_fireflies_recordings(
     Get external recordings from Fireflies.
     Optionally filter by import status (pending, imported, skipped, failed).
     """
-    user_id = user.get("id")
+    user_id, org_id = user_org  # Unpack tuple
+    
+    # Validate user_id
+    if not user_id or user_id == "None":
+        return ExternalRecordingsListResponse(recordings=[], total=0)
     
     try:
         query = supabase.table("external_recordings").select("*").eq(
