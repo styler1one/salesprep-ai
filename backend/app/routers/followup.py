@@ -291,6 +291,7 @@ async def upload_audio(
     meeting_subject: Optional[str] = Form(None),
     contact_ids: Optional[str] = Form(None),  # Comma-separated contact UUIDs
     deal_id: Optional[str] = Form(None),  # Optional deal to link this follow-up to
+    calendar_meeting_id: Optional[str] = Form(None),  # Link to calendar meeting (SPEC-038)
     include_coaching: bool = Form(False),  # opt-in coaching feedback
     language: str = Form("en"),  # i18n: output language (default: English)
     current_user: dict = Depends(get_current_user)
@@ -375,6 +376,7 @@ async def upload_audio(
             "user_id": user_id,
             "prospect_id": prospect_id,  # Link to prospect!
             "meeting_prep_id": meeting_prep_id,
+            "calendar_meeting_id": calendar_meeting_id,  # Link to calendar meeting (SPEC-038)
             "prospect_company_name": prospect_company_name,
             "meeting_date": meeting_date,
             "meeting_subject": meeting_subject,
@@ -392,6 +394,18 @@ async def upload_audio(
         
         followup = response.data[0]
         followup_id = followup["id"]
+        
+        # Update reverse link in calendar_meetings (SPEC-038)
+        if calendar_meeting_id:
+            try:
+                supabase.table("calendar_meetings").update({
+                    "followup_id": followup_id
+                }).eq("id", calendar_meeting_id).eq(
+                    "organization_id", organization_id
+                ).execute()
+                logger.info(f"Linked followup {followup_id} to calendar meeting {calendar_meeting_id}")
+            except Exception as e:
+                logger.warning(f"Failed to link followup to calendar meeting: {e}")
         
         # Upload audio to storage first
         storage_path = f"{organization_id}/{followup_id}/{file.filename}"

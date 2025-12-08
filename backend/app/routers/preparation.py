@@ -35,6 +35,7 @@ class PrepStartRequest(BaseModel):
     custom_notes: Optional[str] = None
     contact_ids: Optional[List[str]] = None  # Selected contact persons for this meeting
     deal_id: Optional[str] = None  # Optional deal to link this prep to
+    calendar_meeting_id: Optional[str] = None  # Link to calendar meeting (SPEC-038)
     language: Optional[str] = "en"  # i18n: output language (default: English)
 
 
@@ -232,6 +233,18 @@ async def start_prep(
         
         prep = response.data[0]
         prep_id = prep["id"]
+        
+        # Link back to calendar meeting if provided (SPEC-038)
+        if body.calendar_meeting_id:
+            try:
+                supabase.table("calendar_meetings").update({
+                    "preparation_id": prep_id
+                }).eq("id", body.calendar_meeting_id).eq(
+                    "organization_id", organization_id
+                ).execute()
+                logger.info(f"Linked prep {prep_id} to calendar meeting {body.calendar_meeting_id}")
+            except Exception as e:
+                logger.warning(f"Failed to link prep to calendar meeting: {e}")
         
         # Start processing via Inngest (if enabled) or BackgroundTasks (fallback)
         if use_inngest_for("preparation"):

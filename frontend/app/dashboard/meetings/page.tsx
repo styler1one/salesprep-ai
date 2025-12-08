@@ -616,6 +616,10 @@ export default function MeetingsPage() {
                                 // Use prospect name if linked, otherwise meeting title
                                 const companyName = meeting.prospect_name || meeting.title
                                 sessionStorage.setItem('prepareForCompany', companyName)
+                                sessionStorage.setItem('prepareForMeetingId', meeting.id)
+                                if (meeting.prospect_id) {
+                                  sessionStorage.setItem('prepareForProspectId', meeting.prospect_id)
+                                }
                                 router.push('/dashboard/preparation')
                               }}
                             >

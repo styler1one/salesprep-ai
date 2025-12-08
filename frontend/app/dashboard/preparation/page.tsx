@@ -75,6 +75,9 @@ export default function PreparationPage() {
   const [availableDeals, setAvailableDeals] = useState<Deal[]>([])
   const [selectedDealId, setSelectedDealId] = useState<string>('')
   const [dealsLoading, setDealsLoading] = useState(false)
+  
+  // Calendar meeting linking state (SPEC-038)
+  const [calendarMeetingId, setCalendarMeetingId] = useState<string | null>(null)
 
   // Get user for display (non-blocking) and load preps in parallel
   useEffect(() => {
@@ -84,12 +87,22 @@ export default function PreparationPage() {
       loadPreps()
     ])
 
-    // Check for pre-selected company from Research page
+    // Check for pre-selected company from Research or Meetings page
     const prepareFor = sessionStorage.getItem('prepareForCompany')
     if (prepareFor) {
       setCompanyName(prepareFor)
       sessionStorage.removeItem('prepareForCompany')
     }
+    
+    // Check for calendar meeting link from Meetings page (SPEC-038)
+    const meetingId = sessionStorage.getItem('prepareForMeetingId')
+    if (meetingId) {
+      setCalendarMeetingId(meetingId)
+      sessionStorage.removeItem('prepareForMeetingId')
+    }
+    
+    // Clean up prospect ID as well
+    sessionStorage.removeItem('prepareForProspectId')
   }, [])
   
   // Poll for status updates
@@ -212,6 +225,7 @@ export default function PreparationPage() {
         custom_notes: customNotes || null,
         contact_ids: selectedContactIds.length > 0 ? selectedContactIds : null,
         deal_id: selectedDealId || null,
+        calendar_meeting_id: calendarMeetingId || null,
         language: outputLanguage
       })
 
@@ -224,6 +238,7 @@ export default function PreparationPage() {
         setAvailableContacts([])
         setSelectedDealId('')
         setAvailableDeals([])
+        setCalendarMeetingId(null)
         setShowAdvanced(false)
         loadPreps()
       } else {

@@ -622,6 +622,7 @@ async def import_fireflies_recording(
         # Create followup record (only use columns that exist in the table)
         transcript = recording.get("transcript_text", "")
         title = recording.get("title", "Fireflies Recording")
+        calendar_meeting_id = recording.get("matched_meeting_id")  # Get linked calendar meeting
         
         followup_data = {
             "organization_id": org_id,
@@ -630,6 +631,7 @@ async def import_fireflies_recording(
             "meeting_prep_id": request.meeting_prep_id,  # Link to preparation
             "contact_ids": request.contact_ids or [],  # Link to contacts
             "external_recording_id": recording_id,  # Link to external recording (SPEC-038)
+            "calendar_meeting_id": calendar_meeting_id,  # Link to calendar meeting (SPEC-038)
             "audio_url": recording.get("audio_url"),
             "transcription_text": transcript[:100000] if transcript else None,  # Limit size
             "meeting_subject": title,  # Use meeting_subject for title
@@ -648,6 +650,18 @@ async def import_fireflies_recording(
             )
         
         followup_id = followup_result.data[0]["id"]
+        
+        # Update reverse link in calendar_meetings (SPEC-038)
+        if calendar_meeting_id:
+            try:
+                supabase.table("calendar_meetings").update({
+                    "followup_id": followup_id
+                }).eq("id", calendar_meeting_id).eq(
+                    "organization_id", org_id
+                ).execute()
+                logger.info(f"Linked followup {followup_id} to calendar meeting {calendar_meeting_id}")
+            except Exception as e:
+                logger.warning(f"Failed to link followup to calendar meeting: {e}")
         
         # Update external recording status
         supabase.table("external_recordings").update({
@@ -908,17 +922,23 @@ async def import_teams_recording(
         }
     
     try:
+        # Get linked calendar meeting
+        calendar_meeting_id = rec.get("matched_meeting_id")
+        
         # Create followup record
         followup_data = {
             "user_id": user_id,
             "organization_id": org_id,
             "external_recording_id": recording_id,  # Link to external recording (SPEC-038)
+            "calendar_meeting_id": calendar_meeting_id,  # Link to calendar meeting (SPEC-038)
             "meeting_subject": rec.get("title") or "Teams Meeting",
             "meeting_date": rec.get("meeting_time"),
             "meeting_duration": rec.get("duration"),
             "transcription_text": rec.get("transcript_text"),
             "status": "summarizing" if rec.get("transcript_text") else "pending",
             "prospect_id": prospect_id,
+            "meeting_prep_id": meeting_prep_id,
+            "contact_ids": contact_ids or [],
         }
         
         result = supabase.table("followups").insert(followup_data).execute()
@@ -930,6 +950,18 @@ async def import_teams_recording(
             )
         
         followup_id = result.data[0]["id"]
+        
+        # Update reverse link in calendar_meetings (SPEC-038)
+        if calendar_meeting_id:
+            try:
+                supabase.table("calendar_meetings").update({
+                    "followup_id": followup_id
+                }).eq("id", calendar_meeting_id).eq(
+                    "organization_id", org_id
+                ).execute()
+                logger.info(f"Linked followup {followup_id} to calendar meeting {calendar_meeting_id}")
+            except Exception as e:
+                logger.warning(f"Failed to link followup to calendar meeting: {e}")
         
         # Update external_recordings
         supabase.table("external_recordings").update({

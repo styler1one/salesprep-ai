@@ -142,6 +142,11 @@ export function BrowserRecording({
         additionalFields.prospect_id = prospectId
       }
       
+      // Link to calendar meeting (SPEC-038)
+      if (meetingId) {
+        additionalFields.calendar_meeting_id = meetingId
+      }
+      
       setUploadProgress(30)
       
       const { data, error } = await uploadFile<{
