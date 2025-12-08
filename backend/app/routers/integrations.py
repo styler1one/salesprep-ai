@@ -608,14 +608,16 @@ async def import_fireflies_recording(
         
         # Create followup record (only use columns that exist in the table)
         transcript = recording.get("transcript_text", "")
+        title = recording.get("title", "Fireflies Recording")
         
         followup_data = {
             "organization_id": org_id,
             "user_id": user_id,
             "prospect_id": prospect_id,
             "audio_url": recording.get("audio_url"),
-            "transcript": transcript[:100000] if transcript else None,  # Limit size
-            "status": "processing",
+            "transcription_text": transcript[:100000] if transcript else None,  # Limit size
+            "meeting_subject": title,  # Use meeting_subject for title
+            "status": "summarizing",  # Valid status: uploading, transcribing, summarizing, completed, failed
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         
