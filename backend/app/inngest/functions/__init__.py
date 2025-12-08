@@ -11,6 +11,7 @@ from .contacts import analyze_contact_fn
 from .followup_actions import generate_followup_action_fn
 from .knowledge_base import process_knowledge_file_fn
 from .calendar import sync_all_calendars_fn, sync_calendar_connection_fn
+from .fireflies import sync_all_fireflies_fn, sync_fireflies_user_fn
 
 # All functions to register with Inngest
 all_functions = [
@@ -23,6 +24,8 @@ all_functions = [
     process_knowledge_file_fn,
     sync_all_calendars_fn,
     sync_calendar_connection_fn,
+    sync_all_fireflies_fn,
+    sync_fireflies_user_fn,
 ]
 
 __all__ = [
@@ -36,5 +39,7 @@ __all__ = [
     "process_knowledge_file_fn",
     "sync_all_calendars_fn",
     "sync_calendar_connection_fn",
+    "sync_all_fireflies_fn",
+    "sync_fireflies_user_fn",
 ]
 

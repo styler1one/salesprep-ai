@@ -149,6 +149,13 @@ class Events:
     # Calendar Integration
     CALENDAR_SYNC_REQUESTED = "dealmotion/calendar.sync.requested"
     CALENDAR_SYNC_COMPLETED = "dealmotion/calendar.sync.completed"
+    
+    # Fireflies Integration
+    FIREFLIES_SYNC_REQUESTED = "dealmotion/fireflies.sync.requested"
+    FIREFLIES_SYNC_COMPLETED = "dealmotion/fireflies.sync.completed"
+    
+    # Follow-up Summarize (for imported transcripts)
+    FOLLOWUP_SUMMARIZE = "dealmotion/followup.summarize"
 
 
 # =============================================================================
