@@ -392,13 +392,20 @@ async def connect_fireflies(
 
 @router.delete("/fireflies/disconnect", response_model=IntegrationDisconnectResponse)
 async def disconnect_fireflies(
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(get_current_user),
+    user_org: Tuple[str, str] = Depends(get_user_org)
 ):
     """
     Disconnect Fireflies integration.
     Removes the integration but keeps imported recordings.
     """
-    user_id = user.get("id")
+    user_id, org_id = user_org  # Unpack tuple
+    
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user"
+        )
     
     try:
         # Delete integration record

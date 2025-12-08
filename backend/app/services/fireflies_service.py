@@ -298,15 +298,6 @@ async def sync_fireflies_recordings(
                 for s in sentences
             ]) if sentences else None
             
-            # Extract summary
-            summary = transcript.get("summary", {})
-            metadata = {
-                "overview": summary.get("overview"),
-                "action_items": summary.get("action_items"),
-                "keywords": summary.get("keywords"),
-                "transcript_url": transcript_url
-            }
-            
             # Try to match with a calendar meeting
             matched_meeting_id = None
             matched_prospect_id = None
@@ -331,7 +322,7 @@ async def sync_fireflies_recordings(
                     logger.info(f"Matched transcript '{title}' with meeting '{meeting['title']}'")
                     break
             
-            # Insert into external_recordings
+            # Insert into external_recordings (without metadata column that doesn't exist)
             record_data = {
                 "organization_id": org_id,
                 "user_id": user_id,
@@ -344,7 +335,6 @@ async def sync_fireflies_recordings(
                 "participants": participants if participants else [],
                 "audio_url": audio_url,
                 "transcript_text": transcript_text[:50000] if transcript_text else None,  # Limit size
-                "metadata": metadata,
                 "matched_meeting_id": matched_meeting_id,
                 "matched_prospect_id": matched_prospect_id,
                 "import_status": "pending",
@@ -359,10 +349,10 @@ async def sync_fireflies_recordings(
             logger.error(f"Error importing transcript {transcript.get('id')}: {e}")
             stats["error"] += 1
     
-    # Update integration last_sync
+    # Update integration last_sync (use "success" or "failed" per database constraint)
     supabase.table("recording_integrations").update({
         "last_sync_at": datetime.now(timezone.utc).isoformat(),
-        "last_sync_status": "success" if stats["error"] == 0 else "partial"
+        "last_sync_status": "success" if stats["error"] == 0 else "failed"
     }).eq("id", integration_id).execute()
     
     logger.info(f"Fireflies sync complete: {stats}")
