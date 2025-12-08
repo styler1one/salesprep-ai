@@ -355,23 +355,19 @@ async def connect_fireflies(
             
             if integration_result.data:
                 integration_id = integration_result.data[0]["id"]
-                service = FirefliesService.from_integration({
-                    "credentials": credentials,
-                    "user_id": user_id,
-                    "organization_id": org_id,
-                    "id": integration_id
-                })
+                # Use the raw API key directly (before encryption) to create service
+                service = FirefliesService(api_key)
                 
-                if service:
-                    # Run initial sync in background (90 days of history)
-                    logger.info(f"Triggering initial Fireflies sync for user {user_id}")
-                    await sync_fireflies_recordings(
-                        user_id=user_id,
-                        org_id=org_id,
-                        integration_id=integration_id,
-                        service=service,
-                        days_back=90  # Initial sync: 90 days of history
-                    )
+                # Run initial sync (90 days of history)
+                logger.info(f"Triggering initial Fireflies sync for user {user_id}")
+                stats = await sync_fireflies_recordings(
+                    user_id=user_id,
+                    org_id=org_id,
+                    integration_id=integration_id,
+                    service=service,
+                    days_back=90  # Initial sync: 90 days of history
+                )
+                logger.info(f"Initial sync complete: {stats}")
         except Exception as sync_error:
             # Don't fail the connect if sync fails
             logger.warning(f"Initial Fireflies sync failed (non-critical): {sync_error}")
