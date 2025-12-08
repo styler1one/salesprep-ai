@@ -182,10 +182,8 @@ export function RecordingsSidebar() {
       
       if (!teamsError && teamsData) {
         totalNew += teamsData.new_recordings || 0
-      } else if (teamsError) {
-        // Teams sync might fail if not connected, that's okay
-        console.log('Teams sync skipped or failed:', teamsError)
       }
+      // Teams sync might fail if not connected, that's okay - no logging needed
       
       toast({
         title: 'Sync complete',

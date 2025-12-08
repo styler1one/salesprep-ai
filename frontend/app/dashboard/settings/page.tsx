@@ -577,11 +577,11 @@ export default function SettingsPage() {
       } else {
         throw new Error('No checkout URL returned')
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to start checkout:', error)
       toast({
         title: tErrors('generic'),
-        description: error?.message || tBilling('checkoutError'),
+        description: error instanceof Error ? error.message : tBilling('checkoutError'),
         variant: 'destructive',
       })
     } finally {

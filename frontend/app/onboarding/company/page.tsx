@@ -193,11 +193,11 @@ export default function CompanyOnboardingPage() {
       // Redirect to company profile page
       router.push('/dashboard/company-profile')
       
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error completing interview:', error)
       toast({
         title: t('toast.createError'),
-        description: error.message || t('toast.createErrorDesc'),
+        description: error instanceof Error ? error.message : t('toast.createErrorDesc'),
         variant: 'destructive'
       })
       setCompleted(false)

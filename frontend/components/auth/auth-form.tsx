@@ -52,8 +52,8 @@ export function AuthForm({ view }: AuthFormProps) {
                 router.refresh()
                 router.push('/dashboard')
             }
-        } catch (err: any) {
-            setError(err.message)
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An error occurred')
         } finally {
             setLoading(false)
         }

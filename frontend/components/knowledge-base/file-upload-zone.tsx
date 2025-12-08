@@ -51,8 +51,8 @@ export function FileUploadZone({ onUpload, uploading }: FileUploadZoneProps) {
 
     try {
       await onUpload(file)
-    } catch (err: any) {
-      setError(err.message || 'Upload failed')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed')
     }
   }, [onUpload])
 

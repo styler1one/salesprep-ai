@@ -336,11 +336,11 @@ export default function FollowupDetailPage() {
       // NOTE: Don't await fetchActions() here - let polling handle it
       // This prevents blocking the UI while waiting for refresh
       
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to generate action:', error)
       
       // Check if it's an "already exists" error - refresh to show existing action
-      const errorMessage = error?.message || ''
+      const errorMessage = error instanceof Error ? error.message : ''
       if (errorMessage.includes('already exists')) {
         toast({ 
           title: t('actions.alreadyExists'),

@@ -110,9 +110,8 @@ export default function KnowledgeBasePage() {
       
       // Start polling for status updates
       setTimeout(() => fetchFiles(), 2000)
-    } catch (error: any) {
+    } catch (error) {
       console.error('Upload failed:', error)
-      const errorMessage = error.message || 'Failed to fetch'
       toast({
         variant: "destructive",
         title: t('toast.failed'),
