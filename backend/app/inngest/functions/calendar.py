@@ -1,15 +1,16 @@
 """
 Calendar Sync Inngest Functions.
 
-Handles automated calendar synchronization.
+Handles automated calendar synchronization and cleanup.
 
 Functions:
 - sync_all_calendars: Cron job to sync all active calendar connections
 - sync_single_calendar: Event-triggered sync for a specific connection
+- cleanup_old_meetings: Daily job to remove old calendar meetings
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 import inngest
 from inngest import TriggerEvent, TriggerCron
 
@@ -173,4 +174,132 @@ def sync_connection(connection_id: str) -> dict:
     except Exception as e:
         logger.error(f"Sync failed for connection {connection_id}: {e}")
         raise
+
+
+# =============================================================================
+# Cleanup Job
+# =============================================================================
+
+@inngest_client.create_function(
+    fn_id="cleanup-old-meetings",
+    trigger=TriggerCron(cron="0 3 * * *"),  # Daily at 3:00 AM UTC
+    retries=1,
+)
+async def cleanup_old_meetings_fn(ctx, step):
+    """
+    Daily cleanup job to remove old calendar meetings.
+    
+    Removes meetings older than 30 days to keep the database clean.
+    Related records (followups, external_recordings) are NOT deleted,
+    but their calendar_meeting_id is set to NULL.
+    """
+    logger.info("Starting daily calendar meetings cleanup")
+    
+    # Step 1: Get count of old meetings
+    stats = await step.run("get-old-meeting-stats", get_old_meeting_stats)
+    
+    if stats["count"] == 0:
+        logger.info("No old meetings to clean up")
+        return {"deleted": 0, "message": "No old meetings found"}
+    
+    logger.info(f"Found {stats['count']} meetings older than 30 days")
+    
+    # Step 2: Clear calendar_meeting_id in related followups
+    cleared_followups = await step.run("clear-followup-links", clear_followup_calendar_links)
+    
+    # Step 3: Clear matched_meeting_id in external_recordings
+    cleared_recordings = await step.run("clear-recording-links", clear_recording_meeting_links)
+    
+    # Step 4: Delete old meetings
+    deleted = await step.run("delete-old-meetings", delete_old_meetings)
+    
+    logger.info(f"Cleanup complete: deleted {deleted} meetings, cleared {cleared_followups} followup links, {cleared_recordings} recording links")
+    
+    return {
+        "deleted": deleted,
+        "cleared_followup_links": cleared_followups,
+        "cleared_recording_links": cleared_recordings
+    }
+
+
+def get_old_meeting_stats() -> dict:
+    """Get count of meetings older than 30 days."""
+    try:
+        cutoff_date = (datetime.utcnow() - timedelta(days=30)).isoformat()
+        
+        result = supabase.table("calendar_meetings").select(
+            "id", count="exact"
+        ).lt("end_time", cutoff_date).execute()
+        
+        return {"count": result.count or 0, "cutoff_date": cutoff_date}
+    except Exception as e:
+        logger.error(f"Failed to get old meeting stats: {e}")
+        return {"count": 0, "cutoff_date": None}
+
+
+def clear_followup_calendar_links() -> int:
+    """Set calendar_meeting_id to NULL for followups linked to old meetings."""
+    try:
+        cutoff_date = (datetime.utcnow() - timedelta(days=30)).isoformat()
+        
+        # Get IDs of old meetings
+        old_meetings = supabase.table("calendar_meetings").select("id").lt(
+            "end_time", cutoff_date
+        ).execute()
+        
+        if not old_meetings.data:
+            return 0
+        
+        old_meeting_ids = [m["id"] for m in old_meetings.data]
+        
+        # Update followups
+        result = supabase.table("followups").update({
+            "calendar_meeting_id": None
+        }).in_("calendar_meeting_id", old_meeting_ids).execute()
+        
+        return len(result.data) if result.data else 0
+    except Exception as e:
+        logger.error(f"Failed to clear followup links: {e}")
+        return 0
+
+
+def clear_recording_meeting_links() -> int:
+    """Set matched_meeting_id to NULL for external_recordings linked to old meetings."""
+    try:
+        cutoff_date = (datetime.utcnow() - timedelta(days=30)).isoformat()
+        
+        # Get IDs of old meetings
+        old_meetings = supabase.table("calendar_meetings").select("id").lt(
+            "end_time", cutoff_date
+        ).execute()
+        
+        if not old_meetings.data:
+            return 0
+        
+        old_meeting_ids = [m["id"] for m in old_meetings.data]
+        
+        # Update external_recordings
+        result = supabase.table("external_recordings").update({
+            "matched_meeting_id": None
+        }).in_("matched_meeting_id", old_meeting_ids).execute()
+        
+        return len(result.data) if result.data else 0
+    except Exception as e:
+        logger.error(f"Failed to clear recording links: {e}")
+        return 0
+
+
+def delete_old_meetings() -> int:
+    """Delete meetings older than 30 days."""
+    try:
+        cutoff_date = (datetime.utcnow() - timedelta(days=30)).isoformat()
+        
+        result = supabase.table("calendar_meetings").delete().lt(
+            "end_time", cutoff_date
+        ).execute()
+        
+        return len(result.data) if result.data else 0
+    except Exception as e:
+        logger.error(f"Failed to delete old meetings: {e}")
+        return 0
 
