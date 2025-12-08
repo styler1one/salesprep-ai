@@ -75,6 +75,21 @@ async def process_followup_audio_fn(ctx, step):
         storage_path, filename, language
     )
     
+    # Validate transcription result
+    if not transcription_result.get("full_text"):
+        logger.error(f"Transcription returned empty text for followup {followup_id}")
+        # Update status to failed and stop processing
+        await step.run(
+            "mark-failed-empty-transcription",
+            mark_transcription_failed,
+            followup_id, "Transcription returned empty text - audio may be too short, silent, or in unsupported format"
+        )
+        return {
+            "followup_id": followup_id,
+            "status": "failed",
+            "error": "Empty transcription"
+        }
+    
     # Step 3: Update with transcription and change status
     await step.run(
         "save-transcription",
@@ -237,6 +252,16 @@ async def update_followup_status(followup_id: str, status: str) -> dict:
         "status": status
     }).eq("id", followup_id).execute()
     return {"updated": True, "status": status}
+
+
+async def mark_transcription_failed(followup_id: str, error_message: str) -> dict:
+    """Mark followup as failed due to transcription error."""
+    supabase.table("followups").update({
+        "status": "failed",
+        "error_message": error_message
+    }).eq("id", followup_id).execute()
+    logger.error(f"Followup {followup_id} marked as failed: {error_message}")
+    return {"updated": True, "status": "failed"}
 
 
 async def transcribe_audio_from_storage(storage_path: str, filename: str, language: str) -> dict:
