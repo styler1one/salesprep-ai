@@ -34,7 +34,8 @@ import {
   Calendar,
   RefreshCw,
   AlertCircle,
-  Mic
+  Mic,
+  X
 } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { useToast } from '@/components/ui/use-toast'
