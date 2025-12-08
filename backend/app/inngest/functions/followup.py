@@ -243,8 +243,15 @@ async def transcribe_audio_from_storage(storage_path: str, filename: str, langua
     """Download audio from Supabase Storage and transcribe."""
     try:
         # Download audio from storage
+        logger.info(f"Downloading audio from storage: {storage_path}")
         response = supabase.storage.from_("followup-audio").download(storage_path)
         audio_bytes = response
+        
+        if not audio_bytes:
+            logger.error(f"Downloaded empty audio file from {storage_path}")
+            raise NonRetriableError(f"Empty audio file downloaded from storage")
+        
+        logger.info(f"Downloaded {len(audio_bytes)} bytes, starting transcription for {filename}")
         
         transcription_service = get_transcription_service()
         result = await transcription_service.transcribe_audio_bytes(
@@ -252,6 +259,11 @@ async def transcribe_audio_from_storage(storage_path: str, filename: str, langua
             filename,
             language=language
         )
+        
+        if not result.full_text:
+            logger.warning(f"Transcription returned empty text for {filename}")
+        else:
+            logger.info(f"Transcription successful: {len(result.full_text)} chars, {result.speaker_count} speakers")
         
         # Convert segments to dict format
         segments = [
@@ -270,8 +282,10 @@ async def transcribe_audio_from_storage(storage_path: str, filename: str, langua
             "speaker_count": result.speaker_count,
             "duration_seconds": int(result.duration_seconds)
         }
+    except NonRetriableError:
+        raise
     except Exception as e:
-        logger.error(f"Transcription failed: {e}")
+        logger.error(f"Transcription failed for {storage_path}: {e}", exc_info=True)
         raise NonRetriableError(f"Transcription failed: {e}")
 
 
