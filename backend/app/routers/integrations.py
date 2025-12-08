@@ -11,6 +11,14 @@ import httpx
 
 from app.deps import get_current_user, get_user_org
 from app.database import get_supabase_service
+from app.services.fireflies_service import FirefliesService, sync_fireflies_recordings
+
+# Try to import Inngest for async processing
+try:
+    from app.inngest.events import send_event, Events
+    INNGEST_ENABLED = True
+except ImportError:
+    INNGEST_ENABLED = False
 
 supabase = get_supabase_service()
 
@@ -80,6 +88,27 @@ class ExternalRecordingsListResponse(BaseModel):
     """List of external recordings."""
     recordings: List[ExternalRecordingResponse]
     total: int
+
+
+class FirefliesSyncResponse(BaseModel):
+    """Response after Fireflies sync."""
+    success: bool
+    new_recordings: int = 0
+    updated_recordings: int = 0
+    skipped_recordings: int = 0
+    errors: int = 0
+
+
+class FirefliesImportRequest(BaseModel):
+    """Request to import a Fireflies recording."""
+    prospect_id: Optional[str] = Field(None, description="Link to a specific prospect")
+
+
+class FirefliesImportResponse(BaseModel):
+    """Response after importing a Fireflies recording."""
+    success: bool
+    followup_id: Optional[str] = Field(None, description="Created followup record ID")
+    message: str
 
 
 # ==========================================
@@ -350,6 +379,67 @@ async def disconnect_fireflies(
         )
 
 
+@router.post("/fireflies/sync", response_model=FirefliesSyncResponse)
+async def sync_fireflies(
+    user: dict = Depends(get_current_user),
+    org: dict = Depends(get_user_org),
+    days_back: int = 30
+):
+    """
+    Manually trigger a sync of Fireflies recordings.
+    Fetches recent transcripts and saves them to external_recordings.
+    """
+    user_id = user.get("id")
+    org_id = org.get("id")
+    
+    # Get integration record
+    result = supabase.table("recording_integrations").select("*").eq(
+        "user_id", user_id
+    ).eq("provider", "fireflies").execute()
+    
+    if not result.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Fireflies integration not found. Please connect first."
+        )
+    
+    integration = result.data[0]
+    integration_id = integration["id"]
+    
+    # Create service from integration
+    service = FirefliesService.from_integration(integration)
+    if not service:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid Fireflies credentials"
+        )
+    
+    try:
+        # Run sync
+        stats = await sync_fireflies_recordings(
+            user_id=user_id,
+            org_id=org_id,
+            integration_id=integration_id,
+            service=service,
+            days_back=days_back
+        )
+        
+        return FirefliesSyncResponse(
+            success=True,
+            new_recordings=stats.get("new", 0),
+            updated_recordings=stats.get("updated", 0),
+            skipped_recordings=stats.get("skipped", 0),
+            errors=stats.get("error", 0)
+        )
+        
+    except Exception as e:
+        logger.error(f"Fireflies sync failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Sync failed: {str(e)}"
+        )
+
+
 @router.get("/fireflies/recordings", response_model=ExternalRecordingsListResponse)
 async def get_fireflies_recordings(
     user: dict = Depends(get_current_user),
@@ -399,5 +489,123 @@ async def get_fireflies_recordings(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch recordings"
+        )
+
+
+@router.post("/fireflies/import/{recording_id}", response_model=FirefliesImportResponse)
+async def import_fireflies_recording(
+    recording_id: str,
+    request: FirefliesImportRequest = FirefliesImportRequest(),
+    user: dict = Depends(get_current_user),
+    org: dict = Depends(get_user_org)
+):
+    """
+    Import a Fireflies recording into Meeting Analysis.
+    Creates a followup record and triggers AI summarization.
+    """
+    user_id = user.get("id")
+    org_id = org.get("id")
+    
+    try:
+        # Get the external recording
+        result = supabase.table("external_recordings").select("*").eq(
+            "id", recording_id
+        ).eq("user_id", user_id).execute()
+        
+        if not result.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Recording not found"
+            )
+        
+        recording = result.data[0]
+        
+        # Check if already imported
+        if recording["import_status"] == "imported":
+            return FirefliesImportResponse(
+                success=True,
+                followup_id=recording.get("followup_id"),
+                message="Recording already imported"
+            )
+        
+        # Determine prospect_id
+        prospect_id = request.prospect_id or recording.get("matched_prospect_id")
+        
+        if not prospect_id:
+            # Try to find from matched meeting
+            if recording.get("matched_meeting_id"):
+                meeting_result = supabase.table("calendar_meetings").select(
+                    "prospect_id"
+                ).eq("id", recording["matched_meeting_id"]).execute()
+                
+                if meeting_result.data and meeting_result.data[0].get("prospect_id"):
+                    prospect_id = meeting_result.data[0]["prospect_id"]
+        
+        # Create followup record
+        transcript = recording.get("transcript_text", "")
+        
+        followup_data = {
+            "organization_id": org_id,
+            "user_id": user_id,
+            "prospect_id": prospect_id,
+            "audio_url": recording.get("audio_url"),
+            "transcript": transcript[:100000] if transcript else None,  # Limit size
+            "status": "processing",
+            "source": "fireflies",
+            "metadata": {
+                "external_recording_id": recording_id,
+                "fireflies_id": recording.get("external_id"),
+                "title": recording.get("title"),
+                "duration_seconds": recording.get("duration_seconds"),
+                "participants": recording.get("participants", []),
+                "recording_date": recording.get("recording_date")
+            },
+            "created_at": datetime.utcnow().isoformat()
+        }
+        
+        # Insert followup
+        followup_result = supabase.table("followups").insert(followup_data).execute()
+        
+        if not followup_result.data:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create followup record"
+            )
+        
+        followup_id = followup_result.data[0]["id"]
+        
+        # Update external recording status
+        supabase.table("external_recordings").update({
+            "import_status": "imported",
+            "followup_id": followup_id,
+            "matched_prospect_id": prospect_id,
+            "updated_at": datetime.utcnow().isoformat()
+        }).eq("id", recording_id).execute()
+        
+        # Trigger AI summarization via Inngest
+        if INNGEST_ENABLED and transcript:
+            try:
+                await send_event(Events.FOLLOWUP_SUMMARIZE, {
+                    "followup_id": followup_id,
+                    "user_id": user_id,
+                    "organization_id": org_id
+                })
+                logger.info(f"Triggered summarization for followup {followup_id}")
+            except Exception as e:
+                logger.warning(f"Failed to trigger summarization: {e}")
+        
+        return FirefliesImportResponse(
+            success=True,
+            followup_id=followup_id,
+            message="Recording imported successfully. AI analysis in progress."
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error importing Fireflies recording: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Import failed: {str(e)}"
         )
 
