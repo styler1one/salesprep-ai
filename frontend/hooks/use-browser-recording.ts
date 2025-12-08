@@ -135,11 +135,14 @@ export function useBrowserRecording(options: UseBrowserRecordingOptions = {}) {
    */
   const requestPermission = useCallback(async (): Promise<boolean> => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
+          sampleRate: 48000,
+          channelCount: 1,
+          sampleSize: 16,
         }
       })
       
@@ -176,22 +179,25 @@ export function useBrowserRecording(options: UseBrowserRecordingOptions = {}) {
     }
     
     try {
-      // Get microphone stream
+      // Get microphone stream with high quality settings
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
+          sampleRate: 48000,        // 48kHz for better quality
+          channelCount: 1,          // Mono is fine for voice
+          sampleSize: 16,           // 16-bit audio
         }
       })
       
       streamRef.current = stream
       chunksRef.current = []
       
-      // Create MediaRecorder with preferred MIME type
+      // Create MediaRecorder with high quality settings
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: capabilities.preferredMimeType,
-        audioBitsPerSecond: 128000, // 128 kbps
+        audioBitsPerSecond: 256000, // 256 kbps for better transcription quality
       })
       
       mediaRecorderRef.current = mediaRecorder

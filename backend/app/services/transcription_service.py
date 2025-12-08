@@ -194,14 +194,16 @@ class TranscriptionService:
             
             output_path = input_path.rsplit(".", 1)[0] + ".mp3"
             
-            # Run ffmpeg conversion
+            # Run ffmpeg conversion with high quality for transcription
             result = subprocess.run(
                 [
                     "ffmpeg", "-y",  # Overwrite output
                     "-i", input_path,
                     "-acodec", "libmp3lame",
-                    "-ab", "128k",  # 128kbps bitrate
-                    "-ar", "44100",  # 44.1kHz sample rate
+                    "-ab", "192k",   # 192kbps for better quality
+                    "-ar", "16000",  # 16kHz - optimal for speech recognition
+                    "-ac", "1",      # Mono channel
+                    "-af", "highpass=f=200,lowpass=f=3000",  # Focus on voice frequencies
                     output_path
                 ],
                 capture_output=True,
