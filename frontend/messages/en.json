@@ -1294,7 +1294,8 @@
       "documents": "Documents",
       "journey": "Sales Journey",
       "timeline": "Recent Activity",
-      "notes": "Quick Notes"
+      "notes": "Quick Notes",
+      "upcomingMeetings": "Upcoming Meetings"
     },
     "journey": {
       "research": "Research",
@@ -1334,10 +1335,19 @@
       "viewFullResearch": "View full research",
       "manage": "Manage",
       "addContact": "Add Contact",
-      "create": "Create"
+      "create": "Create",
+      "viewAll": "View All",
+      "viewPrep": "View Prep",
+      "prepareNow": "Prepare Now"
     },
     "empty": {
-      "noContacts": "No contacts added yet"
+      "noContacts": "No contacts added yet",
+      "noMeetings": "No upcoming meetings scheduled"
+    },
+    "badges": {
+      "now": "NOW",
+      "prepared": "Prepared",
+      "notPrepared": "Not Prepared"
     },
     "more": "more",
     "confirm": {

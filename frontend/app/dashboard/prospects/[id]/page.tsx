@@ -36,8 +36,10 @@ import { useToast } from '@/components/ui/use-toast'
 import { useConfirmDialog } from '@/components/confirm-dialog'
 import { Input } from '@/components/ui/input'
 import { api } from '@/lib/api'
-import { ProspectHub, ProspectContact } from '@/types'
+import { ProspectHub, ProspectContact, CalendarMeeting } from '@/types'
 import { smartDate } from '@/lib/date-utils'
+import { Badge } from '@/components/ui/badge'
+import { Video, Clock } from 'lucide-react'
 
 // ============================================================
 // Types
@@ -84,6 +86,10 @@ export default function ProspectHubPage() {
   const [newNoteContent, setNewNoteContent] = useState('')
   const [savingNote, setSavingNote] = useState(false)
   
+  // Meetings state
+  const [upcomingMeetings, setUpcomingMeetings] = useState<CalendarMeeting[]>([])
+  const [loadingMeetings, setLoadingMeetings] = useState(false)
+  
   // Initial load
   useEffect(() => {
     async function loadData() {
@@ -101,12 +107,20 @@ export default function ProspectHubPage() {
           if (orgMember) {
             setOrganizationId(orgMember.organization_id)
             
-            // Fetch hub data and notes in parallel
-            const [hubResponse, notesResponse] = await Promise.all([
+            // Calculate date range for upcoming meetings (14 days ahead)
+            const now = new Date()
+            const fromDate = now.toISOString()
+            const toDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString()
+            
+            // Fetch hub data, notes, and meetings in parallel
+            const [hubResponse, notesResponse, meetingsResponse] = await Promise.all([
               api.get<ProspectHub>(
                 `/api/v1/prospects/${prospectId}/hub?organization_id=${orgMember.organization_id}`
               ),
-              api.get<ProspectNote[]>(`/api/v1/prospects/${prospectId}/notes`)
+              api.get<ProspectNote[]>(`/api/v1/prospects/${prospectId}/notes`),
+              api.get<{ meetings: CalendarMeeting[] }>(
+                `/api/v1/calendar-meetings?prospect_id=${prospectId}&from_date=${fromDate}&to_date=${toDate}`
+              )
             ])
             
             if (!hubResponse.error && hubResponse.data) {
@@ -115,6 +129,10 @@ export default function ProspectHubPage() {
             
             if (!notesResponse.error && notesResponse.data) {
               setNotes(notesResponse.data)
+            }
+            
+            if (!meetingsResponse.error && meetingsResponse.data) {
+              setUpcomingMeetings(meetingsResponse.data.meetings || [])
             }
           }
         }
@@ -556,6 +574,101 @@ export default function ProspectHubPage() {
                     onAction={stats.followup_count === 0 ? () => router.push('/dashboard/followup') : undefined}
                   />
                 </div>
+              </CardContent>
+            </Card>
+            
+            {/* UPCOMING MEETINGS */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-purple-500" />
+                    {t('sections.upcomingMeetings')}
+                    {upcomingMeetings.length > 0 && (
+                      <span className="text-slate-400 font-normal">({upcomingMeetings.length})</span>
+                    )}
+                  </CardTitle>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => router.push(`/dashboard/meetings?prospect_id=${prospectId}`)}
+                    className="text-purple-600"
+                  >
+                    {t('actions.viewAll')}
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {upcomingMeetings.length === 0 ? (
+                  <div className="text-center py-6 text-slate-500">
+                    <Calendar className="w-10 h-10 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+                    <p className="text-sm">{t('empty.noMeetings')}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {upcomingMeetings.slice(0, 3).map(meeting => (
+                      <div 
+                        key={meeting.id}
+                        className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-slate-900 dark:text-white truncate text-sm">
+                              {meeting.title}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
+                              <Clock className="w-3 h-3" />
+                              <span>{smartDate(meeting.start_time)}</span>
+                              {meeting.is_online && (
+                                <>
+                                  <span>•</span>
+                                  <Video className="w-3 h-3" />
+                                  <span>{tCommon('online')}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          {meeting.is_now && (
+                            <Badge variant="destructive" className="text-xs animate-pulse">
+                              {t('badges.now')}
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        {/* Prep status */}
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                          {meeting.prep_status?.has_prep ? (
+                            <Badge variant="outline" className="text-xs text-green-600 border-green-200 bg-green-50 dark:bg-green-900/20">
+                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                              {t('badges.prepared')}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-xs text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-900/20">
+                              {t('badges.notPrepared')}
+                            </Badge>
+                          )}
+                          
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 text-xs text-purple-600"
+                            onClick={() => {
+                              if (meeting.prep_status?.has_prep && meeting.prep_status.prep_id) {
+                                router.push(`/dashboard/preparation/${meeting.prep_status.prep_id}`)
+                              } else {
+                                router.push(`/dashboard/preparation?prospect_id=${prospectId}&meeting_date=${meeting.start_time}`)
+                              }
+                            }}
+                          >
+                            {meeting.prep_status?.has_prep ? t('actions.viewPrep') : t('actions.prepareNow')}
+                            <ArrowRight className="w-3 h-3 ml-1" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

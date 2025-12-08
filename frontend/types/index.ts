@@ -505,6 +505,44 @@ export interface ProspectHub {
 }
 
 // ==========================================
+// Calendar Meeting Types (for Calendar Integration)
+// ==========================================
+
+export interface CalendarMeetingAttendee {
+  email: string
+  name?: string
+  response_status?: string
+}
+
+export interface CalendarMeetingPrepStatus {
+  has_prep: boolean
+  prep_id?: string
+  prep_created_at?: string
+  is_stale?: boolean
+}
+
+export interface CalendarMeeting {
+  id: string
+  title: string
+  description?: string
+  start_time: string
+  end_time: string
+  location?: string
+  meeting_url?: string
+  is_online: boolean
+  status: string
+  attendees: CalendarMeetingAttendee[]
+  organizer_email?: string
+  is_now: boolean
+  is_today: boolean
+  is_tomorrow: boolean
+  prospect_id?: string
+  prospect_name?: string
+  prep_status?: CalendarMeetingPrepStatus
+  is_recurring: boolean
+}
+
+// ==========================================
 // API Response Types
 // ==========================================
 
