@@ -640,17 +640,24 @@ async def import_fireflies_recording(
             "updated_at": datetime.now(timezone.utc).isoformat()
         }).eq("id", recording_id).execute()
         
-        # Trigger AI summarization via Inngest
+        # Trigger AI summarization via Inngest (use existing transcript processing flow)
         if INNGEST_ENABLED and transcript:
             try:
-                await send_event(Events.FOLLOWUP_SUMMARIZE, {
+                await send_event(Events.FOLLOWUP_TRANSCRIPT_UPLOADED, {
                     "followup_id": followup_id,
+                    "transcription_text": transcript[:100000],  # Limit size
+                    "segments": [],  # Fireflies doesn't provide segment format
+                    "speaker_count": len(recording.get("participants", [])) or 2,
+                    "organization_id": org_id,
                     "user_id": user_id,
-                    "organization_id": org_id
+                    "meeting_prep_id": None,
+                    "prospect_company": None,  # Will be looked up from prospect_id
+                    "include_coaching": False,
+                    "language": "en"
                 })
-                logger.info(f"Triggered summarization for followup {followup_id}")
+                logger.info(f"Triggered transcript processing for followup {followup_id}")
             except Exception as e:
-                logger.warning(f"Failed to trigger summarization: {e}")
+                logger.warning(f"Failed to trigger transcript processing: {e}")
         
         return FirefliesImportResponse(
             success=True,

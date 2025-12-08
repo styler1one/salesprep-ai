@@ -60,11 +60,15 @@ async def send_event(
     
     try:
         # Create Inngest Event object (required by SDK)
-        event = inngest.Event(
-            name=event_name,
-            data=data,
-            user=user
-        )
+        # Only pass user if it's a valid dict (Inngest SDK requires dict, not None)
+        event_kwargs = {
+            "name": event_name,
+            "data": data,
+        }
+        if user is not None:
+            event_kwargs["user"] = user
+        
+        event = inngest.Event(**event_kwargs)
         
         await client.send(event)
         logger.info(f"Inngest event sent: {event_name}")
