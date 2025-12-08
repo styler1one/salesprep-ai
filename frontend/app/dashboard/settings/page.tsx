@@ -1527,12 +1527,12 @@ export default function SettingsPage() {
                           <p className="text-xs text-slate-400">
                             Get your API key from{' '}
                             <a 
-                              href="https://app.fireflies.ai/integrations/custom/fireflies" 
+                              href="https://app.fireflies.ai/settings#DeveloperSettings" 
                               target="_blank" 
                               rel="noopener noreferrer"
                               className="text-blue-500 hover:underline"
                             >
-                              Fireflies Settings → API & Integrations
+                              Fireflies Settings → Developer Settings
                             </a>
                           </p>
                           <div className="flex gap-2">
