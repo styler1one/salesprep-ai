@@ -82,7 +82,6 @@ export function ImportRecordingModal({
   const [prospectId, setProspectId] = useState<string>('')
   const [contactIds, setContactIds] = useState<string[]>([])
   const [prepId, setPrepId] = useState<string>('')
-  const [includeCoaching, setIncludeCoaching] = useState(false)
   
   // Data state
   const [prospects, setProspects] = useState<Prospect[]>([])
@@ -128,7 +127,6 @@ export function ImportRecordingModal({
       setProspectId('')
       setContactIds([])
       setPrepId('')
-      setIncludeCoaching(false)
     }
   }, [isOpen])
 
@@ -185,8 +183,7 @@ export function ImportRecordingModal({
       }>(`/api/v1/integrations/fireflies/import/${recording.id}`, {
         prospect_id: prospectId || null,
         contact_ids: contactIds.length > 0 ? contactIds : null,
-        meeting_prep_id: prepId || null,
-        include_coaching: includeCoaching
+        meeting_prep_id: prepId || null
       })
       
       if (error) {
@@ -286,12 +283,12 @@ export function ImportRecordingModal({
               Link to Prospect
               <span className="text-xs text-slate-400 font-normal">(optional)</span>
             </Label>
-            <Select value={prospectId} onValueChange={setProspectId}>
+            <Select value={prospectId || "none"} onValueChange={(v) => setProspectId(v === "none" ? "" : v)}>
               <SelectTrigger>
                 <SelectValue placeholder={loadingProspects ? "Loading..." : "Select a prospect..."} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No prospect</SelectItem>
+                <SelectItem value="none">No prospect</SelectItem>
                 {prospects.map(p => (
                   <SelectItem key={p.id} value={p.id}>
                     {p.company_name}
@@ -369,12 +366,12 @@ export function ImportRecordingModal({
               ) : preparations.length === 0 ? (
                 <p className="text-sm text-slate-500 py-2">No preparations found for this prospect</p>
               ) : (
-                <Select value={prepId} onValueChange={setPrepId}>
+                <Select value={prepId || "none"} onValueChange={(v) => setPrepId(v === "none" ? "" : v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a preparation..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No preparation</SelectItem>
+                    <SelectItem value="none">No preparation</SelectItem>
                     {preparations.map(p => (
                       <SelectItem key={p.id} value={p.id}>
                         {p.meeting_subject || 'Untitled'} - {new Date(p.created_at).toLocaleDateString()}
@@ -386,27 +383,6 @@ export function ImportRecordingModal({
             </div>
           )}
 
-          {/* Coaching Toggle */}
-          <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
-            <div className="flex items-start space-x-3">
-              <Checkbox
-                id="include-coaching"
-                checked={includeCoaching}
-                onCheckedChange={(checked) => setIncludeCoaching(checked === true)}
-              />
-              <div>
-                <Label 
-                  htmlFor="include-coaching" 
-                  className="text-sm font-medium cursor-pointer"
-                >
-                  Include Coaching Feedback
-                </Label>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Get AI feedback on your sales performance
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
         <DialogFooter>
