@@ -108,6 +108,31 @@ export default function SettingsPage() {
   const [calendarSyncing, setCalendarSyncing] = useState(false)
   const [disconnecting, setDisconnecting] = useState<string | null>(null)
   
+  // Recording integrations state
+  interface IntegrationProviderStatus {
+    connected: boolean
+    api_key_set: boolean
+    account_email: string | null
+    account_name: string | null
+    last_sync: string | null
+    last_sync_status: string | null
+    pending_recordings: number
+    auto_import: boolean
+  }
+  
+  interface IntegrationsStatus {
+    fireflies: IntegrationProviderStatus
+    zoom: IntegrationProviderStatus
+    teams: IntegrationProviderStatus
+  }
+  
+  const [integrationsStatus, setIntegrationsStatus] = useState<IntegrationsStatus | null>(null)
+  const [integrationsLoading, setIntegrationsLoading] = useState(true)
+  const [firefliesApiKey, setFirefliesApiKey] = useState('')
+  const [firefliesConnecting, setFirefliesConnecting] = useState(false)
+  const [firefliesDisconnecting, setFirefliesDisconnecting] = useState(false)
+  const [showFirefliesInput, setShowFirefliesInput] = useState(false)
+  
   // Fetch coach settings directly (independent of CoachProvider)
   useEffect(() => {
     const fetchCoachSettings = async () => {
@@ -165,6 +190,105 @@ export default function SettingsPage() {
   useEffect(() => {
     fetchCalendarStatus()
   }, [fetchCalendarStatus])
+  
+  // Fetch recording integrations status
+  const fetchIntegrationsStatus = useCallback(async () => {
+    setIntegrationsLoading(true)
+    try {
+      const { data, error } = await api.get<IntegrationsStatus>('/api/v1/integrations/status')
+      if (!error && data) {
+        setIntegrationsStatus(data)
+      }
+    } catch (err) {
+      console.error('Failed to fetch integrations status:', err)
+    } finally {
+      setIntegrationsLoading(false)
+    }
+  }, [])
+  
+  useEffect(() => {
+    fetchIntegrationsStatus()
+  }, [fetchIntegrationsStatus])
+  
+  // Handle Fireflies connect
+  const handleFirefliesConnect = async () => {
+    if (!firefliesApiKey.trim()) {
+      toast({
+        title: 'API Key Required',
+        description: 'Please enter your Fireflies API key',
+        variant: 'destructive',
+      })
+      return
+    }
+    
+    setFirefliesConnecting(true)
+    try {
+      const { data, error } = await api.post<{ success: boolean; account_email?: string; account_name?: string }>(
+        '/api/v1/integrations/fireflies/connect',
+        { api_key: firefliesApiKey }
+      )
+      
+      if (error) {
+        throw new Error(error.message || 'Failed to connect Fireflies')
+      }
+      
+      toast({
+        title: tIntegrations('recordings.connectSuccess') || 'Fireflies Connected',
+        description: data?.account_email ? `Connected as ${data.account_email}` : undefined,
+      })
+      
+      setFirefliesApiKey('')
+      setShowFirefliesInput(false)
+      fetchIntegrationsStatus()
+      
+    } catch (err) {
+      console.error('Fireflies connect failed:', err)
+      toast({
+        title: tErrors('generic'),
+        description: err instanceof Error ? err.message : 'Failed to connect Fireflies',
+        variant: 'destructive',
+      })
+    } finally {
+      setFirefliesConnecting(false)
+    }
+  }
+  
+  // Handle Fireflies disconnect
+  const handleFirefliesDisconnect = async () => {
+    const confirmed = await confirm({
+      title: 'Disconnect Fireflies?',
+      description: 'Your imported recordings will be kept, but no new recordings will be synced.',
+      confirmLabel: 'Disconnect',
+      variant: 'danger',
+    })
+    
+    if (!confirmed) return
+    
+    setFirefliesDisconnecting(true)
+    try {
+      const { error } = await api.delete('/api/v1/integrations/fireflies/disconnect')
+      
+      if (error) {
+        throw new Error(error.message || 'Failed to disconnect')
+      }
+      
+      toast({
+        title: 'Fireflies Disconnected',
+      })
+      
+      fetchIntegrationsStatus()
+      
+    } catch (err) {
+      console.error('Fireflies disconnect failed:', err)
+      toast({
+        title: tErrors('generic'),
+        description: err instanceof Error ? err.message : 'Failed to disconnect',
+        variant: 'destructive',
+      })
+    } finally {
+      setFirefliesDisconnecting(false)
+    }
+  }
   
   // Handle Google Calendar OAuth popup
   const handleGoogleConnect = async () => {
@@ -1322,33 +1446,124 @@ export default function SettingsPage() {
                   <h4 className="text-sm font-medium text-slate-900 dark:text-white">
                     {tIntegrations('recordings.title')}
                   </h4>
-                  <Badge variant="secondary" className="text-xs">{t('comingSoon')}</Badge>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {tIntegrations('recordings.description')}
                 </p>
                 
-                <div className="space-y-3 opacity-60">
-                  {/* Fireflies.ai */}
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-sm">
-                        <span className="text-white text-xs font-bold">🔥</span>
+                {integrationsLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+                    <span className="ml-2 text-sm text-slate-500">{tIntegrations('status.checking')}</span>
+                  </div>
+                ) : (
+                <div className="space-y-3">
+                  {/* Fireflies.ai - Now functional */}
+                  <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-sm">
+                          <span className="text-white text-xs font-bold">🔥</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-900 dark:text-white">
+                            {tIntegrations('recordings.fireflies')}
+                          </p>
+                          {integrationsStatus?.fireflies.connected ? (
+                            <p className="text-xs text-slate-500">
+                              {integrationsStatus.fireflies.account_email || integrationsStatus.fireflies.account_name}
+                              {integrationsStatus.fireflies.pending_recordings > 0 && (
+                                <span className="ml-1 text-amber-500">
+                                  • {integrationsStatus.fireflies.pending_recordings} pending
+                                </span>
+                              )}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-slate-400">{tIntegrations('recordings.notConnected')}</p>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-900 dark:text-white">
-                          {tIntegrations('recordings.fireflies')}
-                        </p>
-                        <p className="text-xs text-slate-400">{tIntegrations('recordings.notConnected')}</p>
+                      <div className="flex items-center gap-2">
+                        {integrationsStatus?.fireflies.connected ? (
+                          <>
+                            <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                              <Check className="h-3 w-3 mr-1" />
+                              {tIntegrations('calendar.connected')}
+                            </Badge>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={handleFirefliesDisconnect}
+                              disabled={firefliesDisconnecting}
+                              className="h-7 w-7 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            >
+                              {firefliesDisconnecting ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Power className="h-3 w-3" />
+                              )}
+                            </Button>
+                          </>
+                        ) : (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setShowFirefliesInput(!showFirefliesInput)}
+                            className="gap-1"
+                          >
+                            {showFirefliesInput ? 'Cancel' : tIntegrations('recordings.connect')}
+                          </Button>
+                        )}
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" disabled>
-                      {tIntegrations('recordings.connect')}
-                    </Button>
+                    
+                    {/* API Key Input - shown when connecting */}
+                    {showFirefliesInput && !integrationsStatus?.fireflies.connected && (
+                      <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                        <div className="space-y-2">
+                          <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                            Fireflies API Key
+                          </label>
+                          <p className="text-xs text-slate-400">
+                            Get your API key from{' '}
+                            <a 
+                              href="https://app.fireflies.ai/integrations/custom/fireflies" 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-500 hover:underline"
+                            >
+                              Fireflies Settings → API & Integrations
+                            </a>
+                          </p>
+                          <div className="flex gap-2">
+                            <input
+                              type="password"
+                              value={firefliesApiKey}
+                              onChange={(e) => setFirefliesApiKey(e.target.value)}
+                              placeholder="ff_xxxxxxxxxxxxxxxx"
+                              className="flex-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
+                            />
+                            <Button
+                              size="sm"
+                              onClick={handleFirefliesConnect}
+                              disabled={firefliesConnecting || !firefliesApiKey.trim()}
+                              className="gap-1"
+                            >
+                              {firefliesConnecting ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Check className="h-4 w-4" />
+                              )}
+                              Connect
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
-                  {/* Zoom */}
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                  {/* Zoom - Coming in Phase 3 */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 opacity-60">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-[#2D8CFF] flex items-center justify-center shadow-sm">
                         <span className="text-white text-xs font-bold">Z</span>
@@ -1360,13 +1575,14 @@ export default function SettingsPage() {
                         <p className="text-xs text-slate-400">{tIntegrations('recordings.notConnected')}</p>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" disabled>
+                    <Button variant="outline" size="sm" disabled className="gap-1">
                       {tIntegrations('recordings.connect')}
+                      <Badge variant="secondary" className="text-xs ml-1">Soon</Badge>
                     </Button>
                   </div>
                   
-                  {/* Microsoft Teams */}
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                  {/* Microsoft Teams - Coming in Phase 4 */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 opacity-60">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-[#6264A7] flex items-center justify-center shadow-sm">
                         <span className="text-white text-xs font-bold">T</span>
@@ -1378,11 +1594,13 @@ export default function SettingsPage() {
                         <p className="text-xs text-slate-400">{tIntegrations('recordings.notConnected')}</p>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" disabled>
+                    <Button variant="outline" size="sm" disabled className="gap-1">
                       {tIntegrations('recordings.connect')}
+                      <Badge variant="secondary" className="text-xs ml-1">Phase 4</Badge>
                     </Button>
                   </div>
                 </div>
+                )}
               </div>
             </CardContent>
           </Card>
