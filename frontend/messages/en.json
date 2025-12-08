@@ -1306,7 +1306,8 @@
     "documents": {
       "research": "Company Research",
       "preparation": "Meeting Preparations",
-      "followup": "Follow-up Summaries"
+      "followup": "Meeting Recordings",
+      "recordings": "Meeting Recordings"
     },
     "nextAction": {
       "label": "Next Step",
