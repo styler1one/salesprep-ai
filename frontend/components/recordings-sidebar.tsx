@@ -157,7 +157,7 @@ export function RecordingsSidebar() {
       
       // Navigate to the followup if we got an ID
       if (data?.followup_id) {
-        router.push(`/dashboard/followups/${data.followup_id}`)
+        router.push(`/dashboard/followup/${data.followup_id}`)
       } else {
         // Remove from list
         setRecordings(prev => prev.filter(r => r.id !== recordingId))
